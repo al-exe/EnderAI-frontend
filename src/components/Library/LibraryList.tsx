@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Search } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
   readLibraryItems,
@@ -19,6 +19,17 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value)
+
+  useEffect(() => {
+    const handle = setTimeout(() => setDebounced(value), delayMs)
+    return () => clearTimeout(handle)
+  }, [value, delayMs])
+
+  return debounced
+}
 
 function kindBadgeVariant(kind: LibraryItemKind):
   | "default"
@@ -105,8 +116,10 @@ function groupByWorkflowKey(items: LibraryItemPublic[]) {
 
 export function LibraryList() {
   const [workflowKey, setWorkflowKey] = useState<string>("")
-  const [q, setQ] = useState<string>("")
+  const [qInput, setQInput] = useState<string>("")
   const [kind, setKind] = useState<LibraryItemKind | "all">("all")
+
+  const q = useDebouncedValue(qInput, 750)
 
   const bucketsQuery = useQuery({
     queryKey: ["libraryBuckets"],
@@ -154,8 +167,8 @@ export function LibraryList() {
             <Input
               className="pl-9"
               placeholder="Search title/body"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
+              value={qInput}
+              onChange={(e) => setQInput(e.target.value)}
             />
           </div>
         </div>
