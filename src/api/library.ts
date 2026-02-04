@@ -24,6 +24,7 @@ export interface LibraryItemsPublic {
 
 export interface WorkflowKeyCount {
   workflow_key: string
+  bucket_name: string
   count: number
 }
 

@@ -31,6 +31,20 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced
 }
 
+function humanizeWorkflowKey(workflowKey: string): string {
+  return workflowKey
+    .split("_")
+    .filter(Boolean)
+    .map((part) => {
+      const lower = part.toLowerCase()
+      if (lower === "github") return "GitHub"
+      if (lower === "api") return "API"
+      if (lower === "db") return "DB"
+      return part.charAt(0).toUpperCase() + part.slice(1)
+    })
+    .join(" ")
+}
+
 function kindBadgeVariant(kind: LibraryItemKind):
   | "default"
   | "secondary"
@@ -100,18 +114,35 @@ function LibraryListSkeleton() {
   )
 }
 
-function groupByWorkflowKey(items: LibraryItemPublic[]) {
-  const map = new Map<string, LibraryItemPublic[]>()
+type BucketGroup = {
+  workflowKey: string
+  bucketName: string
+  items: LibraryItemPublic[]
+}
+
+function groupByBucket(
+  items: LibraryItemPublic[],
+  bucketNameByKey: Map<string, string>,
+): BucketGroup[] {
+  const map = new Map<string, BucketGroup>()
+
   for (const item of items) {
-    const key = item.workflow_key || "(none)"
-    const list = map.get(key)
-    if (list) {
-      list.push(item)
-    } else {
-      map.set(key, [item])
+    const workflowKey = item.workflow_key || "(none)"
+    const bucketName =
+      bucketNameByKey.get(workflowKey) || humanizeWorkflowKey(workflowKey)
+
+    const existing = map.get(workflowKey)
+    if (existing) {
+      existing.items.push(item)
+      continue
     }
+
+    map.set(workflowKey, { workflowKey, bucketName, items: [item] })
   }
-  return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b))
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.bucketName.localeCompare(b.bucketName),
+  )
 }
 
 export function LibraryList() {
@@ -126,6 +157,14 @@ export function LibraryList() {
     queryFn: () => readLibraryWorkflowKeys({ current_only: true }),
   })
 
+  const bucketNameByKey = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const b of bucketsQuery.data?.data ?? []) {
+      map.set(b.workflow_key, b.bucket_name)
+    }
+    return map
+  }, [bucketsQuery.data])
+
   const itemsQuery = useQuery({
     queryKey: ["library", { workflowKey, q, kind }],
     queryFn: () =>
@@ -139,7 +178,7 @@ export function LibraryList() {
       }),
   })
 
-  if (itemsQuery.isLoading || !itemsQuery.data) {
+  if (itemsQuery.isLoading) {
     return <LibraryListSkeleton />
   }
 
@@ -154,8 +193,12 @@ export function LibraryList() {
     )
   }
 
+  if (!itemsQuery.data) {
+    return <LibraryListSkeleton />
+  }
+
   const items = itemsQuery.data.data
-  const groups = groupByWorkflowKey(items)
+  const groups = groupByBucket(items, bucketNameByKey)
 
   return (
     <div className="space-y-4">
@@ -166,7 +209,7 @@ export function LibraryList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="Search title/body"
+              placeholder="Search title/body/bucket"
               value={qInput}
               onChange={(e) => setQInput(e.target.value)}
             />
@@ -186,7 +229,7 @@ export function LibraryList() {
               <SelectItem value="all">All buckets</SelectItem>
               {bucketsQuery.data?.data.map((b) => (
                 <SelectItem key={b.workflow_key} value={b.workflow_key}>
-                  {b.workflow_key} ({b.count})
+                  {b.bucket_name} ({b.count})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -227,16 +270,16 @@ export function LibraryList() {
         </div>
       ) : (
         <div className="space-y-6">
-          {groups.map(([groupKey, groupItems]) => (
-            <div key={groupKey} className="space-y-3">
+          {groups.map((group) => (
+            <div key={group.workflowKey} className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="font-semibold">{groupKey}</div>
+                <div className="font-semibold">{group.bucketName}</div>
                 <div className="text-sm text-muted-foreground">
-                  {groupItems.length} item{groupItems.length === 1 ? "" : "s"}
+                  {group.items.length} item{group.items.length === 1 ? "" : "s"}
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                {groupItems.map((item) => (
+                {group.items.map((item) => (
                   <LibraryCard key={item.id} item={item} />
                 ))}
               </div>
