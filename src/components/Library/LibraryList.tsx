@@ -10,6 +10,13 @@ import {
 } from "@/api/library"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -62,41 +69,111 @@ function kindBadgeVariant(kind: LibraryItemKind):
   }
 }
 
+function normalizeBodyMdc(body: string): string {
+  return body
+    .replace(/\r\n/g, "\n")
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+}
+
+function dropLeadingHeading(body: string): string {
+  const normalized = normalizeBodyMdc(body)
+  const lines = normalized.split("\n")
+
+  while (lines.length > 0 && lines[0].trim().length === 0) {
+    lines.shift()
+  }
+
+  if (lines.length > 0 && /^#+\\s/.test(lines[0])) {
+    lines.shift()
+    while (lines.length > 0 && lines[0].trim().length === 0) {
+      lines.shift()
+    }
+  }
+
+  return lines.join("\n")
+}
+
+function formatTimestamp(ts: string | null): string | null {
+  if (!ts) return null
+  return new Date(ts).toLocaleString()
+}
+
 function BodyPreview({ body }: { body: string }) {
   const preview = useMemo(() => {
-    const normalized = body.replace(/\s+/g, " ").trim()
+    const normalized = dropLeadingHeading(body).replace(/\s+/g, " ").trim()
     if (normalized.length <= 220) return normalized
-    return normalized.slice(0, 220) + "…"
+    return normalized.slice(0, 220).trimEnd() + "…"
   }, [body])
 
   return <p className="text-sm text-muted-foreground">{preview}</p>
 }
 
-function LibraryCard({ item }: { item: LibraryItemPublic }) {
+function LibraryCard({
+  item,
+  bucketName,
+}: {
+  item: LibraryItemPublic
+  bucketName: string
+}) {
+  const body = useMemo(() => normalizeBodyMdc(item.body_mdc), [item.body_mdc])
+  const createdAt = formatTimestamp(item.created_at)
+  const lastUsedAt = formatTimestamp(item.last_used_at)
+
   return (
-    <Card>
-      <CardHeader className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={kindBadgeVariant(item.kind)}>{item.kind}</Badge>
-          {item.promotion_mode === "user" && (
-            <Badge variant="secondary">user</Badge>
-          )}
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Open library item: ${item.title}`}
+          className="w-full text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <Card className="transition-colors hover:bg-muted/50">
+            <CardHeader className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={kindBadgeVariant(item.kind)}>{item.kind}</Badge>
+                {item.promotion_mode === "user" && (
+                  <Badge variant="secondary">user</Badge>
+                )}
+              </div>
+              <div className="font-semibold leading-tight">{item.title}</div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <BodyPreview body={body} />
+              <div className="text-xs text-muted-foreground">
+                {createdAt ? `Created ${createdAt}` : null}
+                {createdAt && lastUsedAt ? " • " : null}
+                {lastUsedAt ? `Last used ${lastUsedAt}` : null}
+              </div>
+            </CardContent>
+          </Card>
+        </button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-3xl">
+        <DialogHeader className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={kindBadgeVariant(item.kind)}>{item.kind}</Badge>
+            {item.promotion_mode === "user" && (
+              <Badge variant="secondary">user</Badge>
+            )}
+            <div className="text-xs text-muted-foreground">{bucketName}</div>
+          </div>
+          <DialogTitle>{item.title}</DialogTitle>
+          <div className="text-xs text-muted-foreground">
+            {createdAt ? `Created ${createdAt}` : null}
+            {createdAt && lastUsedAt ? " • " : null}
+            {lastUsedAt ? `Last used ${lastUsedAt}` : null}
+          </div>
+        </DialogHeader>
+
+        <div className="rounded-md border bg-muted/20 p-4 max-h-[65vh] overflow-auto">
+          <div className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+            {body}
+          </div>
         </div>
-        <div className="font-semibold leading-tight">{item.title}</div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <BodyPreview body={item.body_mdc} />
-        <div className="text-xs text-muted-foreground">
-          {item.created_at
-            ? `Created ${new Date(item.created_at).toLocaleString()}`
-            : null}
-          {item.created_at && item.last_used_at ? " • " : null}
-          {item.last_used_at
-            ? `Last used ${new Date(item.last_used_at).toLocaleString()}`
-            : null}
-        </div>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -280,7 +357,11 @@ export function LibraryList() {
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 {group.items.map((item) => (
-                  <LibraryCard key={item.id} item={item} />
+                  <LibraryCard
+                    key={item.id}
+                    item={item}
+                    bucketName={group.bucketName}
+                  />
                 ))}
               </div>
             </div>
