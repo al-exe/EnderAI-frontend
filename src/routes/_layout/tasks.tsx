@@ -15,7 +15,7 @@ function Tasks() {
   return (
     <div className="flex flex-col gap-2">
       <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
-      <p className="text-muted-foreground">The state of all of your work.</p>
+      <p className="text-muted-foreground">The state of all of your work</p>
     </div>
   )
 }

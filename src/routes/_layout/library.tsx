@@ -15,9 +15,7 @@ function Library() {
   return (
     <div className="flex flex-col gap-2">
       <h1 className="text-2xl font-bold tracking-tight">Library</h1>
-      <p className="text-muted-foreground">
-        Your reusable memory entries and workflows.
-      </p>
+      <p className="text-muted-foreground">Your reusable memory entries and workflows</p>
     </div>
   )
 }
