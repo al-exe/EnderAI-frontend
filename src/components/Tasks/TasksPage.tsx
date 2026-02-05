@@ -253,11 +253,6 @@ function RunDetailDialog({
                   {formatBadgeLabel(run.status)}
                 </Badge>
               ) : null}
-              {run?.id ? (
-                <span className="font-mono text-xs text-muted-foreground">
-                  {run.id}
-                </span>
-              ) : null}
             </div>
             <DialogTitle>{run?.summary ?? "Run detail"}</DialogTitle>
             <div className="text-xs text-muted-foreground">
