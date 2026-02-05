@@ -514,7 +514,7 @@ function TaskDialog({
                 <div className="text-xs text-muted-foreground">
                   {createdAt ? `Created ${createdAt}` : null}
                   {createdAt && lastTouchedAt ? " • " : null}
-                  {lastTouchedAt ? `Touched ${lastTouchedAt}` : null}
+                  {lastTouchedAt ? `Updated ${lastTouchedAt}` : null}
                 </div>
               </CardContent>
             </Card>
