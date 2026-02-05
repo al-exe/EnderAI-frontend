@@ -78,11 +78,15 @@ function formatTimestampNoSeconds(ts: string | null): string | null {
   })
 }
 
+function formatBadgeLabel(value: string): string {
+  return value.trim().replace(/_/g, " ").toLowerCase()
+}
+
 function taskStatusVariant(
   status: string,
-): "default" | "secondary" | "destructive" | "outline" {
+): "default" | "secondary" | "destructive" | "outline" | "success" {
   const lower = status.toLowerCase()
-  if (lower === "done" || lower === "closed") return "secondary"
+  if (lower === "done" || lower === "closed") return "success"
   if (lower === "in_progress") return "default"
   if (lower === "blocked" || lower === "error") return "destructive"
   return "outline"
@@ -248,7 +252,9 @@ function RunDetailDialog({
           <DialogHeader className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               {run?.status ? (
-                <Badge variant={runStatusVariant(run.status)}>{run.status}</Badge>
+                <Badge variant={runStatusVariant(run.status)}>
+                  {formatBadgeLabel(run.status)}
+                </Badge>
               ) : null}
               {run?.id ? (
                 <span className="font-mono text-xs text-muted-foreground">
@@ -293,7 +299,7 @@ function RunDetailDialog({
                         <div key={relation} className="space-y-2">
                           <div className="flex items-center gap-2">
                             <Badge variant={relationVariant(relation)}>
-                              {relation}
+                              {formatBadgeLabel(relation)}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {links.length}
@@ -376,7 +382,9 @@ function RunEventRow({ event }: { event: RunEventPublic }) {
     <div className="rounded-md border p-3 bg-muted/10">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={eventTypeVariant(event.type)}>{event.type}</Badge>
+          <Badge variant={eventTypeVariant(event.type)}>
+            {formatBadgeLabel(event.type)}
+          </Badge>
           {ts ? (
             <span className="text-xs text-muted-foreground">{ts}</span>
           ) : null}
@@ -492,7 +500,7 @@ function TaskDialog({
               <CardHeader className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={taskStatusVariant(task.status)}>
-                    {task.status}
+                    {formatBadgeLabel(task.status)}
                   </Badge>
                   <div className="text-xs text-muted-foreground">{bucketName}</div>
                 </div>
@@ -519,7 +527,9 @@ function TaskDialog({
         <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={taskStatusVariant(task.status)}>{task.status}</Badge>
+              <Badge variant={taskStatusVariant(task.status)}>
+                {formatBadgeLabel(task.status)}
+              </Badge>
               <div className="text-xs text-muted-foreground">{bucketName}</div>
             </div>
             <DialogTitle>
@@ -654,11 +664,8 @@ function TaskDialog({
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant={runStatusVariant(run.status)}>
-                            {run.status}
+                            {formatBadgeLabel(run.status)}
                           </Badge>
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {run.id}
-                          </span>
                         </div>
                       </div>
                     </button>
@@ -818,4 +825,3 @@ export function TasksPage() {
     </div>
   )
 }
-
