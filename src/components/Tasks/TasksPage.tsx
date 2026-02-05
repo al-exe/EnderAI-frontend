@@ -65,7 +65,7 @@ function formatTimestamp(ts: string | null): string | null {
   const date = new Date(ts)
   if (Number.isNaN(date.getTime())) return null
   return date.toLocaleTimeString(undefined, {
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
     hour12: true,
   })
