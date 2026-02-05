@@ -19,7 +19,7 @@ function Library() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Library</h1>
         <p className="text-muted-foreground">
-          Your reusable memory entries and workflows
+          What I've learned so far.
         </p>
       </div>
 

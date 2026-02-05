@@ -115,3 +115,25 @@ export function readRunDetail(runId: string): CancelablePromise<RunDetailPublic>
   })
 }
 
+
+export interface TaskTitleUpdate {
+  title: string
+}
+
+export function updateTaskTitle(
+  taskId: string,
+  body: TaskTitleUpdate,
+): CancelablePromise<TaskPublic> {
+  const title = body.title.trim()
+
+  return request(OpenAPI, {
+    method: "PATCH",
+    url: "/api/v1/tasks/{task_id}",
+    path: {
+      task_id: taskId,
+    },
+    body: {
+      title,
+    },
+  })
+}

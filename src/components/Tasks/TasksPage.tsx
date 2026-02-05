@@ -1,11 +1,12 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Search } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   readRunDetail,
   readTaskRuns,
   readTasks,
+  updateTaskTitle,
   type RunDetailPublic,
   type RunEventPublic,
   type RunLibraryRelation,
@@ -62,6 +63,19 @@ function humanizeWorkflowKey(workflowKey: string): string {
 function formatTimestamp(ts: string | null): string | null {
   if (!ts) return null
   return new Date(ts).toLocaleString()
+}
+
+function formatTimestampNoSeconds(ts: string | null): string | null {
+  if (!ts) return null
+  const date = new Date(ts)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
 }
 
 function taskStatusVariant(
@@ -151,7 +165,7 @@ function MemoryItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             {item?.kind ? (
@@ -220,8 +234,8 @@ function RunDetailDialog({
   }, [data?.memory_links])
 
   const run = data?.run
-  const startedAt = formatTimestamp(run?.started_at ?? null)
-  const endedAt = formatTimestamp(run?.ended_at ?? null)
+  const startedAt = formatTimestampNoSeconds(run?.started_at ?? null)
+  const endedAt = formatTimestampNoSeconds(run?.ended_at ?? null)
 
   const bucketName = selectedMemory
     ? humanizeWorkflowKey(selectedMemory.workflow_key)
@@ -230,7 +244,7 @@ function RunDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-4xl">
+        <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               {run?.status ? (
@@ -266,12 +280,7 @@ function RunDetailDialog({
             <div className="space-y-6">
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold tracking-tight">
-                    Memory Diff
-                  </h3>
-                  <div className="text-xs text-muted-foreground">
-                    Used / Created / Promoted / Superseded
-                  </div>
+                  <h3 className="text-sm font-semibold tracking-tight">Memory</h3>
                 </div>
 
                 <div className="space-y-4">
@@ -328,7 +337,6 @@ function RunDetailDialog({
                     Audit Trail
                   </h3>
                   <div className="text-xs text-muted-foreground">
-                    Append-only run events
                   </div>
                 </div>
 
@@ -393,6 +401,65 @@ function TaskDialog({
   task: TaskPublic
 }) {
   const [open, setOpen] = useState(false)
+  const queryClient = useQueryClient()
+
+  const [taskTitle, setTaskTitle] = useState(task.title)
+  const [isRenamingTitle, setIsRenamingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState(task.title)
+  const [titleError, setTitleError] = useState<string | null>(null)
+  const titleInputRef = useRef<HTMLInputElement>(null)
+  const skipBlurCommitRef = useRef(false)
+
+  useEffect(() => {
+    setTaskTitle(task.title)
+    if (!isRenamingTitle) setTitleDraft(task.title)
+  }, [task.title, isRenamingTitle])
+
+  useEffect(() => {
+    if (!isRenamingTitle) return
+    const handle = window.setTimeout(() => {
+      titleInputRef.current?.focus()
+      titleInputRef.current?.select()
+    }, 0)
+    return () => window.clearTimeout(handle)
+  }, [isRenamingTitle])
+
+  const renameMutation = useMutation({
+    mutationFn: (nextTitle: string) =>
+      updateTaskTitle(task.id, { title: nextTitle }),
+    onSuccess: (updated) => {
+      setTaskTitle(updated.title)
+      setTitleDraft(updated.title)
+      setIsRenamingTitle(false)
+      setTitleError(null)
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+    },
+    onError: () => {
+      setTitleError("Couldn’t rename task. Check backend connectivity/auth.")
+    },
+  })
+
+  const cancelRename = () => {
+    skipBlurCommitRef.current = false
+    setIsRenamingTitle(false)
+    setTitleDraft(taskTitle)
+    setTitleError(null)
+  }
+
+  const commitRename = () => {
+    const next = titleDraft.trim()
+    if (!next) {
+      setTitleError("Title can’t be empty.")
+      return
+    }
+
+    if (next === taskTitle.trim()) {
+      cancelRename()
+      return
+    }
+
+    renameMutation.mutate(next)
+  }
   const { data, isLoading, isError } = useQuery({
     queryKey: ["taskRuns", task.id],
     queryFn: () => readTaskRuns(task.id),
@@ -408,11 +475,17 @@ function TaskDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next)
+          if (!next) cancelRename()
+        }}
+      >
         <DialogTrigger asChild>
           <button
             type="button"
-            aria-label={`Open task: ${task.title}`}
+            aria-label={`Open task: ${taskTitle}`}
             className="w-full text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <Card className="transition-colors hover:bg-muted/50">
@@ -423,7 +496,7 @@ function TaskDialog({
                   </Badge>
                   <div className="text-xs text-muted-foreground">{bucketName}</div>
                 </div>
-                <div className="font-semibold leading-tight">{task.title}</div>
+                <div className="font-semibold leading-tight">{taskTitle}</div>
               </CardHeader>
               <CardContent className="space-y-2">
                 {task.goal ? (
@@ -443,16 +516,72 @@ function TaskDialog({
           </button>
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-4xl">
+        <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant={taskStatusVariant(task.status)}>{task.status}</Badge>
               <div className="text-xs text-muted-foreground">{bucketName}</div>
-              <span className="font-mono text-xs text-muted-foreground">
-                {task.id}
-              </span>
             </div>
-            <DialogTitle>{task.title}</DialogTitle>
+            <DialogTitle>
+              {isRenamingTitle ? (
+                <div className="space-y-2">
+                  <Input
+                    ref={titleInputRef}
+                    value={titleDraft}
+                    disabled={renameMutation.isPending}
+                    onChange={(e) => {
+                      setTitleDraft(e.target.value)
+                      setTitleError(null)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        commitRename()
+                      }
+                      if (e.key === "Escape") {
+                        e.preventDefault()
+                        skipBlurCommitRef.current = true
+                        cancelRename()
+                      }
+                    }}
+                    onBlur={() => {
+                      if (skipBlurCommitRef.current) {
+                        skipBlurCommitRef.current = false
+                        return
+                      }
+                      commitRename()
+                    }}
+                  />
+                  {titleError ? (
+                    <div className="text-xs text-destructive">{titleError}</div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground">
+                      Enter to save • Esc to cancel
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="cursor-text"
+                  title="Double-click to rename"
+                  onDoubleClick={() => {
+                    setTitleDraft(taskTitle)
+                    setIsRenamingTitle(true)
+                    setTitleError(null)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return
+                    setTitleDraft(taskTitle)
+                    setIsRenamingTitle(true)
+                    setTitleError(null)
+                  }}
+                >
+                  {taskTitle}
+                </span>
+              )}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-5">
@@ -600,8 +729,21 @@ export function TasksPage() {
   const [workflowKey, setWorkflowKey] = useState<string>("all")
 
   const visibleTasks = useMemo(() => {
-    if (workflowKey === "all") return tasks
-    return tasks.filter((task) => task.workflow_key === workflowKey)
+    const filtered =
+      workflowKey === "all"
+        ? tasks
+        : tasks.filter((task) => task.workflow_key === workflowKey)
+
+    const score = (task: TaskPublic) => {
+      const raw = task.last_touched_at || task.created_at
+      if (!raw) return 0
+      const parsed = new Date(raw).getTime()
+      return Number.isNaN(parsed) ? 0 : parsed
+    }
+
+    return filtered
+      .slice()
+      .sort((a, b) => score(b) - score(a) || a.title.localeCompare(b.title))
   }, [tasks, workflowKey])
 
   return (
@@ -667,7 +809,7 @@ export function TasksPage() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
           {visibleTasks.map((task) => (
             <TaskDialog key={task.id} task={task} />
           ))}
