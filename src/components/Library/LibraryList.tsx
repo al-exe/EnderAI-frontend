@@ -96,7 +96,13 @@ function dropLeadingHeading(body: string): string {
 
 function formatTimestamp(ts: string | null): string | null {
   if (!ts) return null
-  return new Date(ts).toLocaleString()
+  const date = new Date(ts)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
 }
 
 function BodyPreview({ body }: { body: string }) {
