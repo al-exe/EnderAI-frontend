@@ -763,7 +763,7 @@ export function TasksPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2 md:shrink-0">
+        <div className="flex items-center gap-2 md:shrink-0 md:ml-auto">
           <Select value={workflowKey} onValueChange={setWorkflowKey}>
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="Workflow" />
