@@ -18,9 +18,7 @@ function Library() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Library</h1>
-        <p className="text-muted-foreground">
-          What I've learned so far.
-        </p>
+        <p className="text-muted-foreground">What we've learned so far</p>
       </div>
 
       <LibraryList />

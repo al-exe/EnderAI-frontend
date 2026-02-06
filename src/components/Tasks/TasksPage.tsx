@@ -747,9 +747,9 @@ export function TasksPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-2">
+      <div>
         <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
-        <p className="text-muted-foreground">The state of all of your work</p>
+        <p className="text-muted-foreground">The state of your work</p>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center gap-3">
