@@ -285,7 +285,7 @@ export function LibraryList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex-1">
           <div className="text-sm font-medium mb-1">Search</div>
           <div className="relative">
@@ -299,43 +299,45 @@ export function LibraryList() {
           </div>
         </div>
 
-        <div className="sm:w-[260px]">
-          <div className="text-sm font-medium mb-1">Bucket</div>
-          <Select
-            value={workflowKey || "all"}
-            onValueChange={(v) => setWorkflowKey(v === "all" ? "" : v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All buckets" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All buckets</SelectItem>
-              {bucketsQuery.data?.data.map((b) => (
-                <SelectItem key={b.workflow_key} value={b.workflow_key}>
-                  {b.bucket_name} ({b.count})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
+          <div className="sm:w-[260px]">
+            <div className="text-sm font-medium mb-1">Bucket</div>
+            <Select
+              value={workflowKey || "all"}
+              onValueChange={(v) => setWorkflowKey(v === "all" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All buckets" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All buckets</SelectItem>
+                {bucketsQuery.data?.data.map((b) => (
+                  <SelectItem key={b.workflow_key} value={b.workflow_key}>
+                    {b.bucket_name} ({b.count})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="sm:w-[200px]">
-          <div className="text-sm font-medium mb-1">Kind</div>
-          <Select
-            value={kind}
-            onValueChange={(v) => setKind(v as LibraryItemKind | "all")}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="recipe">recipe</SelectItem>
-              <SelectItem value="checklist">checklist</SelectItem>
-              <SelectItem value="decision">decision</SelectItem>
-              <SelectItem value="pitfall">pitfall</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="sm:w-[200px]">
+            <div className="text-sm font-medium mb-1">Kind</div>
+            <Select
+              value={kind}
+              onValueChange={(v) => setKind(v as LibraryItemKind | "all")}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="recipe">recipe</SelectItem>
+                <SelectItem value="checklist">checklist</SelectItem>
+                <SelectItem value="decision">decision</SelectItem>
+                <SelectItem value="pitfall">pitfall</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
