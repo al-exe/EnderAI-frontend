@@ -222,6 +222,18 @@ function groupByBucket(
 
     map.set(workflowKey, { workflowKey, bucketName, items: [item] })
   }
+  // Sort items within each bucket by last_used_at (descending).
+  // Fall back to created_at when last_used_at is null/invalid.
+  function sortKeyMs(it: LibraryItemPublic): number {
+    const ts = it.last_used_at ?? it.created_at
+    if (!ts) return 0
+    const ms = new Date(ts).getTime()
+    return Number.isNaN(ms) ? 0 : ms
+  }
+
+  for (const g of map.values()) {
+    g.items.sort((a, b) => sortKeyMs(b) - sortKeyMs(a))
+  }
 
   return Array.from(map.values()).sort((a, b) =>
     a.bucketName.localeCompare(b.bucketName),
@@ -285,11 +297,11 @@ export function LibraryList() {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <div className="w-full">
-          <div className="text-sm font-medium mb-1">Search</div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-9"
+              aria-label="Search library items"
               placeholder="Search title/body/bucket"
               value={qInput}
               onChange={(e) => setQInput(e.target.value)}
@@ -299,12 +311,11 @@ export function LibraryList() {
 
         <div className="w-full flex flex-col gap-3 sm:w-auto sm:flex-row sm:items-end sm:justify-end">
           <div className="sm:w-[260px]">
-            <div className="text-sm font-medium mb-1">Bucket</div>
             <Select
               value={workflowKey || "all"}
               onValueChange={(v) => setWorkflowKey(v === "all" ? "" : v)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Filter by bucket">
                 <SelectValue placeholder="All buckets" />
               </SelectTrigger>
               <SelectContent>
