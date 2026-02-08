@@ -231,7 +231,6 @@ function groupByBucket(
 export function LibraryList() {
   const [workflowKey, setWorkflowKey] = useState<string>("")
   const [qInput, setQInput] = useState<string>("")
-  const [kind, setKind] = useState<LibraryItemKind | "all">("all")
 
   const q = useDebouncedValue(qInput, 750)
 
@@ -249,12 +248,11 @@ export function LibraryList() {
   }, [bucketsQuery.data])
 
   const itemsQuery = useQuery({
-    queryKey: ["library", { workflowKey, q, kind }],
+    queryKey: ["library", { workflowKey, q }],
     queryFn: () =>
       readLibraryItems({
         workflow_key: workflowKey,
         q,
-        kind: kind === "all" ? undefined : kind,
         current_only: true,
         skip: 0,
         limit: 200,
@@ -316,25 +314,6 @@ export function LibraryList() {
                     {b.bucket_name} ({b.count})
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="sm:w-[200px]">
-            <div className="text-sm font-medium mb-1">Kind</div>
-            <Select
-              value={kind}
-              onValueChange={(v) => setKind(v as LibraryItemKind | "all")}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="recipe">recipe</SelectItem>
-                <SelectItem value="checklist">checklist</SelectItem>
-                <SelectItem value="decision">decision</SelectItem>
-                <SelectItem value="pitfall">pitfall</SelectItem>
               </SelectContent>
             </Select>
           </div>
