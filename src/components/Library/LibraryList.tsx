@@ -285,8 +285,8 @@ export function LibraryList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="w-full sm:flex-1">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div className="w-full">
           <div className="text-sm font-medium mb-1">Search</div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -299,7 +299,7 @@ export function LibraryList() {
           </div>
         </div>
 
-        <div className="w-full flex flex-col gap-3 sm:w-auto sm:flex-row sm:items-end sm:shrink-0 sm:ml-auto">
+        <div className="w-full flex flex-col gap-3 sm:w-auto sm:flex-row sm:items-end sm:justify-end">
           <div className="sm:w-[260px]">
             <div className="text-sm font-medium mb-1">Bucket</div>
             <Select
