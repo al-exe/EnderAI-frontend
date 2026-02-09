@@ -104,9 +104,7 @@ export function ExecutionsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Executions</h1>
-        <p className="text-muted-foreground">
-          Per-attempt records under a thread
-        </p>
+        <p className="text-muted-foreground">Instances of work under a thread</p>
       </div>
 
       <div className="w-full">
