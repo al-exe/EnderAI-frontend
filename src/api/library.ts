@@ -1,12 +1,12 @@
 import { OpenAPI, type CancelablePromise } from "@/client"
 import { request } from "@/client/core/request"
 
-export type LibraryItemKind = "recipe" | "pitfall" | "decision" | "checklist"
+export type ArtifactKind = "recipe" | "pitfall" | "decision" | "checklist"
 
-export interface LibraryItemPublic {
+export interface ArtifactPublic {
   id: string
   workflow_key: string
-  kind: LibraryItemKind
+  kind: ArtifactKind
   title: string
   body_mdc: string
   tags: Record<string, unknown>
@@ -17,8 +17,8 @@ export interface LibraryItemPublic {
   superseded_by_id: string | null
 }
 
-export interface LibraryItemsPublic {
-  data: LibraryItemPublic[]
+export interface ArtifactsPublic {
+  data: ArtifactPublic[]
   count: number
 }
 
@@ -34,7 +34,7 @@ export interface WorkflowKeysPublic {
 
 export interface ReadLibraryItemsParams {
   workflow_key?: string
-  kind?: LibraryItemKind
+  kind?: ArtifactKind
   q?: string
   current_only?: boolean
   skip?: number
@@ -43,13 +43,13 @@ export interface ReadLibraryItemsParams {
 
 export function readLibraryItems(
   params: ReadLibraryItemsParams = {},
-): CancelablePromise<LibraryItemsPublic> {
+): CancelablePromise<ArtifactsPublic> {
   const workflow_key = params.workflow_key?.trim() || undefined
   const q = params.q?.trim() || undefined
 
   return request(OpenAPI, {
     method: "GET",
-    url: "/api/v1/library/",
+    url: "/api/v1/artifacts/",
     query: {
       workflow_key,
       kind: params.kind,
@@ -66,7 +66,7 @@ export function readLibraryWorkflowKeys(params: {
 } = {}): CancelablePromise<WorkflowKeysPublic> {
   return request(OpenAPI, {
     method: "GET",
-    url: "/api/v1/library/workflow-keys",
+    url: "/api/v1/artifacts/workflow-keys",
     query: {
       current_only: params.current_only,
     },

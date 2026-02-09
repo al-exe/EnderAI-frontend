@@ -1,9 +1,9 @@
 import { OpenAPI, type CancelablePromise } from "@/client"
 import { request } from "@/client/core/request"
 
-import type { LibraryItemPublic } from "@/api/library"
+import type { ArtifactPublic } from "@/api/library"
 
-export interface TaskPublic {
+export interface ThreadPublic {
   id: string
   title: string
   workflow_key: string
@@ -16,14 +16,14 @@ export interface TaskPublic {
   last_touched_at: string | null
 }
 
-export interface TasksPublic {
-  data: TaskPublic[]
+export interface ThreadsPublic {
+  data: ThreadPublic[]
   count: number
 }
 
-export interface RunPublic {
+export interface ExecutionPublic {
   id: string
-  task_id: string
+  thread_id: string
   targets: unknown[]
   started_at: string | null
   ended_at: string | null
@@ -31,14 +31,14 @@ export interface RunPublic {
   summary: string | null
 }
 
-export interface RunsPublic {
-  data: RunPublic[]
+export interface ExecutionsPublic {
+  data: ExecutionPublic[]
   count: number
 }
 
-export interface RunEventPublic {
+export interface EventPublic {
   id: number
-  run_id: string
+  execution_id: string
   ts: string | null
   type: string
   message: string | null
@@ -46,21 +46,26 @@ export interface RunEventPublic {
   supersedes_event_id: number | null
 }
 
-export type RunLibraryRelation = "used" | "created" | "promoted" | "superseded"
+export type ExecutionArtifactRelation =
+  | "used"
+  | "created"
+  | "promoted"
+  | "superseded"
 
-export interface RunMemoryLinkPublic {
-  relation: RunLibraryRelation
+export interface ExecutionArtifactLinkPublic {
+  relation: ExecutionArtifactRelation
   created_at: string | null
-  library_item: LibraryItemPublic
+  artifact: ArtifactPublic
 }
 
-export interface RunDetailPublic {
-  run: RunPublic
-  events: RunEventPublic[]
-  memory_links: RunMemoryLinkPublic[]
+export interface ExecutionDetailPublic {
+  execution: ExecutionPublic
+  thread: ThreadPublic
+  events: EventPublic[]
+  artifact_links: ExecutionArtifactLinkPublic[]
 }
 
-export interface ReadTasksParams {
+export interface ReadThreadsParams {
   workflow_key?: string
   status?: string
   q?: string
@@ -68,16 +73,23 @@ export interface ReadTasksParams {
   limit?: number
 }
 
-export function readTasks(
-  params: ReadTasksParams = {},
-): CancelablePromise<TasksPublic> {
+export interface ReadExecutionsParams {
+  thread_id?: string
+  status?: string
+  skip?: number
+  limit?: number
+}
+
+export function readThreads(
+  params: ReadThreadsParams = {},
+): CancelablePromise<ThreadsPublic> {
   const workflow_key = params.workflow_key?.trim() || undefined
   const status = params.status?.trim() || undefined
   const q = params.q?.trim() || undefined
 
   return request(OpenAPI, {
     method: "GET",
-    url: "/api/v1/tasks/",
+    url: "/api/v1/threads/",
     query: {
       workflow_key,
       status,
@@ -88,15 +100,33 @@ export function readTasks(
   })
 }
 
-export function readTaskRuns(
-  taskId: string,
-  params: { skip?: number; limit?: number } = {},
-): CancelablePromise<RunsPublic> {
+export function readExecutions(
+  params: ReadExecutionsParams = {},
+): CancelablePromise<ExecutionsPublic> {
+  const thread_id = params.thread_id?.trim() || undefined
+  const status = params.status?.trim() || undefined
+
   return request(OpenAPI, {
     method: "GET",
-    url: "/api/v1/tasks/{task_id}/runs",
+    url: "/api/v1/executions/",
+    query: {
+      thread_id,
+      status,
+      skip: params.skip,
+      limit: params.limit,
+    },
+  })
+}
+
+export function readThreadExecutions(
+  threadId: string,
+  params: { skip?: number; limit?: number } = {},
+): CancelablePromise<ExecutionsPublic> {
+  return request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/threads/{thread_id}/executions",
     path: {
-      task_id: taskId,
+      thread_id: threadId,
     },
     query: {
       skip: params.skip,
@@ -105,32 +135,34 @@ export function readTaskRuns(
   })
 }
 
-export function readRunDetail(runId: string): CancelablePromise<RunDetailPublic> {
+export function readExecutionDetail(
+  executionId: string,
+): CancelablePromise<ExecutionDetailPublic> {
   return request(OpenAPI, {
     method: "GET",
-    url: "/api/v1/runs/{run_id}/detail",
+    url: "/api/v1/executions/{execution_id}/detail",
     path: {
-      run_id: runId,
+      execution_id: executionId,
     },
   })
 }
 
 
-export interface TaskTitleUpdate {
+export interface ThreadTitleUpdate {
   title: string
 }
 
-export function updateTaskTitle(
-  taskId: string,
-  body: TaskTitleUpdate,
-): CancelablePromise<TaskPublic> {
+export function updateThreadTitle(
+  threadId: string,
+  body: ThreadTitleUpdate,
+): CancelablePromise<ThreadPublic> {
   const title = body.title.trim()
 
   return request(OpenAPI, {
     method: "PATCH",
-    url: "/api/v1/tasks/{task_id}",
+    url: "/api/v1/threads/{thread_id}",
     path: {
-      task_id: taskId,
+      thread_id: threadId,
     },
     body: {
       title,

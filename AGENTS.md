@@ -1,6 +1,6 @@
 # EnderAI — MCP-First Agent Rules (Portable Template)
 
-Last updated: 2026-02-07
+Last updated: 2026-02-09
 
 This is a clean, MCP-first rules template intended to be imported into new IDEs/agents. It assumes **no repo-specific local memory directories exist** and treats the EnderAI backend (via MCP) as the primary persistence layer.
 
@@ -9,9 +9,9 @@ When the user’s goal is to **prove EnderAI’s usefulness** (examples: “use 
 - Only use **EnderAI remote memory via MCP** (`enderai_request`, `enderai_openapi`, `enderai_health_check`) + user-provided context.
 - Do NOT read or search local repo files for “what to do next” (no `rg`, no opening `architecture/*.mdc`, no scripts, no local logs, no git history).
 - Allowed local access is limited to the minimum required to connect MCP (for example: reading `mcp.json` for the MCP endpoint auth header).
-- If a step can’t be derived from MCP memory, stop and ask the user to either:
+  - If a step can’t be derived from MCP memory, stop and ask the user to either:
   - grant explicit permission to consult local repo docs/code, or
-  - store the missing guidance in EnderAI Library first, then retry using MCP-only.
+  - store the missing guidance in EnderAI Artifacts first, then retry using MCP-only.
 
 ## IDE Setup (One-Time)
 - Configure an MCP server entry that points to your deployed MCP endpoint (example: `https://enderai-mcp.onrender.com/mcp`).
@@ -30,6 +30,14 @@ When the user’s goal is to **prove EnderAI’s usefulness** (examples: “use 
 3. **MCP-first memory**
    - Read and write “memory” through the EnderAI backend API (preferably via MCP tools).
    - Do not connect directly to Postgres or run ad-hoc SQL unless the user explicitly approves it.
+
+## Core Model (Thread vs Execution vs Artifact vs Event)
+- **Thread**: the durable bucket of "what was done". Create a new Thread only when the work is meaningfully new (not just a repeat).
+- **Execution**: a single execution instance under a Thread. Most user requests (chats) should create an Execution.
+- **Artifact**: reusable execution artifacts explaining how work was done (paths explored, decisions, commands). Link them to Executions.
+- **Event**: append-only log under an Execution. Every MCP -> EnderAI API call should be recorded as an Event, including:
+  - intent (why the call was made)
+  - request args + response (secrets redacted)
 
 ## Required MCP Tools
 Use these MCP tools (names may vary by client, but the intent is the same):
@@ -50,33 +58,60 @@ There are two independent auth layers:
 Rules:
 - Treat backend access tokens as ephemeral session secrets.
 
-## Default Start-Of-Task Flow (Context Hydration)
-1. Decide on a `workflow_key` (short, stable identifier for the workstream). If unsure, query workflow buckets: `GET /api/v1/library/workflow-keys`.
-2. Fetch only the memory you need to avoid noise:
-   - Tasks: `GET /api/v1/tasks/?workflow_key=...&q=...`
-   - Library: `GET /api/v1/library/?workflow_key=...&q=...&current_only=true`
-3. If you need deeper “what happened last time” context:
-   - Runs: `GET /api/v1/tasks/{task_id}/runs`, then `GET /api/v1/runs/{run_id}/detail`
-4. Inject the retrieved context into the current plan:
-   - Summarize the minimal relevant items and include IDs (`task_id`, `run_id`, `library_item.id`) so the user can audit and navigate.
+## Default Start-Of-Execution Flow (Most User Requests)
+1. Decide on a `workflow_key` (short, stable identifier for the workstream). If unsure, query buckets: `GET /api/v1/artifacts/workflow-keys`.
+2. Determine whether this work belongs under an existing Thread:
+   - Search Threads: `GET /api/v1/threads/?workflow_key=...&q=...`
+   - If needed, inspect recent history: `GET /api/v1/threads/{thread_id}/executions`, then `GET /api/v1/executions/{execution_id}/detail`
+3. Start an Execution (this will reuse or create the Thread):
+   - `POST /api/v1/executions/start` with a stable `(workflow_key, intent_key)` and a human title.
+   - Do **not** create Threads directly via `POST /api/v1/threads/` for normal work; it bypasses Execution creation and breaks auditability.
+4. From this point on, every backend call should be attributable:
+   - Record each MCP -> EnderAI API call as an Event with request+response+intent.
+   - Link any created/used Artifacts to this Execution.
 
-## Memory: What To Write (When User Opts In)
-Only write memory when the user explicitly opts in (examples: “log this”, “keep memory updated”).
+## Artifacts: What To Write (Default)
+Default behavior: create/update artifacts so Executions are explainable and repeatable.
+
+Rules:
+- Create at least 1 Artifact per Execution capturing the key exploration and decisions (paths, commands, APIs, pitfalls).
+- Link created artifacts to the Execution (`relation=created`).
+- If an Artifact was consulted during the Execution, link it as `used`.
+- If the user explicitly asks not to persist anything, skip artifact writes for that Execution.
 
 Preferred write patterns:
-- Rename/update task title: `PATCH /api/v1/tasks/{task_id}` with `{ "title": "..." }`
-- Create reusable guidance (Library item): `POST /api/v1/library/` (may require elevated permissions)
-- Update reusable guidance by superseding: `PUT /api/v1/library/{id}` (creates a new row; never edits in place)
+- Rename/update thread title: `PATCH /api/v1/threads/{thread_id}` with `{ "title": "..." }`
+- Create reusable guidance (Artifact): `POST /api/v1/artifacts/` (may require elevated permissions)
+- Update reusable guidance by superseding: `PUT /api/v1/artifacts/{id}` (creates a new row; never edits in place)
 
-If the backend API does not provide an endpoint for what you want to log (for example: runs, run events, links):
+If the backend API does not provide an endpoint for what you want to log (for example: executions, events, links):
 - Do not fall back to direct SQL by default.
 - Keep an ephemeral worklog in the chat/IDE scratchpad and propose/implement the missing API endpoint.
 
-## Default End-Of-Task Flow (Promotion)
-1. Confirm with the user what should become durable memory (what’s reusable vs task-specific).
-2. Prefer “durable, reusable” content in Library items (supersede instead of editing in place).
-3. Prefer task hygiene updates that keep navigation easy (rename task titles to match reality).
-4. Never store secrets in written memory.
+## Events (Execution Event Log)
+Goal: The Execution's Event Log should show the **EnderAI tool calls** (MCP) made during execution.
+
+Preferred:
+- Use an MCP server that supports per-call audit metadata, and pass an intent for each `enderai_request`:
+  - `audit.intent`: why you are making the call (human readable)
+  - (optional) `audit.execution_id`: if you need to force which execution to attach to
+
+Fallback (if the MCP server does not auto-log):
+- `POST /api/v1/executions/{execution_id}/events` with `{ "type": "mcp", "message": "<intent>", "data": { "request": ..., "response": ... } }`
+
+Never store secrets in events (redact tokens/passwords).
+
+## Artifact Links (Execution <-> Artifact)
+- When you **create** an Artifact during an Execution, link it:
+  - `POST /api/v1/executions/{execution_id}/artifact-links` with `{ "artifact_id": "...", "relation": "created" }`
+- When you **use** an existing Artifact to guide the Execution, link it:
+  - `POST /api/v1/executions/{execution_id}/artifact-links` with `{ "artifact_id": "...", "relation": "used" }`
+
+## Default End-Of-Execution Flow (Promotion)
+1. Confirm with the user what should become durable artifacts (what’s reusable vs execution-specific).
+2. Prefer “durable, reusable” content in Artifacts (supersede instead of editing in place).
+3. Prefer thread hygiene updates that keep navigation easy (rename thread titles to match reality).
+4. Never store secrets in written artifacts.
 
 ## API Calling Conventions (Via `enderai_request`)
 - Always send `path` starting with `/` (never a full URL).
@@ -91,4 +126,3 @@ If the backend API does not provide an endpoint for what you want to log (for ex
 - A transient `404 Not Found` from the MCP endpoint often indicates a stale session after a redeploy/spin-down. Retry so the client re-initializes.
 - If hand-rolling MCP HTTP requests (not recommended), you must use JSON-RPC and include `Accept: application/json, text/event-stream`.
   - Never invent `Mcp-Session-Id` values; initialize first and use the server-issued session id.
-

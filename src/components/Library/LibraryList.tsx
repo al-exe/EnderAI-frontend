@@ -3,8 +3,8 @@ import { Search } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import {
-  type LibraryItemKind,
-  type LibraryItemPublic,
+  type ArtifactKind,
+  type ArtifactPublic,
   readLibraryItems,
   readLibraryWorkflowKeys,
 } from "@/api/library"
@@ -53,7 +53,7 @@ function humanizeWorkflowKey(workflowKey: string): string {
 }
 
 function kindBadgeVariant(
-  kind: LibraryItemKind,
+  kind: ArtifactKind,
 ): "default" | "secondary" | "destructive" | "outline" {
   switch (kind) {
     case "recipe":
@@ -129,7 +129,7 @@ function LibraryCard({
   item,
   bucketName,
 }: {
-  item: LibraryItemPublic
+  item: ArtifactPublic
   bucketName: string
 }) {
   const body = useMemo(() => normalizeBodyMdc(item.body_mdc), [item.body_mdc])
@@ -141,7 +141,7 @@ function LibraryCard({
       <DialogTrigger asChild>
         <button
           type="button"
-          aria-label={`Open library item: ${item.title}`}
+          aria-label={`Open artifact: ${item.title}`}
           className="w-full text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Card className="transition-colors hover:bg-muted/50 h-full flex flex-col">
@@ -212,11 +212,11 @@ function LibraryListSkeleton() {
 type BucketGroup = {
   workflowKey: string
   bucketName: string
-  items: LibraryItemPublic[]
+  items: ArtifactPublic[]
 }
 
 function groupByBucket(
-  items: LibraryItemPublic[],
+  items: ArtifactPublic[],
   bucketNameByKey: Map<string, string>,
 ): BucketGroup[] {
   const map = new Map<string, BucketGroup>()
@@ -236,7 +236,7 @@ function groupByBucket(
   }
   // Sort items within each bucket by last_used_at (descending).
   // Fall back to created_at when last_used_at is null/invalid.
-  function sortKeyMs(it: LibraryItemPublic): number {
+  function sortKeyMs(it: ArtifactPublic): number {
     const ts = it.last_used_at ?? it.created_at
     if (!ts) return 0
     const ms = new Date(ts).getTime()
@@ -259,7 +259,7 @@ export function LibraryList() {
   const q = useDebouncedValue(qInput, 750)
 
   const bucketsQuery = useQuery({
-    queryKey: ["libraryBuckets"],
+    queryKey: ["artifactBuckets"],
     queryFn: () => readLibraryWorkflowKeys({ current_only: true }),
   })
 
@@ -272,7 +272,7 @@ export function LibraryList() {
   }, [bucketsQuery.data])
 
   const itemsQuery = useQuery({
-    queryKey: ["library", { workflowKey, q }],
+    queryKey: ["artifacts", { workflowKey, q }],
     queryFn: () =>
       readLibraryItems({
         workflow_key: workflowKey,
@@ -290,7 +290,7 @@ export function LibraryList() {
   if (itemsQuery.isError) {
     return (
       <div className="rounded-lg border p-4">
-        <div className="font-medium">Couldn’t load Library</div>
+        <div className="font-medium">Couldn’t load Artifacts</div>
         <div className="text-sm text-muted-foreground">
           {(itemsQuery.error as Error).message}
         </div>
@@ -313,7 +313,7 @@ export function LibraryList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              aria-label="Search library items"
+              aria-label="Search artifacts"
               placeholder="Search title/body/bucket"
               value={qInput}
               onChange={(e) => setQInput(e.target.value)}
@@ -352,7 +352,7 @@ export function LibraryList() {
           <div className="rounded-full bg-muted p-4 mb-4">
             <Search className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold">No library items found</h3>
+          <h3 className="text-lg font-semibold">No artifacts found</h3>
           <p className="text-muted-foreground">Try clearing your filters</p>
         </div>
       ) : (
