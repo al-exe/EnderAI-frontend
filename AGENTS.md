@@ -66,7 +66,15 @@ Rules:
 3. Start an Execution (this will reuse or create the Thread):
    - `POST /api/v1/executions/start` with a stable `(workflow_key, intent_key)` and a human title.
    - Do **not** create Threads directly via `POST /api/v1/threads/` for normal work; it bypasses Execution creation and breaks auditability.
-4. From this point on, every backend call should be attributable:
+4. Artifact discovery (required): after you have an `execution_id`, search for existing Artifacts that might help.
+   - Derive 2-5 targeted queries from the user goal (feature name, component, file path, error string, etc).
+   - Search artifacts (start narrow): `GET /api/v1/artifacts/?workflow_key=<workflow_key>&q=<query>&limit=10`
+     - If results are empty, broaden: drop `workflow_key` and/or vary the query terms.
+   - Open promising candidates: `GET /api/v1/artifacts/{id}`
+   - If you actually apply an Artifact's guidance during the Execution, link it so it appears in the Execution modal:
+     - `POST /api/v1/executions/{execution_id}/artifact-links` with `{ "artifact_id": "...", "relation": "used" }`
+   - Do not link artifacts you merely skimmed; only link artifacts that influenced your decisions/actions.
+5. From this point on, every backend call should be attributable:
    - Record each MCP -> EnderAI API call as an Event with request+response+intent.
    - Link any created/used Artifacts to this Execution.
 
@@ -77,6 +85,7 @@ Rules:
 - Create at least 1 Artifact per Execution capturing the key exploration and decisions (paths, commands, APIs, pitfalls).
 - Link created artifacts to the Execution (`relation=created`).
 - If an Artifact was consulted during the Execution, link it as `used`.
+- Before creating a new Artifact, search for an existing one on the same topic and prefer superseding/updating it (avoids duplicates).
 - If the user explicitly asks not to persist anything, skip artifact writes for that Execution.
 
 Preferred write patterns:
