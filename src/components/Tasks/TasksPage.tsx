@@ -265,9 +265,7 @@ export function ExecutionDetailDialog({
                 </Badge>
               ) : null}
             </div>
-            <DialogTitle>
-              {execution?.summary ?? "Execution detail"}
-            </DialogTitle>
+            <DialogTitle>{execution?.summary ?? "Execution"}</DialogTitle>
             <div className="text-xs text-muted-foreground">
               {startedAt ? `Started ${startedAt}` : null}
               {startedAt && endedAt ? " • " : null}
