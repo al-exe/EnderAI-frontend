@@ -59,7 +59,9 @@ function Items() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Items</h1>
-          <p className="text-muted-foreground">Create and manage your items</p>
+          <p className="text-muted-foreground">
+            These are demo objects separate from EnderAI
+          </p>
         </div>
         <AddItem />
       </div>
