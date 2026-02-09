@@ -752,44 +752,44 @@ export function TasksPage() {
         <p className="text-muted-foreground">The state of your work</p>
       </div>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search tasks…"
-            className="pl-9"
-          />
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div className="w-full">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              aria-label="Search tasks"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search tasks…"
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 md:shrink-0 md:ml-auto">
-          <Select value={workflowKey} onValueChange={setWorkflowKey}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Workflow" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All workflows</SelectItem>
-              {workflowKeys.map((key) => (
-                <SelectItem key={key} value={key}>
-                  {humanizeWorkflowKey(key)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              setQ("")
-              setWorkflowKey("all")
-            }}
-          >
-            Reset
-          </Button>
+        <div className="w-full flex flex-col gap-3 sm:w-auto sm:flex-row sm:items-end sm:justify-end">
+          <div className="sm:w-[260px]">
+            <Select value={workflowKey} onValueChange={setWorkflowKey}>
+              <SelectTrigger aria-label="Filter by workflow">
+                <SelectValue placeholder="All workflows" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All workflows</SelectItem>
+                {workflowKeys.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {humanizeWorkflowKey(key)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
+
+      {!isLoading && !isError ? (
+        <div className="text-sm text-muted-foreground">
+          {visibleTasks.length} task{visibleTasks.length === 1 ? "" : "s"}
+        </div>
+      ) : null}
 
       {isLoading ? (
         <TasksSkeleton />
