@@ -3,10 +3,10 @@ import { Search } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import {
-  readLibraryItems,
-  readLibraryWorkflowKeys,
   type LibraryItemKind,
   type LibraryItemPublic,
+  readLibraryItems,
+  readLibraryWorkflowKeys,
 } from "@/api/library"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -52,11 +52,9 @@ function humanizeWorkflowKey(workflowKey: string): string {
     .join(" ")
 }
 
-function kindBadgeVariant(kind: LibraryItemKind):
-  | "default"
-  | "secondary"
-  | "destructive"
-  | "outline" {
+function kindBadgeVariant(
+  kind: LibraryItemKind,
+): "default" | "secondary" | "destructive" | "outline" {
   switch (kind) {
     case "recipe":
       return "default"
@@ -109,10 +107,15 @@ function BodyPreview({ body }: { body: string }) {
   const preview = useMemo(() => {
     const normalized = dropLeadingHeading(body).replace(/\s+/g, " ").trim()
     if (normalized.length <= 220) return normalized
-    return normalized.slice(0, 220).trimEnd() + "…"
+    return `${normalized.slice(0, 220).trimEnd()}…`
   }, [body])
 
-  return <p className="text-sm text-muted-foreground">{preview}</p>
+  // Clamp + min-height keeps cards visually uniform across varying content lengths.
+  return (
+    <p className="text-sm text-muted-foreground line-clamp-3 min-h-[3.75rem]">
+      {preview}
+    </p>
+  )
 }
 
 function LibraryCard({
@@ -134,7 +137,7 @@ function LibraryCard({
           aria-label={`Open library item: ${item.title}`}
           className="w-full text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          <Card className="transition-colors hover:bg-muted/50">
+          <Card className="transition-colors hover:bg-muted/50 h-full flex flex-col">
             <CardHeader className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={kindBadgeVariant(item.kind)}>{item.kind}</Badge>
@@ -142,9 +145,11 @@ function LibraryCard({
                   <Badge variant="secondary">user</Badge>
                 )}
               </div>
-              <div className="font-semibold leading-tight">{item.title}</div>
+              <div className="font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">
+                {item.title}
+              </div>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="flex-1 flex flex-col gap-2">
               <BodyPreview body={body} />
               <div className="text-xs text-muted-foreground">
                 {createdAt ? `Created ${createdAt}` : null}
