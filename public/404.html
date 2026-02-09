@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting…</title>
+    <script>
+      // GitHub Pages doesn't support SPA deep links (e.g. /library). It serves 404.html instead.
+      // Redirect back to index with the original path encoded so the app can navigate client-side.
+      (function () {
+        var l = window.location;
+        var parts = l.pathname.split("/");
+        var repoBase = parts.length > 1 ? "/" + parts[1] : "";
+        var rest = l.pathname.slice(repoBase.length) || "/";
+        var target =
+          repoBase +
+          "/?p=" +
+          encodeURIComponent(rest + l.search + l.hash);
+        l.replace(target);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
+

@@ -48,6 +48,16 @@ declare module "@tanstack/react-router" {
   }
 }
 
+// GitHub Pages deep-link support: see `public/404.html`.
+// If we were redirected from a 404, navigate to the originally requested route.
+const redirectParam = new URLSearchParams(window.location.search).get("p")
+if (redirectParam) {
+  const url = new URL(window.location.href)
+  url.searchParams.delete("p")
+  window.history.replaceState(null, "", url.pathname + url.search + url.hash)
+  void router.navigate({ to: redirectParam, replace: true })
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
