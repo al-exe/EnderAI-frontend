@@ -64,11 +64,18 @@ function formatTimestamp(ts: string | null): string | null {
   if (!ts) return null
   const date = new Date(ts)
   if (Number.isNaN(date.getTime())) return null
-  return date.toLocaleTimeString(undefined, {
+
+  const time = date.toLocaleTimeString(undefined, {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   })
+
+  const mm = String(date.getMonth() + 1).padStart(2, "0")
+  const dd = String(date.getDate()).padStart(2, "0")
+  const yyyy = String(date.getFullYear())
+
+  return `${time}, ${mm}/${dd}/${yyyy}`
 }
 
 function formatTimestampNoSeconds(ts: string | null): string | null {
