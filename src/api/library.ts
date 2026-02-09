@@ -1,4 +1,4 @@
-import { OpenAPI, type CancelablePromise } from "@/client"
+import { type CancelablePromise, OpenAPI } from "@/client"
 import { request } from "@/client/core/request"
 
 export type ArtifactKind = "recipe" | "pitfall" | "decision" | "checklist"
@@ -61,9 +61,9 @@ export function readLibraryItems(
   })
 }
 
-export function readLibraryWorkflowKeys(params: {
-  current_only?: boolean
-} = {}): CancelablePromise<WorkflowKeysPublic> {
+export function readLibraryWorkflowKeys(
+  params: { current_only?: boolean } = {},
+): CancelablePromise<WorkflowKeysPublic> {
   return request(OpenAPI, {
     method: "GET",
     url: "/api/v1/artifacts/workflow-keys",

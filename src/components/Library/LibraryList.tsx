@@ -290,7 +290,7 @@ export function LibraryList() {
   if (itemsQuery.isError) {
     return (
       <div className="rounded-lg border p-4">
-        <div className="font-medium">Couldn’t load Artifacts</div>
+        <div className="font-medium">Couldn’t load units of context memory</div>
         <div className="text-sm text-muted-foreground">
           {(itemsQuery.error as Error).message}
         </div>

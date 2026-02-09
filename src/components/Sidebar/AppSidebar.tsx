@@ -1,9 +1,9 @@
 import {
+  Brain,
   Briefcase,
   ClipboardCheck,
   Home,
   Spool,
-  Terminal,
   Users,
 } from "lucide-react"
 
@@ -24,7 +24,7 @@ const baseItems: Item[] = [
   { icon: Briefcase, title: "Items", path: "/items" },
   { icon: Spool, title: "Threads", path: "/tasks" },
   { icon: ClipboardCheck, title: "Executions", path: "/executions" },
-  { icon: Terminal, title: "Artifacts", path: "/library" },
+  { icon: Brain, title: "Units of context memory", path: "/library" },
 ]
 
 export function AppSidebar() {

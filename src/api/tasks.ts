@@ -1,7 +1,6 @@
-import { OpenAPI, type CancelablePromise } from "@/client"
-import { request } from "@/client/core/request"
-
 import type { ArtifactPublic } from "@/api/library"
+import { type CancelablePromise, OpenAPI } from "@/client"
+import { request } from "@/client/core/request"
 
 export interface ThreadPublic {
   id: string
@@ -146,7 +145,6 @@ export function readExecutionDetail(
     },
   })
 }
-
 
 export interface ThreadTitleUpdate {
   title: string
