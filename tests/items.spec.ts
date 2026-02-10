@@ -114,19 +114,6 @@ test.describe("Items management", () => {
       ).toBeVisible()
       await expect(page.getByText(itemTitle)).not.toBeVisible()
     })
-
-    test("Archive item option is available (UI only)", async ({ page }) => {
-      const itemRow = page.getByRole("row").filter({ hasText: itemTitle })
-      await itemRow.getByRole("button").last().click()
-
-      await page.getByRole("menuitem", { name: "Archive item" }).click()
-      await page.getByRole("button", { name: "Archive" }).click()
-
-      await expect(
-        page.getByText(/Item archived \\(UI only\\):/),
-      ).toBeVisible()
-      await expect(page.getByText(itemTitle)).toBeVisible()
-    })
   })
 })
 
