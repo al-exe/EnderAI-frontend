@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_layout/tasks")({
   head: () => ({
     meta: [
       {
-        title: "Threads",
+        title: "Topics",
       },
     ],
   }),

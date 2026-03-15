@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_layout/executions")({
   head: () => ({
     meta: [
       {
-        title: "Executions",
+        title: "Cases",
       },
     ],
   }),

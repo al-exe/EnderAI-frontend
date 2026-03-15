@@ -100,9 +100,9 @@ export function ExecutionsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Executions</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Cases</h1>
         <p className="text-muted-foreground">
-          Instances of work under a thread
+          Bounded work sessions under a topic
         </p>
       </div>
 
@@ -111,17 +111,17 @@ export function ExecutionsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             className="pl-9"
-            aria-label="Search executions"
+            aria-label="Search cases"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search executions…"
+            placeholder="Search cases…"
           />
         </div>
       </div>
 
       {!isLoading && !isError ? (
         <div className="text-sm text-muted-foreground">
-          {visible.length} execution{visible.length === 1 ? "" : "s"}
+          {visible.length} case{visible.length === 1 ? "" : "s"}
         </div>
       ) : null}
 
@@ -129,14 +129,14 @@ export function ExecutionsPage() {
         <ExecutionsSkeleton />
       ) : isError ? (
         <div className="rounded-md border bg-muted/20 p-6">
-          <div className="font-medium">Couldn’t load Executions</div>
+          <div className="font-medium">Couldn’t load Cases</div>
           <div className="text-sm text-muted-foreground">
-            Check backend connectivity/auth and that execution tables exist.
+            Check backend connectivity/auth and that case data is available.
           </div>
         </div>
       ) : visible.length === 0 ? (
         <div className="rounded-md border bg-muted/20 p-6">
-          <div className="font-medium">No executions found</div>
+          <div className="font-medium">No cases found</div>
           <div className="text-sm text-muted-foreground">
             Try clearing your filters.
           </div>
@@ -164,7 +164,7 @@ export function ExecutionsPage() {
                     </span>
                   </div>
                   <div className="font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">
-                    {execution.summary ?? "Execution"}
+                    {execution.summary ?? "Case"}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-1">
