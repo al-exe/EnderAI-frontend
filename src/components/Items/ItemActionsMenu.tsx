@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import ArchiveItem from "../Items/ArchiveItem"
 import DeleteItem from "../Items/DeleteItem"
+import DuplicateItem from "../Items/DuplicateItem"
 import EditItem from "../Items/EditItem"
 
 interface ItemActionsMenuProps {
@@ -28,6 +29,7 @@ export const ItemActionsMenu = ({ item }: ItemActionsMenuProps) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <EditItem item={item} onSuccess={() => setOpen(false)} />
+        <DuplicateItem item={item} onSuccess={() => setOpen(false)} />
         <ArchiveItem item={item} onSuccess={() => setOpen(false)} />
         <DeleteItem id={item.id} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>
