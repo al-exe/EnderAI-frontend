@@ -387,7 +387,7 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   )
   await expect(
     page.getByText(
-      "Add this block to ~/.codex/config.toml, then start a new Codex session.",
+      "Add this block to ~/.codex/config.toml, then launch `codex` from that same shell.",
     ),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-config")).toContainText(

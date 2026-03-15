@@ -288,7 +288,9 @@ const ConnectAgent = () => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [copiedText, copy] = useCopyToClipboard()
   const [selectedClient, setSelectedClient] = useState<ClientKind>("codex")
-  const [credentialLabel, setCredentialLabel] = useState("Codex CLI")
+  const [credentialLabel, setCredentialLabel] = useState(
+    "Codex CLI (terminal)",
+  )
   const [hostedMcpUrl, setHostedMcpUrl] = useState(DEFAULT_HOSTED_MCP_URL)
   const [requiresMcpAuthorization, setRequiresMcpAuthorization] = useState(true)
   const [selectedCredentialId, setSelectedCredentialId] = useState<
@@ -335,9 +337,12 @@ const ConnectAgent = () => {
       selectedClient === "codex" &&
       credentialLabel === "Generic MCP client"
     ) {
-      setCredentialLabel("Codex CLI")
+      setCredentialLabel("Codex CLI (terminal)")
     }
-    if (selectedClient === "generic" && credentialLabel === "Codex CLI") {
+    if (
+      selectedClient === "generic" &&
+      credentialLabel === "Codex CLI (terminal)"
+    ) {
       setCredentialLabel("Generic MCP client")
     }
   }, [credentialLabel, selectedClient])
@@ -387,7 +392,9 @@ const ConnectAgent = () => {
   const trimmedLabel = credentialLabel.trim()
   const nextLabel =
     trimmedLabel ||
-    (selectedClient === "codex" ? "Codex CLI" : "Generic MCP client")
+    (selectedClient === "codex"
+      ? "Codex CLI (terminal)"
+      : "Generic MCP client")
 
   const backendToken =
     revealedCredential?.credentialId === selectedCredentialId
@@ -462,7 +469,7 @@ const ConnectAgent = () => {
                   data-testid="agent-credential-label"
                   value={credentialLabel}
                   onChange={(event) => setCredentialLabel(event.target.value)}
-                  placeholder="Codex CLI"
+                  placeholder="Codex CLI (terminal)"
                 />
               </div>
 
@@ -506,8 +513,8 @@ const ConnectAgent = () => {
                 </li>
                 <li className="flex gap-2">
                   <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
-                  Copy/paste setup for Codex CLI or a generic MCP client. Pick
-                  one path, not both.
+                  Copy/paste setup for terminal Codex CLI or a generic MCP
+                  client. Pick one path, not both.
                 </li>
                 <li className="flex gap-2">
                   <RotateCw className="mt-0.5 size-4 shrink-0 text-primary" />A
@@ -531,9 +538,11 @@ const ConnectAgent = () => {
                 <CheckCircle2 className="size-4" />
                 <AlertTitle>Where this goes</AlertTitle>
                 <AlertDescription>
-                  Use the TOML block below for Codex. Export the env vars in the
-                  shell that launches Codex, add the MCP entry to
-                  `~/.codex/config.toml`, then start a new Codex session.
+                  Use the TOML block below for terminal `codex`. Run the env
+                  exports in the same shell before launching `codex`, then add
+                  the MCP entry to `~/.codex/config.toml`. The Codex VS Code
+                  sidebar chat is a separate process and does not inherit env
+                  vars from an already-open integrated terminal.
                 </AlertDescription>
               </Alert>
             </TabsContent>
@@ -571,7 +580,7 @@ const ConnectAgent = () => {
                 }
                 description={
                   selectedClient === "codex"
-                    ? "Run these in the shell that starts Codex."
+                    ? "Run these in the same shell that will launch `codex`."
                     : "Paste these values when your MCP client prompts for them. You do not need to export env vars for the generic hosted flow."
                 }
                 snippet={envSnippet}
@@ -590,7 +599,7 @@ const ConnectAgent = () => {
                 }
                 description={
                   selectedClient === "codex"
-                    ? "Add this block to ~/.codex/config.toml, then start a new Codex session."
+                    ? "Add this block to ~/.codex/config.toml, then launch `codex` from that same shell."
                     : "Paste this into your local MCP config file. This is an alternative to the Codex flow, not an additional step."
                 }
                 snippet={clientSnippet}
