@@ -373,40 +373,14 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   await page.getByTestId("create-agent-credential").click()
 
   await expect(page.getByText("Agent credential created")).toBeVisible()
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
-    "ENDERAI_BACKEND_TOKEN",
-  )
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
-    "ENDERAI_MCP_TOKEN",
-  )
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
-    "backend-token-123",
-  )
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
-    "mcp-token-abc",
-  )
-  await expect(
-    page.getByText(
-      "Add this block to ~/.codex/config.toml, then launch `codex` from that same shell.",
-    ),
-  ).toBeVisible()
-  await expect(page.getByTestId("connect-agent-config")).toContainText(
-    "X-EnderAI-Backend-Token",
-  )
-  await expect(page.getByTestId("connect-agent-config")).toContainText(
-    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
-  )
-
-  await page.getByRole("tab", { name: "Generic MCP client" }).click()
-
   await expect(page.getByText("Token values to enter")).toBeVisible()
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
-    "enderai_backend_token",
-  )
   await expect(page.getByTestId("connect-agent-token")).toContainText(
     "enderai_mcp_token",
   )
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
+    "enderai_backend_token",
+  )
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
     "backend-token-123",
   )
   await expect(page.getByTestId("connect-agent-token")).toContainText(
@@ -419,12 +393,63 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
     '"inputs"',
   )
   await expect(page.getByTestId("connect-agent-config")).toContainText(
+    `Bearer ${"$"}{input:enderai_mcp_token}`,
+  )
+  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
     '"id": "enderai_backend_token"',
   )
+  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
+    `${"$"}{input:enderai_backend_token}`,
+  )
+
+  await page.getByRole("tab", { name: "Codex CLI" }).click()
+
+  await expect(
+    page.getByText(
+      "Add this block to ~/.codex/config.toml, then launch `codex` from that same shell.",
+    ),
+  ).toBeVisible()
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "ENDERAI_MCP_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
+    "ENDERAI_BACKEND_TOKEN",
+  )
   await expect(page.getByTestId("connect-agent-config")).toContainText(
-    `Bearer ${"$"}{input:enderai_mcp_token}`,
+    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
+  )
+  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
+    "X-EnderAI-Backend-Token",
+  )
+
+  await page.getByRole("tab", { name: "Generic MCP client" }).click()
+
+  await page.getByLabel("Use a single user-scoped MCP token").click()
+
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "enderai_backend_token",
   )
   await expect(page.getByTestId("connect-agent-config")).toContainText(
     `${"$"}{input:enderai_backend_token}`,
+  )
+
+  await page.getByRole("tab", { name: "Codex CLI" }).click()
+
+  await expect(
+    page.getByText(
+      "Add this block to ~/.codex/config.toml, then launch `codex` from that same shell.",
+    ),
+  ).toBeVisible()
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "ENDERAI_MCP_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "ENDERAI_BACKEND_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    "X-EnderAI-Backend-Token",
   )
 })

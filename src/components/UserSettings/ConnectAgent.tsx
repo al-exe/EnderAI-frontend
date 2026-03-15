@@ -57,11 +57,13 @@ function formatTimestamp(value: string | null): string {
 function buildEnvSnippet(
   backendToken: string,
   mcpToken: string,
-  requiresMcpAuthorization: boolean,
+  useSingleTokenFlow: boolean,
 ): string {
   return [
-    requiresMcpAuthorization ? `export ENDERAI_MCP_TOKEN="${mcpToken}"` : null,
-    `export ENDERAI_BACKEND_TOKEN="${backendToken}"`,
+    `export ENDERAI_MCP_TOKEN="${mcpToken}"`,
+    useSingleTokenFlow
+      ? null
+      : `export ENDERAI_BACKEND_TOKEN="${backendToken}"`,
   ]
     .filter(Boolean)
     .join("\n")
@@ -70,46 +72,47 @@ function buildEnvSnippet(
 function buildGenericTokenSnippet(
   backendToken: string,
   mcpToken: string,
-  requiresMcpAuthorization: boolean,
+  useSingleTokenFlow: boolean,
 ): string {
-  const tokens: Record<string, string> = {}
-
-  if (requiresMcpAuthorization) {
-    tokens.enderai_mcp_token = mcpToken
+  const tokens: Record<string, string> = {
+    enderai_mcp_token: mcpToken,
   }
-  tokens.enderai_backend_token = backendToken
+  if (!useSingleTokenFlow) {
+    tokens.enderai_backend_token = backendToken
+  }
 
   return JSON.stringify(tokens, null, 2)
 }
 
 function buildGenericConfigSnippet(
   hostedMcpUrl: string,
-  requiresMcpAuthorization: boolean,
+  useSingleTokenFlow: boolean,
 ): string {
-  const inputs = []
-
-  if (requiresMcpAuthorization) {
-    inputs.push({
+  const inputs = [
+    {
       type: "promptString",
       id: "enderai_mcp_token",
       description: "EnderAI MCP token",
       password: true,
+    },
+  ]
+
+  if (!useSingleTokenFlow) {
+    inputs.push({
+      type: "promptString",
+      id: "enderai_backend_token",
+      description: "EnderAI backend token",
+      password: true,
     })
   }
 
-  inputs.push({
-    type: "promptString",
-    id: "enderai_backend_token",
-    description: "EnderAI backend token",
-    password: true,
-  })
-
-  const headers: Record<string, string> = {}
-
-  if (requiresMcpAuthorization) {
-    headers.Authorization = `Bearer ${"$"}{input:enderai_mcp_token}`
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${"$"}{input:enderai_mcp_token}`,
   }
-  headers["X-EnderAI-Backend-Token"] = `${"$"}{input:enderai_backend_token}`
+
+  if (!useSingleTokenFlow) {
+    headers["X-EnderAI-Backend-Token"] = `${"$"}{input:enderai_backend_token}`
+  }
 
   return JSON.stringify(
     {
@@ -129,18 +132,34 @@ function buildGenericConfigSnippet(
 
 function buildCodexConfigSnippet(
   hostedMcpUrl: string,
-  requiresMcpAuthorization: boolean,
+  useSingleTokenFlow: boolean,
 ): string {
   return [
     "[mcp_servers.enderai-api]",
     `url = "${hostedMcpUrl}"`,
-    'env_http_headers = { "X-EnderAI-Backend-Token" = "ENDERAI_BACKEND_TOKEN" }',
-    requiresMcpAuthorization
-      ? 'bearer_token_env_var = "ENDERAI_MCP_TOKEN"'
-      : null,
+    useSingleTokenFlow
+      ? null
+      : 'env_http_headers = { "X-EnderAI-Backend-Token" = "ENDERAI_BACKEND_TOKEN" }',
+    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
   ]
     .filter(Boolean)
     .join("\n")
+}
+
+function buildAuthModeDescription(useSingleTokenFlow: boolean): string {
+  if (useSingleTokenFlow) {
+    return "Recommended hosted flow. The user-scoped MCP token is validated by the hosted MCP and reused for backend API calls, so you only need one token in the client."
+  }
+
+  return "Legacy dual-token flow. Use this only if you intentionally want a separate backend token forwarded in X-EnderAI-Backend-Token."
+}
+
+function buildAuthModeShortDescription(useSingleTokenFlow: boolean): string {
+  if (useSingleTokenFlow) {
+    return "One token. Recommended for Codex and other hosted MCP clients."
+  }
+
+  return "Two tokens. Legacy compatibility path."
 }
 
 function SnippetBlock({
@@ -287,12 +306,12 @@ const ConnectAgent = () => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [copiedText, copy] = useCopyToClipboard()
-  const [selectedClient, setSelectedClient] = useState<ClientKind>("codex")
+  const [selectedClient, setSelectedClient] = useState<ClientKind>("generic")
   const [credentialLabel, setCredentialLabel] = useState(
     "Codex CLI (terminal)",
   )
   const [hostedMcpUrl, setHostedMcpUrl] = useState(DEFAULT_HOSTED_MCP_URL)
-  const [requiresMcpAuthorization, setRequiresMcpAuthorization] = useState(true)
+  const [useSingleTokenFlow, setUseSingleTokenFlow] = useState(true)
   const [selectedCredentialId, setSelectedCredentialId] = useState<
     string | null
   >(null)
@@ -404,24 +423,22 @@ const ConnectAgent = () => {
     revealedCredential?.credentialId === selectedCredentialId
       ? revealedCredential.mcpToken
       : null
+  const hasTokensForSelectedFlow =
+    mcpToken !== null && (useSingleTokenFlow || backendToken !== null)
   const envSnippet =
-    backendToken && (!requiresMcpAuthorization || mcpToken)
+    hasTokensForSelectedFlow
       ? selectedClient === "codex"
-        ? buildEnvSnippet(
-            backendToken,
-            mcpToken ?? "",
-            requiresMcpAuthorization,
-          )
+        ? buildEnvSnippet(backendToken ?? "", mcpToken ?? "", useSingleTokenFlow)
         : buildGenericTokenSnippet(
-            backendToken,
+            backendToken ?? "",
             mcpToken ?? "",
-            requiresMcpAuthorization,
+            useSingleTokenFlow,
           )
       : null
-  const clientSnippet = backendToken
+  const clientSnippet = hasTokensForSelectedFlow
     ? selectedClient === "codex"
-      ? buildCodexConfigSnippet(hostedMcpUrl.trim(), requiresMcpAuthorization)
-      : buildGenericConfigSnippet(hostedMcpUrl.trim(), requiresMcpAuthorization)
+      ? buildCodexConfigSnippet(hostedMcpUrl.trim(), useSingleTokenFlow)
+      : buildGenericConfigSnippet(hostedMcpUrl.trim(), useSingleTokenFlow)
     : null
 
   return (
@@ -475,19 +492,18 @@ const ConnectAgent = () => {
 
               <div className="flex items-start gap-3 rounded-lg border bg-muted/20 p-3">
                 <Checkbox
-                  id="shared-mcp-token"
-                  checked={requiresMcpAuthorization}
+                  id="single-token-flow"
+                  checked={useSingleTokenFlow}
                   onCheckedChange={(checked) =>
-                    setRequiresMcpAuthorization(checked === true)
+                    setUseSingleTokenFlow(checked === true)
                   }
                 />
                 <div className="space-y-1">
-                  <Label htmlFor="shared-mcp-token" className="cursor-pointer">
-                    Hosted MCP requires an MCP bearer token
+                  <Label htmlFor="single-token-flow" className="cursor-pointer">
+                    Use a single user-scoped MCP token
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Keep this on if your hosted MCP expects `Authorization:
-                    Bearer ${"{env:ENDERAI_MCP_TOKEN}"}`.
+                    {buildAuthModeDescription(useSingleTokenFlow)}
                   </p>
                 </div>
               </div>
@@ -508,8 +524,9 @@ const ConnectAgent = () => {
               <ul className="mt-3 space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" />
-                  A dedicated MCP token plus backend token for this agent
-                  install
+                  A user-scoped MCP token for the recommended hosted flow, plus
+                  a legacy backend token if you still need the older dual-token
+                  wiring
                 </li>
                 <li className="flex gap-2">
                   <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -530,22 +547,9 @@ const ConnectAgent = () => {
             onValueChange={(value) => setSelectedClient(value as ClientKind)}
           >
             <TabsList>
-              <TabsTrigger value="codex">Codex CLI</TabsTrigger>
               <TabsTrigger value="generic">Generic MCP client</TabsTrigger>
+              <TabsTrigger value="codex">Codex CLI</TabsTrigger>
             </TabsList>
-            <TabsContent value="codex" className="mt-4">
-              <Alert>
-                <CheckCircle2 className="size-4" />
-                <AlertTitle>Where this goes</AlertTitle>
-                <AlertDescription>
-                  Use the TOML block below for terminal `codex`. Run the env
-                  exports in the same shell before launching `codex`, then add
-                  the MCP entry to `~/.codex/config.toml`. The Codex VS Code
-                  sidebar chat is a separate process and does not inherit env
-                  vars from an already-open integrated terminal.
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
             <TabsContent value="generic" className="mt-4">
               <Alert>
                 <CheckCircle2 className="size-4" />
@@ -555,12 +559,26 @@ const ConnectAgent = () => {
                   Paste it into your local MCP config, reconnect the client, and
                   enter the prompted token values when asked. Do not also add
                   the Codex config. The hosted MCP service is already running.
+                  Recommended if your client supports prompted MCP inputs.{" "}
+                  {buildAuthModeShortDescription(useSingleTokenFlow)}
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
+            <TabsContent value="codex" className="mt-4">
+              <Alert>
+                <CheckCircle2 className="size-4" />
+                <AlertTitle>Where this goes</AlertTitle>
+                <AlertDescription>
+                  Use the TOML block below for terminal `codex`. Run the env
+                  exports in the same shell before launching `codex`, then add
+                  the MCP entry to `~/.codex/config.toml`.{" "}
+                  {buildAuthModeShortDescription(useSingleTokenFlow)}
                 </AlertDescription>
               </Alert>
             </TabsContent>
           </Tabs>
 
-          {backendToken && envSnippet && clientSnippet ? (
+          {envSnippet && clientSnippet ? (
             <div className="space-y-4">
               <Alert>
                 <CheckCircle2 className="size-4" />
