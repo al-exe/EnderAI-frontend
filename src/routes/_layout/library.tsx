@@ -18,7 +18,7 @@ function Library() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Artifacts</h1>
-        <p className="text-muted-foreground">AI actions and intentions</p>
+        <p className="text-muted-foreground">Units of context memory</p>
       </div>
 
       <LibraryList />

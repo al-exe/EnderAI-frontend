@@ -1,20 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Search } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
-
+import type { ArtifactPublic } from "@/api/library"
 import {
+  type EventPublic,
+  type ExecutionArtifactLinkPublic,
+  type ExecutionArtifactRelation,
+  type ExecutionDetailPublic,
+  type ExecutionPublic,
   readExecutionDetail,
   readThreadExecutions,
   readThreads,
-  updateThreadTitle,
-  type ExecutionArtifactRelation,
-  type ExecutionArtifactLinkPublic,
-  type ExecutionDetailPublic,
-  type ExecutionPublic,
-  type EventPublic,
   type ThreadPublic,
+  updateThreadTitle,
 } from "@/api/tasks"
-import type { ArtifactPublic } from "@/api/library"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -167,7 +166,10 @@ function ArtifactDialog({
   item: ArtifactPublic | null
   bucketName: string | null
 }) {
-  const body = useMemo(() => normalizeBodyMdc(item?.body_mdc ?? ""), [item?.body_mdc])
+  const body = useMemo(
+    () => normalizeBodyMdc(item?.body_mdc ?? ""),
+    [item?.body_mdc],
+  )
   const createdAt = formatTimestamp(item?.created_at ?? null)
   const lastUsedAt = formatTimestamp(item?.last_used_at ?? null)
 
@@ -222,12 +224,14 @@ export function ExecutionDetailDialog({
   })
 
   const [artifactOpen, setArtifactOpen] = useState(false)
-  const [selectedArtifact, setSelectedArtifact] = useState<ArtifactPublic | null>(
-    null,
-  )
+  const [selectedArtifact, setSelectedArtifact] =
+    useState<ArtifactPublic | null>(null)
 
   const grouped = useMemo(() => {
-    const groups: Record<ExecutionArtifactRelation, ExecutionArtifactLinkPublic[]> = {
+    const groups: Record<
+      ExecutionArtifactRelation,
+      ExecutionArtifactLinkPublic[]
+    > = {
       used: [],
       created: [],
       promoted: [],
@@ -261,7 +265,9 @@ export function ExecutionDetailDialog({
                 </Badge>
               ) : null}
             </div>
-            <DialogTitle>{execution?.summary ?? "Execution detail"}</DialogTitle>
+            <DialogTitle>
+              {execution?.summary ?? "Execution detail"}
+            </DialogTitle>
             <div className="text-xs text-muted-foreground">
               {startedAt ? `Started ${startedAt}` : null}
               {startedAt && endedAt ? " • " : null}
@@ -285,44 +291,50 @@ export function ExecutionDetailDialog({
             <div className="space-y-6">
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold tracking-tight">Artifacts</h3>
+                  <h3 className="text-sm font-semibold tracking-tight">
+                    Artifacts
+                  </h3>
                 </div>
 
                 <div className="space-y-4">
-                  {(Object.keys(grouped) as ExecutionArtifactRelation[]).map((relation) => {
-                    const links = grouped[relation]
-                    if (!links.length) return null
+                  {(Object.keys(grouped) as ExecutionArtifactRelation[]).map(
+                    (relation) => {
+                      const links = grouped[relation]
+                      if (!links.length) return null
 
-                    return (
-                      <div key={relation} className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant={relationVariant(relation)}>
-                            {formatBadgeLabel(relation)}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {links.length}
-                          </span>
+                      return (
+                        <div key={relation} className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={relationVariant(relation)}>
+                              {formatBadgeLabel(relation)}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {links.length}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {links.map((link) => (
+                              <Button
+                                key={`${relation}:${link.artifact.id}`}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="justify-start max-w-full"
+                                onClick={() => {
+                                  setSelectedArtifact(link.artifact)
+                                  setArtifactOpen(true)
+                                }}
+                              >
+                                <span className="truncate">
+                                  {link.artifact.title}
+                                </span>
+                              </Button>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {links.map((link) => (
-                            <Button
-                              key={`${relation}:${link.artifact.id}`}
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="justify-start max-w-full"
-                              onClick={() => {
-                                setSelectedArtifact(link.artifact)
-                                setArtifactOpen(true)
-                              }}
-                            >
-                              <span className="truncate">{link.artifact.title}</span>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    },
+                  )}
 
                   {(data?.artifact_links?.length ?? 0) === 0 ? (
                     <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">
@@ -337,8 +349,7 @@ export function ExecutionDetailDialog({
                   <h3 className="text-sm font-semibold tracking-tight">
                     Events
                   </h3>
-                  <div className="text-xs text-muted-foreground">
-                  </div>
+                  <div className="text-xs text-muted-foreground" />
                 </div>
 
                 <div className="space-y-3">
@@ -398,11 +409,7 @@ function RunEventRow({ event }: { event: EventPublic }) {
   )
 }
 
-function ThreadDialog({
-  thread,
-}: {
-  thread: ThreadPublic
-}) {
+function ThreadDialog({ thread }: { thread: ThreadPublic }) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -499,7 +506,9 @@ function ThreadDialog({
                   <Badge variant={taskStatusVariant(thread.status)}>
                     {formatBadgeLabel(thread.status)}
                   </Badge>
-                  <div className="text-xs text-muted-foreground">{bucketName}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {bucketName}
+                  </div>
                 </div>
                 <div className="font-semibold leading-tight">{threadTitle}</div>
               </CardHeader>
@@ -568,10 +577,9 @@ function ThreadDialog({
                   )}
                 </div>
               ) : (
-                <span
-                  role="button"
-                  tabIndex={0}
-                  className="cursor-text"
+                <button
+                  type="button"
+                  className="cursor-text bg-transparent p-0 text-left"
                   title="Double-click to rename"
                   onDoubleClick={() => {
                     setTitleDraft(threadTitle)
@@ -586,16 +594,16 @@ function ThreadDialog({
                   }}
                 >
                   {threadTitle}
-                </span>
+                </button>
               )}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-5">
             <section className="space-y-2">
-                <div className="text-sm font-semibold tracking-tight">
-                  Description
-                </div>
+              <div className="text-sm font-semibold tracking-tight">
+                Description
+              </div>
               <div className="rounded-md border bg-muted/20 p-4 text-sm leading-relaxed">
                 {thread.goal ?? (
                   <span className="italic text-muted-foreground">

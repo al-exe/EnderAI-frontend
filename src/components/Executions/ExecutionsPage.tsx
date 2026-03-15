@@ -2,10 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Search } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import {
-  readExecutions,
-  type ExecutionPublic,
-} from "@/api/tasks"
+import { type ExecutionPublic, readExecutions } from "@/api/tasks"
 import { ExecutionDetailDialog } from "@/components/Tasks/TasksPage"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -104,7 +101,9 @@ export function ExecutionsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Executions</h1>
-        <p className="text-muted-foreground">Instances of work under a thread</p>
+        <p className="text-muted-foreground">
+          Instances of work under a thread
+        </p>
       </div>
 
       <div className="w-full">

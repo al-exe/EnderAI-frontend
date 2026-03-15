@@ -7,10 +7,10 @@
     <script>
       // GitHub Pages doesn't support SPA deep links (e.g. /library). It serves 404.html instead.
       // Redirect back to index with the original path encoded so the app can navigate client-side.
-      (function () {
+      (() => {
         var l = window.location;
         var parts = l.pathname.split("/");
-        var repoBase = parts.length > 1 ? "/" + parts[1] : "";
+        var repoBase = parts.length > 1 ? `/${parts[1]}` : "";
         var rest = l.pathname.slice(repoBase.length) || "/";
         var target =
           repoBase +
