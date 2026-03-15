@@ -39,7 +39,8 @@ type ClientKind = "codex" | "generic"
 
 interface RevealedCredential {
   credentialId: string
-  token: string
+  backendToken: string
+  mcpToken: string
 }
 
 function formatTimestamp(value: string | null): string {
@@ -55,12 +56,11 @@ function formatTimestamp(value: string | null): string {
 
 function buildEnvSnippet(
   backendToken: string,
-  requiresSharedMcpToken: boolean,
+  mcpToken: string,
+  requiresMcpAuthorization: boolean,
 ): string {
   return [
-    requiresSharedMcpToken
-      ? 'export ENDERAI_MCP_TOKEN="<get-this-from-EnderAI>"'
-      : null,
+    requiresMcpAuthorization ? `export ENDERAI_MCP_TOKEN="${mcpToken}"` : null,
     `export ENDERAI_BACKEND_TOKEN="${backendToken}"`,
   ]
     .filter(Boolean)
@@ -69,10 +69,10 @@ function buildEnvSnippet(
 
 function buildGenericConfigSnippet(
   hostedMcpUrl: string,
-  requiresSharedMcpToken: boolean,
+  requiresMcpAuthorization: boolean,
 ): string {
   const headers = [
-    requiresSharedMcpToken
+    requiresMcpAuthorization
       ? `        "Authorization": "Bearer \${env:ENDERAI_MCP_TOKEN}",`
       : null,
     `        "X-EnderAI-Backend-Token": "\${env:ENDERAI_BACKEND_TOKEN}"`,
@@ -95,13 +95,13 @@ ${headers}
 
 function buildCodexConfigSnippet(
   hostedMcpUrl: string,
-  requiresSharedMcpToken: boolean,
+  requiresMcpAuthorization: boolean,
 ): string {
   return [
     "[mcp_servers.enderai-api]",
     `url = "${hostedMcpUrl}"`,
     'env_http_headers = { "X-EnderAI-Backend-Token" = "ENDERAI_BACKEND_TOKEN" }',
-    requiresSharedMcpToken
+    requiresMcpAuthorization
       ? 'bearer_token_env_var = "ENDERAI_MCP_TOKEN"'
       : null,
   ]
@@ -190,7 +190,7 @@ function CredentialCard({
               {isRevoked ? "Revoked" : "Active"}
             </Badge>
             {hasRevealedToken ? (
-              <Badge variant="success">Token ready</Badge>
+              <Badge variant="success">Tokens ready</Badge>
             ) : null}
           </div>
           <div className="space-y-1 text-sm text-muted-foreground">
@@ -256,7 +256,7 @@ const ConnectAgent = () => {
   const [selectedClient, setSelectedClient] = useState<ClientKind>("codex")
   const [credentialLabel, setCredentialLabel] = useState("Codex CLI")
   const [hostedMcpUrl, setHostedMcpUrl] = useState(DEFAULT_HOSTED_MCP_URL)
-  const [requiresSharedMcpToken, setRequiresSharedMcpToken] = useState(true)
+  const [requiresMcpAuthorization, setRequiresMcpAuthorization] = useState(true)
   const [selectedCredentialId, setSelectedCredentialId] = useState<
     string | null
   >(null)
@@ -315,7 +315,8 @@ const ConnectAgent = () => {
       setSelectedCredentialId(result.credential.id)
       setRevealedCredential({
         credentialId: result.credential.id,
-        token: result.access_token,
+        backendToken: result.backend_access_token ?? result.access_token,
+        mcpToken: result.mcp_access_token,
       })
       queryClient.invalidateQueries({ queryKey: ["agentCredentials"] })
     },
@@ -329,7 +330,8 @@ const ConnectAgent = () => {
       setSelectedCredentialId(result.credential.id)
       setRevealedCredential({
         credentialId: result.credential.id,
-        token: result.access_token,
+        backendToken: result.backend_access_token ?? result.access_token,
+        mcpToken: result.mcp_access_token,
       })
       queryClient.invalidateQueries({ queryKey: ["agentCredentials"] })
     },
@@ -355,15 +357,20 @@ const ConnectAgent = () => {
 
   const backendToken =
     revealedCredential?.credentialId === selectedCredentialId
-      ? revealedCredential.token
+      ? revealedCredential.backendToken
       : null
-  const envSnippet = backendToken
-    ? buildEnvSnippet(backendToken, requiresSharedMcpToken)
-    : null
+  const mcpToken =
+    revealedCredential?.credentialId === selectedCredentialId
+      ? revealedCredential.mcpToken
+      : null
+  const envSnippet =
+    backendToken && (!requiresMcpAuthorization || mcpToken)
+      ? buildEnvSnippet(backendToken, mcpToken ?? "", requiresMcpAuthorization)
+      : null
   const clientSnippet = backendToken
     ? selectedClient === "codex"
-      ? buildCodexConfigSnippet(hostedMcpUrl.trim(), requiresSharedMcpToken)
-      : buildGenericConfigSnippet(hostedMcpUrl.trim(), requiresSharedMcpToken)
+      ? buildCodexConfigSnippet(hostedMcpUrl.trim(), requiresMcpAuthorization)
+      : buildGenericConfigSnippet(hostedMcpUrl.trim(), requiresMcpAuthorization)
     : null
 
   return (
@@ -375,8 +382,8 @@ const ConnectAgent = () => {
             Connect Agent
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Generate a per-user backend token and the local MCP config your
-            client needs.
+            Generate per-user MCP and backend tokens plus the local MCP config
+            your client needs.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -418,14 +425,14 @@ const ConnectAgent = () => {
               <div className="flex items-start gap-3 rounded-lg border bg-muted/20 p-3">
                 <Checkbox
                   id="shared-mcp-token"
-                  checked={requiresSharedMcpToken}
+                  checked={requiresMcpAuthorization}
                   onCheckedChange={(checked) =>
-                    setRequiresSharedMcpToken(checked === true)
+                    setRequiresMcpAuthorization(checked === true)
                   }
                 />
                 <div className="space-y-1">
                   <Label htmlFor="shared-mcp-token" className="cursor-pointer">
-                    Hosted MCP requires a shared bearer token
+                    Hosted MCP requires an MCP bearer token
                   </Label>
                   <p className="text-sm text-muted-foreground">
                     Keep this on if your hosted MCP expects `Authorization:
@@ -450,7 +457,8 @@ const ConnectAgent = () => {
               <ul className="mt-3 space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" />
-                  A dedicated backend token for this agent install
+                  A dedicated MCP token plus backend token for this agent
+                  install
                 </li>
                 <li className="flex gap-2">
                   <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -499,11 +507,11 @@ const ConnectAgent = () => {
             <div className="space-y-4">
               <Alert>
                 <CheckCircle2 className="size-4" />
-                <AlertTitle>Fresh backend token ready</AlertTitle>
+                <AlertTitle>Fresh tokens ready</AlertTitle>
                 <AlertDescription>
-                  This token is only shown right now. If you lose it, rotate the
-                  credential below to mint a fresh one and regenerate the
-                  config.
+                  These tokens are only shown right now. If you lose them,
+                  rotate the credential below to mint a fresh pair and
+                  regenerate the config.
                 </AlertDescription>
               </Alert>
 
@@ -540,11 +548,11 @@ const ConnectAgent = () => {
           ) : selectedCredential ? (
             <Alert>
               <RotateCw className="size-4" />
-              <AlertTitle>Rotate to reveal a fresh token</AlertTitle>
+              <AlertTitle>Rotate to reveal fresh tokens</AlertTitle>
               <AlertDescription>
-                You have a credential selected, but its token is not shown again
-                after creation. Rotate it below to mint a new backend token and
-                regenerate the setup snippets.
+                You have a credential selected, but its tokens are not shown
+                again after creation. Rotate it below to mint a new MCP/backend
+                token pair and regenerate the setup snippets.
               </AlertDescription>
             </Alert>
           ) : (

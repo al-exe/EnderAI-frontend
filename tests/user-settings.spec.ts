@@ -328,6 +328,8 @@ test("Connect Agent can generate env vars and config snippets", async ({
       body: JSON.stringify({
         credential: createdCredential,
         access_token: "backend-token-123",
+        backend_access_token: "backend-token-123",
+        mcp_access_token: "mcp-token-abc",
         token_type: "bearer",
       }),
     })
@@ -342,6 +344,8 @@ test("Connect Agent can generate env vars and config snippets", async ({
         body: JSON.stringify({
           credential: credentials.data[0],
           access_token: "backend-token-rotated",
+          backend_access_token: "backend-token-rotated",
+          mcp_access_token: "mcp-token-rotated",
           token_type: "bearer",
         }),
       })
@@ -373,12 +377,21 @@ test("Connect Agent can generate env vars and config snippets", async ({
     "ENDERAI_BACKEND_TOKEN",
   )
   await expect(page.getByTestId("connect-agent-env")).toContainText(
+    "ENDERAI_MCP_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-env")).toContainText(
     "backend-token-123",
+  )
+  await expect(page.getByTestId("connect-agent-env")).toContainText(
+    "mcp-token-abc",
   )
   await expect(
     page.getByText("Add this block to ~/.codex/config.toml."),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-config")).toContainText(
     "X-EnderAI-Backend-Token",
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
   )
 })

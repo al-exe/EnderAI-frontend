@@ -25,6 +25,8 @@ export interface AgentCredentialCreate {
 export interface AgentCredentialIssueResult {
   credential: AgentCredentialPublic
   access_token: string
+  backend_access_token: string
+  mcp_access_token: string
   token_type?: string
 }
 
