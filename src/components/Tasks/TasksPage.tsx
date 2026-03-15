@@ -181,7 +181,7 @@ function ArtifactDialog({
             {item?.kind ? (
               <Badge variant="outline">{item.kind}</Badge>
             ) : (
-              <Badge variant="outline">artifact</Badge>
+              <Badge variant="outline">note</Badge>
             )}
             {item?.promotion_mode === "user" && (
               <Badge variant="secondary">user</Badge>
@@ -265,7 +265,7 @@ export function ExecutionDetailDialog({
                 </Badge>
               ) : null}
             </div>
-            <DialogTitle>{execution?.summary ?? "Execution"}</DialogTitle>
+            <DialogTitle>{execution?.summary ?? "Case"}</DialogTitle>
             <div className="text-xs text-muted-foreground">
               {startedAt ? `Started ${startedAt}` : null}
               {startedAt && endedAt ? " • " : null}
@@ -280,7 +280,7 @@ export function ExecutionDetailDialog({
             </div>
           ) : isError ? (
             <div className="rounded-md border bg-muted/20 p-4">
-              <div className="font-medium">Couldn’t load Run detail</div>
+              <div className="font-medium">Couldn’t load Case detail</div>
               <div className="text-sm text-muted-foreground">
                 Check backend connectivity and auth.
               </div>
@@ -290,7 +290,7 @@ export function ExecutionDetailDialog({
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold tracking-tight">
-                    Artifacts
+                    Notes
                   </h3>
                 </div>
 
@@ -336,7 +336,7 @@ export function ExecutionDetailDialog({
 
                   {(data?.artifact_links?.length ?? 0) === 0 ? (
                     <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">
-                      No artifacts linked to this execution yet.
+                      No notes linked to this case yet.
                     </div>
                   ) : null}
                 </div>
@@ -443,7 +443,7 @@ function ThreadDialog({ thread }: { thread: ThreadPublic }) {
       queryClient.invalidateQueries({ queryKey: ["threads"] })
     },
     onError: () => {
-      setTitleError("Couldn’t rename thread. Check backend connectivity/auth.")
+      setTitleError("Couldn’t rename topic. Check backend connectivity/auth.")
     },
   })
 
@@ -495,7 +495,7 @@ function ThreadDialog({ thread }: { thread: ThreadPublic }) {
         <DialogTrigger asChild>
           <button
             type="button"
-            aria-label={`Open thread: ${threadTitle}`}
+            aria-label={`Open topic: ${threadTitle}`}
             className="w-full text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <Card className="transition-colors hover:bg-muted/50">
@@ -627,7 +627,7 @@ function ThreadDialog({ thread }: { thread: ThreadPublic }) {
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold tracking-tight">
-                  Executions
+                  Cases
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {data?.count ?? 0} total
@@ -641,7 +641,7 @@ function ThreadDialog({ thread }: { thread: ThreadPublic }) {
                 </div>
               ) : isError ? (
                 <div className="rounded-md border bg-muted/20 p-4">
-                  <div className="font-medium">Couldn’t load Executions</div>
+                  <div className="font-medium">Couldn’t load Cases</div>
                   <div className="text-sm text-muted-foreground">
                     Check backend connectivity and auth.
                   </div>
@@ -661,7 +661,7 @@ function ThreadDialog({ thread }: { thread: ThreadPublic }) {
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                         <div className="space-y-1">
                           <div className="font-medium leading-tight">
-                            {execution.summary ?? "Execution"}
+                            {execution.summary ?? "Case"}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {formatTimestamp(execution.started_at)}
@@ -678,7 +678,7 @@ function ThreadDialog({ thread }: { thread: ThreadPublic }) {
 
                   {(data?.data?.length ?? 0) === 0 ? (
                     <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">
-                      No executions recorded yet.
+                      No cases recorded yet.
                     </div>
                   ) : null}
                 </div>
@@ -761,8 +761,8 @@ export function TasksPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Threads</h1>
-        <p className="text-muted-foreground">Groupings of work by category</p>
+        <h1 className="text-2xl font-bold tracking-tight">Topics</h1>
+        <p className="text-muted-foreground">Recurring areas of work</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
@@ -771,10 +771,10 @@ export function TasksPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              aria-label="Search threads"
+              aria-label="Search topics"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search threads…"
+              placeholder="Search topics…"
             />
           </div>
         </div>
@@ -800,7 +800,7 @@ export function TasksPage() {
 
       {!isLoading && !isError ? (
         <div className="text-sm text-muted-foreground">
-          {visibleTasks.length} thread{visibleTasks.length === 1 ? "" : "s"}
+          {visibleTasks.length} topic{visibleTasks.length === 1 ? "" : "s"}
         </div>
       ) : null}
 
@@ -808,16 +808,16 @@ export function TasksPage() {
         <TasksSkeleton />
       ) : isError ? (
         <div className="rounded-md border bg-muted/20 p-6">
-          <div className="font-medium">Couldn’t load Threads</div>
+          <div className="font-medium">Couldn’t load Topics</div>
           <div className="text-sm text-muted-foreground">
-            Check backend connectivity/auth and that execution tables exist.
+            Check backend connectivity/auth and that topic/case data is available.
           </div>
         </div>
       ) : visibleTasks.length === 0 ? (
         <div className="rounded-md border bg-muted/20 p-6">
-          <div className="font-medium">No threads found</div>
+          <div className="font-medium">No topics found</div>
           <div className="text-sm text-muted-foreground">
-            Seed the execution tables or remove filters.
+            Seed the topic/case data or remove filters.
           </div>
         </div>
       ) : (

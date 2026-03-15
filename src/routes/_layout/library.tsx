@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_layout/library")({
   head: () => ({
     meta: [
       {
-        title: "Artifacts",
+        title: "Notes",
       },
     ],
   }),
@@ -17,8 +17,10 @@ function Library() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Artifacts</h1>
-        <p className="text-muted-foreground">Units of context memory</p>
+        <h1 className="text-2xl font-bold tracking-tight">Notes</h1>
+        <p className="text-muted-foreground">
+          Context notes captured under topics and cases
+        </p>
       </div>
 
       <LibraryList />
