@@ -406,7 +406,7 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
 
   await expect(
     page.getByText(
-      "Add this block to ~/.codex/config.toml, then launch `codex` from that same shell.",
+      "If you want new terminals to pick up the token automatically, use the persistent shell setup below instead of re-running `export` each time.",
     ),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-token")).toContainText(
@@ -421,6 +421,23 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   await expect(page.getByTestId("connect-agent-config")).not.toContainText(
     "X-EnderAI-Backend-Token",
   )
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("~/.enderai_mcp_token")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("chmod 600 ~/.enderai_mcp_token")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText('echo \'export ENDERAI_MCP_TOKEN=')
+  await expect(
+    page.getByText("Why use the file-based shell setup"),
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      "Directly writing `export ENDERAI_MCP_TOKEN=\"...\"` into `~/.bashrc` also works",
+    ),
+  ).toBeVisible()
 
   await page.getByRole("tab", { name: "Generic MCP client" }).click()
 
@@ -437,7 +454,7 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
 
   await expect(
     page.getByText(
-      "Add this block to ~/.codex/config.toml, then launch `codex` from that same shell.",
+      "If you want new terminals to pick up the token automatically, use the persistent shell setup below instead of re-running `export` each time.",
     ),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-token")).toContainText(
@@ -452,4 +469,13 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   await expect(page.getByTestId("connect-agent-config")).toContainText(
     "X-EnderAI-Backend-Token",
   )
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("~/.enderai_backend_token")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("chmod 600 ~/.enderai_backend_token")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("export ENDERAI_BACKEND_TOKEN")
 })
