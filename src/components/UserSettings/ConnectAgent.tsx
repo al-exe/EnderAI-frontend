@@ -67,30 +67,64 @@ function buildEnvSnippet(
     .join("\n")
 }
 
+function buildGenericTokenSnippet(
+  backendToken: string,
+  mcpToken: string,
+  requiresMcpAuthorization: boolean,
+): string {
+  const tokens: Record<string, string> = {}
+
+  if (requiresMcpAuthorization) {
+    tokens.enderai_mcp_token = mcpToken
+  }
+  tokens.enderai_backend_token = backendToken
+
+  return JSON.stringify(tokens, null, 2)
+}
+
 function buildGenericConfigSnippet(
   hostedMcpUrl: string,
   requiresMcpAuthorization: boolean,
 ): string {
-  const headers = [
-    requiresMcpAuthorization
-      ? `        "Authorization": "Bearer \${env:ENDERAI_MCP_TOKEN}",`
-      : null,
-    `        "X-EnderAI-Backend-Token": "\${env:ENDERAI_BACKEND_TOKEN}"`,
-  ]
-    .filter(Boolean)
-    .join("\n")
+  const inputs = []
 
-  return `{
-  "servers": {
-    "enderai-api": {
-      "type": "http",
-      "url": "${hostedMcpUrl}",
-      "headers": {
-${headers}
-      }
-    }
+  if (requiresMcpAuthorization) {
+    inputs.push({
+      type: "promptString",
+      id: "enderai_mcp_token",
+      description: "EnderAI MCP token",
+      password: true,
+    })
   }
-}`
+
+  inputs.push({
+    type: "promptString",
+    id: "enderai_backend_token",
+    description: "EnderAI backend token",
+    password: true,
+  })
+
+  const headers: Record<string, string> = {}
+
+  if (requiresMcpAuthorization) {
+    headers.Authorization = `Bearer ${"$"}{input:enderai_mcp_token}`
+  }
+  headers["X-EnderAI-Backend-Token"] = `${"$"}{input:enderai_backend_token}`
+
+  return JSON.stringify(
+    {
+      inputs,
+      servers: {
+        "enderai-api": {
+          type: "http",
+          url: hostedMcpUrl,
+          headers,
+        },
+      },
+    },
+    null,
+    2,
+  )
 }
 
 function buildCodexConfigSnippet(
@@ -365,7 +399,17 @@ const ConnectAgent = () => {
       : null
   const envSnippet =
     backendToken && (!requiresMcpAuthorization || mcpToken)
-      ? buildEnvSnippet(backendToken, mcpToken ?? "", requiresMcpAuthorization)
+      ? selectedClient === "codex"
+        ? buildEnvSnippet(
+            backendToken,
+            mcpToken ?? "",
+            requiresMcpAuthorization,
+          )
+        : buildGenericTokenSnippet(
+            backendToken,
+            mcpToken ?? "",
+            requiresMcpAuthorization,
+          )
       : null
   const clientSnippet = backendToken
     ? selectedClient === "codex"
@@ -382,8 +426,8 @@ const ConnectAgent = () => {
             Connect Agent
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Generate per-user MCP and backend tokens plus the local MCP config
-            your client needs.
+            Generate per-user tokens plus the client-specific setup snippet your
+            agent needs.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -462,7 +506,8 @@ const ConnectAgent = () => {
                 </li>
                 <li className="flex gap-2">
                   <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
-                  Copy/paste config for Codex CLI or a generic MCP client
+                  Copy/paste setup for Codex CLI or a generic MCP client. Pick
+                  one path, not both.
                 </li>
                 <li className="flex gap-2">
                   <RotateCw className="mt-0.5 size-4 shrink-0 text-primary" />A
@@ -479,15 +524,16 @@ const ConnectAgent = () => {
           >
             <TabsList>
               <TabsTrigger value="codex">Codex CLI</TabsTrigger>
-              <TabsTrigger value="generic">Generic MCP JSON</TabsTrigger>
+              <TabsTrigger value="generic">Generic MCP client</TabsTrigger>
             </TabsList>
             <TabsContent value="codex" className="mt-4">
               <Alert>
                 <CheckCircle2 className="size-4" />
                 <AlertTitle>Where this goes</AlertTitle>
                 <AlertDescription>
-                  Export the env vars in the shell that launches Codex, then add
-                  the MCP entry to `~/.codex/config.toml`.
+                  Use the TOML block below for Codex. Export the env vars in the
+                  shell that launches Codex, add the MCP entry to
+                  `~/.codex/config.toml`, then start a new Codex session.
                 </AlertDescription>
               </Alert>
             </TabsContent>
@@ -496,8 +542,10 @@ const ConnectAgent = () => {
                 <CheckCircle2 className="size-4" />
                 <AlertTitle>Where this goes</AlertTitle>
                 <AlertDescription>
-                  Paste the generated JSON into your local MCP client config and
-                  set the matching env vars in the same environment.
+                  Use the JSON block below for a generic hosted MCP client.
+                  Paste it into your local MCP config, reconnect the client, and
+                  enter the prompted token values when asked. Do not also add
+                  the Codex config. The hosted MCP service is already running.
                 </AlertDescription>
               </Alert>
             </TabsContent>
@@ -516,26 +564,34 @@ const ConnectAgent = () => {
               </Alert>
 
               <SnippetBlock
-                title="Export these env vars"
-                description="Run these in the shell that starts your MCP client."
+                title={
+                  selectedClient === "codex"
+                    ? "Export these env vars"
+                    : "Token values to enter"
+                }
+                description={
+                  selectedClient === "codex"
+                    ? "Run these in the shell that starts Codex."
+                    : "Paste these values when your MCP client prompts for them. You do not need to export env vars for the generic hosted flow."
+                }
                 snippet={envSnippet}
                 copiedText={copiedText}
                 onCopy={(value) => {
                   void copy(value)
                 }}
-                testId="connect-agent-env"
+                testId="connect-agent-token"
               />
 
               <SnippetBlock
                 title={
                   selectedClient === "codex"
                     ? "Codex CLI config"
-                    : "Generic MCP JSON config"
+                    : "Generic MCP client config"
                 }
                 description={
                   selectedClient === "codex"
-                    ? "Add this block to ~/.codex/config.toml."
-                    : "Paste this into your local MCP config file."
+                    ? "Add this block to ~/.codex/config.toml, then start a new Codex session."
+                    : "Paste this into your local MCP config file. This is an alternative to the Codex flow, not an additional step."
                 }
                 snippet={clientSnippet}
                 copiedText={copiedText}
