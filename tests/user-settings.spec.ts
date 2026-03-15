@@ -4,7 +4,7 @@ import { createUser } from "./utils/privateApi.ts"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser, logOutUser } from "./utils/user"
 
-const tabs = ["My profile", "Password", "Danger zone"]
+const tabs = ["My profile", "Connect Agent", "Password", "Danger zone"]
 
 test("My profile tab is active by default", async ({ page }) => {
   await page.goto("/settings")
@@ -253,4 +253,132 @@ test("Selected mode is preserved across sessions", async ({ page }) => {
     document.documentElement.classList.contains("dark"),
   )
   expect(isDarkMode).toBe(true)
+})
+
+test("Connect Agent can generate env vars and config snippets", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("access_token", "frontend-test-token")
+  })
+
+  let credentials = {
+    data: [],
+    count: 0,
+  } as {
+    data: Array<{
+      id: string
+      user_id: string
+      label: string
+      created_at: string | null
+      updated_at: string | null
+      last_rotated_at: string | null
+      current_token_expires_at: string | null
+      last_used_at: string | null
+      revoked_at: string | null
+    }>
+    count: number
+  }
+
+  await page.route("**/api/v1/users/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "user-1",
+        email: "frontend-test@example.com",
+        is_active: true,
+        is_superuser: false,
+        full_name: "Frontend Test User",
+        created_at: "2026-03-14T20:00:00Z",
+      }),
+    })
+  })
+
+  await page.route("**/api/v1/agent-credentials/", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(credentials),
+      })
+      return
+    }
+
+    const createdCredential = {
+      id: "agent-credential-1",
+      user_id: "user-1",
+      label: "Codex laptop",
+      created_at: "2026-03-14T20:00:00Z",
+      updated_at: "2026-03-14T20:00:00Z",
+      last_rotated_at: "2026-03-14T20:00:00Z",
+      current_token_expires_at: "2027-03-14T20:00:00Z",
+      last_used_at: null,
+      revoked_at: null,
+    }
+
+    credentials = {
+      data: [createdCredential],
+      count: 1,
+    }
+
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        credential: createdCredential,
+        access_token: "backend-token-123",
+        token_type: "bearer",
+      }),
+    })
+  })
+
+  await page.route(
+    "**/api/v1/agent-credentials/agent-credential-1/rotate",
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          credential: credentials.data[0],
+          access_token: "backend-token-rotated",
+          token_type: "bearer",
+        }),
+      })
+    },
+  )
+
+  await page.route(
+    "**/api/v1/agent-credentials/agent-credential-1",
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          message: "Agent credential revoked successfully",
+        }),
+      })
+    },
+  )
+
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Connect Agent" }).click()
+  await expect(page.getByLabel("Credential label")).toBeVisible()
+
+  await page.getByLabel("Credential label").fill("Codex laptop")
+  await page.getByTestId("create-agent-credential").click()
+
+  await expect(page.getByText("Agent credential created")).toBeVisible()
+  await expect(page.getByTestId("connect-agent-env")).toContainText(
+    "ENDERAI_BACKEND_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-env")).toContainText(
+    "backend-token-123",
+  )
+  await expect(
+    page.getByText("Add this block to ~/.codex/config.toml."),
+  ).toBeVisible()
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    "X-EnderAI-Backend-Token",
+  )
 })
