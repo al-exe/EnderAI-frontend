@@ -4,7 +4,7 @@ import { createUser } from "./utils/privateApi.ts"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser, logOutUser } from "./utils/user"
 
-const tabs = ["My profile", "Password", "Danger zone"]
+const tabs = ["My profile", "Connect Agent", "Password", "Danger zone"]
 
 test("My profile tab is active by default", async ({ page }) => {
   await page.goto("/settings")
@@ -253,4 +253,229 @@ test("Selected mode is preserved across sessions", async ({ page }) => {
     document.documentElement.classList.contains("dark"),
   )
   expect(isDarkMode).toBe(true)
+})
+
+test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("access_token", "frontend-test-token")
+  })
+
+  let credentials = {
+    data: [],
+    count: 0,
+  } as {
+    data: Array<{
+      id: string
+      user_id: string
+      label: string
+      created_at: string | null
+      updated_at: string | null
+      last_rotated_at: string | null
+      current_token_expires_at: string | null
+      last_used_at: string | null
+      revoked_at: string | null
+    }>
+    count: number
+  }
+
+  await page.route("**/api/v1/users/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "user-1",
+        email: "frontend-test@example.com",
+        is_active: true,
+        is_superuser: false,
+        full_name: "Frontend Test User",
+        created_at: "2026-03-14T20:00:00Z",
+      }),
+    })
+  })
+
+  await page.route("**/api/v1/agent-credentials/", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(credentials),
+      })
+      return
+    }
+
+    const createdCredential = {
+      id: "agent-credential-1",
+      user_id: "user-1",
+      label: "Codex laptop",
+      created_at: "2026-03-14T20:00:00Z",
+      updated_at: "2026-03-14T20:00:00Z",
+      last_rotated_at: "2026-03-14T20:00:00Z",
+      current_token_expires_at: "2027-03-14T20:00:00Z",
+      last_used_at: null,
+      revoked_at: null,
+    }
+
+    credentials = {
+      data: [createdCredential],
+      count: 1,
+    }
+
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        credential: createdCredential,
+        access_token: "backend-token-123",
+        backend_access_token: "backend-token-123",
+        mcp_access_token: "mcp-token-abc",
+        token_type: "bearer",
+      }),
+    })
+  })
+
+  await page.route(
+    "**/api/v1/agent-credentials/agent-credential-1/rotate",
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          credential: credentials.data[0],
+          access_token: "backend-token-rotated",
+          backend_access_token: "backend-token-rotated",
+          mcp_access_token: "mcp-token-rotated",
+          token_type: "bearer",
+        }),
+      })
+    },
+  )
+
+  await page.route(
+    "**/api/v1/agent-credentials/agent-credential-1",
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          message: "Agent credential revoked successfully",
+        }),
+      })
+    },
+  )
+
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Connect Agent" }).click()
+  await expect(page.getByLabel("Credential label")).toBeVisible()
+
+  await page.getByLabel("Credential label").fill("Codex laptop")
+  await page.getByTestId("create-agent-credential").click()
+
+  await expect(page.getByText("Agent credential created")).toBeVisible()
+  await expect(page.getByText("Token values to enter")).toBeVisible()
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "enderai_mcp_token",
+  )
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
+    "enderai_backend_token",
+  )
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
+    "backend-token-123",
+  )
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "mcp-token-abc",
+  )
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
+    "export ENDERAI_BACKEND_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    '"inputs"',
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    `Bearer ${"$"}{input:enderai_mcp_token}`,
+  )
+  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
+    '"id": "enderai_backend_token"',
+  )
+  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
+    `${"$"}{input:enderai_backend_token}`,
+  )
+
+  await page.getByRole("tab", { name: "Codex CLI" }).click()
+
+  await expect(
+    page.getByText(
+      "If you want new terminals to pick up the token automatically, use the persistent shell setup below instead of re-running `export` each time.",
+    ),
+  ).toBeVisible()
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "ENDERAI_MCP_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
+    "ENDERAI_BACKEND_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
+  )
+  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
+    "X-EnderAI-Backend-Token",
+  )
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("~/.enderai_mcp_token")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("chmod 600 ~/.enderai_mcp_token")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText('echo \'export ENDERAI_MCP_TOKEN=')
+  await expect(
+    page.getByText("Why use the file-based shell setup"),
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      "Directly writing `export ENDERAI_MCP_TOKEN=\"...\"` into `~/.bashrc` also works",
+    ),
+  ).toBeVisible()
+
+  await page.getByRole("tab", { name: "Generic MCP client" }).click()
+
+  await page.getByLabel("Use a single user-scoped MCP token").click()
+
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "enderai_backend_token",
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    `${"$"}{input:enderai_backend_token}`,
+  )
+
+  await page.getByRole("tab", { name: "Codex CLI" }).click()
+
+  await expect(
+    page.getByText(
+      "If you want new terminals to pick up the token automatically, use the persistent shell setup below instead of re-running `export` each time.",
+    ),
+  ).toBeVisible()
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "ENDERAI_MCP_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "ENDERAI_BACKEND_TOKEN",
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
+  )
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    "X-EnderAI-Backend-Token",
+  )
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("~/.enderai_backend_token")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("chmod 600 ~/.enderai_backend_token")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("export ENDERAI_BACKEND_TOKEN")
 })
