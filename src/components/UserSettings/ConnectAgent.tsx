@@ -603,10 +603,10 @@ const ConnectAgent = () => {
                 <AlertDescription>
                   Use the TOML block below for terminal `codex`. Run the env
                   exports in the same shell before launching `codex`, then add
-                  the MCP entry to `~/.codex/config.toml`. If you want new
-                  terminals to pick up the token automatically, use the
-                  persistent shell setup below instead of re-running `export`
-                  each time.{" "}
+                  the MCP entry to `~/.codex/config.toml`. If you use bash and
+                  want new terminals to pick up the token automatically, use
+                  the bash persistence setup below instead of re-running
+                  `export` each time.{" "}
                   {buildAuthModeShortDescription(useSingleTokenFlow)}
                 </AlertDescription>
               </Alert>
@@ -665,8 +665,8 @@ const ConnectAgent = () => {
 
               {codexPersistentShellSnippet ? (
                 <SnippetBlock
-                  title="Optional: persist the token across new terminals"
-                  description="Stores the token in a local file with chmod 600 and loads it from ~/.bashrc so future shells can launch `codex` without re-running `export`."
+                  title="Optional: persist the token for bash"
+                  description="Stores the token in a local file with chmod 600 and loads it from ~/.bashrc so future bash shells can launch `codex` without re-running `export`. If you use another shell, adapt the same token-file pattern to that shell's startup file."
                   snippet={codexPersistentShellSnippet}
                   copiedText={copiedText}
                   onCopy={(value) => {
@@ -681,7 +681,7 @@ const ConnectAgent = () => {
                   <Shield className="size-4" />
                   <AlertTitle>Why use the file-based shell setup</AlertTitle>
                   <AlertDescription>
-                    Directly writing `export ENDERAI_MCP_TOKEN="..."` into
+                    For bash users, directly writing `export ENDERAI_MCP_TOKEN="..."` into
                     `~/.bashrc` also works, but it leaves the raw token in a
                     config file that is easier to copy, sync, diff, or share by
                     accident. The file-based flow is mainly about reducing that
