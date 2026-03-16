@@ -406,7 +406,7 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
 
   await expect(
     page.getByText(
-      "If you want new terminals to pick up the token automatically, use the persistent shell setup below instead of re-running `export` each time.",
+      "If you use bash and want new terminals to pick up the token automatically, use the bash persistence setup below instead of re-running `export` each time.",
     ),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-token")).toContainText(
@@ -435,7 +435,7 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   ).toBeVisible()
   await expect(
     page.getByText(
-      "Directly writing `export ENDERAI_MCP_TOKEN=\"...\"` into `~/.bashrc` also works",
+      "For bash users, directly writing `export ENDERAI_MCP_TOKEN=\"...\"` into `~/.bashrc` also works",
     ),
   ).toBeVisible()
 
@@ -454,7 +454,7 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
 
   await expect(
     page.getByText(
-      "If you want new terminals to pick up the token automatically, use the persistent shell setup below instead of re-running `export` each time.",
+      "If you use bash and want new terminals to pick up the token automatically, use the bash persistence setup below instead of re-running `export` each time.",
     ),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-token")).toContainText(
