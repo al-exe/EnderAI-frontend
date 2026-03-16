@@ -255,6 +255,50 @@ test("Selected mode is preserved across sessions", async ({ page }) => {
   expect(isDarkMode).toBe(true)
 })
 
+test("Connect Agent shows environment-agnostic backend error guidance", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("access_token", "frontend-test-token")
+  })
+
+  await page.route("**/api/v1/users/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "user-1",
+        email: "frontend-test@example.com",
+        is_active: true,
+        is_superuser: false,
+        full_name: "Frontend Test User",
+        created_at: "2026-03-14T20:00:00Z",
+      }),
+    })
+  })
+
+  await page.route("**/api/v1/agent-credentials/", async (route) => {
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ detail: "backend unavailable" }),
+    })
+  })
+
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Connect Agent" }).click()
+
+  await expect(
+    page.getByText("Couldn't load agent credentials"),
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      "The frontend is up, but the backend credential endpoints weren't reachable. Make sure the backend API and agent credential routes are reachable, then refresh this page.",
+    ),
+  ).toBeVisible()
+  await expect(page.getByText("KAN-5")).toHaveCount(0)
+})
+
 test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   page,
 }) => {
