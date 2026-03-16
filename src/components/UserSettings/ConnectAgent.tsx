@@ -493,8 +493,8 @@ const ConnectAgent = () => {
               <AlertTitle>Couldn&apos;t load agent credentials</AlertTitle>
               <AlertDescription>
                 The frontend is up, but the backend credential endpoints
-                weren&apos;t reachable. Make sure the `KAN-5` backend deploy is
-                live, then refresh this page.
+                weren&apos;t reachable. Make sure the backend API and agent
+                credential routes are reachable, then refresh this page.
               </AlertDescription>
             </Alert>
           ) : null}
