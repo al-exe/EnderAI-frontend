@@ -15,11 +15,9 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
-import { Route as LayoutTasksRouteImport } from './routes/_layout/tasks'
+import { Route as LayoutTopicsRouteImport } from './routes/_layout/topics'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
-import { Route as LayoutLibraryRouteImport } from './routes/_layout/library'
-import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
-import { Route as LayoutExecutionsRouteImport } from './routes/_layout/executions'
+import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 
 const SignupRoute = SignupRouteImport.update({
@@ -51,9 +49,9 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutTasksRoute = LayoutTasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
+const LayoutTopicsRoute = LayoutTopicsRouteImport.update({
+  id: '/topics',
+  path: '/topics',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
@@ -61,19 +59,9 @@ const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutLibraryRoute = LayoutLibraryRouteImport.update({
-  id: '/library',
-  path: '/library',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutItemsRoute = LayoutItemsRouteImport.update({
-  id: '/items',
-  path: '/items',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutExecutionsRoute = LayoutExecutionsRouteImport.update({
-  id: '/executions',
-  path: '/executions',
+const LayoutCasesRoute = LayoutCasesRouteImport.update({
+  id: '/cases',
+  path: '/cases',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
@@ -89,11 +77,9 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
-  '/executions': typeof LayoutExecutionsRoute
-  '/items': typeof LayoutItemsRoute
-  '/library': typeof LayoutLibraryRoute
+  '/cases': typeof LayoutCasesRoute
   '/settings': typeof LayoutSettingsRoute
-  '/tasks': typeof LayoutTasksRoute
+  '/topics': typeof LayoutTopicsRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -101,11 +87,9 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
-  '/executions': typeof LayoutExecutionsRoute
-  '/items': typeof LayoutItemsRoute
-  '/library': typeof LayoutLibraryRoute
+  '/cases': typeof LayoutCasesRoute
   '/settings': typeof LayoutSettingsRoute
-  '/tasks': typeof LayoutTasksRoute
+  '/topics': typeof LayoutTopicsRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
@@ -116,11 +100,9 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
-  '/_layout/executions': typeof LayoutExecutionsRoute
-  '/_layout/items': typeof LayoutItemsRoute
-  '/_layout/library': typeof LayoutLibraryRoute
+  '/_layout/cases': typeof LayoutCasesRoute
   '/_layout/settings': typeof LayoutSettingsRoute
-  '/_layout/tasks': typeof LayoutTasksRoute
+  '/_layout/topics': typeof LayoutTopicsRoute
   '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
@@ -132,11 +114,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
-    | '/executions'
-    | '/items'
-    | '/library'
+    | '/cases'
     | '/settings'
-    | '/tasks'
+    | '/topics'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -144,11 +124,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
-    | '/executions'
-    | '/items'
-    | '/library'
+    | '/cases'
     | '/settings'
-    | '/tasks'
+    | '/topics'
     | '/'
   id:
     | '__root__'
@@ -158,11 +136,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_layout/admin'
-    | '/_layout/executions'
-    | '/_layout/items'
-    | '/_layout/library'
+    | '/_layout/cases'
     | '/_layout/settings'
-    | '/_layout/tasks'
+    | '/_layout/topics'
     | '/_layout/'
   fileRoutesById: FileRoutesById
 }
@@ -218,11 +194,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/tasks': {
-      id: '/_layout/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof LayoutTasksRouteImport
+    '/_layout/topics': {
+      id: '/_layout/topics'
+      path: '/topics'
+      fullPath: '/topics'
+      preLoaderRoute: typeof LayoutTopicsRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings': {
@@ -232,25 +208,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/library': {
-      id: '/_layout/library'
-      path: '/library'
-      fullPath: '/library'
-      preLoaderRoute: typeof LayoutLibraryRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/items': {
-      id: '/_layout/items'
-      path: '/items'
-      fullPath: '/items'
-      preLoaderRoute: typeof LayoutItemsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/executions': {
-      id: '/_layout/executions'
-      path: '/executions'
-      fullPath: '/executions'
-      preLoaderRoute: typeof LayoutExecutionsRouteImport
+    '/_layout/cases': {
+      id: '/_layout/cases'
+      path: '/cases'
+      fullPath: '/cases'
+      preLoaderRoute: typeof LayoutCasesRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/admin': {
@@ -265,21 +227,17 @@ declare module '@tanstack/react-router' {
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
-  LayoutExecutionsRoute: typeof LayoutExecutionsRoute
-  LayoutItemsRoute: typeof LayoutItemsRoute
-  LayoutLibraryRoute: typeof LayoutLibraryRoute
+  LayoutCasesRoute: typeof LayoutCasesRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
-  LayoutTasksRoute: typeof LayoutTasksRoute
+  LayoutTopicsRoute: typeof LayoutTopicsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
-  LayoutExecutionsRoute: LayoutExecutionsRoute,
-  LayoutItemsRoute: LayoutItemsRoute,
-  LayoutLibraryRoute: LayoutLibraryRoute,
+  LayoutCasesRoute: LayoutCasesRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
-  LayoutTasksRoute: LayoutTasksRoute,
+  LayoutTopicsRoute: LayoutTopicsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 
