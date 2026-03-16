@@ -48,7 +48,7 @@ test("Log in with valid email and password ", async ({ page }) => {
   await expect(page.getByText("It's nice to see you here!")).toBeVisible()
 })
 
-test("Sidebar raises Topics and Cases, not Notes", async ({ page }) => {
+test("Sidebar only raises Topics and Cases", async ({ page }) => {
   await page.goto("/login")
 
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
@@ -58,8 +58,11 @@ test("Sidebar raises Topics and Cases, not Notes", async ({ page }) => {
 
   await expect(page.getByRole("link", { name: "Topics" })).toBeVisible()
   await expect(page.getByRole("link", { name: "Cases" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Items" })).toHaveCount(0)
   await expect(page.getByRole("link", { name: "Artifacts" })).toHaveCount(0)
   await expect(page.getByRole("link", { name: "Notes" })).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "Threads" })).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "Executions" })).toHaveCount(0)
 })
 
 test("Log in with invalid email", async ({ page }) => {
