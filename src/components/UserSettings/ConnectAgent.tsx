@@ -20,7 +20,6 @@ import {
 } from "@/api/agentCredentials"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -39,7 +38,6 @@ type ClientKind = "codex" | "generic"
 
 interface RevealedCredential {
   credentialId: string
-  backendToken: string
   mcpToken: string
 }
 
@@ -54,98 +52,43 @@ function formatTimestamp(value: string | null): string {
   }).format(new Date(value))
 }
 
-function buildEnvSnippet(
-  backendToken: string,
-  mcpToken: string,
-  useSingleTokenFlow: boolean,
-): string {
-  return [
-    `export ENDERAI_MCP_TOKEN="${mcpToken}"`,
-    useSingleTokenFlow
-      ? null
-      : `export ENDERAI_BACKEND_TOKEN="${backendToken}"`,
-  ]
-    .filter(Boolean)
-    .join("\n")
+function buildEnvSnippet(mcpToken: string): string {
+  return `export ENDERAI_MCP_TOKEN="${mcpToken}"`
 }
 
-function buildCodexPersistentShellSnippet(
-  backendToken: string,
-  mcpToken: string,
-  useSingleTokenFlow: boolean,
-): string {
+function buildCodexPersistentShellSnippet(mcpToken: string): string {
   const lines = [
-    `printf '%s\\n' '${mcpToken}' > ~/.enderai_mcp_token`,
+    `printf '%s\n' '${mcpToken}' > ~/.enderai_mcp_token`,
     "chmod 600 ~/.enderai_mcp_token",
-    `echo 'export ENDERAI_MCP_TOKEN=\"$(tr -d \"\\\\r\\\\n\" < ~/.enderai_mcp_token)\"' >> ~/.bashrc`,
+    `echo 'export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.enderai_mcp_token)"' >> ~/.bashrc`,
+    "source ~/.bashrc",
   ]
-
-  if (!useSingleTokenFlow) {
-    lines.push(
-      `printf '%s\\n' '${backendToken}' > ~/.enderai_backend_token`,
-      "chmod 600 ~/.enderai_backend_token",
-      `echo 'export ENDERAI_BACKEND_TOKEN=\"$(tr -d \"\\\\r\\\\n\" < ~/.enderai_backend_token)\"' >> ~/.bashrc`,
-    )
-  }
-
-  lines.push("source ~/.bashrc")
 
   return lines.join("\n")
 }
 
-function buildGenericTokenSnippet(
-  backendToken: string,
-  mcpToken: string,
-  useSingleTokenFlow: boolean,
-): string {
-  const tokens: Record<string, string> = {
-    enderai_mcp_token: mcpToken,
-  }
-  if (!useSingleTokenFlow) {
-    tokens.enderai_backend_token = backendToken
-  }
-
-  return JSON.stringify(tokens, null, 2)
+function buildGenericTokenSnippet(mcpToken: string): string {
+  return mcpToken
 }
 
-function buildGenericConfigSnippet(
-  hostedMcpUrl: string,
-  useSingleTokenFlow: boolean,
-): string {
-  const inputs = [
-    {
-      type: "promptString",
-      id: "enderai_mcp_token",
-      description: "EnderAI MCP token",
-      password: true,
-    },
-  ]
-
-  if (!useSingleTokenFlow) {
-    inputs.push({
-      type: "promptString",
-      id: "enderai_backend_token",
-      description: "EnderAI backend token",
-      password: true,
-    })
-  }
-
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${"$"}{input:enderai_mcp_token}`,
-  }
-
-  if (!useSingleTokenFlow) {
-    headers["X-EnderAI-Backend-Token"] = `${"$"}{input:enderai_backend_token}`
-  }
-
+function buildGenericConfigSnippet(hostedMcpUrl: string): string {
   return JSON.stringify(
     {
-      inputs,
+      inputs: [
+        {
+          type: "promptString",
+          id: "enderai_mcp_token",
+          description: "EnderAI MCP token",
+          password: true,
+        },
+      ],
       servers: {
         "enderai-api": {
           type: "http",
           url: hostedMcpUrl,
-          headers,
+          headers: {
+            Authorization: `Bearer ${"$"}{input:enderai_mcp_token}`,
+          },
         },
       },
     },
@@ -154,36 +97,23 @@ function buildGenericConfigSnippet(
   )
 }
 
-function buildCodexConfigSnippet(
-  hostedMcpUrl: string,
-  useSingleTokenFlow: boolean,
-): string {
+function buildCodexConfigSnippet(hostedMcpUrl: string): string {
   return [
     "[mcp_servers.enderai-api]",
     `url = "${hostedMcpUrl}"`,
-    useSingleTokenFlow
-      ? null
-      : 'env_http_headers = { "X-EnderAI-Backend-Token" = "ENDERAI_BACKEND_TOKEN" }',
     'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
-  ]
-    .filter(Boolean)
-    .join("\n")
+  ].join("\n")
 }
 
-function buildAuthModeDescription(useSingleTokenFlow: boolean): string {
-  if (useSingleTokenFlow) {
-    return "Recommended hosted flow. The user-scoped MCP token is validated by the hosted MCP and reused for backend API calls, so you only need one token in the client."
-  }
-
-  return "Legacy dual-token flow. Use this only if you intentionally want a separate backend token forwarded in X-EnderAI-Backend-Token."
-}
-
-function buildAuthModeShortDescription(useSingleTokenFlow: boolean): string {
-  if (useSingleTokenFlow) {
-    return "One token. Recommended for Codex and other hosted MCP clients."
-  }
-
-  return "Two tokens. Legacy compatibility path."
+function buildAgentInstructionSnippet(): string {
+  return [
+    "If EnderAI tools are available:",
+    "- Start meaningful user-initiated work with `enderai_begin_case`.",
+    "- Let EnderAI auto-hydrate relevant prior context before work begins.",
+    "- Use `enderai_update_case` as material progress develops.",
+    "- Use `enderai_finish_case` when the work is complete.",
+    "- Prefer the guided case tools over raw `enderai_request` calls.",
+  ].join("\n")
 }
 
 function SnippetBlock({
@@ -335,7 +265,6 @@ const ConnectAgent = () => {
     "Codex CLI (terminal)",
   )
   const [hostedMcpUrl, setHostedMcpUrl] = useState(DEFAULT_HOSTED_MCP_URL)
-  const [useSingleTokenFlow, setUseSingleTokenFlow] = useState(true)
   const [selectedCredentialId, setSelectedCredentialId] = useState<
     string | null
   >(null)
@@ -397,7 +326,6 @@ const ConnectAgent = () => {
       setSelectedCredentialId(result.credential.id)
       setRevealedCredential({
         credentialId: result.credential.id,
-        backendToken: result.backend_access_token ?? result.access_token,
         mcpToken: result.mcp_access_token,
       })
       queryClient.invalidateQueries({ queryKey: ["agentCredentials"] })
@@ -412,7 +340,6 @@ const ConnectAgent = () => {
       setSelectedCredentialId(result.credential.id)
       setRevealedCredential({
         credentialId: result.credential.id,
-        backendToken: result.backend_access_token ?? result.access_token,
         mcpToken: result.mcp_access_token,
       })
       queryClient.invalidateQueries({ queryKey: ["agentCredentials"] })
@@ -439,38 +366,26 @@ const ConnectAgent = () => {
       ? "Codex CLI (terminal)"
       : "Generic MCP client")
 
-  const backendToken =
-    revealedCredential?.credentialId === selectedCredentialId
-      ? revealedCredential.backendToken
-      : null
   const mcpToken =
     revealedCredential?.credentialId === selectedCredentialId
       ? revealedCredential.mcpToken
       : null
-  const hasTokensForSelectedFlow =
-    mcpToken !== null && (useSingleTokenFlow || backendToken !== null)
+  const hasTokensForSelectedFlow = mcpToken !== null
   const envSnippet =
     hasTokensForSelectedFlow
       ? selectedClient === "codex"
-        ? buildEnvSnippet(backendToken ?? "", mcpToken ?? "", useSingleTokenFlow)
-        : buildGenericTokenSnippet(
-            backendToken ?? "",
-            mcpToken ?? "",
-            useSingleTokenFlow,
-          )
+        ? buildEnvSnippet(mcpToken ?? "")
+        : buildGenericTokenSnippet(mcpToken ?? "")
       : null
   const clientSnippet = hasTokensForSelectedFlow
     ? selectedClient === "codex"
-      ? buildCodexConfigSnippet(hostedMcpUrl.trim(), useSingleTokenFlow)
-      : buildGenericConfigSnippet(hostedMcpUrl.trim(), useSingleTokenFlow)
+      ? buildCodexConfigSnippet(hostedMcpUrl.trim())
+      : buildGenericConfigSnippet(hostedMcpUrl.trim())
     : null
+  const agentInstructionSnippet = buildAgentInstructionSnippet()
   const codexPersistentShellSnippet =
     hasTokensForSelectedFlow && selectedClient === "codex"
-      ? buildCodexPersistentShellSnippet(
-          backendToken ?? "",
-          mcpToken ?? "",
-          useSingleTokenFlow,
-        )
+      ? buildCodexPersistentShellSnippet(mcpToken ?? "")
       : null
 
   return (
@@ -482,8 +397,8 @@ const ConnectAgent = () => {
             Connect Agent
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Generate per-user tokens plus the client-specific setup snippet your
-            agent needs.
+            Generate a per-user MCP token, client-specific setup, and the
+            minimal EnderAI workflow snippet your agent needs.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -493,8 +408,8 @@ const ConnectAgent = () => {
               <AlertTitle>Couldn&apos;t load agent credentials</AlertTitle>
               <AlertDescription>
                 The frontend is up, but the backend credential endpoints
-                weren&apos;t reachable. Make sure the backend API and agent
-                credential routes are reachable, then refresh this page.
+                weren&apos;t reachable. Make sure the `KAN-5` backend deploy is
+                live, then refresh this page.
               </AlertDescription>
             </Alert>
           ) : null}
@@ -522,23 +437,14 @@ const ConnectAgent = () => {
                 />
               </div>
 
-              <div className="flex items-start gap-3 rounded-lg border bg-muted/20 p-3">
-                <Checkbox
-                  id="single-token-flow"
-                  checked={useSingleTokenFlow}
-                  onCheckedChange={(checked) =>
-                    setUseSingleTokenFlow(checked === true)
-                  }
-                />
-                <div className="space-y-1">
-                  <Label htmlFor="single-token-flow" className="cursor-pointer">
-                    Use a single user-scoped MCP token
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {buildAuthModeDescription(useSingleTokenFlow)}
-                  </p>
-                </div>
-              </div>
+              <Alert>
+                <Shield className="size-4" />
+                <AlertTitle>Single-token hosted MCP flow</AlertTitle>
+                <AlertDescription>
+                  Use one user-scoped MCP token. The hosted MCP validates that
+                  token and reuses it for backend API calls on your behalf.
+                </AlertDescription>
+              </Alert>
 
               <LoadingButton
                 type="button"
@@ -556,9 +462,7 @@ const ConnectAgent = () => {
               <ul className="mt-3 space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" />
-                  A user-scoped MCP token for the recommended hosted flow, plus
-                  a legacy backend token if you still need the older dual-token
-                  wiring
+                  One user-scoped MCP token for the hosted EnderAI flow.
                 </li>
                 <li className="flex gap-2">
                   <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -568,7 +472,12 @@ const ConnectAgent = () => {
                 <li className="flex gap-2">
                   <RotateCw className="mt-0.5 size-4 shrink-0 text-primary" />A
                   visible rotate/revoke path later without reusing your normal
-                  login token
+                  login token.
+                </li>
+                <li className="flex gap-2">
+                  <LaptopMinimal className="mt-0.5 size-4 shrink-0 text-primary" />
+                  A minimal workflow reminder so your agent starts meaningful
+                  work by auto-hydrating context with EnderAI first.
                 </li>
               </ul>
             </div>
@@ -589,10 +498,8 @@ const ConnectAgent = () => {
                 <AlertDescription>
                   Use the JSON block below for a generic hosted MCP client.
                   Paste it into your local MCP config, reconnect the client, and
-                  enter the prompted token values when asked. Do not also add
-                  the Codex config. The hosted MCP service is already running.
-                  Recommended if your client supports prompted MCP inputs.{" "}
-                  {buildAuthModeShortDescription(useSingleTokenFlow)}
+                  enter the prompted MCP token when asked. Do not also add the
+                  Codex config. The hosted MCP service is already running.
                 </AlertDescription>
               </Alert>
             </TabsContent>
@@ -601,13 +508,12 @@ const ConnectAgent = () => {
                 <CheckCircle2 className="size-4" />
                 <AlertTitle>Where this goes</AlertTitle>
                 <AlertDescription>
-                  Use the TOML block below for terminal `codex`. Run the env
-                  exports in the same shell before launching `codex`, then add
-                  the MCP entry to `~/.codex/config.toml`. If you use bash and
-                  want new terminals to pick up the token automatically, use
-                  the bash persistence setup below instead of re-running
-                  `export` each time.{" "}
-                  {buildAuthModeShortDescription(useSingleTokenFlow)}
+                  Use the TOML block below for terminal `codex`. Run the MCP
+                  token export in the same shell before launching `codex`, then
+                  add the MCP entry to `~/.codex/config.toml`. If you want new
+                  terminals to pick up the token automatically, use the
+                  persistent shell setup below instead of re-running `export`
+                  each time.
                 </AlertDescription>
               </Alert>
             </TabsContent>
@@ -619,17 +525,17 @@ const ConnectAgent = () => {
                 <CheckCircle2 className="size-4" />
                 <AlertTitle>Fresh tokens ready</AlertTitle>
                 <AlertDescription>
-                  These tokens are only shown right now. If you lose them,
-                  rotate the credential below to mint a fresh pair and
-                  regenerate the config.
+                  This token is only shown right now. If you lose it, rotate the
+                  credential below to mint a fresh MCP token and regenerate the
+                  setup snippets.
                 </AlertDescription>
               </Alert>
 
               <SnippetBlock
                 title={
                   selectedClient === "codex"
-                    ? "Export these env vars"
-                    : "Token values to enter"
+                    ? "Export this env var"
+                    : "Token value to enter"
                 }
                 description={
                   selectedClient === "codex"
@@ -665,8 +571,8 @@ const ConnectAgent = () => {
 
               {codexPersistentShellSnippet ? (
                 <SnippetBlock
-                  title="Optional: persist the token for bash"
-                  description="Stores the token in a local file with chmod 600 and loads it from ~/.bashrc so future bash shells can launch `codex` without re-running `export`. If you use another shell, adapt the same token-file pattern to that shell's startup file."
+                  title="Optional: persist the token across new terminals"
+                  description="Stores the token in a local file with chmod 600 and loads it from ~/.bashrc so future shells can launch `codex` without re-running `export`."
                   snippet={codexPersistentShellSnippet}
                   copiedText={copiedText}
                   onCopy={(value) => {
@@ -681,7 +587,7 @@ const ConnectAgent = () => {
                   <Shield className="size-4" />
                   <AlertTitle>Why use the file-based shell setup</AlertTitle>
                   <AlertDescription>
-                    For bash users, directly writing `export ENDERAI_MCP_TOKEN="..."` into
+                    Directly writing `export ENDERAI_MCP_TOKEN="..."` into
                     `~/.bashrc` also works, but it leaves the raw token in a
                     config file that is easier to copy, sync, diff, or share by
                     accident. The file-based flow is mainly about reducing that
@@ -695,9 +601,9 @@ const ConnectAgent = () => {
               <RotateCw className="size-4" />
               <AlertTitle>Rotate to reveal fresh tokens</AlertTitle>
               <AlertDescription>
-                You have a credential selected, but its tokens are not shown
-                again after creation. Rotate it below to mint a new MCP/backend
-                token pair and regenerate the setup snippets.
+                You have a credential selected, but its token is not shown again
+                after creation. Rotate it below to mint a new MCP token and
+                regenerate the setup snippets.
               </AlertDescription>
             </Alert>
           ) : (
@@ -705,11 +611,22 @@ const ConnectAgent = () => {
               <KeyRound className="size-4" />
               <AlertTitle>Create your first agent credential</AlertTitle>
               <AlertDescription>
-                Once you create a credential, this page will generate the env
-                vars and config block for your chosen client.
+                Once you create a credential, this page will generate the token,
+                config, and workflow snippet for your chosen client.
               </AlertDescription>
             </Alert>
           )}
+
+          <SnippetBlock
+            title="Minimal agent instruction"
+            description="Add this to your client or repo instructions so meaningful work starts by auto-hydrating EnderAI context first."
+            snippet={agentInstructionSnippet}
+            copiedText={copiedText}
+            onCopy={(value) => {
+              void copy(value)
+            }}
+            testId="connect-agent-instructions"
+          />
         </CardContent>
       </Card>
 
@@ -717,8 +634,8 @@ const ConnectAgent = () => {
         <CardHeader>
           <CardTitle>Issued agent credentials</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Rotate a credential to mint a fresh backend token or revoke it when
-            an install should stop working.
+            Rotate a credential to mint a fresh MCP token or revoke it when an
+            install should stop working.
           </p>
         </CardHeader>
         <CardContent className="space-y-3">

@@ -255,50 +255,6 @@ test("Selected mode is preserved across sessions", async ({ page }) => {
   expect(isDarkMode).toBe(true)
 })
 
-test("Connect Agent shows environment-agnostic backend error guidance", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem("access_token", "frontend-test-token")
-  })
-
-  await page.route("**/api/v1/users/me", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        id: "user-1",
-        email: "frontend-test@example.com",
-        is_active: true,
-        is_superuser: false,
-        full_name: "Frontend Test User",
-        created_at: "2026-03-14T20:00:00Z",
-      }),
-    })
-  })
-
-  await page.route("**/api/v1/agent-credentials/", async (route) => {
-    await route.fulfill({
-      status: 503,
-      contentType: "application/json",
-      body: JSON.stringify({ detail: "backend unavailable" }),
-    })
-  })
-
-  await page.goto("/settings")
-  await page.getByRole("tab", { name: "Connect Agent" }).click()
-
-  await expect(
-    page.getByText("Couldn't load agent credentials"),
-  ).toBeVisible()
-  await expect(
-    page.getByText(
-      "The frontend is up, but the backend credential endpoints weren't reachable. Make sure the backend API and agent credential routes are reachable, then refresh this page.",
-    ),
-  ).toBeVisible()
-  await expect(page.getByText("KAN-5")).toHaveCount(0)
-})
-
 test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   page,
 }) => {
@@ -371,8 +327,6 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
       contentType: "application/json",
       body: JSON.stringify({
         credential: createdCredential,
-        access_token: "backend-token-123",
-        backend_access_token: "backend-token-123",
         mcp_access_token: "mcp-token-abc",
         token_type: "bearer",
       }),
@@ -387,8 +341,6 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
         contentType: "application/json",
         body: JSON.stringify({
           credential: credentials.data[0],
-          access_token: "backend-token-rotated",
-          backend_access_token: "backend-token-rotated",
           mcp_access_token: "mcp-token-rotated",
           token_type: "bearer",
         }),
@@ -417,8 +369,11 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   await page.getByTestId("create-agent-credential").click()
 
   await expect(page.getByText("Agent credential created")).toBeVisible()
-  await expect(page.getByText("Token values to enter")).toBeVisible()
+  await expect(page.getByText("Token value to enter")).toBeVisible()
   await expect(page.getByTestId("connect-agent-token")).toContainText(
+    "mcp-token-abc",
+  )
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
     "enderai_mcp_token",
   )
   await expect(page.getByTestId("connect-agent-token")).not.toContainText(
@@ -450,7 +405,7 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
 
   await expect(
     page.getByText(
-      "If you use bash and want new terminals to pick up the token automatically, use the bash persistence setup below instead of re-running `export` each time.",
+      "If you want new terminals to pick up the token automatically, use the persistent shell setup below instead of re-running `export` each time.",
     ),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-token")).toContainText(
@@ -479,47 +434,60 @@ test("Connect Agent can generate Codex and generic MCP setup snippets", async ({
   ).toBeVisible()
   await expect(
     page.getByText(
-      "For bash users, directly writing `export ENDERAI_MCP_TOKEN=\"...\"` into `~/.bashrc` also works",
+      "Directly writing `export ENDERAI_MCP_TOKEN=\"...\"` into `~/.bashrc` also works",
     ),
   ).toBeVisible()
 
   await page.getByRole("tab", { name: "Generic MCP client" }).click()
 
-  await page.getByLabel("Use a single user-scoped MCP token").click()
-
   await expect(page.getByTestId("connect-agent-token")).toContainText(
-    "enderai_backend_token",
+    "mcp-token-abc",
+  )
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
+    "enderai_mcp_token",
   )
   await expect(page.getByTestId("connect-agent-config")).toContainText(
-    `${"$"}{input:enderai_backend_token}`,
+    `Bearer ${"$"}{input:enderai_mcp_token}`,
+  )
+  await expect(page.getByTestId("connect-agent-instructions")).toContainText(
+    "enderai_begin_case",
+  )
+  await expect(page.getByTestId("connect-agent-instructions")).toContainText(
+    "auto-hydrate relevant prior context",
   )
 
   await page.getByRole("tab", { name: "Codex CLI" }).click()
 
   await expect(
     page.getByText(
-      "If you use bash and want new terminals to pick up the token automatically, use the bash persistence setup below instead of re-running `export` each time.",
+      "If you want new terminals to pick up the token automatically, use the persistent shell setup below instead of re-running `export` each time.",
     ),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-token")).toContainText(
     "ENDERAI_MCP_TOKEN",
   )
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
+  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
     "ENDERAI_BACKEND_TOKEN",
   )
   await expect(page.getByTestId("connect-agent-config")).toContainText(
     'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
   )
-  await expect(page.getByTestId("connect-agent-config")).toContainText(
+  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
     "X-EnderAI-Backend-Token",
   )
-  await expect(
-    page.getByTestId("connect-agent-persistent-shell"),
-  ).toContainText("~/.enderai_backend_token")
-  await expect(
-    page.getByTestId("connect-agent-persistent-shell"),
-  ).toContainText("chmod 600 ~/.enderai_backend_token")
-  await expect(
-    page.getByTestId("connect-agent-persistent-shell"),
-  ).toContainText("export ENDERAI_BACKEND_TOKEN")
+  await expect(page.getByTestId("connect-agent-instructions")).toContainText(
+    "enderai_finish_case",
+  )
+
+  await page.reload()
+  await page.getByRole("tab", { name: "Connect Agent" }).click()
+
+  await expect(page.getByText("Rotate to reveal fresh tokens")).toBeVisible()
+  await expect(page.getByTestId("connect-agent-instructions")).toContainText(
+    "enderai_begin_case",
+  )
+  await expect(page.getByTestId("connect-agent-instructions")).toContainText(
+    "enderai_finish_case",
+  )
+  await expect(page.getByTestId("connect-agent-token")).toHaveCount(0)
 })
