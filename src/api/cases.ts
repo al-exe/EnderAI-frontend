@@ -120,3 +120,33 @@ export function readCase(caseId: string): CancelablePromise<CasePublic> {
     },
   })
 }
+
+export interface CaseUpdate {
+  title?: string
+  summary_current?: string | null
+}
+
+export function updateCase(
+  caseId: string,
+  body: CaseUpdate,
+): CancelablePromise<CasePublic> {
+  const title = body.title?.trim()
+  const summaryCurrent =
+    typeof body.summary_current === "string"
+      ? body.summary_current.trim() || null
+      : body.summary_current
+
+  return request(OpenAPI, {
+    method: "PATCH",
+    url: "/api/v1/cases/{case_id}",
+    path: {
+      case_id: caseId,
+    },
+    body: {
+      ...(title !== undefined ? { title } : {}),
+      ...(body.summary_current !== undefined
+        ? { summary_current: summaryCurrent }
+        : {}),
+    },
+  })
+}

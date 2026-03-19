@@ -97,3 +97,31 @@ export function readTopicRollup(
     },
   })
 }
+
+export interface TopicUpdate {
+  title?: string
+  description?: string | null
+}
+
+export function updateTopic(
+  topicId: string,
+  body: TopicUpdate,
+): CancelablePromise<TopicPublic> {
+  const title = body.title?.trim()
+  const description =
+    typeof body.description === "string"
+      ? body.description.trim() || null
+      : body.description
+
+  return request(OpenAPI, {
+    method: "PATCH",
+    url: "/api/v1/topics/{topic_id}",
+    path: {
+      topic_id: topicId,
+    },
+    body: {
+      ...(title !== undefined ? { title } : {}),
+      ...(body.description !== undefined ? { description } : {}),
+    },
+  })
+}

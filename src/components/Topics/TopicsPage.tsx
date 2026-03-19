@@ -1,11 +1,23 @@
-import { useQuery } from "@tanstack/react-query"
-import { useMemo, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
+import { useEffect, useMemo, useState } from "react"
 
 import { readCases } from "@/api/cases"
-import { readTopicRollup, readTopics, type TopicPublic } from "@/api/topics"
+import {
+  readTopicRollup,
+  readTopics,
+  type TopicPublic,
+  type TopicsPublic,
+  updateTopic,
+} from "@/api/topics"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
+import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -23,8 +35,29 @@ function badgeVariant(status: string): "default" | "secondary" | "success" | "de
   return "outline"
 }
 
+function replaceTopicInList(
+  current: TopicsPublic | undefined,
+  updatedTopic: TopicPublic,
+): TopicsPublic | undefined {
+  if (!current) return current
+
+  return {
+    ...current,
+    data: current.data.map((topic) =>
+      topic.id === updatedTopic.id ? updatedTopic : topic,
+    ),
+  }
+}
+
 export function TopicsPage() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState("")
+  const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const [descriptionDraft, setDescriptionDraft] = useState("")
 
   const topicsQuery = useQuery({
     queryKey: ["topics"],
@@ -48,6 +81,99 @@ export function TopicsPage() {
     queryKey: ["topicRollup", selectedTopic?.id],
     queryFn: () => readTopicRollup(selectedTopic?.id ?? ""),
   })
+
+  useEffect(() => {
+    if (!isEditingTitle) {
+      setTitleDraft(selectedTopic?.title ?? "")
+    }
+  }, [isEditingTitle, selectedTopic?.id, selectedTopic?.title])
+
+  useEffect(() => {
+    if (!isEditingDescription) {
+      setDescriptionDraft(selectedTopic?.description ?? "")
+    }
+  }, [isEditingDescription, selectedTopic?.description, selectedTopic?.id])
+
+  const updateTopicMutation = useMutation({
+    mutationFn: ({
+      topicId,
+      title,
+      description,
+    }: {
+      topicId: string
+      title?: string
+      description?: string | null
+    }) => updateTopic(topicId, { title, description }),
+    onSuccess: (updatedTopic) => {
+      queryClient.setQueryData<TopicsPublic | undefined>(["topics"], (current) =>
+        replaceTopicInList(current, updatedTopic),
+      )
+      queryClient.invalidateQueries({
+        queryKey: ["topicRollup", updatedTopic.id],
+      })
+    },
+    onError: handleError.bind(showErrorToast),
+  })
+
+  const cancelTitleEdit = () => {
+    setIsEditingTitle(false)
+    setTitleDraft(selectedTopic?.title ?? "")
+  }
+
+  const cancelDescriptionEdit = () => {
+    setIsEditingDescription(false)
+    setDescriptionDraft(selectedTopic?.description ?? "")
+  }
+
+  const saveTitle = async () => {
+    if (!selectedTopic) return
+
+    const nextTitle = titleDraft.trim()
+    if (!nextTitle) {
+      showErrorToast("Topic title can't be empty.")
+      return
+    }
+
+    if (nextTitle === selectedTopic.title.trim()) {
+      cancelTitleEdit()
+      return
+    }
+
+    try {
+      await updateTopicMutation.mutateAsync({
+        topicId: selectedTopic.id,
+        title: nextTitle,
+      })
+      setIsEditingTitle(false)
+      showSuccessToast("Topic title updated")
+    } catch {
+      return
+    }
+  }
+
+  const saveDescription = async () => {
+    if (!selectedTopic) return
+
+    const nextDescription = descriptionDraft.trim()
+    const currentDescription = selectedTopic.description?.trim() ?? ""
+    if (nextDescription === currentDescription) {
+      cancelDescriptionEdit()
+      return
+    }
+
+    try {
+      await updateTopicMutation.mutateAsync({
+        topicId: selectedTopic.id,
+        description: nextDescription || null,
+      })
+      setIsEditingDescription(false)
+      showSuccessToast(
+        nextDescription ? "Topic description updated" : "Topic description cleared",
+      )
+    } catch {
+      return
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -125,9 +251,124 @@ export function TopicsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{selectedTopic?.title}</CardTitle>
+              <CardTitle>
+                {isEditingTitle ? (
+                  <div className="space-y-2">
+                    <Input
+                      autoFocus
+                      maxLength={255}
+                      value={titleDraft}
+                      disabled={updateTopicMutation.isPending}
+                      onChange={(e) => setTitleDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          void saveTitle()
+                        }
+
+                        if (e.key === "Escape") {
+                          e.preventDefault()
+                          cancelTitleEdit()
+                        }
+                      }}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={updateTopicMutation.isPending}
+                        onClick={() => {
+                          void saveTitle()
+                        }}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={updateTopicMutation.isPending}
+                        onClick={cancelTitleEdit}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="w-fit max-w-full cursor-text text-left underline-offset-4 hover:underline"
+                    title="Click to rename topic title"
+                    onClick={() => {
+                      setTitleDraft(selectedTopic?.title ?? "")
+                      setIsEditingTitle(true)
+                    }}
+                  >
+                    {selectedTopic?.title ?? "Untitled topic"}
+                  </button>
+                )}
+              </CardTitle>
               <CardDescription>
-                {selectedTopic?.description || "No description captured for this topic yet."}
+                {isEditingDescription ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      autoFocus
+                      rows={4}
+                      value={descriptionDraft}
+                      disabled={updateTopicMutation.isPending}
+                      placeholder="No description captured for this topic yet."
+                      onChange={(e) => setDescriptionDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                          e.preventDefault()
+                          void saveDescription()
+                        }
+
+                        if (e.key === "Escape") {
+                          e.preventDefault()
+                          cancelDescriptionEdit()
+                        }
+                      }}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={updateTopicMutation.isPending}
+                        onClick={() => {
+                          void saveDescription()
+                        }}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={updateTopicMutation.isPending}
+                        onClick={cancelDescriptionEdit}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="w-full cursor-text text-left underline-offset-4 hover:underline"
+                    title="Click to rename topic description"
+                    onClick={() => {
+                      setDescriptionDraft(selectedTopic?.description ?? "")
+                      setIsEditingDescription(true)
+                    }}
+                  >
+                    {selectedTopic?.description ? (
+                      selectedTopic.description
+                    ) : (
+                      <span className="italic">No description captured for this topic yet.</span>
+                    )}
+                  </button>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -190,7 +431,17 @@ export function TopicsPage() {
                 ) : (
                   <div className="space-y-3">
                     {topicCasesQuery.data?.data.map((caseItem) => (
-                      <div key={caseItem.id} className="rounded-lg border p-3">
+                      <button
+                        key={caseItem.id}
+                        type="button"
+                        className="w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() =>
+                          navigate({
+                            to: "/cases",
+                            search: { caseId: caseItem.id },
+                          })
+                        }
+                      >
                         <div className="flex items-center justify-between gap-3">
                           <div className="font-medium">{caseItem.title}</div>
                           <Badge variant={badgeVariant(caseItem.status)}>
@@ -200,7 +451,7 @@ export function TopicsPage() {
                         <p className="mt-1 text-sm text-muted-foreground">
                           {caseItem.summary_current || caseItem.input_summary || "No summary yet."}
                         </p>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
