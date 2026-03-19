@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Maximize2, Minimize2 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import { readCases } from "@/api/cases"
 import {
@@ -103,6 +103,8 @@ export function TopicsPage() {
   const [titleDraft, setTitleDraft] = useState("")
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [descriptionDraft, setDescriptionDraft] = useState("")
+  const skipTitleBlurRef = useRef(false)
+  const skipDescriptionBlurRef = useRef(false)
   const [topicsListViewport, setTopicsListViewport] =
     useState<HTMLDivElement | null>(null)
   const [isFocusedViewOpen, setIsFocusedViewOpen] = useState(false)
@@ -171,13 +173,27 @@ export function TopicsPage() {
   })
 
   const cancelTitleEdit = () => {
+    skipTitleBlurRef.current = false
     setIsEditingTitle(false)
     setTitleDraft(selectedTopic?.title ?? "")
   }
 
   const cancelDescriptionEdit = () => {
+    skipDescriptionBlurRef.current = false
     setIsEditingDescription(false)
     setDescriptionDraft(selectedTopic?.description ?? "")
+  }
+
+  const startTitleEdit = () => {
+    skipTitleBlurRef.current = false
+    setTitleDraft(selectedTopic?.title ?? "")
+    setIsEditingTitle(true)
+  }
+
+  const startDescriptionEdit = () => {
+    skipDescriptionBlurRef.current = false
+    setDescriptionDraft(selectedTopic?.description ?? "")
+    setIsEditingDescription(true)
   }
 
   const saveTitle = async () => {
@@ -271,30 +287,20 @@ export function TopicsPage() {
 
                       if (e.key === "Escape") {
                         e.preventDefault()
+                        skipTitleBlurRef.current = true
                         cancelTitleEdit()
                       }
                     }}
+                    onBlur={() => {
+                      if (skipTitleBlurRef.current) {
+                        skipTitleBlurRef.current = false
+                        return
+                      }
+                      void saveTitle()
+                    }}
                   />
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={updateTopicMutation.isPending}
-                      onClick={() => {
-                        void saveTitle()
-                      }}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={updateTopicMutation.isPending}
-                      onClick={cancelTitleEdit}
-                    >
-                      Cancel
-                    </Button>
+                  <div className="text-xs text-muted-foreground">
+                    Enter to save • Esc to cancel
                   </div>
                 </div>
               ) : (
@@ -302,10 +308,7 @@ export function TopicsPage() {
                   type="button"
                   className="w-fit max-w-full cursor-text text-left underline-offset-4 hover:underline"
                   title="Click to rename topic title"
-                  onClick={() => {
-                    setTitleDraft(selectedTopic?.title ?? "")
-                    setIsEditingTitle(true)
-                  }}
+                  onClick={startTitleEdit}
                 >
                   {selectedTopic?.title ?? "Untitled topic"}
                 </button>
@@ -340,37 +343,27 @@ export function TopicsPage() {
                 placeholder="No description captured for this topic yet."
                 onChange={(e) => setDescriptionDraft(e.target.value)}
                 onKeyDown={(e) => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault()
                     void saveDescription()
                   }
 
                   if (e.key === "Escape") {
                     e.preventDefault()
+                    skipDescriptionBlurRef.current = true
                     cancelDescriptionEdit()
                   }
                 }}
+                onBlur={() => {
+                  if (skipDescriptionBlurRef.current) {
+                    skipDescriptionBlurRef.current = false
+                    return
+                  }
+                  void saveDescription()
+                }}
               />
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={updateTopicMutation.isPending}
-                  onClick={() => {
-                    void saveDescription()
-                  }}
-                >
-                  Save
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={updateTopicMutation.isPending}
-                  onClick={cancelDescriptionEdit}
-                >
-                  Cancel
-                </Button>
+              <div className="text-xs text-muted-foreground">
+                Enter to save • Shift+Enter for newline • Esc to cancel
               </div>
             </div>
           ) : (
@@ -378,10 +371,7 @@ export function TopicsPage() {
               type="button"
               className="w-full cursor-text text-left underline-offset-4 hover:underline"
               title="Click to rename topic description"
-              onClick={() => {
-                setDescriptionDraft(selectedTopic?.description ?? "")
-                setIsEditingDescription(true)
-              }}
+              onClick={startDescriptionEdit}
             >
               {selectedTopic?.description ? (
                 selectedTopic.description

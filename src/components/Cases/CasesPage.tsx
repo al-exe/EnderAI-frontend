@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { Maximize2, Minimize2 } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   type CasePublic,
@@ -106,6 +106,8 @@ export function CasesPage({
   const [titleDraft, setTitleDraft] = useState("")
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [descriptionDraft, setDescriptionDraft] = useState("")
+  const skipTitleBlurRef = useRef(false)
+  const skipDescriptionBlurRef = useRef(false)
   const [casesListViewport, setCasesListViewport] =
     useState<HTMLDivElement | null>(null)
   const [isFocusedViewOpen, setIsFocusedViewOpen] = useState(false)
@@ -188,13 +190,27 @@ export function CasesPage({
   })
 
   const cancelTitleEdit = () => {
+    skipTitleBlurRef.current = false
     setIsEditingTitle(false)
     setTitleDraft(detail?.title ?? "")
   }
 
   const cancelDescriptionEdit = () => {
+    skipDescriptionBlurRef.current = false
     setIsEditingDescription(false)
     setDescriptionDraft(detail?.summary_current ?? "")
+  }
+
+  const startTitleEdit = () => {
+    skipTitleBlurRef.current = false
+    setTitleDraft(detail?.title ?? "")
+    setIsEditingTitle(true)
+  }
+
+  const startDescriptionEdit = () => {
+    skipDescriptionBlurRef.current = false
+    setDescriptionDraft(detail?.summary_current ?? "")
+    setIsEditingDescription(true)
   }
 
   const saveTitle = async () => {
@@ -335,30 +351,20 @@ export function CasesPage({
 
                         if (e.key === "Escape") {
                           e.preventDefault()
+                          skipTitleBlurRef.current = true
                           cancelTitleEdit()
                         }
                       }}
+                      onBlur={() => {
+                        if (skipTitleBlurRef.current) {
+                          skipTitleBlurRef.current = false
+                          return
+                        }
+                        void saveTitle()
+                      }}
                     />
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={updateCaseMutation.isPending}
-                        onClick={() => {
-                          void saveTitle()
-                        }}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={updateCaseMutation.isPending}
-                        onClick={cancelTitleEdit}
-                      >
-                        Cancel
-                      </Button>
+                    <div className="text-xs text-muted-foreground">
+                      Enter to save • Esc to cancel
                     </div>
                   </div>
                 ) : (
@@ -366,10 +372,7 @@ export function CasesPage({
                     type="button"
                     className="w-fit max-w-full cursor-text text-left underline-offset-4 hover:underline"
                     title="Click to rename case title"
-                    onClick={() => {
-                      setTitleDraft(detail.title ?? "")
-                      setIsEditingTitle(true)
-                    }}
+                    onClick={startTitleEdit}
                   >
                     {detail.title ?? "Untitled case"}
                   </button>
@@ -403,37 +406,27 @@ export function CasesPage({
                   placeholder="No description captured for this case yet."
                   onChange={(e) => setDescriptionDraft(e.target.value)}
                   onKeyDown={(e) => {
-                    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault()
                       void saveDescription()
                     }
 
                     if (e.key === "Escape") {
                       e.preventDefault()
+                      skipDescriptionBlurRef.current = true
                       cancelDescriptionEdit()
                     }
                   }}
+                  onBlur={() => {
+                    if (skipDescriptionBlurRef.current) {
+                      skipDescriptionBlurRef.current = false
+                      return
+                    }
+                    void saveDescription()
+                  }}
                 />
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={updateCaseMutation.isPending}
-                    onClick={() => {
-                      void saveDescription()
-                    }}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={updateCaseMutation.isPending}
-                    onClick={cancelDescriptionEdit}
-                  >
-                    Cancel
-                  </Button>
+                <div className="text-xs text-muted-foreground">
+                  Enter to save • Shift+Enter for newline • Esc to cancel
                 </div>
               </div>
             ) : (
@@ -441,10 +434,7 @@ export function CasesPage({
                 type="button"
                 className="w-full cursor-text text-left underline-offset-4 hover:underline"
                 title="Click to rename case description"
-                onClick={() => {
-                  setDescriptionDraft(detail.summary_current ?? "")
-                  setIsEditingDescription(true)
-                }}
+                onClick={startDescriptionEdit}
               >
                 {detail.summary_current ? (
                   detail.summary_current
