@@ -1,21 +1,47 @@
+import {
+  type InfiniteData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
+import { Maximize2, Minimize2 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
-  readCase,
-  readCases,
   type CasePublic,
   type CasesPublic,
+  readCase,
+  readCases,
   updateCase,
 } from "@/api/cases"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { useAutoLoadMore } from "@/hooks/useAutoLoadMore"
 import useCustomToast from "@/hooks/useCustomToast"
+import { useIsMobile } from "@/hooks/useMobile"
+import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
+
+const CASES_PAGE_SIZE = 25
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -25,26 +51,44 @@ function formatTimestamp(value: string | null): string {
   }).format(new Date(value))
 }
 
-function badgeVariant(status: string): "default" | "secondary" | "success" | "destructive" | "outline" {
+function badgeVariant(
+  status: string,
+): "default" | "secondary" | "success" | "destructive" | "outline" {
   const normalized = status.trim().toLowerCase()
   if (["done", "closed", "resolved"].includes(normalized)) return "success"
   if (["failed", "error", "blocked"].includes(normalized)) return "destructive"
-  if (["running", "active", "in progress"].includes(normalized)) return "secondary"
+  if (["running", "active", "in progress"].includes(normalized))
+    return "secondary"
   return "outline"
 }
 
-function replaceCaseInList(
-  current: CasesPublic | undefined,
+function replaceCaseInPages(
+  current: InfiniteData<CasesPublic> | undefined,
   updatedCase: CasePublic,
-): CasesPublic | undefined {
+): InfiniteData<CasesPublic> | undefined {
   if (!current) return current
 
   return {
     ...current,
-    data: current.data.map((caseItem) =>
-      caseItem.id === updatedCase.id ? updatedCase : caseItem,
-    ),
+    pages: current.pages.map((page) => ({
+      ...page,
+      data: page.data.map((caseItem) =>
+        caseItem.id === updatedCase.id ? updatedCase : caseItem,
+      ),
+    })),
   }
+}
+
+function describeLoadedCount(
+  loaded: number,
+  total: number,
+  singular: string,
+  plural: string,
+): string {
+  if (total === 0) return `0 ${plural}`
+  if (loaded < total)
+    return `${loaded} of ${total} ${total === 1 ? singular : plural}`
+  return `${total} ${total === 1 ? singular : plural}`
 }
 
 export function CasesPage({
@@ -53,6 +97,7 @@ export function CasesPage({
   initialSelectedCaseId?: string | null
 }) {
   const queryClient = useQueryClient()
+  const isMobile = useIsMobile()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(
     initialSelectedCaseId,
@@ -61,28 +106,54 @@ export function CasesPage({
   const [titleDraft, setTitleDraft] = useState("")
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [descriptionDraft, setDescriptionDraft] = useState("")
+  const [casesListViewport, setCasesListViewport] =
+    useState<HTMLDivElement | null>(null)
+  const [isFocusedViewOpen, setIsFocusedViewOpen] = useState(false)
 
   useEffect(() => {
     if (initialSelectedCaseId) {
       setSelectedCaseId(initialSelectedCaseId)
+      setIsFocusedViewOpen(false)
     }
   }, [initialSelectedCaseId])
 
-  const casesQuery = useQuery({
+  const casesQuery = useInfiniteQuery({
     queryKey: ["cases"],
-    queryFn: () => readCases({ limit: 100 }),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      readCases({
+        skip: pageParam,
+        limit: CASES_PAGE_SIZE,
+      }),
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce(
+        (total, page) => total + page.data.length,
+        0,
+      )
+      return loaded < lastPage.count ? loaded : undefined
+    },
   })
 
-  const cases = casesQuery.data?.data ?? []
+  const cases = useMemo(
+    () => casesQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [casesQuery.data],
+  )
+  const totalCases = casesQuery.data?.pages[0]?.count ?? cases.length
+
   const selectedCase = useMemo<CasePublic | null>(() => {
     if (!cases.length) return null
-    return cases.find((caseItem) => caseItem.id === selectedCaseId) ?? cases[0]
-  }, [selectedCaseId, cases])
+    if (selectedCaseId) {
+      return cases.find((caseItem) => caseItem.id === selectedCaseId) ?? null
+    }
+    return cases[0]
+  }, [cases, selectedCaseId])
+
+  const resolvedSelectedCaseId = selectedCaseId ?? cases[0]?.id ?? null
 
   const detailQuery = useQuery({
-    enabled: Boolean(selectedCase?.id),
-    queryKey: ["case", selectedCase?.id],
-    queryFn: () => readCase(selectedCase?.id ?? ""),
+    enabled: Boolean(resolvedSelectedCaseId),
+    queryKey: ["case", resolvedSelectedCaseId],
+    queryFn: () => readCase(resolvedSelectedCaseId ?? ""),
   })
 
   const detail = detailQuery.data ?? selectedCase
@@ -91,18 +162,6 @@ export function CasesPage({
     ...(detail?.errors ?? []),
     ...(detail?.symptoms ?? []),
   ]
-
-  useEffect(() => {
-    if (!isEditingTitle) {
-      setTitleDraft(detail?.title ?? "")
-    }
-  }, [detail?.id, detail?.title, isEditingTitle])
-
-  useEffect(() => {
-    if (!isEditingDescription) {
-      setDescriptionDraft(detail?.summary_current ?? "")
-    }
-  }, [detail?.id, detail?.summary_current, isEditingDescription])
 
   const updateCaseMutation = useMutation({
     mutationFn: ({
@@ -119,8 +178,9 @@ export function CasesPage({
         summary_current: summaryCurrent,
       }),
     onSuccess: (updatedCase) => {
-      queryClient.setQueryData<CasesPublic | undefined>(["cases"], (current) =>
-        replaceCaseInList(current, updatedCase),
+      queryClient.setQueryData<InfiniteData<CasesPublic> | undefined>(
+        ["cases"],
+        (current) => replaceCaseInPages(current, updatedCase),
       )
       queryClient.setQueryData(["case", updatedCase.id], updatedCase)
     },
@@ -180,85 +240,84 @@ export function CasesPage({
       })
       setIsEditingDescription(false)
       showSuccessToast(
-        nextDescription ? "Case description updated" : "Case description cleared",
+        nextDescription
+          ? "Case description updated"
+          : "Case description cleared",
       )
     } catch {
       return
     }
   }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Cases</h1>
-        <p className="text-muted-foreground">
-          Bounded execution records attached to Topics under the canonical model.
-        </p>
-      </div>
+  const casesLoadMoreRef = useAutoLoadMore<HTMLDivElement>({
+    enabled: !casesQuery.isLoading,
+    hasMore: casesQuery.hasNextPage,
+    isLoadingMore: casesQuery.isFetchingNextPage,
+    onLoadMore: () => {
+      if (!casesQuery.hasNextPage || casesQuery.isFetchingNextPage) return
+      void casesQuery.fetchNextPage()
+    },
+    root: isMobile ? null : casesListViewport,
+  })
 
-      {casesQuery.isLoading ? (
-        <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">Loading Cases…</CardContent>
-        </Card>
-      ) : casesQuery.isError ? (
-        <Card>
-          <CardContent className="pt-6 text-sm text-destructive">Couldn’t load Cases.</CardContent>
-        </Card>
-      ) : cases.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
-            No Cases yet. Cases will appear here once Topic work starts flowing through the canonical model.
+  const renderCaseDetailCard = (focused: boolean) => {
+    if (!detail) {
+      return (
+        <Card
+          className={cn(
+            focused
+              ? "flex h-full flex-col rounded-none border-0 shadow-none"
+              : "lg:flex lg:min-h-0 lg:flex-col",
+          )}
+        >
+          <CardHeader>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <CardTitle>Loading Case…</CardTitle>
+                <CardDescription>
+                  Fetching the selected case detail from the canonical API.
+                </CardDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                className="shrink-0"
+                aria-label={
+                  focused ? "Exit focused case view" : "Open focused case view"
+                }
+                data-testid="case-focus-toggle"
+                disabled
+              >
+                {focused ? <Minimize2 /> : <Maximize2 />}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent
+            className={cn(
+              "text-sm text-muted-foreground",
+              focused
+                ? "min-h-0 flex-1 overflow-y-auto"
+                : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+            )}
+          >
+            Case details will appear here once loading completes.
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-          <Card>
-            <CardHeader>
-              <CardTitle>All Cases</CardTitle>
-              <CardDescription>{cases.length} case records</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Case</TableHead>
-                    <TableHead>Topic</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Updated</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {cases.map((caseItem) => {
-                    const selected = selectedCase?.id === caseItem.id
-                    return (
-                      <TableRow
-                        key={caseItem.id}
-                        className={selected ? "bg-muted/50" : undefined}
-                        onClick={() => setSelectedCaseId(caseItem.id)}
-                      >
-                        <TableCell className="cursor-pointer">
-                          <div className="flex flex-col gap-1">
-                            <span className="font-medium">{caseItem.title}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {caseItem.summary_current || caseItem.input_summary || "No summary yet"}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{caseItem.topic_title || "—"}</TableCell>
-                        <TableCell>
-                          <Badge variant={badgeVariant(caseItem.status)}>{caseItem.status}</Badge>
-                        </TableCell>
-                        <TableCell>{formatTimestamp(caseItem.updated_at)}</TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+      )
+    }
 
-          <Card>
-            <CardHeader>
+    return (
+      <Card
+        className={cn(
+          focused
+            ? "flex h-full flex-col rounded-none border-0 shadow-none"
+            : "lg:flex lg:min-h-0 lg:flex-col",
+        )}
+      >
+        <CardHeader className="space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <CardTitle>
                 {isEditingTitle ? (
                   <div className="space-y-2">
@@ -308,131 +367,296 @@ export function CasesPage({
                     className="w-fit max-w-full cursor-text text-left underline-offset-4 hover:underline"
                     title="Click to rename case title"
                     onClick={() => {
-                      setTitleDraft(detail?.title ?? "")
+                      setTitleDraft(detail.title ?? "")
                       setIsEditingTitle(true)
                     }}
                   >
-                    {detail?.title ?? "Untitled case"}
+                    {detail.title ?? "Untitled case"}
                   </button>
                 )}
               </CardTitle>
-              <CardDescription>
-                {isEditingDescription ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      autoFocus
-                      rows={4}
-                      value={descriptionDraft}
-                      disabled={updateCaseMutation.isPending}
-                      placeholder="No description captured for this case yet."
-                      onChange={(e) => setDescriptionDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                          e.preventDefault()
-                          void saveDescription()
-                        }
+            </div>
 
-                        if (e.key === "Escape") {
-                          e.preventDefault()
-                          cancelDescriptionEdit()
-                        }
-                      }}
-                    />
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={updateCaseMutation.isPending}
-                        onClick={() => {
-                          void saveDescription()
-                        }}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={updateCaseMutation.isPending}
-                        onClick={cancelDescriptionEdit}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="shrink-0"
+              aria-label={
+                focused ? "Exit focused case view" : "Open focused case view"
+              }
+              data-testid="case-focus-toggle"
+              onClick={() => setIsFocusedViewOpen((open) => !open)}
+            >
+              {focused ? <Minimize2 /> : <Maximize2 />}
+            </Button>
+          </div>
+
+          <CardDescription>
+            {isEditingDescription ? (
+              <div className="space-y-2">
+                <Textarea
+                  autoFocus
+                  rows={4}
+                  value={descriptionDraft}
+                  disabled={updateCaseMutation.isPending}
+                  placeholder="No description captured for this case yet."
+                  onChange={(e) => setDescriptionDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                      e.preventDefault()
+                      void saveDescription()
+                    }
+
+                    if (e.key === "Escape") {
+                      e.preventDefault()
+                      cancelDescriptionEdit()
+                    }
+                  }}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
                     type="button"
-                    className="w-full cursor-text text-left underline-offset-4 hover:underline"
-                    title="Click to rename case description"
+                    size="sm"
+                    disabled={updateCaseMutation.isPending}
                     onClick={() => {
-                      setDescriptionDraft(detail?.summary_current ?? "")
-                      setIsEditingDescription(true)
+                      void saveDescription()
                     }}
                   >
-                    {detail?.summary_current ? (
-                      detail.summary_current
-                    ) : (
-                      <span className="italic">No description captured for this case yet.</span>
-                    )}
-                  </button>
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={updateCaseMutation.isPending}
+                    onClick={cancelDescriptionEdit}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="w-full cursor-text text-left underline-offset-4 hover:underline"
+                title="Click to rename case description"
+                onClick={() => {
+                  setDescriptionDraft(detail.summary_current ?? "")
+                  setIsEditingDescription(true)
+                }}
+              >
+                {detail.summary_current ? (
+                  detail.summary_current
+                ) : (
+                  <span className="italic">
+                    No description captured for this case yet.
+                  </span>
                 )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-wrap gap-2">
-                <Badge variant={badgeVariant(detail?.status ?? "open")}>{detail?.status ?? "open"}</Badge>
-                <Badge variant="outline">{detail?.topic_title || "Unassigned Topic"}</Badge>
-                <Badge variant="outline">Opened {formatTimestamp(detail?.opened_at ?? null)}</Badge>
-                <Badge variant="outline">Updated {formatTimestamp(detail?.updated_at ?? null)}</Badge>
-                {detail?.closed_at ? (
-                  <Badge variant="outline">Closed {formatTimestamp(detail.closed_at)}</Badge>
-                ) : null}
-              </div>
+              </button>
+            )}
+          </CardDescription>
+        </CardHeader>
 
-              <div className="space-y-2 text-sm">
-                <div>
-                  <div className="font-medium">Request</div>
-                  <p className="text-muted-foreground">
-                    {detail?.input_summary || "No request summary captured yet."}
-                  </p>
-                </div>
-                <div>
-                  <div className="font-medium">Source</div>
-                  <p className="text-muted-foreground">{detail?.source || "—"}</p>
-                </div>
-              </div>
+        <CardContent
+          className={cn(
+            "space-y-6",
+            focused
+              ? "min-h-0 flex-1 overflow-y-auto"
+              : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+          )}
+        >
+          <div className="flex flex-wrap gap-2">
+            <Badge variant={badgeVariant(detail.status ?? "open")}>
+              {detail.status ?? "open"}
+            </Badge>
+            <Badge variant="outline">
+              {detail.topic_title || "Unassigned Topic"}
+            </Badge>
+            <Badge variant="outline">
+              Opened {formatTimestamp(detail.opened_at ?? null)}
+            </Badge>
+            <Badge variant="outline">
+              Updated {formatTimestamp(detail.updated_at ?? null)}
+            </Badge>
+            {detail.closed_at ? (
+              <Badge variant="outline">
+                Closed {formatTimestamp(detail.closed_at)}
+              </Badge>
+            ) : null}
+          </div>
 
-              <div className="space-y-3">
-                <div className="font-medium">Signals</div>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  {signals.slice(0, 8).map((value) => (
-                    <Badge key={value} variant="outline">
-                      {value}
-                    </Badge>
-                  ))}
-                  {signals.length === 0 ? (
-                    <span className="text-muted-foreground">No signals recorded yet.</span>
+          <div className="space-y-2 text-sm">
+            <div>
+              <div className="font-medium">Request</div>
+              <p className="text-muted-foreground">
+                {detail.input_summary || "No request summary captured yet."}
+              </p>
+            </div>
+            <div>
+              <div className="font-medium">Source</div>
+              <p className="text-muted-foreground">{detail.source || "—"}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="font-medium">Signals</div>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {signals.slice(0, 8).map((value) => (
+                <Badge key={value} variant="outline">
+                  {value}
+                </Badge>
+              ))}
+              {signals.length === 0 ? (
+                <span className="text-muted-foreground">
+                  No signals recorded yet.
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="font-medium">Notes</div>
+            {(detail.next_steps.length ?? 0) === 0 && !detail.outcome ? (
+              <p className="text-sm text-muted-foreground">
+                No contextual notes recorded for this Case yet.
+              </p>
+            ) : (
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {detail.outcome ? <p>{detail.outcome}</p> : null}
+                {detail.next_steps.map((step) => (
+                  <p key={step}>• {step}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Cases</h1>
+        <p className="text-muted-foreground">
+          Bounded execution records attached to Topics under the canonical
+          model.
+        </p>
+      </div>
+
+      {casesQuery.isLoading ? (
+        <Card>
+          <CardContent className="pt-6 text-sm text-muted-foreground">
+            Loading Cases…
+          </CardContent>
+        </Card>
+      ) : casesQuery.isError ? (
+        <Card>
+          <CardContent className="pt-6 text-sm text-destructive">
+            Couldn’t load Cases.
+          </CardContent>
+        </Card>
+      ) : cases.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6 text-sm text-muted-foreground">
+            No Cases yet. Cases will appear here once Topic work starts flowing
+            through the canonical model.
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+            <Card className="lg:flex lg:min-h-0 lg:flex-col">
+              <CardHeader>
+                <CardTitle>All Cases</CardTitle>
+                <CardDescription>
+                  {describeLoadedCount(
+                    cases.length,
+                    totalCases,
+                    "case record",
+                    "case records",
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+                <div
+                  ref={setCasesListViewport}
+                  className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+                >
+                  <Table>
+                    <TableHeader className="lg:sticky lg:top-0 lg:z-10">
+                      <TableRow>
+                        <TableHead>Case</TableHead>
+                        <TableHead>Topic</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Updated</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {cases.map((caseItem) => {
+                        const selected = detail?.id === caseItem.id
+                        return (
+                          <TableRow
+                            key={caseItem.id}
+                            className={selected ? "bg-muted/50" : undefined}
+                            onClick={() => {
+                              setSelectedCaseId(caseItem.id)
+                              setIsFocusedViewOpen(false)
+                            }}
+                          >
+                            <TableCell className="cursor-pointer align-top">
+                              <div className="flex flex-col gap-1">
+                                <span className="font-medium">
+                                  {caseItem.title}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {caseItem.summary_current ||
+                                    caseItem.input_summary ||
+                                    "No summary yet"}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{caseItem.topic_title || "—"}</TableCell>
+                            <TableCell>
+                              <Badge variant={badgeVariant(caseItem.status)}>
+                                {caseItem.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {formatTimestamp(caseItem.updated_at)}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+
+                  {casesQuery.hasNextPage ? (
+                    <div ref={casesLoadMoreRef} className="h-4" />
                   ) : null}
                 </div>
-              </div>
 
-              <div className="space-y-3">
-                <div className="font-medium">Notes</div>
-                {(detail?.next_steps.length ?? 0) === 0 && !detail?.outcome ? (
-                  <p className="text-sm text-muted-foreground">No contextual notes recorded for this Case yet.</p>
-                ) : (
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    {detail?.outcome ? <p>{detail.outcome}</p> : null}
-                    {detail?.next_steps.map((step) => (
-                      <p key={step}>• {step}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                {casesQuery.isFetchingNextPage ? (
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    Loading more Cases…
+                  </p>
+                ) : null}
+              </CardContent>
+            </Card>
+
+            {renderCaseDetailCard(false)}
+          </div>
+
+          <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
+            <DialogContent
+              showCloseButton={false}
+              className="flex h-[calc(100dvh-2rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
+            >
+              {renderCaseDetailCard(true)}
+            </DialogContent>
+          </Dialog>
+        </>
       )}
     </div>
   )
