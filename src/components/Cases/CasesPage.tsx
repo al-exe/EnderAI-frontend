@@ -613,27 +613,42 @@ export function CasesPage({
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell className="align-top whitespace-normal">
-                              <div className="flex min-w-0 flex-col gap-1">
-                                <span className="break-words font-medium">
+                            <TableCell className="align-top py-2">
+                              <div className="flex min-w-0 flex-col gap-0.5">
+                                <span
+                                  className="block truncate font-medium"
+                                  title={caseItem.title}
+                                >
                                   {caseItem.title}
                                 </span>
-                                <span className="break-words text-xs text-muted-foreground">
+                                <span
+                                  className="block truncate text-xs text-muted-foreground"
+                                  title={
+                                    caseItem.summary_current ||
+                                    caseItem.input_summary ||
+                                    "No summary yet"
+                                  }
+                                >
                                   {caseItem.summary_current ||
                                     caseItem.input_summary ||
                                     "No summary yet"}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="whitespace-normal break-words">
-                              {caseItem.topic_title || "—"}
+                            <TableCell className="py-2">
+                              <span
+                                className="block truncate"
+                                title={caseItem.topic_title || "—"}
+                              >
+                                {caseItem.topic_title || "—"}
+                              </span>
                             </TableCell>
-                            <TableCell className="whitespace-nowrap">
+                            <TableCell className="py-2 whitespace-nowrap">
                               <Badge variant={badgeVariant(caseItem.status)}>
                                 {caseItem.status}
                               </Badge>
                             </TableCell>
-                            <TableCell className="whitespace-nowrap">
+                            <TableCell className="py-2 whitespace-nowrap">
                               {formatTimestamp(caseItem.updated_at)}
                             </TableCell>
                           </TableRow>
