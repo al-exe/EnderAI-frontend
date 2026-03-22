@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { Maximize2, Minimize2 } from "lucide-react"
+import { Maximize2, Minimize2, X } from "lucide-react"
 import { useMemo, useRef, useState } from "react"
 
 import { readCases } from "@/api/cases"
@@ -107,6 +107,7 @@ export function TopicsPage() {
   const skipDescriptionBlurRef = useRef(false)
   const [topicsListViewport, setTopicsListViewport] =
     useState<HTMLDivElement | null>(null)
+  const [isSplitViewOpen, setIsSplitViewOpen] = useState(true)
   const [isFocusedViewOpen, setIsFocusedViewOpen] = useState(false)
 
   const topicsQuery = useInfiniteQuery({
@@ -367,20 +368,36 @@ export function TopicsPage() {
             </CardDescription>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            className="shrink-0"
-            aria-label={
-              focused ? "Exit focused topic view" : "Open focused topic view"
-            }
-            data-testid="topic-focus-toggle"
-            disabled={!selectedTopic}
-            onClick={() => setIsFocusedViewOpen((open) => !open)}
-          >
-            {focused ? <Minimize2 /> : <Maximize2 />}
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            {!focused ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label="Close split topic view"
+                data-testid="topic-split-close"
+                disabled={!selectedTopic}
+                onClick={() => setIsSplitViewOpen(false)}
+              >
+                <X />
+              </Button>
+            ) : null}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="shrink-0"
+              aria-label={
+                focused ? "Exit focused topic view" : "Open focused topic view"
+              }
+              data-testid="topic-focus-toggle"
+              disabled={!selectedTopic}
+              onClick={() => setIsFocusedViewOpen((open) => !open)}
+            >
+              {focused ? <Minimize2 /> : <Maximize2 />}
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
@@ -518,7 +535,14 @@ export function TopicsPage() {
         </Card>
       ) : (
         <>
-          <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div
+            className={cn(
+              "grid gap-6 lg:min-h-0 lg:flex-1",
+              isSplitViewOpen
+                ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
+                : "lg:grid-cols-1",
+            )}
+          >
             <Card className="lg:flex lg:min-h-0 lg:flex-col">
               <CardHeader>
                 <CardTitle>All Topics</CardTitle>
@@ -557,6 +581,7 @@ export function TopicsPage() {
                             )}
                             onClick={() => {
                               setSelectedTopicId(topic.id)
+                              setIsSplitViewOpen(true)
                               setIsFocusedViewOpen(false)
                             }}
                           >
@@ -600,7 +625,7 @@ export function TopicsPage() {
               </CardContent>
             </Card>
 
-            {renderTopicDetailCard(false)}
+            {isSplitViewOpen ? renderTopicDetailCard(false) : null}
           </div>
 
           <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
