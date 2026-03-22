@@ -91,6 +91,161 @@ function describeLoadedCount(
   return `${total} ${total === 1 ? singular : plural}`
 }
 
+function ChipList({
+  items,
+  emptyText,
+}: {
+  items: string[]
+  emptyText: string
+}) {
+  if (items.length === 0) {
+    return <p className="text-sm text-muted-foreground">{emptyText}</p>
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2 text-xs">
+      {items.map((item) => (
+        <Badge key={item} variant="outline">
+          {item}
+        </Badge>
+      ))}
+    </div>
+  )
+}
+
+function hypothesisVariant(
+  status: CasePublic["hypotheses"][number]["status"],
+): "default" | "secondary" | "success" | "destructive" | "outline" {
+  if (status === "supported") return "success"
+  if (status === "disproven") return "destructive"
+  if (status === "open") return "secondary"
+  return "outline"
+}
+
+function changeVariant(
+  kind: CasePublic["changes"][number]["kind"] | undefined,
+): "default" | "secondary" | "success" | "destructive" | "outline" {
+  switch (kind) {
+    case "code":
+      return "default"
+    case "docs":
+      return "secondary"
+    case "test":
+      return "success"
+    case "infra":
+      return "destructive"
+    default:
+      return "outline"
+  }
+}
+
+function CommandList({ commands }: { commands: CasePublic["commands"] }) {
+  if (commands.length === 0) {
+    return <p className="text-sm text-muted-foreground">No commands captured yet.</p>
+  }
+
+  return (
+    <div className="space-y-3">
+      {commands.map((command, index) => (
+        <div
+          key={`${command.cmd}-${command.ts ?? index}`}
+          className="rounded-lg border p-3"
+        >
+          <div className="font-mono text-xs">{command.cmd}</div>
+          {(command.purpose || command.salient_result || command.ts) ? (
+            <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+              {command.purpose ? <p>{command.purpose}</p> : null}
+              {command.salient_result ? <p>{command.salient_result}</p> : null}
+              {command.ts ? <p>{formatTimestamp(command.ts)}</p> : null}
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function HypothesisList({
+  hypotheses,
+}: {
+  hypotheses: CasePublic["hypotheses"]
+}) {
+  if (hypotheses.length === 0) {
+    return <p className="text-sm text-muted-foreground">No hypotheses recorded yet.</p>
+  }
+
+  return (
+    <div className="space-y-3">
+      {hypotheses.map((hypothesis, index) => (
+        <div
+          key={`${hypothesis.statement}-${hypothesis.ts ?? index}`}
+          className="rounded-lg border p-3"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="font-medium">{hypothesis.statement}</div>
+            <Badge variant={hypothesisVariant(hypothesis.status)}>
+              {hypothesis.status}
+            </Badge>
+          </div>
+          {hypothesis.evidence ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {hypothesis.evidence}
+            </p>
+          ) : null}
+          {hypothesis.ts ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {formatTimestamp(hypothesis.ts)}
+            </p>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
+  if (changes.length === 0) {
+    return <p className="text-sm text-muted-foreground">No changes recorded yet.</p>
+  }
+
+  return (
+    <div className="space-y-3">
+      {changes.map((change, index) => (
+        <div
+          key={`${change.summary}-${change.ts ?? index}`}
+          className="rounded-lg border p-3"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={changeVariant(change.kind)}>{change.kind}</Badge>
+            <div className="font-medium">{change.summary}</div>
+          </div>
+          {change.files.length ? (
+            <div className="mt-3">
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Files
+              </div>
+              <ChipList items={change.files} emptyText="No files captured for this change." />
+            </div>
+          ) : null}
+          {change.refs.length ? (
+            <div className="mt-3">
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Refs
+              </div>
+              <ChipList items={change.refs} emptyText="No refs captured for this change." />
+            </div>
+          ) : null}
+          {change.ts ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              {formatTimestamp(change.ts)}
+            </p>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function CasesPage({
   initialSelectedCaseId = null,
 }: {
@@ -160,11 +315,24 @@ export function CasesPage({
   })
 
   const detail = detailQuery.data ?? selectedCase
-  const signals = [
-    ...(detail?.files ?? []),
-    ...(detail?.errors ?? []),
-    ...(detail?.symptoms ?? []),
-  ]
+  const files = detail?.files ?? []
+  const symbols = detail?.symbols ?? []
+  const errors = detail?.errors ?? []
+  const symptoms = detail?.symptoms ?? []
+  const hasStructuredNotes = Boolean(
+    detail?.input_summary ||
+      detail?.summary_current ||
+      detail?.source ||
+      detail?.outcome ||
+      detail?.next_steps.length ||
+      files.length ||
+      symbols.length ||
+      errors.length ||
+      symptoms.length ||
+      detail?.commands.length ||
+      detail?.hypotheses.length ||
+      detail?.changes.length,
+  )
 
   const updateCaseMutation = useMutation({
     mutationFn: ({
@@ -491,48 +659,87 @@ export function CasesPage({
             ) : null}
           </div>
 
-          <div className="space-y-2 text-sm">
-            <div>
-              <div className="font-medium">Request</div>
-              <p className="text-muted-foreground">
-                {detail.input_summary || "No request summary captured yet."}
+          <div className="space-y-3">
+            <div className="font-medium">Notes</div>
+            {!hasStructuredNotes ? (
+              <p className="text-sm text-muted-foreground">
+                No case notes recorded for this Case yet.
               </p>
-            </div>
-            <div>
-              <div className="font-medium">Source</div>
-              <p className="text-muted-foreground">{detail.source || "—"}</p>
-            </div>
+            ) : (
+              <div className="space-y-3 text-sm">
+                <div>
+                  <div className="font-medium">Request</div>
+                  <p className="text-muted-foreground">
+                    {detail.input_summary || "No request summary captured yet."}
+                  </p>
+                </div>
+                <div>
+                  <div className="font-medium">Current summary</div>
+                  <p className="text-muted-foreground">
+                    {detail.summary_current || "No running summary yet."}
+                  </p>
+                </div>
+                <div>
+                  <div className="font-medium">Source</div>
+                  <p className="text-muted-foreground">{detail.source || "—"}</p>
+                </div>
+                {detail.outcome ? (
+                  <div>
+                    <div className="font-medium">Outcome</div>
+                    <p className="text-muted-foreground">{detail.outcome}</p>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">
             <div className="font-medium">Signals</div>
-            <div className="flex flex-wrap gap-2 text-xs">
-              {signals.slice(0, 8).map((value) => (
-                <Badge key={value} variant="outline">
-                  {value}
-                </Badge>
-              ))}
-              {signals.length === 0 ? (
-                <span className="text-muted-foreground">
-                  No signals recorded yet.
-                </span>
-              ) : null}
+            <div className="space-y-3">
+              <div>
+                <div className="mb-2 text-sm font-medium">Files</div>
+                <ChipList items={files} emptyText="No files captured yet." />
+              </div>
+              <div>
+                <div className="mb-2 text-sm font-medium">Symbols</div>
+                <ChipList items={symbols} emptyText="No symbols captured yet." />
+              </div>
+              <div>
+                <div className="mb-2 text-sm font-medium">Errors</div>
+                <ChipList items={errors} emptyText="No errors captured yet." />
+              </div>
+              <div>
+                <div className="mb-2 text-sm font-medium">Symptoms</div>
+                <ChipList items={symptoms} emptyText="No symptoms captured yet." />
+              </div>
             </div>
           </div>
 
           <div className="space-y-3">
-            <div className="font-medium">Notes</div>
-            {(detail.next_steps.length ?? 0) === 0 && !detail.outcome ? (
-              <p className="text-sm text-muted-foreground">
-                No contextual notes recorded for this Case yet.
-              </p>
-            ) : (
+            <div className="font-medium">{`Commands (${detail.commands.length})`}</div>
+            <CommandList commands={detail.commands} />
+          </div>
+
+          <div className="space-y-3">
+            <div className="font-medium">{`Hypotheses (${detail.hypotheses.length})`}</div>
+            <HypothesisList hypotheses={detail.hypotheses} />
+          </div>
+
+          <div className="space-y-3">
+            <div className="font-medium">{`Changes (${detail.changes.length})`}</div>
+            <ChangeList changes={detail.changes} />
+          </div>
+
+          <div className="space-y-3">
+            <div className="font-medium">{`Next steps (${detail.next_steps.length})`}</div>
+            {detail.next_steps.length ? (
               <div className="space-y-2 text-sm text-muted-foreground">
-                {detail.outcome ? <p>{detail.outcome}</p> : null}
                 {detail.next_steps.map((step) => (
                   <p key={step}>• {step}</p>
                 ))}
               </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No next steps recorded yet.</p>
             )}
           </div>
         </CardContent>
