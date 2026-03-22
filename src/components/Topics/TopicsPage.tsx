@@ -585,25 +585,31 @@ export function TopicsPage() {
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell className="align-top whitespace-normal">
-                              <div className="flex min-w-0 flex-col gap-1">
-                                <span className="break-words font-medium">
+                            <TableCell className="align-top py-2">
+                              <div className="flex min-w-0 flex-col gap-0.5">
+                                <span
+                                  className="block truncate font-medium"
+                                  title={topic.title}
+                                >
                                   {topic.title}
                                 </span>
-                                <span className="break-words text-xs text-muted-foreground">
+                                <span
+                                  className="block truncate text-xs text-muted-foreground"
+                                  title={topic.workflow_key}
+                                >
                                   {topic.workflow_key}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="whitespace-nowrap">
+                            <TableCell className="py-2 whitespace-nowrap">
                               <Badge variant={badgeVariant(topic.status)}>
                                 {topic.status}
                               </Badge>
                             </TableCell>
-                            <TableCell className="whitespace-nowrap">
+                            <TableCell className="py-2 whitespace-nowrap">
                               {topic.case_count}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap">
+                            <TableCell className="py-2 whitespace-nowrap">
                               {formatTimestamp(topic.last_used_at)}
                             </TableCell>
                           </TableRow>
