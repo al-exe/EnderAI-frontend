@@ -545,13 +545,13 @@ export function TopicsPage() {
           >
             <Card className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden">
               <CardHeader>
-                <CardTitle>All Topics</CardTitle>
+                <CardTitle>Topics</CardTitle>
                 <CardDescription>
                   {describeLoadedCount(
                     topics.length,
                     totalTopics,
-                    "active topic record",
-                    "active topic records",
+                    "topic",
+                    "topics",
                   )}
                 </CardDescription>
               </CardHeader>
