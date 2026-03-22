@@ -573,13 +573,13 @@ export function CasesPage({
           >
             <Card className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden">
               <CardHeader>
-                <CardTitle>All Cases</CardTitle>
+                <CardTitle>Cases</CardTitle>
                 <CardDescription>
                   {describeLoadedCount(
                     cases.length,
                     totalCases,
-                    "case record",
-                    "case records",
+                    "case",
+                    "cases",
                   )}
                 </CardDescription>
               </CardHeader>
