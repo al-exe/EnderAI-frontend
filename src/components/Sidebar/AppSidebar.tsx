@@ -1,12 +1,22 @@
-import { ClipboardCheck, Home, Spool, Users } from "lucide-react"
+import {
+  ClipboardCheck,
+  Home,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Spool,
+  Users,
+} from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import {
   Sidebar,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
 import { type Item, Main } from "./Main"
@@ -17,6 +27,28 @@ const baseItems: Item[] = [
   { icon: Spool, title: "Topics", path: "/topics" },
   { icon: ClipboardCheck, title: "Cases", path: "/cases" },
 ]
+
+function SidebarCollapseToggle() {
+  const { isMobile, open, toggleSidebar } = useSidebar()
+
+  if (isMobile) return null
+
+  const Icon = open ? PanelLeftClose : PanelLeftOpen
+  const label = open ? "Collapse Sidebar" : "Expand Sidebar"
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        tooltip={label}
+        data-testid="sidebar-collapse-toggle"
+        onClick={toggleSidebar}
+      >
+        <Icon className="size-4 text-muted-foreground" />
+        <span>{label}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
 
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
@@ -34,6 +66,7 @@ export function AppSidebar() {
         <Main items={items} />
       </SidebarContent>
       <SidebarFooter>
+        <SidebarCollapseToggle />
         <SidebarAppearance />
         <User user={currentUser} />
       </SidebarFooter>
