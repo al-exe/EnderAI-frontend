@@ -565,7 +565,7 @@ export function CasesPage({
         <>
           <div
             className={cn(
-              "grid gap-6 lg:min-h-0 lg:flex-1",
+              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-start",
               isSplitViewOpen
                 ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
                 : "lg:grid-cols-1",
