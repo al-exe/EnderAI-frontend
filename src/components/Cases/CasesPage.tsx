@@ -676,7 +676,7 @@ export function CasesPage({
           <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
             <DialogContent
               showCloseButton={false}
-              className="flex h-[calc(100dvh-2rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
+              className="flex h-[calc(100dvh-4rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
             >
               {renderCaseDetailCard(true)}
             </DialogContent>
