@@ -331,9 +331,9 @@ export function CasesPage({
             : "lg:flex lg:min-h-0 lg:flex-col",
         )}
       >
-        <CardHeader className="space-y-4">
+        <CardHeader>
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 space-y-4">
               <CardTitle>
                 {isEditingTitle ? (
                   <div className="space-y-2">
@@ -378,6 +378,57 @@ export function CasesPage({
                   </button>
                 )}
               </CardTitle>
+              <CardDescription>
+                {isEditingDescription ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      autoFocus
+                      rows={4}
+                      value={descriptionDraft}
+                      disabled={updateCaseMutation.isPending}
+                      placeholder="No description captured for this case yet."
+                      onChange={(e) => setDescriptionDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault()
+                          void saveDescription()
+                        }
+
+                        if (e.key === "Escape") {
+                          e.preventDefault()
+                          skipDescriptionBlurRef.current = true
+                          cancelDescriptionEdit()
+                        }
+                      }}
+                      onBlur={() => {
+                        if (skipDescriptionBlurRef.current) {
+                          skipDescriptionBlurRef.current = false
+                          return
+                        }
+                        void saveDescription()
+                      }}
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      Enter to save • Shift+Enter for newline • Esc to cancel
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="w-full cursor-text text-left underline-offset-4 hover:underline"
+                    title="Click to rename case description"
+                    onClick={startDescriptionEdit}
+                  >
+                    {detail.summary_current ? (
+                      detail.summary_current
+                    ) : (
+                      <span className="italic">
+                        No description captured for this case yet.
+                      </span>
+                    )}
+                  </button>
+                )}
+              </CardDescription>
             </div>
 
             <Button
@@ -394,58 +445,6 @@ export function CasesPage({
               {focused ? <Minimize2 /> : <Maximize2 />}
             </Button>
           </div>
-
-          <CardDescription>
-            {isEditingDescription ? (
-              <div className="space-y-2">
-                <Textarea
-                  autoFocus
-                  rows={4}
-                  value={descriptionDraft}
-                  disabled={updateCaseMutation.isPending}
-                  placeholder="No description captured for this case yet."
-                  onChange={(e) => setDescriptionDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      void saveDescription()
-                    }
-
-                    if (e.key === "Escape") {
-                      e.preventDefault()
-                      skipDescriptionBlurRef.current = true
-                      cancelDescriptionEdit()
-                    }
-                  }}
-                  onBlur={() => {
-                    if (skipDescriptionBlurRef.current) {
-                      skipDescriptionBlurRef.current = false
-                      return
-                    }
-                    void saveDescription()
-                  }}
-                />
-                <div className="text-xs text-muted-foreground">
-                  Enter to save • Shift+Enter for newline • Esc to cancel
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="w-full cursor-text text-left underline-offset-4 hover:underline"
-                title="Click to rename case description"
-                onClick={startDescriptionEdit}
-              >
-                {detail.summary_current ? (
-                  detail.summary_current
-                ) : (
-                  <span className="italic">
-                    No description captured for this case yet.
-                  </span>
-                )}
-              </button>
-            )}
-          </CardDescription>
         </CardHeader>
 
         <CardContent
@@ -581,13 +580,16 @@ export function CasesPage({
                         return (
                           <TableRow
                             key={caseItem.id}
-                            className={selected ? "bg-muted/50" : undefined}
+                            className={cn(
+                              "cursor-pointer",
+                              selected ? "bg-muted/50" : undefined,
+                            )}
                             onClick={() => {
                               setSelectedCaseId(caseItem.id)
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell className="cursor-pointer align-top">
+                            <TableCell className="align-top">
                               <div className="flex flex-col gap-1">
                                 <span className="font-medium">
                                   {caseItem.title}
