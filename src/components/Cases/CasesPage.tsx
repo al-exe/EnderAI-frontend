@@ -527,29 +527,21 @@ export function CasesPage({
 
   return (
     <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Cases</h1>
-        <p className="text-muted-foreground">
-          Bounded execution records attached to Topics under the canonical
-          model.
-        </p>
-      </div>
-
       {casesQuery.isLoading ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
+          <CardContent className="text-sm text-muted-foreground">
             Loading Cases…
           </CardContent>
         </Card>
       ) : casesQuery.isError ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-destructive">
+          <CardContent className="text-sm text-destructive">
             Couldn’t load Cases.
           </CardContent>
         </Card>
       ) : cases.length === 0 ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
+          <CardContent className="text-sm text-muted-foreground">
             No Cases yet. Cases will appear here once Topic work starts flowing
             through the canonical model.
           </CardContent>

@@ -498,29 +498,21 @@ export function TopicsPage() {
 
   return (
     <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Topics</h1>
-        <p className="text-muted-foreground">
-          Canonical workstreams backed only by the Topic / Case / ContextPack
-          model.
-        </p>
-      </div>
-
       {topicsQuery.isLoading ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
+          <CardContent className="text-sm text-muted-foreground">
             Loading Topics…
           </CardContent>
         </Card>
       ) : topicsQuery.isError ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-destructive">
+          <CardContent className="text-sm text-destructive">
             Couldn’t load Topics.
           </CardContent>
         </Card>
       ) : topics.length === 0 ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
+          <CardContent className="text-sm text-muted-foreground">
             No Topics yet. Topics will appear here as cases are created under
             the new canonical model.
           </CardContent>
