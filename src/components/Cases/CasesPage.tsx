@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
-import { Maximize2, Minimize2 } from "lucide-react"
+import { Maximize2, Minimize2, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -110,6 +110,7 @@ export function CasesPage({
   const skipDescriptionBlurRef = useRef(false)
   const [casesListViewport, setCasesListViewport] =
     useState<HTMLDivElement | null>(null)
+  const [isSplitViewOpen, setIsSplitViewOpen] = useState(true)
   const [isFocusedViewOpen, setIsFocusedViewOpen] = useState(false)
 
   useEffect(() => {
@@ -431,19 +432,34 @@ export function CasesPage({
               </CardDescription>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              className="shrink-0"
-              aria-label={
-                focused ? "Exit focused case view" : "Open focused case view"
-              }
-              data-testid="case-focus-toggle"
-              onClick={() => setIsFocusedViewOpen((open) => !open)}
-            >
-              {focused ? <Minimize2 /> : <Maximize2 />}
-            </Button>
+            <div className="flex shrink-0 items-center gap-2">
+              {!focused ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label="Close split case view"
+                  data-testid="case-split-close"
+                  onClick={() => setIsSplitViewOpen(false)}
+                >
+                  <X />
+                </Button>
+              ) : null}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                className="shrink-0"
+                aria-label={
+                  focused ? "Exit focused case view" : "Open focused case view"
+                }
+                data-testid="case-focus-toggle"
+                onClick={() => setIsFocusedViewOpen((open) => !open)}
+              >
+                {focused ? <Minimize2 /> : <Maximize2 />}
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -547,7 +563,14 @@ export function CasesPage({
         </Card>
       ) : (
         <>
-          <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div
+            className={cn(
+              "grid gap-6 lg:min-h-0 lg:flex-1",
+              isSplitViewOpen
+                ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
+                : "lg:grid-cols-1",
+            )}
+          >
             <Card className="lg:flex lg:min-h-0 lg:flex-col">
               <CardHeader>
                 <CardTitle>All Cases</CardTitle>
@@ -586,6 +609,7 @@ export function CasesPage({
                             )}
                             onClick={() => {
                               setSelectedCaseId(caseItem.id)
+                              setIsSplitViewOpen(true)
                               setIsFocusedViewOpen(false)
                             }}
                           >
@@ -631,7 +655,7 @@ export function CasesPage({
               </CardContent>
             </Card>
 
-            {renderCaseDetailCard(false)}
+            {isSplitViewOpen ? renderCaseDetailCard(false) : null}
           </div>
 
           <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
