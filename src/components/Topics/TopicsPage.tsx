@@ -536,13 +536,13 @@ export function TopicsPage() {
                   ref={setTopicsListViewport}
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
-                  <Table>
+                  <Table className="table-fixed">
                     <TableHeader className="lg:sticky lg:top-0 lg:z-10">
                       <TableRow>
-                        <TableHead>Topic</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Cases</TableHead>
-                        <TableHead>Last used</TableHead>
+                        <TableHead className="w-[48%]">Topic</TableHead>
+                        <TableHead className="w-[16%]">Status</TableHead>
+                        <TableHead className="w-[12%]">Cases</TableHead>
+                        <TableHead className="w-[24%]">Last used</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -560,23 +560,25 @@ export function TopicsPage() {
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell className="align-top">
-                              <div className="flex flex-col gap-1">
-                                <span className="font-medium">
+                            <TableCell className="align-top whitespace-normal">
+                              <div className="flex min-w-0 flex-col gap-1">
+                                <span className="break-words font-medium">
                                   {topic.title}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="break-words text-xs text-muted-foreground">
                                   {topic.workflow_key}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="whitespace-nowrap">
                               <Badge variant={badgeVariant(topic.status)}>
                                 {topic.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>{topic.case_count}</TableCell>
-                            <TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              {topic.case_count}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
                               {formatTimestamp(topic.last_used_at)}
                             </TableCell>
                           </TableRow>

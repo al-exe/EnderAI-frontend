@@ -565,13 +565,13 @@ export function CasesPage({
                   ref={setCasesListViewport}
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
-                  <Table>
+                  <Table className="table-fixed">
                     <TableHeader className="lg:sticky lg:top-0 lg:z-10">
                       <TableRow>
-                        <TableHead>Case</TableHead>
-                        <TableHead>Topic</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Updated</TableHead>
+                        <TableHead className="w-[44%]">Case</TableHead>
+                        <TableHead className="w-[22%]">Topic</TableHead>
+                        <TableHead className="w-[14%]">Status</TableHead>
+                        <TableHead className="w-[20%]">Updated</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -589,25 +589,27 @@ export function CasesPage({
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell className="align-top">
-                              <div className="flex flex-col gap-1">
-                                <span className="font-medium">
+                            <TableCell className="align-top whitespace-normal">
+                              <div className="flex min-w-0 flex-col gap-1">
+                                <span className="break-words font-medium">
                                   {caseItem.title}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="break-words text-xs text-muted-foreground">
                                   {caseItem.summary_current ||
                                     caseItem.input_summary ||
                                     "No summary yet"}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell>{caseItem.topic_title || "—"}</TableCell>
-                            <TableCell>
+                            <TableCell className="whitespace-normal break-words">
+                              {caseItem.topic_title || "—"}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
                               <Badge variant={badgeVariant(caseItem.status)}>
                                 {caseItem.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="whitespace-nowrap">
                               {formatTimestamp(caseItem.updated_at)}
                             </TableCell>
                           </TableRow>
