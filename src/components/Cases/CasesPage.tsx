@@ -284,7 +284,7 @@ export function CasesPage({
           className={cn(
             focused
               ? "flex h-full flex-col rounded-none border-0 shadow-none"
-              : "lg:flex lg:min-h-0 lg:flex-col",
+              : "lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
           )}
         >
           <CardHeader>
@@ -329,7 +329,7 @@ export function CasesPage({
         className={cn(
           focused
             ? "flex h-full flex-col rounded-none border-0 shadow-none"
-            : "lg:flex lg:min-h-0 lg:flex-col",
+            : "lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
         )}
       >
         <CardHeader>
@@ -541,7 +541,7 @@ export function CasesPage({
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1">
+    <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:overflow-hidden">
       {casesQuery.isLoading ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
@@ -565,13 +565,13 @@ export function CasesPage({
         <>
           <div
             className={cn(
-              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-start",
+              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-start lg:overflow-hidden",
               isSplitViewOpen
                 ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
                 : "lg:grid-cols-1",
             )}
           >
-            <Card className="lg:flex lg:min-h-0 lg:flex-col">
+            <Card className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden">
               <CardHeader>
                 <CardTitle>All Cases</CardTitle>
                 <CardDescription>
