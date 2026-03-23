@@ -44,12 +44,6 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const TOPICS_PAGE_SIZE = 25
-const TOPIC_PINNED_HEADER_CLASS =
-  "sticky left-0 z-20 min-w-[18rem] bg-muted/50 shadow-[1px_0_0_hsl(var(--border))]"
-const TOPIC_PINNED_CELL_CLASS =
-  "sticky left-0 z-10 min-w-[18rem] bg-card shadow-[1px_0_0_hsl(var(--border))] group-hover:bg-muted/50"
-const TOPIC_PINNED_SELECTED_CELL_CLASS =
-  "sticky left-0 z-10 min-w-[18rem] bg-muted/50 shadow-[1px_0_0_hsl(var(--border))]"
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -375,20 +369,6 @@ export function TopicsPage() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            {!focused ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                aria-label="Close split topic view"
-                data-testid="topic-split-close"
-                disabled={!selectedTopic}
-                onClick={() => setIsSplitViewOpen(false)}
-              >
-                <X />
-              </Button>
-            ) : null}
-
             <Button
               type="button"
               variant="outline"
@@ -403,6 +383,20 @@ export function TopicsPage() {
             >
               {focused ? <Minimize2 /> : <Maximize2 />}
             </Button>
+
+            {!focused ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label="Close split topic view"
+                data-testid="topic-split-close"
+                disabled={!selectedTopic}
+                onClick={() => setIsSplitViewOpen(false)}
+              >
+                <X />
+              </Button>
+            ) : null}
           </div>
         </div>
       </CardHeader>
@@ -519,7 +513,7 @@ export function TopicsPage() {
   )
 
   return (
-    <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
       {topicsQuery.isLoading ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
@@ -543,7 +537,7 @@ export function TopicsPage() {
         <>
           <div
             className={cn(
-              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-start lg:overflow-hidden",
+              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-stretch lg:overflow-hidden",
               isSplitViewOpen
                 ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
                 : "lg:grid-cols-1",
@@ -566,15 +560,13 @@ export function TopicsPage() {
                   ref={setTopicsListViewport}
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
-                  <Table className="min-w-[44rem] table-fixed">
+                  <Table className="min-w-max">
                     <TableHeader className="lg:sticky lg:top-0 lg:z-10">
                       <TableRow>
-                        <TableHead className={cn("w-[48%]", TOPIC_PINNED_HEADER_CLASS)}>
-                          Topic
-                        </TableHead>
-                        <TableHead className="w-[16%]">Status</TableHead>
-                        <TableHead className="w-[12%]">Cases</TableHead>
-                        <TableHead className="w-[24%]">Last used</TableHead>
+                        <TableHead>Topic</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Cases</TableHead>
+                        <TableHead>Last used</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -593,25 +585,12 @@ export function TopicsPage() {
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell
-                              className={cn(
-                                "align-top py-2",
-                                selected
-                                  ? TOPIC_PINNED_SELECTED_CELL_CLASS
-                                  : TOPIC_PINNED_CELL_CLASS,
-                              )}
-                            >
-                              <div className="flex min-w-0 flex-col gap-0.5">
-                                <span
-                                  className="block truncate font-medium"
-                                  title={topic.title}
-                                >
+                            <TableCell className="align-top py-2">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-medium">
                                   {topic.title}
                                 </span>
-                                <span
-                                  className="block truncate text-xs text-muted-foreground"
-                                  title={topic.workflow_key}
-                                >
+                                <span className="text-xs text-muted-foreground">
                                   {topic.workflow_key}
                                 </span>
                               </div>
@@ -652,7 +631,7 @@ export function TopicsPage() {
           <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
             <DialogContent
               showCloseButton={false}
-              className="flex h-[calc(100dvh-4rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
+              className="flex h-[calc(100dvh-2rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
             >
               {renderTopicDetailCard(true)}
             </DialogContent>

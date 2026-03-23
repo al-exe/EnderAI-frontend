@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -33,8 +32,6 @@ import { Label } from "../ui/label"
 
 const DEFAULT_HOSTED_MCP_URL =
   import.meta.env.VITE_HOSTED_MCP_URL || "https://enderai-mcp.onrender.com/mcp"
-
-type ClientKind = "codex" | "generic"
 
 interface RevealedCredential {
   credentialId: string
@@ -65,36 +62,6 @@ function buildCodexPersistentShellSnippet(mcpToken: string): string {
   ]
 
   return lines.join("\n")
-}
-
-function buildGenericTokenSnippet(mcpToken: string): string {
-  return mcpToken
-}
-
-function buildGenericConfigSnippet(hostedMcpUrl: string): string {
-  return JSON.stringify(
-    {
-      inputs: [
-        {
-          type: "promptString",
-          id: "enderai_mcp_token",
-          description: "EnderAI MCP token",
-          password: true,
-        },
-      ],
-      servers: {
-        "enderai-api": {
-          type: "http",
-          url: hostedMcpUrl,
-          headers: {
-            Authorization: `Bearer ${"$"}{input:enderai_mcp_token}`,
-          },
-        },
-      },
-    },
-    null,
-    2,
-  )
 }
 
 function buildCodexConfigSnippet(hostedMcpUrl: string): string {
@@ -260,11 +227,7 @@ const ConnectAgent = () => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [copiedText, copy] = useCopyToClipboard()
-  const [selectedClient, setSelectedClient] = useState<ClientKind>("generic")
-  const [credentialLabel, setCredentialLabel] = useState(
-    "Codex CLI (terminal)",
-  )
-  const [hostedMcpUrl, setHostedMcpUrl] = useState(DEFAULT_HOSTED_MCP_URL)
+  const [credentialLabel, setCredentialLabel] = useState("Codex CLI (terminal)")
   const [selectedCredentialId, setSelectedCredentialId] = useState<
     string | null
   >(null)
@@ -277,47 +240,25 @@ const ConnectAgent = () => {
   })
 
   const credentials = credentialsQuery.data?.data ?? []
-  const selectedCredential =
-    credentials.find((credential) => credential.id === selectedCredentialId) ??
-    null
+  const activeCredentials = credentials.filter(
+    (credential) => credential.revoked_at === null,
+  )
 
   useEffect(() => {
-    if (!credentials.length) {
+    if (!activeCredentials.length) {
       setSelectedCredentialId(null)
       return
     }
 
-    const activeCredential = credentials.find(
-      (credential) =>
-        credential.id === selectedCredentialId &&
-        credential.revoked_at === null,
+    const activeCredential = activeCredentials.find(
+      (credential) => credential.id === selectedCredentialId,
     )
     if (activeCredential) {
       return
     }
 
-    const firstActiveCredential = credentials.find(
-      (credential) => credential.revoked_at === null,
-    )
-    setSelectedCredentialId(
-      firstActiveCredential?.id ?? credentials[0]?.id ?? null,
-    )
-  }, [credentials, selectedCredentialId])
-
-  useEffect(() => {
-    if (
-      selectedClient === "codex" &&
-      credentialLabel === "Generic MCP client"
-    ) {
-      setCredentialLabel("Codex CLI (terminal)")
-    }
-    if (
-      selectedClient === "generic" &&
-      credentialLabel === "Codex CLI (terminal)"
-    ) {
-      setCredentialLabel("Generic MCP client")
-    }
-  }, [credentialLabel, selectedClient])
+    setSelectedCredentialId(activeCredentials[0]?.id ?? null)
+  }, [activeCredentials, selectedCredentialId])
 
   const createMutation = useMutation({
     mutationFn: (label: string) => createAgentCredential({ label }),
@@ -360,33 +301,21 @@ const ConnectAgent = () => {
   })
 
   const trimmedLabel = credentialLabel.trim()
-  const nextLabel =
-    trimmedLabel ||
-    (selectedClient === "codex"
-      ? "Codex CLI (terminal)"
-      : "Generic MCP client")
+  const nextLabel = trimmedLabel || "Codex CLI (terminal)"
 
   const mcpToken =
     revealedCredential?.credentialId === selectedCredentialId
       ? revealedCredential.mcpToken
       : null
-  const hasTokensForSelectedFlow = mcpToken !== null
-  const envSnippet =
-    hasTokensForSelectedFlow
-      ? selectedClient === "codex"
-        ? buildEnvSnippet(mcpToken ?? "")
-        : buildGenericTokenSnippet(mcpToken ?? "")
-      : null
-  const clientSnippet = hasTokensForSelectedFlow
-    ? selectedClient === "codex"
-      ? buildCodexConfigSnippet(hostedMcpUrl.trim())
-      : buildGenericConfigSnippet(hostedMcpUrl.trim())
+  const hasTokensReady = mcpToken !== null
+  const envSnippet = hasTokensReady ? buildEnvSnippet(mcpToken ?? "") : null
+  const clientSnippet = hasTokensReady
+    ? buildCodexConfigSnippet(DEFAULT_HOSTED_MCP_URL)
     : null
   const agentInstructionSnippet = buildAgentInstructionSnippet()
-  const codexPersistentShellSnippet =
-    hasTokensForSelectedFlow && selectedClient === "codex"
-      ? buildCodexPersistentShellSnippet(mcpToken ?? "")
-      : null
+  const codexPersistentShellSnippet = hasTokensReady
+    ? buildCodexPersistentShellSnippet(mcpToken ?? "")
+    : null
 
   return (
     <div className="space-y-6">
@@ -397,8 +326,8 @@ const ConnectAgent = () => {
             Connect Agent
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Generate a per-user MCP token, client-specific setup, and the
-            minimal EnderAI workflow snippet your agent needs.
+            Generate a per-user MCP token and the minimal EnderAI workflow
+            snippet your agent needs.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -416,14 +345,11 @@ const ConnectAgent = () => {
 
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="space-y-4 rounded-xl border p-4">
-              <div className="space-y-2">
-                <Label htmlFor="hosted-mcp-url">Hosted MCP URL</Label>
-                <Input
-                  id="hosted-mcp-url"
-                  value={hostedMcpUrl}
-                  onChange={(event) => setHostedMcpUrl(event.target.value)}
-                  placeholder="https://enderai-mcp.onrender.com/mcp"
-                />
+              <div className="space-y-1">
+                <div className="text-sm font-medium">Hosted MCP URL</div>
+                <code className="block rounded-md border bg-muted/30 px-3 py-2 text-xs">
+                  {DEFAULT_HOSTED_MCP_URL}
+                </code>
               </div>
 
               <div className="space-y-2">
@@ -436,15 +362,6 @@ const ConnectAgent = () => {
                   placeholder="Codex CLI (terminal)"
                 />
               </div>
-
-              <Alert>
-                <Shield className="size-4" />
-                <AlertTitle>Single-token hosted MCP flow</AlertTitle>
-                <AlertDescription>
-                  Use one user-scoped MCP token. The hosted MCP validates that
-                  token and reuses it for backend API calls on your behalf.
-                </AlertDescription>
-              </Alert>
 
               <LoadingButton
                 type="button"
@@ -462,12 +379,11 @@ const ConnectAgent = () => {
               <ul className="mt-3 space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" />
-                  One user-scoped MCP token for the hosted EnderAI flow.
+                  One per-user MCP token for the hosted EnderAI workflow.
                 </li>
                 <li className="flex gap-2">
                   <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
-                  Copy/paste setup for terminal Codex CLI or a generic MCP
-                  client. Pick one path, not both.
+                  Codex CLI setup snippets with the fixed hosted MCP endpoint.
                 </li>
                 <li className="flex gap-2">
                   <RotateCw className="mt-0.5 size-4 shrink-0 text-primary" />A
@@ -476,48 +392,23 @@ const ConnectAgent = () => {
                 </li>
                 <li className="flex gap-2">
                   <LaptopMinimal className="mt-0.5 size-4 shrink-0 text-primary" />
-                  A minimal workflow reminder so your agent starts meaningful
-                  work by auto-hydrating context with EnderAI first.
+                  A minimal workflow reminder so your AI workflow starts using
+                  EnderAI correctly.
                 </li>
               </ul>
             </div>
           </div>
 
-          <Tabs
-            value={selectedClient}
-            onValueChange={(value) => setSelectedClient(value as ClientKind)}
-          >
-            <TabsList>
-              <TabsTrigger value="generic">Generic MCP client</TabsTrigger>
-              <TabsTrigger value="codex">Codex CLI</TabsTrigger>
-            </TabsList>
-            <TabsContent value="generic" className="mt-4">
-              <Alert>
-                <CheckCircle2 className="size-4" />
-                <AlertTitle>Where this goes</AlertTitle>
-                <AlertDescription>
-                  Use the JSON block below for a generic hosted MCP client.
-                  Paste it into your local MCP config, reconnect the client, and
-                  enter the prompted MCP token when asked. Do not also add the
-                  Codex config. The hosted MCP service is already running.
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
-            <TabsContent value="codex" className="mt-4">
-              <Alert>
-                <CheckCircle2 className="size-4" />
-                <AlertTitle>Where this goes</AlertTitle>
-                <AlertDescription>
-                  Use the TOML block below for terminal `codex`. Run the MCP
-                  token export in the same shell before launching `codex`, then
-                  add the MCP entry to `~/.codex/config.toml`. If you want new
-                  terminals to pick up the token automatically, use the
-                  persistent shell setup below instead of re-running `export`
-                  each time.
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
-          </Tabs>
+          <Alert>
+            <CheckCircle2 className="size-4" />
+            <AlertTitle>Where this goes</AlertTitle>
+            <AlertDescription>
+              Run the export snippet in the same shell that will launch terminal
+              `codex`, then add the TOML block to `~/.codex/config.toml`. If you
+              want future bash shells to pick up the token automatically, use
+              the persistent shell setup below.
+            </AlertDescription>
+          </Alert>
 
           {envSnippet && clientSnippet ? (
             <div className="space-y-4">
@@ -525,23 +416,14 @@ const ConnectAgent = () => {
                 <CheckCircle2 className="size-4" />
                 <AlertTitle>Fresh tokens ready</AlertTitle>
                 <AlertDescription>
-                  This token is only shown right now. If you lose it, rotate the
-                  credential below to mint a fresh MCP token and regenerate the
-                  setup snippets.
+                  This token is only shown right now. Save it now if you need it
+                  for setup.
                 </AlertDescription>
               </Alert>
 
               <SnippetBlock
-                title={
-                  selectedClient === "codex"
-                    ? "Export this env var"
-                    : "Token value to enter"
-                }
-                description={
-                  selectedClient === "codex"
-                    ? "Run these in the same shell that will launch `codex`."
-                    : "Paste these values when your MCP client prompts for them. You do not need to export env vars for the generic hosted flow."
-                }
+                title="Export this env var"
+                description="Run this in the same shell that will launch `codex`."
                 snippet={envSnippet}
                 copiedText={copiedText}
                 onCopy={(value) => {
@@ -551,16 +433,8 @@ const ConnectAgent = () => {
               />
 
               <SnippetBlock
-                title={
-                  selectedClient === "codex"
-                    ? "Codex CLI config"
-                    : "Generic MCP client config"
-                }
-                description={
-                  selectedClient === "codex"
-                    ? "Add this block to ~/.codex/config.toml, then launch `codex` from that same shell."
-                    : "Paste this into your local MCP config file. This is an alternative to the Codex flow, not an additional step."
-                }
+                title="Codex CLI config"
+                description="Add this block to `~/.codex/config.toml`, then launch `codex` from that same shell."
                 snippet={clientSnippet}
                 copiedText={copiedText}
                 onCopy={(value) => {
@@ -582,44 +456,32 @@ const ConnectAgent = () => {
                 />
               ) : null}
 
-              {selectedClient === "codex" ? (
-                <Alert>
-                  <Shield className="size-4" />
-                  <AlertTitle>Why use the file-based shell setup</AlertTitle>
-                  <AlertDescription>
-                    Directly writing `export ENDERAI_MCP_TOKEN="..."` into
-                    `~/.bashrc` also works, but it leaves the raw token in a
-                    config file that is easier to copy, sync, diff, or share by
-                    accident. The file-based flow is mainly about reducing that
-                    accidental disclosure risk.
-                  </AlertDescription>
-                </Alert>
-              ) : null}
+              <Alert>
+                <Shield className="size-4" />
+                <AlertTitle>Why use the file-based shell setup</AlertTitle>
+                <AlertDescription>
+                  Directly writing `export ENDERAI_MCP_TOKEN="..."` into
+                  `~/.bashrc` also works, but it leaves the raw token in a
+                  config file that is easier to copy, sync, diff, or share by
+                  accident. The file-based flow is mainly about reducing that
+                  accidental disclosure risk.
+                </AlertDescription>
+              </Alert>
             </div>
-          ) : selectedCredential ? (
-            <Alert>
-              <RotateCw className="size-4" />
-              <AlertTitle>Rotate to reveal fresh tokens</AlertTitle>
-              <AlertDescription>
-                You have a credential selected, but its token is not shown again
-                after creation. Rotate it below to mint a new MCP token and
-                regenerate the setup snippets.
-              </AlertDescription>
-            </Alert>
           ) : (
             <Alert>
               <KeyRound className="size-4" />
               <AlertTitle>Create your first agent credential</AlertTitle>
               <AlertDescription>
                 Once you create a credential, this page will generate the token,
-                config, and workflow snippet for your chosen client.
+                Codex config, and workflow snippet you need.
               </AlertDescription>
             </Alert>
           )}
 
           <SnippetBlock
             title="Minimal agent instruction"
-            description="Add this to your client or repo instructions so meaningful work starts by auto-hydrating EnderAI context first."
+            description="Add this to your AI workflow’s instruction file to start using EnderAI."
             snippet={agentInstructionSnippet}
             copiedText={copiedText}
             onCopy={(value) => {
@@ -632,19 +494,15 @@ const ConnectAgent = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Issued agent credentials</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Rotate a credential to mint a fresh MCP token or revoke it when an
-            install should stop working.
-          </p>
+          <CardTitle>Credentials</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {credentialsQuery.isLoading ? (
             <p className="text-sm text-muted-foreground">
               Loading credentials…
             </p>
-          ) : credentials.length ? (
-            credentials.map((credential) => (
+          ) : activeCredentials.length ? (
+            activeCredentials.map((credential) => (
               <CredentialCard
                 key={credential.id}
                 credential={credential}
@@ -667,7 +525,7 @@ const ConnectAgent = () => {
             ))
           ) : (
             <p className="text-sm text-muted-foreground">
-              No agent credentials yet.
+              No active credentials yet.
             </p>
           )}
         </CardContent>

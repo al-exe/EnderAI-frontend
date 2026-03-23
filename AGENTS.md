@@ -1,6 +1,6 @@
 # EnderAI — MCP-First Agent Rules (Portable Template)
 
-Last updated: 2026-03-18
+Last updated: 2026-03-22
 
 This template is intended for agents and IDEs that use EnderAI through MCP.
 
@@ -38,6 +38,13 @@ For meaningful user-initiated work:
 3. do the work
 4. call `enderai_update_case` as material findings, commands, hypotheses, or changes develop
 5. call `enderai_finish_case` when the work is complete or stops
+
+## Delivery Workflow
+For repo-level fix requests, bug lists, or cleanup batches:
+1. create a Jira ticket with relevant context before coding unless the user explicitly says not to
+2. do the work on a branch and open a PR
+3. link the Jira ticket in the PR and add the PR URL back to Jira
+4. merge after validation unless the user explicitly asks to hold the PR open
 
 ## Default Behavior
 - prefer guided case tools over raw `enderai_request`
