@@ -44,6 +44,12 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const TOPICS_PAGE_SIZE = 25
+const TOPIC_PINNED_HEADER_CLASS =
+  "sticky left-0 z-20 min-w-[18rem] bg-muted/50 shadow-[1px_0_0_hsl(var(--border))]"
+const TOPIC_PINNED_CELL_CLASS =
+  "sticky left-0 z-10 min-w-[18rem] bg-card shadow-[1px_0_0_hsl(var(--border))] group-hover:bg-muted/50"
+const TOPIC_PINNED_SELECTED_CELL_CLASS =
+  "sticky left-0 z-10 min-w-[18rem] bg-muted/50 shadow-[1px_0_0_hsl(var(--border))]"
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -560,10 +566,12 @@ export function TopicsPage() {
                   ref={setTopicsListViewport}
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
-                  <Table className="table-fixed">
+                  <Table className="min-w-[44rem] table-fixed">
                     <TableHeader className="lg:sticky lg:top-0 lg:z-10">
                       <TableRow>
-                        <TableHead className="w-[48%]">Topic</TableHead>
+                        <TableHead className={cn("w-[48%]", TOPIC_PINNED_HEADER_CLASS)}>
+                          Topic
+                        </TableHead>
                         <TableHead className="w-[16%]">Status</TableHead>
                         <TableHead className="w-[12%]">Cases</TableHead>
                         <TableHead className="w-[24%]">Last used</TableHead>
@@ -576,7 +584,7 @@ export function TopicsPage() {
                           <TableRow
                             key={topic.id}
                             className={cn(
-                              "cursor-pointer",
+                              "group cursor-pointer",
                               selected ? "bg-muted/50" : undefined,
                             )}
                             onClick={() => {
@@ -585,7 +593,14 @@ export function TopicsPage() {
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell className="align-top py-2">
+                            <TableCell
+                              className={cn(
+                                "align-top py-2",
+                                selected
+                                  ? TOPIC_PINNED_SELECTED_CELL_CLASS
+                                  : TOPIC_PINNED_CELL_CLASS,
+                              )}
+                            >
                               <div className="flex min-w-0 flex-col gap-0.5">
                                 <span
                                   className="block truncate font-medium"
