@@ -375,16 +375,19 @@ test("Connect Agent generates the hosted Codex setup and hides revoked credentia
   await page.goto("/settings")
   await page.getByRole("tab", { name: "Connect Agent" }).click()
   await expect(page.getByLabel("Credential label")).toBeVisible()
+  await expect(page.getByLabel("Credential label")).toHaveValue(
+    "EnderAI token",
+  )
   await expect(page.getByText("Revoked install")).toHaveCount(0)
   await expect(
     page.getByText(
       "Generate a per-user MCP token and the minimal EnderAI workflow snippet your agent needs.",
     ),
   ).toBeVisible()
-  await expect(page.getByText("Hosted MCP URL")).toBeVisible()
+  await expect(page.getByText("Hosted MCP URL")).toHaveCount(0)
   await expect(
     page.getByText("https://enderai-mcp.onrender.com/mcp"),
-  ).toBeVisible()
+  ).toHaveCount(0)
   await expect(
     page.getByRole("tab", { name: "Generic MCP client" }),
   ).toHaveCount(0)

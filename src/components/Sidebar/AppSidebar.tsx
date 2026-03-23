@@ -34,7 +34,7 @@ function SidebarCollapseToggle() {
   if (isMobile) return null
 
   const Icon = open ? PanelLeftClose : PanelLeftOpen
-  const label = open ? "Collapse Sidebar" : "Expand Sidebar"
+  const label = open ? "Collapse" : "Expand"
 
   return (
     <SidebarMenuItem>

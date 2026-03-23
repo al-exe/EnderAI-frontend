@@ -30,9 +30,6 @@ import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import { Badge } from "../ui/badge"
 import { Label } from "../ui/label"
 
-const DEFAULT_HOSTED_MCP_URL =
-  import.meta.env.VITE_HOSTED_MCP_URL || "https://enderai-mcp.onrender.com/mcp"
-
 interface RevealedCredential {
   credentialId: string
   mcpToken: string
@@ -227,7 +224,7 @@ const ConnectAgent = () => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [copiedText, copy] = useCopyToClipboard()
-  const [credentialLabel, setCredentialLabel] = useState("Codex CLI (terminal)")
+  const [credentialLabel, setCredentialLabel] = useState("EnderAI token")
   const [selectedCredentialId, setSelectedCredentialId] = useState<
     string | null
   >(null)
@@ -301,7 +298,7 @@ const ConnectAgent = () => {
   })
 
   const trimmedLabel = credentialLabel.trim()
-  const nextLabel = trimmedLabel || "Codex CLI (terminal)"
+  const nextLabel = trimmedLabel || "EnderAI token"
 
   const mcpToken =
     revealedCredential?.credentialId === selectedCredentialId
@@ -310,7 +307,10 @@ const ConnectAgent = () => {
   const hasTokensReady = mcpToken !== null
   const envSnippet = hasTokensReady ? buildEnvSnippet(mcpToken ?? "") : null
   const clientSnippet = hasTokensReady
-    ? buildCodexConfigSnippet(DEFAULT_HOSTED_MCP_URL)
+    ? buildCodexConfigSnippet(
+        import.meta.env.VITE_HOSTED_MCP_URL ||
+          "https://enderai-mcp.onrender.com/mcp",
+      )
     : null
   const agentInstructionSnippet = buildAgentInstructionSnippet()
   const codexPersistentShellSnippet = hasTokensReady
@@ -345,13 +345,6 @@ const ConnectAgent = () => {
 
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="space-y-4 rounded-xl border p-4">
-              <div className="space-y-1">
-                <div className="text-sm font-medium">Hosted MCP URL</div>
-                <code className="block rounded-md border bg-muted/30 px-3 py-2 text-xs">
-                  {DEFAULT_HOSTED_MCP_URL}
-                </code>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="credential-label">Credential label</Label>
                 <Input
@@ -359,7 +352,7 @@ const ConnectAgent = () => {
                   data-testid="agent-credential-label"
                   value={credentialLabel}
                   onChange={(event) => setCredentialLabel(event.target.value)}
-                  placeholder="Codex CLI (terminal)"
+                  placeholder="EnderAI token"
                 />
               </div>
 
