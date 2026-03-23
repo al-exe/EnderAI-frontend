@@ -819,7 +819,10 @@ export function CasesPage({
                   ref={setCasesListViewport}
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
-                  <Table className="min-w-max">
+                  <Table
+                    className="min-w-max"
+                    containerClassName="overflow-visible"
+                  >
                     <TableHeader>
                       <TableRow>
                         <TableHead className="sticky top-0 z-10 bg-muted/95">
