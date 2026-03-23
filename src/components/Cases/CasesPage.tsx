@@ -465,8 +465,8 @@ export function CasesPage({
         <Card
           className={cn(
             focused
-              ? "flex h-full flex-col rounded-none border-0 shadow-none"
-              : "lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
+              ? "flex h-full min-w-0 flex-col rounded-none border-0 shadow-none"
+              : "lg:flex lg:min-h-0 lg:min-w-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
           )}
         >
           <CardHeader>
@@ -494,7 +494,7 @@ export function CasesPage({
           </CardHeader>
           <CardContent
             className={cn(
-              "text-sm text-muted-foreground",
+              "overflow-x-hidden text-sm text-muted-foreground",
               focused
                 ? "min-h-0 flex-1 overflow-y-auto"
                 : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
@@ -510,8 +510,8 @@ export function CasesPage({
       <Card
         className={cn(
           focused
-            ? "flex h-full flex-col rounded-none border-0 shadow-none"
-            : "lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
+            ? "flex h-full min-w-0 flex-col rounded-none border-0 shadow-none"
+            : "lg:flex lg:min-h-0 lg:min-w-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
         )}
       >
         <CardHeader>
@@ -647,7 +647,7 @@ export function CasesPage({
 
         <CardContent
           className={cn(
-            "space-y-6",
+            "space-y-6 overflow-x-hidden",
             focused
               ? "min-h-0 flex-1 overflow-y-auto"
               : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",

@@ -23,7 +23,7 @@ import { type Item, Main } from "./Main"
 import { User } from "./User"
 
 const baseItems: Item[] = [
-  { icon: Home, title: "Dashboard", path: "/" },
+  { icon: Home, title: "Home", path: "/" },
   { icon: Spool, title: "Topics", path: "/topics" },
   { icon: ClipboardCheck, title: "Cases", path: "/cases" },
 ]
