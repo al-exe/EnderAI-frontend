@@ -837,8 +837,15 @@ export function CasesPage({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {cases.map((caseItem) => {
+                      {cases.map((caseItem, index) => {
                         const selected = detail?.id === caseItem.id
+                        const freezeFirstRow = index === 0
+                        const frozenCellClassName = freezeFirstRow
+                          ? cn(
+                              "sticky top-11 z-[5]",
+                              selected ? "bg-muted/95" : "bg-background/95",
+                            )
+                          : undefined
                         return (
                           <TableRow
                             key={caseItem.id}
@@ -852,7 +859,12 @@ export function CasesPage({
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell className="align-top py-2">
+                            <TableCell
+                              className={cn(
+                                "align-top py-2",
+                                frozenCellClassName,
+                              )}
+                            >
                               <div className="flex flex-col gap-0.5">
                                 <span className="font-medium">
                                   {caseItem.title}
@@ -864,15 +876,27 @@ export function CasesPage({
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="py-2">
+                            <TableCell
+                              className={cn("py-2", frozenCellClassName)}
+                            >
                               <span>{caseItem.topic_title || "—"}</span>
                             </TableCell>
-                            <TableCell className="py-2 whitespace-nowrap">
+                            <TableCell
+                              className={cn(
+                                "py-2 whitespace-nowrap",
+                                frozenCellClassName,
+                              )}
+                            >
                               <Badge variant={badgeVariant(caseItem.status)}>
                                 {caseItem.status}
                               </Badge>
                             </TableCell>
-                            <TableCell className="py-2 whitespace-nowrap">
+                            <TableCell
+                              className={cn(
+                                "py-2 whitespace-nowrap",
+                                frozenCellClassName,
+                              )}
+                            >
                               {formatTimestamp(caseItem.updated_at)}
                             </TableCell>
                           </TableRow>
