@@ -141,7 +141,9 @@ function changeVariant(
 
 function CommandList({ commands }: { commands: CasePublic["commands"] }) {
   if (commands.length === 0) {
-    return <p className="text-sm text-muted-foreground">No commands captured yet.</p>
+    return (
+      <p className="text-sm text-muted-foreground">No commands captured yet.</p>
+    )
   }
 
   return (
@@ -152,7 +154,7 @@ function CommandList({ commands }: { commands: CasePublic["commands"] }) {
           className="rounded-lg border p-3"
         >
           <div className="font-mono text-xs">{command.cmd}</div>
-          {(command.purpose || command.salient_result || command.ts) ? (
+          {command.purpose || command.salient_result || command.ts ? (
             <div className="mt-2 space-y-1 text-sm text-muted-foreground">
               {command.purpose ? <p>{command.purpose}</p> : null}
               {command.salient_result ? <p>{command.salient_result}</p> : null}
@@ -171,7 +173,11 @@ function HypothesisList({
   hypotheses: CasePublic["hypotheses"]
 }) {
   if (hypotheses.length === 0) {
-    return <p className="text-sm text-muted-foreground">No hypotheses recorded yet.</p>
+    return (
+      <p className="text-sm text-muted-foreground">
+        No hypotheses recorded yet.
+      </p>
+    )
   }
 
   return (
@@ -205,7 +211,9 @@ function HypothesisList({
 
 function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
   if (changes.length === 0) {
-    return <p className="text-sm text-muted-foreground">No changes recorded yet.</p>
+    return (
+      <p className="text-sm text-muted-foreground">No changes recorded yet.</p>
+    )
   }
 
   return (
@@ -224,7 +232,10 @@ function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
               <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Files
               </div>
-              <ChipList items={change.files} emptyText="No files captured for this change." />
+              <ChipList
+                items={change.files}
+                emptyText="No files captured for this change."
+              />
             </div>
           ) : null}
           {change.refs.length ? (
@@ -232,7 +243,10 @@ function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
               <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Refs
               </div>
-              <ChipList items={change.refs} emptyText="No refs captured for this change." />
+              <ChipList
+                items={change.refs}
+                emptyText="No refs captured for this change."
+              />
             </div>
           ) : null}
           {change.ts ? (
@@ -601,19 +615,6 @@ export function CasesPage({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              {!focused ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-sm"
-                  aria-label="Close split case view"
-                  data-testid="case-split-close"
-                  onClick={() => setIsSplitViewOpen(false)}
-                >
-                  <X />
-                </Button>
-              ) : null}
-
               <Button
                 type="button"
                 variant="outline"
@@ -627,6 +628,19 @@ export function CasesPage({
               >
                 {focused ? <Minimize2 /> : <Maximize2 />}
               </Button>
+
+              {!focused ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label="Close split case view"
+                  data-testid="case-split-close"
+                  onClick={() => setIsSplitViewOpen(false)}
+                >
+                  <X />
+                </Button>
+              ) : null}
             </div>
           </div>
         </CardHeader>
@@ -681,7 +695,9 @@ export function CasesPage({
                 </div>
                 <div>
                   <div className="font-medium">Source</div>
-                  <p className="text-muted-foreground">{detail.source || "—"}</p>
+                  <p className="text-muted-foreground">
+                    {detail.source || "—"}
+                  </p>
                 </div>
                 {detail.outcome ? (
                   <div>
@@ -702,7 +718,10 @@ export function CasesPage({
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">Symbols</div>
-                <ChipList items={symbols} emptyText="No symbols captured yet." />
+                <ChipList
+                  items={symbols}
+                  emptyText="No symbols captured yet."
+                />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">Errors</div>
@@ -710,7 +729,10 @@ export function CasesPage({
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">Symptoms</div>
-                <ChipList items={symptoms} emptyText="No symptoms captured yet." />
+                <ChipList
+                  items={symptoms}
+                  emptyText="No symptoms captured yet."
+                />
               </div>
             </div>
           </div>
@@ -739,7 +761,9 @@ export function CasesPage({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No next steps recorded yet.</p>
+              <p className="text-sm text-muted-foreground">
+                No next steps recorded yet.
+              </p>
             )}
           </div>
         </CardContent>
@@ -748,7 +772,7 @@ export function CasesPage({
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
       {casesQuery.isLoading ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
@@ -772,7 +796,7 @@ export function CasesPage({
         <>
           <div
             className={cn(
-              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-start lg:overflow-hidden",
+              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-stretch lg:overflow-hidden",
               isSplitViewOpen
                 ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
                 : "lg:grid-cols-1",
@@ -795,13 +819,13 @@ export function CasesPage({
                   ref={setCasesListViewport}
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
-                  <Table className="table-fixed">
+                  <Table className="min-w-max">
                     <TableHeader className="lg:sticky lg:top-0 lg:z-10">
                       <TableRow>
-                        <TableHead className="w-[44%]">Case</TableHead>
-                        <TableHead className="w-[22%]">Topic</TableHead>
-                        <TableHead className="w-[14%]">Status</TableHead>
-                        <TableHead className="w-[20%]">Updated</TableHead>
+                        <TableHead>Case</TableHead>
+                        <TableHead>Topic</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Updated</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -821,21 +845,11 @@ export function CasesPage({
                             }}
                           >
                             <TableCell className="align-top py-2">
-                              <div className="flex min-w-0 flex-col gap-0.5">
-                                <span
-                                  className="block truncate font-medium"
-                                  title={caseItem.title}
-                                >
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-medium">
                                   {caseItem.title}
                                 </span>
-                                <span
-                                  className="block truncate text-xs text-muted-foreground"
-                                  title={
-                                    caseItem.summary_current ||
-                                    caseItem.input_summary ||
-                                    "No summary yet"
-                                  }
-                                >
+                                <span className="text-xs text-muted-foreground">
                                   {caseItem.summary_current ||
                                     caseItem.input_summary ||
                                     "No summary yet"}
@@ -843,12 +857,7 @@ export function CasesPage({
                               </div>
                             </TableCell>
                             <TableCell className="py-2">
-                              <span
-                                className="block truncate"
-                                title={caseItem.topic_title || "—"}
-                              >
-                                {caseItem.topic_title || "—"}
-                              </span>
+                              <span>{caseItem.topic_title || "—"}</span>
                             </TableCell>
                             <TableCell className="py-2 whitespace-nowrap">
                               <Badge variant={badgeVariant(caseItem.status)}>
@@ -883,7 +892,7 @@ export function CasesPage({
           <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
             <DialogContent
               showCloseButton={false}
-              className="flex h-[calc(100dvh-4rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
+              className="flex h-[calc(100dvh-2rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
             >
               {renderCaseDetailCard(true)}
             </DialogContent>

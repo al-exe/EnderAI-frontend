@@ -268,24 +268,25 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar, open } = useSidebar()
-  const sidebarCopy = open ? "Collapse Sidebar" : "Open Sidebar"
+  const { toggleSidebar, open, openMobile, isMobile } = useSidebar()
+  const isOpen = isMobile ? openMobile : open
+  const sidebarCopy = isOpen ? "Collapse" : "Expand"
 
   return (
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
-      size="icon"
-      className={cn("size-7", className)}
+      size="sm"
+      className={cn("h-10 gap-2 px-4 text-sm", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}
     >
-      <PanelLeftIcon />
-      <span className="sr-only">{sidebarCopy}</span>
+      <PanelLeftIcon className="size-4" />
+      <span>{sidebarCopy}</span>
     </Button>
   )
 }

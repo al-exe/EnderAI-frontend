@@ -369,20 +369,6 @@ export function TopicsPage() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            {!focused ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                aria-label="Close split topic view"
-                data-testid="topic-split-close"
-                disabled={!selectedTopic}
-                onClick={() => setIsSplitViewOpen(false)}
-              >
-                <X />
-              </Button>
-            ) : null}
-
             <Button
               type="button"
               variant="outline"
@@ -397,6 +383,20 @@ export function TopicsPage() {
             >
               {focused ? <Minimize2 /> : <Maximize2 />}
             </Button>
+
+            {!focused ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label="Close split topic view"
+                data-testid="topic-split-close"
+                disabled={!selectedTopic}
+                onClick={() => setIsSplitViewOpen(false)}
+              >
+                <X />
+              </Button>
+            ) : null}
           </div>
         </div>
       </CardHeader>
@@ -513,7 +513,7 @@ export function TopicsPage() {
   )
 
   return (
-    <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
       {topicsQuery.isLoading ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
@@ -537,7 +537,7 @@ export function TopicsPage() {
         <>
           <div
             className={cn(
-              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-start lg:overflow-hidden",
+              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-stretch lg:overflow-hidden",
               isSplitViewOpen
                 ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
                 : "lg:grid-cols-1",
@@ -560,13 +560,13 @@ export function TopicsPage() {
                   ref={setTopicsListViewport}
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
-                  <Table className="table-fixed">
+                  <Table className="min-w-max">
                     <TableHeader className="lg:sticky lg:top-0 lg:z-10">
                       <TableRow>
-                        <TableHead className="w-[48%]">Topic</TableHead>
-                        <TableHead className="w-[16%]">Status</TableHead>
-                        <TableHead className="w-[12%]">Cases</TableHead>
-                        <TableHead className="w-[24%]">Last used</TableHead>
+                        <TableHead>Topic</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Cases</TableHead>
+                        <TableHead>Last used</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -586,17 +586,11 @@ export function TopicsPage() {
                             }}
                           >
                             <TableCell className="align-top py-2">
-                              <div className="flex min-w-0 flex-col gap-0.5">
-                                <span
-                                  className="block truncate font-medium"
-                                  title={topic.title}
-                                >
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-medium">
                                   {topic.title}
                                 </span>
-                                <span
-                                  className="block truncate text-xs text-muted-foreground"
-                                  title={topic.workflow_key}
-                                >
+                                <span className="text-xs text-muted-foreground">
                                   {topic.workflow_key}
                                 </span>
                               </div>
@@ -637,7 +631,7 @@ export function TopicsPage() {
           <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
             <DialogContent
               showCloseButton={false}
-              className="flex h-[calc(100dvh-4rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
+              className="flex h-[calc(100dvh-2rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
             >
               {renderTopicDetailCard(true)}
             </DialogContent>
