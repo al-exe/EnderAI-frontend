@@ -576,7 +576,7 @@ export function TopicsPage() {
                           <TableRow
                             key={topic.id}
                             className={cn(
-                              "cursor-pointer",
+                              "group cursor-pointer",
                               selected ? "bg-muted/50" : undefined,
                             )}
                             onClick={() => {
