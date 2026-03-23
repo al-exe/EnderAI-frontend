@@ -820,12 +820,20 @@ export function CasesPage({
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
                   <Table className="min-w-max">
-                    <TableHeader className="lg:sticky lg:top-0 lg:z-10">
+                    <TableHeader>
                       <TableRow>
-                        <TableHead>Case</TableHead>
-                        <TableHead>Topic</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Updated</TableHead>
+                        <TableHead className="sticky top-0 z-10 bg-muted/95">
+                          Case
+                        </TableHead>
+                        <TableHead className="sticky top-0 z-10 bg-muted/95">
+                          Topic
+                        </TableHead>
+                        <TableHead className="sticky top-0 z-10 bg-muted/95">
+                          Status
+                        </TableHead>
+                        <TableHead className="sticky top-0 z-10 bg-muted/95">
+                          Updated
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

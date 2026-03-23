@@ -561,12 +561,20 @@ export function TopicsPage() {
                   className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
                 >
                   <Table className="min-w-max">
-                    <TableHeader className="lg:sticky lg:top-0 lg:z-10">
+                    <TableHeader>
                       <TableRow>
-                        <TableHead>Topic</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Cases</TableHead>
-                        <TableHead>Last used</TableHead>
+                        <TableHead className="sticky top-0 z-10 bg-muted/95">
+                          Topic
+                        </TableHead>
+                        <TableHead className="sticky top-0 z-10 bg-muted/95">
+                          Status
+                        </TableHead>
+                        <TableHead className="sticky top-0 z-10 bg-muted/95">
+                          Cases
+                        </TableHead>
+                        <TableHead className="sticky top-0 z-10 bg-muted/95">
+                          Last used
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
