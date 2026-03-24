@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
+import type { ColumnDef } from "@tanstack/react-table"
 import { Maximize2, Minimize2, X } from "lucide-react"
 import { useMemo, useRef, useState } from "react"
 
@@ -17,7 +18,7 @@ import {
   type TopicsPublic,
   updateTopic,
 } from "@/api/topics"
-import { SplitScrollableTable } from "@/components/Common/SplitScrollableTable"
+import { SplitDataTable } from "@/components/Common/SplitDataTable"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,13 +30,6 @@ import {
 } from "@/components/ui/card"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import {
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { useAutoLoadMore } from "@/hooks/useAutoLoadMore"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -44,7 +38,6 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const TOPICS_PAGE_SIZE = 25
-const TOPICS_COLUMN_WIDTHS = ["18rem", "8rem", "6rem", "12rem"] as const
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -93,6 +86,55 @@ function describeLoadedCount(
     return `${loaded} of ${total} ${total === 1 ? singular : plural}`
   return `${total} ${total === 1 ? singular : plural}`
 }
+
+const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
+  {
+    accessorKey: "title",
+    header: "Topic",
+    meta: {
+      width: "18rem",
+      cellClassName: "align-top py-2",
+    },
+    cell: ({ row }) => (
+      <div className="flex flex-col gap-0.5">
+        <span className="font-medium">{row.original.title}</span>
+        <span className="text-xs text-muted-foreground">
+          {row.original.workflow_key}
+        </span>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    meta: {
+      width: "8rem",
+      cellClassName: "py-2 whitespace-nowrap",
+    },
+    cell: ({ row }) => (
+      <Badge variant={badgeVariant(row.original.status)}>
+        {row.original.status}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "case_count",
+    header: "Cases",
+    meta: {
+      width: "6rem",
+      cellClassName: "py-2 whitespace-nowrap",
+    },
+  },
+  {
+    accessorKey: "last_used_at",
+    header: "Last used",
+    meta: {
+      width: "12rem",
+      cellClassName: "py-2 whitespace-nowrap",
+    },
+    cell: ({ row }) => formatTimestamp(row.original.last_used_at),
+  },
+]
 
 export function TopicsPage() {
   const navigate = useNavigate()
@@ -558,80 +600,20 @@ export function TopicsPage() {
               </CardHeader>
               <CardContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
                 <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-                  <SplitScrollableTable
+                  <SplitDataTable
+                    columns={TOPIC_COLUMNS}
+                    data={topics}
+                    getRowId={(topic) => topic.id}
+                    selectedRowId={selectedTopic?.id ?? null}
                     viewportRef={setTopicsListViewport}
-                    header={
-                      <table className="w-max min-w-full caption-bottom text-sm">
-                        <colgroup>
-                          {TOPICS_COLUMN_WIDTHS.map((width) => (
-                            <col key={width} style={{ width }} />
-                          ))}
-                        </colgroup>
-                        <TableHeader>
-                          <TableRow className="border-b-0">
-                            <TableHead>Topic</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Cases</TableHead>
-                            <TableHead>Last used</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                      </table>
-                    }
-                    body={
-                      <>
-                        <table className="w-max min-w-full caption-bottom text-sm">
-                          <colgroup>
-                            {TOPICS_COLUMN_WIDTHS.map((width) => (
-                              <col key={width} style={{ width }} />
-                            ))}
-                          </colgroup>
-                          <TableBody>
-                            {topics.map((topic) => {
-                              const selected = selectedTopic?.id === topic.id
-                              return (
-                                <TableRow
-                                  key={topic.id}
-                                  className={cn(
-                                    "group cursor-pointer",
-                                    selected ? "bg-muted/50" : undefined,
-                                  )}
-                                  onClick={() => {
-                                    setSelectedTopicId(topic.id)
-                                    setIsSplitViewOpen(true)
-                                    setIsFocusedViewOpen(false)
-                                  }}
-                                >
-                                  <TableCell className="align-top py-2">
-                                    <div className="flex flex-col gap-0.5">
-                                      <span className="font-medium">
-                                        {topic.title}
-                                      </span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {topic.workflow_key}
-                                      </span>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="py-2 whitespace-nowrap">
-                                    <Badge variant={badgeVariant(topic.status)}>
-                                      {topic.status}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="py-2 whitespace-nowrap">
-                                    {topic.case_count}
-                                  </TableCell>
-                                  <TableCell className="py-2 whitespace-nowrap">
-                                    {formatTimestamp(topic.last_used_at)}
-                                  </TableCell>
-                                </TableRow>
-                              )
-                            })}
-                          </TableBody>
-                        </table>
-                        {topicsQuery.hasNextPage ? (
-                          <div ref={topicsLoadMoreRef} className="h-4" />
-                        ) : null}
-                      </>
-                    }
+                    loadMoreRef={topicsLoadMoreRef}
+                    hasMore={topicsQuery.hasNextPage}
+                    getRowClassName={() => "group"}
+                    onRowClick={(topic) => {
+                      setSelectedTopicId(topic.id)
+                      setIsSplitViewOpen(true)
+                      setIsFocusedViewOpen(false)
+                    }}
                   />
                 </div>
 
