@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -30,23 +30,44 @@ export function SplitScrollableTable({
 }: SplitScrollableTableProps) {
   const headerTrackRef = useRef<HTMLDivElement | null>(null)
   const bodyViewportRef = useRef<HTMLDivElement | null>(null)
+  const [scrollbarWidth, setScrollbarWidth] = useState(0)
 
   const syncHeader = useCallback((scrollLeft: number) => {
     if (!headerTrackRef.current) return
     headerTrackRef.current.style.transform = `translateX(-${scrollLeft}px)`
   }, [])
 
+  const syncLayout = useCallback(() => {
+    const viewport = bodyViewportRef.current
+    if (!viewport) return
+    syncHeader(viewport.scrollLeft)
+    setScrollbarWidth(viewport.offsetWidth - viewport.clientWidth)
+  }, [syncHeader])
+
   const setViewportNode = useCallback(
     (node: HTMLDivElement | null) => {
       bodyViewportRef.current = node
       assignRef(viewportRef, node)
+      if (node) {
+        setScrollbarWidth(node.offsetWidth - node.clientWidth)
+      }
     },
     [viewportRef],
   )
 
   useEffect(() => {
-    syncHeader(bodyViewportRef.current?.scrollLeft ?? 0)
-  }, [syncHeader])
+    syncLayout()
+  })
+
+  useEffect(() => {
+    const viewport = bodyViewportRef.current
+    if (!viewport || typeof ResizeObserver === "undefined") return
+
+    const observer = new ResizeObserver(() => syncLayout())
+    observer.observe(viewport)
+
+    return () => observer.disconnect()
+  }, [syncLayout])
 
   return (
     <div
@@ -57,6 +78,7 @@ export function SplitScrollableTable({
     >
       <div
         className={cn("overflow-hidden border-b bg-muted/50", headerClassName)}
+        style={{ paddingRight: scrollbarWidth }}
       >
         <div
           ref={headerTrackRef}
