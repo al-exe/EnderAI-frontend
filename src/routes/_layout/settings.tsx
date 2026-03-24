@@ -34,16 +34,19 @@ function UserSettings() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
+    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+      <div className="shrink-0">
         <h1 className="text-2xl font-bold tracking-tight">User Settings</h1>
         <p className="text-muted-foreground">
           Manage your account settings and preferences
         </p>
       </div>
 
-      <Tabs defaultValue="my-profile">
-        <TabsList>
+      <Tabs
+        defaultValue="my-profile"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <TabsList className="shrink-0">
           {finalTabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.title}
@@ -51,7 +54,11 @@ function UserSettings() {
           ))}
         </TabsList>
         {finalTabs.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value}>
+          <TabsContent
+            key={tab.value}
+            value={tab.value}
+            className="min-h-0 flex-1 overflow-y-auto pr-1"
+          >
             <tab.component />
           </TabsContent>
         ))}
