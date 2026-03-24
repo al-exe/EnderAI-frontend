@@ -32,7 +32,7 @@ export function Main({ items }: MainProps) {
   }
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="group-data-[collapsible=icon]:pt-1">
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
