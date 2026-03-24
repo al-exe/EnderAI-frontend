@@ -1,9 +1,9 @@
 import {
-  ClipboardCheck,
+  Box,
+  Boxes,
   Home,
   PanelLeftClose,
   PanelLeftOpen,
-  Spool,
   Users,
 } from "lucide-react"
 
@@ -24,8 +24,8 @@ import { User } from "./User"
 
 const baseItems: Item[] = [
   { icon: Home, title: "Home", path: "/" },
-  { icon: Spool, title: "Topics", path: "/topics" },
-  { icon: ClipboardCheck, title: "Cases", path: "/cases" },
+  { icon: Box, title: "Topics", path: "/topics" },
+  { icon: Boxes, title: "Cases", path: "/cases" },
 ]
 
 function SidebarCollapseToggle() {
