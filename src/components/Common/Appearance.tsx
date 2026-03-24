@@ -32,7 +32,7 @@ export const SidebarAppearance = () => {
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip="Appearance" data-testid="theme-button">
-            <Icon className="size-4 text-muted-foreground group-data-[collapsible=icon]:size-6" />
+            <Icon className="size-[18px] text-muted-foreground" />
             <span>Appearance</span>
             <span className="sr-only">Toggle theme</span>
           </SidebarMenuButton>
