@@ -847,8 +847,7 @@ export function CasesPage({
       ) : visibleCases.length === 0 ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
-            No Cases yet. Cases will appear here once Topic work starts flowing
-            through the canonical model.
+            No Cases yet.
           </CardContent>
         </Card>
       ) : (
