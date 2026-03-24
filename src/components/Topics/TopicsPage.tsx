@@ -578,15 +578,8 @@ export function TopicsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {topics.map((topic, index) => {
+                      {topics.map((topic) => {
                         const selected = selectedTopic?.id === topic.id
-                        const freezeFirstRow = index === 0
-                        const frozenCellClassName = freezeFirstRow
-                          ? cn(
-                              "sticky top-11 z-[5]",
-                              selected ? "bg-muted/95" : "bg-background/95",
-                            )
-                          : undefined
                         return (
                           <TableRow
                             key={topic.id}
@@ -600,12 +593,7 @@ export function TopicsPage() {
                               setIsFocusedViewOpen(false)
                             }}
                           >
-                            <TableCell
-                              className={cn(
-                                "align-top py-2",
-                                frozenCellClassName,
-                              )}
-                            >
+                            <TableCell className="align-top py-2">
                               <div className="flex flex-col gap-0.5">
                                 <span className="font-medium">
                                   {topic.title}
@@ -615,30 +603,15 @@ export function TopicsPage() {
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell
-                              className={cn(
-                                "py-2 whitespace-nowrap",
-                                frozenCellClassName,
-                              )}
-                            >
+                            <TableCell className="py-2 whitespace-nowrap">
                               <Badge variant={badgeVariant(topic.status)}>
                                 {topic.status}
                               </Badge>
                             </TableCell>
-                            <TableCell
-                              className={cn(
-                                "py-2 whitespace-nowrap",
-                                frozenCellClassName,
-                              )}
-                            >
+                            <TableCell className="py-2 whitespace-nowrap">
                               {topic.case_count}
                             </TableCell>
-                            <TableCell
-                              className={cn(
-                                "py-2 whitespace-nowrap",
-                                frozenCellClassName,
-                              )}
-                            >
+                            <TableCell className="py-2 whitespace-nowrap">
                               {formatTimestamp(topic.last_used_at)}
                             </TableCell>
                           </TableRow>
