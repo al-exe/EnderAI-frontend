@@ -26,13 +26,13 @@ interface UserInfoProps {
 
 function UserInfo({ fullName, email }: UserInfoProps) {
   return (
-    <div className="flex items-center gap-2.5 w-full min-w-0">
-      <Avatar className="size-8">
+    <div className="flex items-center gap-2.5 w-full min-w-0 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:gap-0">
+      <Avatar className="size-8 group-data-[collapsible=icon]:size-10">
         <AvatarFallback className="bg-zinc-600 text-white">
           {getInitials(fullName || "User")}
         </AvatarFallback>
       </Avatar>
-      <div className="flex flex-col items-start min-w-0">
+      <div className="flex flex-col items-start min-w-0 group-data-[collapsible=icon]:hidden">
         <p className="text-sm font-medium truncate w-full">{fullName}</p>
         <p className="text-xs text-muted-foreground truncate w-full">{email}</p>
       </div>
@@ -66,7 +66,7 @@ export function User({ user }: { user: any }) {
               data-testid="user-menu"
             >
               <UserInfo fullName={user?.full_name} email={user?.email} />
-              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
