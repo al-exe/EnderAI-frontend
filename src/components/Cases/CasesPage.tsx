@@ -15,6 +15,7 @@ import {
   readCases,
   updateCase,
 } from "@/api/cases"
+import { SplitScrollableTable } from "@/components/Common/SplitScrollableTable"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,7 +28,6 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const CASES_PAGE_SIZE = 25
+const CASES_COLUMN_WIDTHS = ["22rem", "14rem", "8rem", "12rem"] as const
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -815,78 +816,86 @@ export function CasesPage({
                 </CardDescription>
               </CardHeader>
               <CardContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-                <div
-                  ref={setCasesListViewport}
-                  className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
-                >
-                  <Table
-                    className="min-w-max"
-                    containerClassName="overflow-visible"
-                  >
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="sticky top-0 z-10 bg-muted/95">
-                          Case
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 bg-muted/95">
-                          Topic
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 bg-muted/95">
-                          Status
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 bg-muted/95">
-                          Updated
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {cases.map((caseItem) => {
-                        const selected = detail?.id === caseItem.id
-                        return (
-                          <TableRow
-                            key={caseItem.id}
-                            className={cn(
-                              "group cursor-pointer",
-                              selected ? "bg-muted/50" : undefined,
-                            )}
-                            onClick={() => {
-                              setSelectedCaseId(caseItem.id)
-                              setIsSplitViewOpen(true)
-                              setIsFocusedViewOpen(false)
-                            }}
-                          >
-                            <TableCell className="align-top py-2">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="font-medium">
-                                  {caseItem.title}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {caseItem.summary_current ||
-                                    caseItem.input_summary ||
-                                    "No summary yet"}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-2">
-                              <span>{caseItem.topic_title || "—"}</span>
-                            </TableCell>
-                            <TableCell className="py-2 whitespace-nowrap">
-                              <Badge variant={badgeVariant(caseItem.status)}>
-                                {caseItem.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="py-2 whitespace-nowrap">
-                              {formatTimestamp(caseItem.updated_at)}
-                            </TableCell>
+                <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+                  <SplitScrollableTable
+                    viewportRef={setCasesListViewport}
+                    header={
+                      <table className="w-max min-w-full caption-bottom text-sm">
+                        <colgroup>
+                          {CASES_COLUMN_WIDTHS.map((width) => (
+                            <col key={width} style={{ width }} />
+                          ))}
+                        </colgroup>
+                        <TableHeader>
+                          <TableRow className="border-b-0">
+                            <TableHead>Case</TableHead>
+                            <TableHead>Topic</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Updated</TableHead>
                           </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-
-                  {casesQuery.hasNextPage ? (
-                    <div ref={casesLoadMoreRef} className="h-4" />
-                  ) : null}
+                        </TableHeader>
+                      </table>
+                    }
+                    body={
+                      <>
+                        <table className="w-max min-w-full caption-bottom text-sm">
+                          <colgroup>
+                            {CASES_COLUMN_WIDTHS.map((width) => (
+                              <col key={width} style={{ width }} />
+                            ))}
+                          </colgroup>
+                          <TableBody>
+                            {cases.map((caseItem) => {
+                              const selected = detail?.id === caseItem.id
+                              return (
+                                <TableRow
+                                  key={caseItem.id}
+                                  className={cn(
+                                    "group cursor-pointer",
+                                    selected ? "bg-muted/50" : undefined,
+                                  )}
+                                  onClick={() => {
+                                    setSelectedCaseId(caseItem.id)
+                                    setIsSplitViewOpen(true)
+                                    setIsFocusedViewOpen(false)
+                                  }}
+                                >
+                                  <TableCell className="align-top py-2">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="font-medium">
+                                        {caseItem.title}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {caseItem.summary_current ||
+                                          caseItem.input_summary ||
+                                          "No summary yet"}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="py-2">
+                                    <span>{caseItem.topic_title || "—"}</span>
+                                  </TableCell>
+                                  <TableCell className="py-2 whitespace-nowrap">
+                                    <Badge
+                                      variant={badgeVariant(caseItem.status)}
+                                    >
+                                      {caseItem.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="py-2 whitespace-nowrap">
+                                    {formatTimestamp(caseItem.updated_at)}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </table>
+                        {casesQuery.hasNextPage ? (
+                          <div ref={casesLoadMoreRef} className="h-4" />
+                        ) : null}
+                      </>
+                    }
+                  />
                 </div>
 
                 {casesQuery.isFetchingNextPage ? (

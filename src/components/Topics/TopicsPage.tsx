@@ -17,6 +17,7 @@ import {
   type TopicsPublic,
   updateTopic,
 } from "@/api/topics"
+import { SplitScrollableTable } from "@/components/Common/SplitScrollableTable"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,7 +30,6 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -44,6 +44,7 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const TOPICS_PAGE_SIZE = 25
+const TOPICS_COLUMN_WIDTHS = ["18rem", "8rem", "6rem", "12rem"] as const
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -556,76 +557,82 @@ export function TopicsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-                <div
-                  ref={setTopicsListViewport}
-                  className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
-                >
-                  <Table
-                    className="min-w-max"
-                    containerClassName="overflow-visible"
-                  >
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="sticky top-0 z-10 bg-muted/95">
-                          Topic
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 bg-muted/95">
-                          Status
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 bg-muted/95">
-                          Cases
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 bg-muted/95">
-                          Last used
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {topics.map((topic) => {
-                        const selected = selectedTopic?.id === topic.id
-                        return (
-                          <TableRow
-                            key={topic.id}
-                            className={cn(
-                              "group cursor-pointer",
-                              selected ? "bg-muted/50" : undefined,
-                            )}
-                            onClick={() => {
-                              setSelectedTopicId(topic.id)
-                              setIsSplitViewOpen(true)
-                              setIsFocusedViewOpen(false)
-                            }}
-                          >
-                            <TableCell className="align-top py-2">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="font-medium">
-                                  {topic.title}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {topic.workflow_key}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-2 whitespace-nowrap">
-                              <Badge variant={badgeVariant(topic.status)}>
-                                {topic.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="py-2 whitespace-nowrap">
-                              {topic.case_count}
-                            </TableCell>
-                            <TableCell className="py-2 whitespace-nowrap">
-                              {formatTimestamp(topic.last_used_at)}
-                            </TableCell>
+                <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+                  <SplitScrollableTable
+                    viewportRef={setTopicsListViewport}
+                    header={
+                      <table className="w-max min-w-full caption-bottom text-sm">
+                        <colgroup>
+                          {TOPICS_COLUMN_WIDTHS.map((width) => (
+                            <col key={width} style={{ width }} />
+                          ))}
+                        </colgroup>
+                        <TableHeader>
+                          <TableRow className="border-b-0">
+                            <TableHead>Topic</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Cases</TableHead>
+                            <TableHead>Last used</TableHead>
                           </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-
-                  {topicsQuery.hasNextPage ? (
-                    <div ref={topicsLoadMoreRef} className="h-4" />
-                  ) : null}
+                        </TableHeader>
+                      </table>
+                    }
+                    body={
+                      <>
+                        <table className="w-max min-w-full caption-bottom text-sm">
+                          <colgroup>
+                            {TOPICS_COLUMN_WIDTHS.map((width) => (
+                              <col key={width} style={{ width }} />
+                            ))}
+                          </colgroup>
+                          <TableBody>
+                            {topics.map((topic) => {
+                              const selected = selectedTopic?.id === topic.id
+                              return (
+                                <TableRow
+                                  key={topic.id}
+                                  className={cn(
+                                    "group cursor-pointer",
+                                    selected ? "bg-muted/50" : undefined,
+                                  )}
+                                  onClick={() => {
+                                    setSelectedTopicId(topic.id)
+                                    setIsSplitViewOpen(true)
+                                    setIsFocusedViewOpen(false)
+                                  }}
+                                >
+                                  <TableCell className="align-top py-2">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="font-medium">
+                                        {topic.title}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {topic.workflow_key}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="py-2 whitespace-nowrap">
+                                    <Badge variant={badgeVariant(topic.status)}>
+                                      {topic.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="py-2 whitespace-nowrap">
+                                    {topic.case_count}
+                                  </TableCell>
+                                  <TableCell className="py-2 whitespace-nowrap">
+                                    {formatTimestamp(topic.last_used_at)}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </table>
+                        {topicsQuery.hasNextPage ? (
+                          <div ref={topicsLoadMoreRef} className="h-4" />
+                        ) : null}
+                      </>
+                    }
+                  />
                 </div>
 
                 {topicsQuery.isFetchingNextPage ? (
