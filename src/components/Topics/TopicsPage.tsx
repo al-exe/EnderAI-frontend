@@ -8,10 +8,11 @@ import {
 import { useNavigate } from "@tanstack/react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Maximize2, Minimize2, X } from "lucide-react"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { readCases } from "@/api/cases"
 import {
+  readTopic,
   readTopicRollup,
   readTopics,
   type TopicPublic,
@@ -136,12 +137,18 @@ const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
   },
 ]
 
-export function TopicsPage() {
+export function TopicsPage({
+  initialSelectedTopicId = null,
+}: {
+  initialSelectedTopicId?: string | null
+}) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const isMobile = useIsMobile()
   const { showSuccessToast, showErrorToast } = useCustomToast()
-  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null)
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(
+    initialSelectedTopicId,
+  )
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState("")
   const [isEditingDescription, setIsEditingDescription] = useState(false)
@@ -152,6 +159,13 @@ export function TopicsPage() {
     useState<HTMLDivElement | null>(null)
   const [isSplitViewOpen, setIsSplitViewOpen] = useState(true)
   const [isFocusedViewOpen, setIsFocusedViewOpen] = useState(false)
+
+  useEffect(() => {
+    if (initialSelectedTopicId) {
+      setSelectedTopicId(initialSelectedTopicId)
+      setIsFocusedViewOpen(false)
+    }
+  }, [initialSelectedTopicId])
 
   const topicsQuery = useInfiniteQuery({
     queryKey: ["topics"],
@@ -176,10 +190,29 @@ export function TopicsPage() {
   )
   const totalTopics = topicsQuery.data?.pages[0]?.count ?? topics.length
 
-  const selectedTopic = useMemo<TopicPublic | null>(() => {
+  const selectedTopicFromList = useMemo<TopicPublic | null>(() => {
     if (!topics.length) return null
-    return topics.find((topic) => topic.id === selectedTopicId) ?? topics[0]
+    if (selectedTopicId) {
+      return topics.find((topic) => topic.id === selectedTopicId) ?? null
+    }
+    return topics[0]
   }, [selectedTopicId, topics])
+
+  const resolvedSelectedTopicId = selectedTopicId ?? topics[0]?.id ?? null
+
+  const selectedTopicQuery = useQuery({
+    enabled: Boolean(resolvedSelectedTopicId),
+    queryKey: ["topic", resolvedSelectedTopicId],
+    queryFn: () => readTopic(resolvedSelectedTopicId ?? ""),
+  })
+
+  const selectedTopic = selectedTopicQuery.data ?? selectedTopicFromList
+
+  const visibleTopics = useMemo(() => {
+    if (!selectedTopic) return topics
+    if (topics.some((topic) => topic.id === selectedTopic.id)) return topics
+    return [selectedTopic, ...topics]
+  }, [selectedTopic, topics])
 
   const topicCasesQuery = useQuery({
     enabled: Boolean(selectedTopic?.id),
@@ -209,6 +242,7 @@ export function TopicsPage() {
         ["topics"],
         (current) => replaceTopicInPages(current, updatedTopic),
       )
+      queryClient.setQueryData(["topic", updatedTopic.id], updatedTopic)
       queryClient.invalidateQueries({
         queryKey: ["topicRollup", updatedTopic.id],
       })
@@ -555,9 +589,15 @@ export function TopicsPage() {
     </Card>
   )
 
+  const isLoadingTopics =
+    topicsQuery.isLoading ||
+    (Boolean(resolvedSelectedTopicId) &&
+      selectedTopicQuery.isLoading &&
+      visibleTopics.length === 0)
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
-      {topicsQuery.isLoading ? (
+      {isLoadingTopics ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
             Loading Topics…
@@ -569,7 +609,7 @@ export function TopicsPage() {
             Couldn’t load Topics.
           </CardContent>
         </Card>
-      ) : topics.length === 0 ? (
+      ) : visibleTopics.length === 0 ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
             No Topics yet. Topics will appear here as cases are created under
@@ -591,7 +631,7 @@ export function TopicsPage() {
                 <CardTitle>Topics</CardTitle>
                 <CardDescription>
                   {describeLoadedCount(
-                    topics.length,
+                    visibleTopics.length,
                     totalTopics,
                     "topic",
                     "topics",
@@ -602,7 +642,7 @@ export function TopicsPage() {
                 <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
                   <SplitDataTable
                     columns={TOPIC_COLUMNS}
-                    data={topics}
+                    data={visibleTopics}
                     getRowId={(topic) => topic.id}
                     selectedRowId={selectedTopic?.id ?? null}
                     viewportRef={setTopicsListViewport}
@@ -613,6 +653,10 @@ export function TopicsPage() {
                       setSelectedTopicId(topic.id)
                       setIsSplitViewOpen(true)
                       setIsFocusedViewOpen(false)
+                      void navigate({
+                        to: "/topics",
+                        search: { topicId: topic.id },
+                      })
                     }}
                   />
                 </div>

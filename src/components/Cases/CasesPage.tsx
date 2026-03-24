@@ -5,6 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Maximize2, Minimize2, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -311,6 +312,7 @@ export function CasesPage({
 }: {
   initialSelectedCaseId?: string | null
 }) {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const isMobile = useIsMobile()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -375,6 +377,11 @@ export function CasesPage({
   })
 
   const detail = detailQuery.data ?? selectedCase
+  const visibleCases = useMemo(() => {
+    if (!detail) return cases
+    if (cases.some((caseItem) => caseItem.id === detail.id)) return cases
+    return [detail, ...cases]
+  }, [cases, detail])
   const files = detail?.files ?? []
   const symbols = detail?.symbols ?? []
   const errors = detail?.errors ?? []
@@ -817,9 +824,15 @@ export function CasesPage({
     )
   }
 
+  const isLoadingCases =
+    casesQuery.isLoading ||
+    (Boolean(resolvedSelectedCaseId) &&
+      detailQuery.isLoading &&
+      visibleCases.length === 0)
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
-      {casesQuery.isLoading ? (
+      {isLoadingCases ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
             Loading Cases…
@@ -831,7 +844,7 @@ export function CasesPage({
             Couldn’t load Cases.
           </CardContent>
         </Card>
-      ) : cases.length === 0 ? (
+      ) : visibleCases.length === 0 ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
             No Cases yet. Cases will appear here once Topic work starts flowing
@@ -853,7 +866,7 @@ export function CasesPage({
                 <CardTitle>Cases</CardTitle>
                 <CardDescription>
                   {describeLoadedCount(
-                    cases.length,
+                    visibleCases.length,
                     totalCases,
                     "case",
                     "cases",
@@ -864,7 +877,7 @@ export function CasesPage({
                 <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
                   <SplitDataTable
                     columns={CASE_COLUMNS}
-                    data={cases}
+                    data={visibleCases}
                     getRowId={(caseItem) => caseItem.id}
                     selectedRowId={detail?.id ?? null}
                     viewportRef={setCasesListViewport}
@@ -875,6 +888,10 @@ export function CasesPage({
                       setSelectedCaseId(caseItem.id)
                       setIsSplitViewOpen(true)
                       setIsFocusedViewOpen(false)
+                      void navigate({
+                        to: "/cases",
+                        search: { caseId: caseItem.id },
+                      })
                     }}
                   />
                 </div>
