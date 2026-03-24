@@ -612,8 +612,7 @@ export function TopicsPage({
       ) : visibleTopics.length === 0 ? (
         <Card>
           <CardContent className="text-sm text-muted-foreground">
-            No Topics yet. Topics will appear here as cases are created under
-            the new canonical model.
+            No Topics yet.
           </CardContent>
         </Card>
       ) : (
