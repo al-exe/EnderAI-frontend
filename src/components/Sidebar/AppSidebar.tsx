@@ -65,7 +65,7 @@ export function AppSidebar() {
       <SidebarContent>
         <Main items={items} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="gap-1">
         <SidebarCollapseToggle />
         <SidebarAppearance />
         <User user={currentUser} />
