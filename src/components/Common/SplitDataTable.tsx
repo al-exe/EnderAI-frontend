@@ -59,7 +59,7 @@ function buildTableStyle<TData>(
   if (widths.length !== columns.length) return undefined
 
   return {
-    width: `max(100%, calc(${widths.join(" + ")}))`,
+    minWidth: `calc(${widths.join(" + ")})`,
   }
 }
 
@@ -88,7 +88,7 @@ export function SplitDataTable<TData>({
       viewportRef={viewportRef}
       header={
         <table
-          className="caption-bottom text-sm table-fixed"
+          className="w-max min-w-full caption-bottom text-sm"
           style={tableStyle}
         >
           <colgroup>
@@ -129,7 +129,7 @@ export function SplitDataTable<TData>({
       body={
         <>
           <table
-            className="caption-bottom text-sm table-fixed"
+            className="w-max min-w-full caption-bottom text-sm"
             style={tableStyle}
           >
             <colgroup>
