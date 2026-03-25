@@ -1,0 +1,233 @@
+@reference "../../index.css";
+
+.page {
+  @apply flex min-h-0 flex-1 flex-col gap-6 overflow-hidden;
+}
+
+.statusCardContent {
+  @apply text-sm text-muted-foreground;
+}
+
+.errorCardContent {
+  @apply text-sm text-destructive;
+}
+
+.splitLayout {
+  @apply grid gap-6;
+}
+
+.focusedCard {
+  @apply flex h-full min-w-0 flex-col rounded-none border-0 shadow-none;
+}
+
+.detailHeader {
+  @apply flex items-start justify-between gap-3;
+}
+
+.detailHeaderMain {
+  @apply min-w-0 flex-1 space-y-4;
+}
+
+.editGroup {
+  @apply space-y-2;
+}
+
+.editHint {
+  @apply text-xs text-muted-foreground;
+}
+
+.editButtonTitle {
+  @apply w-fit max-w-full cursor-text text-left underline-offset-4 hover:underline;
+}
+
+.editButtonDescription {
+  @apply w-full cursor-text text-left underline-offset-4 hover:underline;
+}
+
+.emptyDescription {
+  @apply italic;
+}
+
+.actionGroup {
+  @apply flex shrink-0 items-center gap-2;
+}
+
+.shrinkButton {
+  @apply shrink-0;
+}
+
+.detailContent {
+  @apply space-y-6 overflow-x-hidden;
+}
+
+.detailContentFocused {
+  @apply min-h-0 flex-1 overflow-y-auto;
+}
+
+.loadingCardContent {
+  @apply overflow-x-hidden text-sm text-muted-foreground;
+}
+
+.badgeRow {
+  @apply flex flex-wrap gap-2;
+}
+
+.section {
+  @apply space-y-3;
+}
+
+.sectionTitle {
+  @apply font-medium;
+}
+
+.smallMutedText {
+  @apply text-sm text-muted-foreground;
+}
+
+.mutedText {
+  @apply text-muted-foreground;
+}
+
+.errorText {
+  @apply text-sm text-destructive;
+}
+
+.chipList {
+  @apply flex flex-wrap gap-2 text-xs;
+}
+
+.chip {
+  @apply max-w-full;
+}
+
+.chipLabel {
+  @apply block max-w-full truncate;
+}
+
+.recordStack {
+  @apply space-y-3;
+}
+
+.recordCard {
+  @apply rounded-lg border p-3;
+}
+
+.recordHeader {
+  @apply flex flex-wrap items-center gap-2;
+}
+
+.recordTitle {
+  @apply font-medium;
+}
+
+.monoText {
+  @apply font-mono text-xs;
+}
+
+.metaStack {
+  @apply mt-2 space-y-1 text-sm text-muted-foreground;
+}
+
+.timestampText {
+  @apply mt-2 text-xs text-muted-foreground;
+}
+
+.subsection {
+  @apply mt-3;
+}
+
+.subsectionTitle {
+  @apply mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground;
+}
+
+.notesContent {
+  @apply space-y-3 text-sm;
+}
+
+.signalGroups {
+  @apply space-y-3;
+}
+
+.signalTitle {
+  @apply mb-2 text-sm font-medium;
+}
+
+.nextStepsList {
+  @apply space-y-2 text-sm text-muted-foreground;
+}
+
+.loadMoreText {
+  @apply mt-3 text-sm text-muted-foreground;
+}
+
+.dialogContent {
+  @apply flex flex-col overflow-hidden p-0;
+  height: calc(100dvh - 2rem);
+  max-width: calc(100dvw - 2rem);
+}
+
+.tableTitleCell {
+  @apply flex min-w-0 flex-col gap-0.5;
+}
+
+.tableTitle {
+  @apply block truncate font-medium;
+}
+
+.tableSubtitle {
+  @apply block truncate text-xs text-muted-foreground;
+}
+
+.tableTopic {
+  @apply block truncate;
+}
+
+.caseCell {
+  @apply min-w-0 py-2 align-top;
+}
+
+.topicCell {
+  @apply min-w-0 py-2;
+}
+
+.statusCell {
+  @apply py-2 whitespace-nowrap;
+}
+
+.updatedCell {
+  @apply py-2 whitespace-nowrap;
+}
+
+@media (min-width: 1024px) {
+  .splitLayout {
+    @apply min-h-0 flex-1 items-stretch overflow-hidden;
+  }
+
+  .splitLayoutOpen {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+
+  .splitLayoutClosed {
+    grid-template-columns: 1fr;
+  }
+
+  .primaryPane {
+    @apply flex min-h-0 max-h-full flex-col overflow-hidden;
+  }
+
+  .primaryContent {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  .primaryTableWrap {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  .splitCard {
+    @apply flex min-h-0 min-w-0 max-h-full flex-col overflow-hidden;
+  }
+
+  .detailContentSplit {
+    @apply min-h-0 flex-1 overflow-y-auto;
+  }
+}
