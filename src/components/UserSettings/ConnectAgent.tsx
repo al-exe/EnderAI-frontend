@@ -323,7 +323,7 @@ const ConnectAgent = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LaptopMinimal className="size-5" />
-            Connect Agent
+            Connect agent
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Generate a per-user MCP token and the minimal EnderAI workflow
