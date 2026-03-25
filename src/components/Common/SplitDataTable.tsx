@@ -111,13 +111,19 @@ export function SplitDataTable<TData>({
             />
           ))}
         </colgroup>
-        <TableHeader className="sticky top-0 z-10 bg-muted">
+        <TableHeader className="sticky top-0 z-10 bg-muted shadow-[inset_0_-1px_0_0_var(--border)]">
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-transparent">
+            <TableRow
+              key={headerGroup.id}
+              className="border-b-0 hover:bg-transparent"
+            >
               {headerGroup.headers.map((header) => {
                 const meta = getColumnMeta(header.column.columnDef)
                 return (
-                  <TableHead key={header.id} className={meta?.headerClassName}>
+                  <TableHead
+                    key={header.id}
+                    className={cn("bg-muted", meta?.headerClassName)}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
