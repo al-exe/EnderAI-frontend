@@ -155,10 +155,19 @@ test("Topics page matches the primary pane width and truncates long left-table t
     .getByTestId("topics-primary-pane")
     .evaluate((element) => element.getBoundingClientRect().width)
   const tableHeader = page.locator("thead").first()
+  const firstHeaderCell = tableHeader.locator("th").first()
 
   expect(Math.abs(globalSearchWidth - primaryPaneWidth)).toBeLessThanOrEqual(1)
   await expect(tableHeader).toHaveClass(/\bbg-muted\b/)
   await expect(tableHeader).not.toHaveClass(/bg-muted\/50/)
+  expect(
+    await tableHeader.evaluate((element) => getComputedStyle(element).boxShadow),
+  ).not.toBe("none")
+  expect(
+    await firstHeaderCell.evaluate(
+      (element) => getComputedStyle(element).backgroundColor,
+    ),
+  ).not.toBe("rgba(0, 0, 0, 0)")
 
   const firstRow = page.locator("tbody tr").first()
   const topicTitle = firstRow.locator("td").first().locator("span").first()
