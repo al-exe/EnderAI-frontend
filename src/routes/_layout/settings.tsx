@@ -9,7 +9,7 @@ import useAuth from "@/hooks/useAuth"
 
 const tabsConfig = [
   { value: "my-profile", title: "My profile", component: UserInformation },
-  { value: "connect-agent", title: "Connect Agent", component: ConnectAgent },
+  { value: "connect-agent", title: "Connect agent", component: ConnectAgent },
   { value: "password", title: "Password", component: ChangePassword },
   { value: "danger-zone", title: "Danger zone", component: DeleteAccount },
 ]

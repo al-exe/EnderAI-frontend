@@ -4,7 +4,7 @@ import { createUser } from "./utils/privateApi.ts"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser, logOutUser } from "./utils/user"
 
-const tabs = ["My profile", "Connect Agent", "Password", "Danger zone"]
+const tabs = ["My profile", "Connect agent", "Password", "Danger zone"]
 
 test("My profile tab is active by default", async ({ page }) => {
   await page.goto("/settings")
@@ -255,7 +255,7 @@ test("Selected mode is preserved across sessions", async ({ page }) => {
   expect(isDarkMode).toBe(true)
 })
 
-test("Connect Agent generates the hosted Codex setup and hides revoked credentials", async ({
+test("Connect agent generates the hosted Codex setup and hides revoked credentials", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -373,11 +373,14 @@ test("Connect Agent generates the hosted Codex setup and hides revoked credentia
   )
 
   await page.goto("/settings")
-  await page.getByRole("tab", { name: "Connect Agent" }).click()
+  await page.getByRole("tab", { name: "Connect agent" }).click()
+  await expect(
+    page
+      .locator('[data-slot="card-title"]')
+      .filter({ hasText: "Connect agent" }),
+  ).toBeVisible()
   await expect(page.getByLabel("Credential label")).toBeVisible()
-  await expect(page.getByLabel("Credential label")).toHaveValue(
-    "EnderAI token",
-  )
+  await expect(page.getByLabel("Credential label")).toHaveValue("EnderAI token")
   await expect(page.getByText("Revoked install")).toHaveCount(0)
   await expect(
     page.getByText(
@@ -444,12 +447,14 @@ test("Connect Agent generates the hosted Codex setup and hides revoked credentia
     "enderai_finish_case",
   )
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
-    "start using EnderAI",
+    "Prefer the guided case tools over raw `enderai_request` calls.",
   )
-  await expect(page.getByRole("heading", { name: "Credentials" })).toBeVisible()
+  await expect(
+    page.locator('[data-slot="card-title"]').filter({ hasText: "Credentials" }),
+  ).toBeVisible()
 
   await page.reload()
-  await page.getByRole("tab", { name: "Connect Agent" }).click()
+  await page.getByRole("tab", { name: "Connect agent" }).click()
 
   await expect(page.getByText("Rotate to reveal fresh tokens")).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
