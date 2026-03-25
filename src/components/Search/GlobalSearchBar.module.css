@@ -1,0 +1,73 @@
+@reference "../../index.css";
+
+.container {
+  @apply relative w-full lg:w-[calc((100%-1.5rem)*7/12)] lg:max-w-none;
+}
+
+.inputWrap {
+  @apply relative;
+}
+
+.searchIcon {
+  @apply pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground;
+}
+
+.input {
+  @apply pl-9 pr-9;
+}
+
+.loader {
+  @apply absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground;
+}
+
+.resultsCard {
+  @apply absolute top-[calc(100%+0.5rem)] right-0 left-0 z-50 overflow-hidden shadow-lg;
+}
+
+.resultsContent {
+  @apply max-h-[24rem] overflow-y-auto p-0;
+}
+
+.status {
+  @apply px-3 py-4 text-sm text-muted-foreground;
+}
+
+.group {
+  @apply space-y-1;
+}
+
+.groupTitle {
+  @apply px-3 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground;
+}
+
+.groupList {
+  @apply space-y-1 px-2 pb-2;
+}
+
+.resultButton {
+  @apply w-full rounded-md px-3 py-2 text-left transition-colors;
+}
+
+.resultButtonActive {
+  @apply bg-muted;
+}
+
+.resultButtonInactive {
+  @apply hover:bg-muted/60;
+}
+
+.resultRow {
+  @apply flex items-center justify-between gap-3;
+}
+
+.resultTitle {
+  @apply truncate font-medium;
+}
+
+.resultSubtitle {
+  @apply truncate text-xs text-muted-foreground;
+}
+
+.resultExcerpt {
+  @apply mt-1 line-clamp-2 text-sm text-muted-foreground;
+}

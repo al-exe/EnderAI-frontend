@@ -7,6 +7,7 @@ import { readGlobalSearch, type SearchHitPublic } from "@/api/search"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import styles from "./GlobalSearchBar.module.css"
 
 const MIN_QUERY_LENGTH = 2
 const LIMIT_PER_KIND = 5
@@ -142,11 +143,9 @@ export function GlobalSearchBar() {
     if (results.length === 0) return null
 
     return (
-      <div className="space-y-1">
-        <div className="px-3 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {title}
-        </div>
-        <div className="space-y-1 px-2 pb-2">
+      <div className={styles.group}>
+        <div className={styles.groupTitle}>{title}</div>
+        <div className={styles.groupList}>
           {results.map((hit, index) => {
             const entryIndex = startIndex + index
             const isActive = entryIndex === activeIndex
@@ -156,25 +155,25 @@ export function GlobalSearchBar() {
                 key={hit.id}
                 type="button"
                 className={cn(
-                  "w-full rounded-md px-3 py-2 text-left transition-colors",
-                  isActive ? "bg-muted" : "hover:bg-muted/60",
+                  styles.resultButton,
+                  isActive
+                    ? styles.resultButtonActive
+                    : styles.resultButtonInactive,
                 )}
                 onMouseDown={(event) => event.preventDefault()}
                 onMouseEnter={() => setActiveIndex(entryIndex)}
                 onClick={() => selectHit(hit)}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="truncate font-medium">{hit.title}</span>
+                <div className={styles.resultRow}>
+                  <span className={styles.resultTitle}>{hit.title}</span>
                   {hit.subtitle ? (
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className={styles.resultSubtitle}>
                       {hit.subtitle}
                     </span>
                   ) : null}
                 </div>
                 {hit.excerpt ? (
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                    {hit.excerpt}
-                  </p>
+                  <p className={styles.resultExcerpt}>{hit.excerpt}</p>
                 ) : null}
               </button>
             )
@@ -191,35 +190,29 @@ export function GlobalSearchBar() {
     <div
       ref={containerRef}
       data-testid="global-search-container"
-      className="relative w-full lg:w-[calc((100%-1.5rem)*7/12)] lg:max-w-none"
+      className={styles.container}
     >
-      <div className="relative">
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+      <div className={styles.inputWrap}>
+        <SearchIcon className={styles.searchIcon} />
         <Input
           value={query}
           placeholder="Search Topics and Cases"
-          className="pl-9 pr-9"
+          className={styles.input}
           data-testid="global-search-input"
           onFocus={() => setIsFocused(true)}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onKeyDown}
         />
-        {searchQuery.isFetching ? (
-          <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-        ) : null}
+        {searchQuery.isFetching ? <Loader2 className={styles.loader} /> : null}
       </div>
 
       {isOpen ? (
-        <Card className="absolute top-[calc(100%+0.5rem)] right-0 left-0 z-50 overflow-hidden shadow-lg">
-          <CardContent className="max-h-[24rem] overflow-y-auto p-0">
+        <Card className={styles.resultsCard}>
+          <CardContent className={styles.resultsContent}>
             {searchQuery.isFetching ? (
-              <div className="px-3 py-4 text-sm text-muted-foreground">
-                Searching Topics and Cases…
-              </div>
+              <div className={styles.status}>Searching Topics and Cases…</div>
             ) : entries.length === 0 ? (
-              <div className="px-3 py-4 text-sm text-muted-foreground">
-                No Topics or Cases matched.
-              </div>
+              <div className={styles.status}>No Topics or Cases matched.</div>
             ) : (
               <div>
                 {renderGroup("Topics", topicResults, 0)}

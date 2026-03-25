@@ -36,6 +36,7 @@ import { useIsMobile } from "@/hooks/useMobile"
 import { getClippedTextDisplay, getSignalChipDisplay } from "@/lib/display"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
+import styles from "./CasesPage.module.css"
 
 const CASES_PAGE_SIZE = 25
 
@@ -95,11 +96,11 @@ function ChipList({
   emptyText: string
 }) {
   if (items.length === 0) {
-    return <p className="text-sm text-muted-foreground">{emptyText}</p>
+    return <p className={styles.smallMutedText}>{emptyText}</p>
   }
 
   return (
-    <div className="flex flex-wrap gap-2 text-xs">
+    <div className={styles.chipList}>
       {items.map((item, index) => {
         const display = getSignalChipDisplay(item)
 
@@ -107,10 +108,10 @@ function ChipList({
           <Badge
             key={`${item}-${index}`}
             variant="outline"
-            className="max-w-full"
+            className={styles.chip}
             title={display.title}
           >
-            <span className="block max-w-full truncate">{display.label}</span>
+            <span className={styles.chipLabel}>{display.label}</span>
           </Badge>
         )
       })}
@@ -146,21 +147,19 @@ function changeVariant(
 
 function CommandList({ commands }: { commands: CasePublic["commands"] }) {
   if (commands.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">No commands captured yet.</p>
-    )
+    return <p className={styles.smallMutedText}>No commands captured yet.</p>
   }
 
   return (
-    <div className="space-y-3">
+    <div className={styles.recordStack}>
       {commands.map((command, index) => (
         <div
           key={`${command.cmd}-${command.ts ?? index}`}
-          className="rounded-lg border p-3"
+          className={styles.recordCard}
         >
-          <div className="font-mono text-xs">{command.cmd}</div>
+          <div className={styles.monoText}>{command.cmd}</div>
           {command.purpose || command.salient_result || command.ts ? (
-            <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+            <div className={styles.metaStack}>
               {command.purpose ? <p>{command.purpose}</p> : null}
               {command.salient_result ? <p>{command.salient_result}</p> : null}
               {command.ts ? <p>{formatTimestamp(command.ts)}</p> : null}
@@ -178,33 +177,27 @@ function HypothesisList({
   hypotheses: CasePublic["hypotheses"]
 }) {
   if (hypotheses.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No hypotheses recorded yet.
-      </p>
-    )
+    return <p className={styles.smallMutedText}>No hypotheses recorded yet.</p>
   }
 
   return (
-    <div className="space-y-3">
+    <div className={styles.recordStack}>
       {hypotheses.map((hypothesis, index) => (
         <div
           key={`${hypothesis.statement}-${hypothesis.ts ?? index}`}
-          className="rounded-lg border p-3"
+          className={styles.recordCard}
         >
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="font-medium">{hypothesis.statement}</div>
+          <div className={styles.recordHeader}>
+            <div className={styles.recordTitle}>{hypothesis.statement}</div>
             <Badge variant={hypothesisVariant(hypothesis.status)}>
               {hypothesis.status}
             </Badge>
           </div>
           {hypothesis.evidence ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {hypothesis.evidence}
-            </p>
+            <p className={styles.metaStack}>{hypothesis.evidence}</p>
           ) : null}
           {hypothesis.ts ? (
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className={styles.timestampText}>
               {formatTimestamp(hypothesis.ts)}
             </p>
           ) : null}
@@ -216,27 +209,23 @@ function HypothesisList({
 
 function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
   if (changes.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">No changes recorded yet.</p>
-    )
+    return <p className={styles.smallMutedText}>No changes recorded yet.</p>
   }
 
   return (
-    <div className="space-y-3">
+    <div className={styles.recordStack}>
       {changes.map((change, index) => (
         <div
           key={`${change.summary}-${change.ts ?? index}`}
-          className="rounded-lg border p-3"
+          className={styles.recordCard}
         >
-          <div className="flex flex-wrap items-center gap-2">
+          <div className={styles.recordHeader}>
             <Badge variant={changeVariant(change.kind)}>{change.kind}</Badge>
-            <div className="font-medium">{change.summary}</div>
+            <div className={styles.recordTitle}>{change.summary}</div>
           </div>
           {change.files.length ? (
-            <div className="mt-3">
-              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Files
-              </div>
+            <div className={styles.subsection}>
+              <div className={styles.subsectionTitle}>Files</div>
               <ChipList
                 items={change.files}
                 emptyText="No files captured for this change."
@@ -244,10 +233,8 @@ function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
             </div>
           ) : null}
           {change.refs.length ? (
-            <div className="mt-3">
-              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Refs
-              </div>
+            <div className={styles.subsection}>
+              <div className={styles.subsectionTitle}>Refs</div>
               <ChipList
                 items={change.refs}
                 emptyText="No refs captured for this change."
@@ -255,9 +242,7 @@ function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
             </div>
           ) : null}
           {change.ts ? (
-            <p className="mt-3 text-xs text-muted-foreground">
-              {formatTimestamp(change.ts)}
-            </p>
+            <p className={styles.timestampText}>{formatTimestamp(change.ts)}</p>
           ) : null}
         </div>
       ))}
@@ -271,7 +256,7 @@ const CASE_COLUMNS: ColumnDef<CasePublic>[] = [
     header: "Case",
     meta: {
       width: "22rem",
-      cellClassName: "align-top py-2 min-w-0",
+      cellClassName: styles.caseCell,
     },
     cell: ({ row }) => {
       const title = getClippedTextDisplay(row.original.title)
@@ -282,14 +267,11 @@ const CASE_COLUMNS: ColumnDef<CasePublic>[] = [
       )
 
       return (
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="block truncate font-medium" title={title.title}>
+        <div className={styles.tableTitleCell}>
+          <span className={styles.tableTitle} title={title.title}>
             {title.label}
           </span>
-          <span
-            className="block truncate text-xs text-muted-foreground"
-            title={subtitle.title}
-          >
+          <span className={styles.tableSubtitle} title={subtitle.title}>
             {subtitle.label}
           </span>
         </div>
@@ -301,13 +283,13 @@ const CASE_COLUMNS: ColumnDef<CasePublic>[] = [
     header: "Topic",
     meta: {
       width: "14rem",
-      cellClassName: "py-2 min-w-0",
+      cellClassName: styles.topicCell,
     },
     cell: ({ row }) => {
       const topicTitle = getClippedTextDisplay(row.original.topic_title || "—")
 
       return (
-        <span className="block truncate" title={topicTitle.title}>
+        <span className={styles.tableTopic} title={topicTitle.title}>
           {topicTitle.label}
         </span>
       )
@@ -318,7 +300,7 @@ const CASE_COLUMNS: ColumnDef<CasePublic>[] = [
     header: "Status",
     meta: {
       width: "8rem",
-      cellClassName: "py-2 whitespace-nowrap",
+      cellClassName: styles.statusCell,
     },
     cell: ({ row }) => (
       <Badge variant={badgeVariant(row.original.status)}>
@@ -331,7 +313,7 @@ const CASE_COLUMNS: ColumnDef<CasePublic>[] = [
     header: "Updated",
     meta: {
       width: "12rem",
-      cellClassName: "py-2 whitespace-nowrap",
+      cellClassName: styles.updatedCell,
     },
     cell: ({ row }) => formatTimestamp(row.original.updated_at),
   },
@@ -545,16 +527,10 @@ export function CasesPage({
   const renderCaseDetailCard = (focused: boolean) => {
     if (!detail) {
       return (
-        <Card
-          className={cn(
-            focused
-              ? "flex h-full min-w-0 flex-col rounded-none border-0 shadow-none"
-              : "lg:flex lg:min-h-0 lg:min-w-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
-          )}
-        >
+        <Card className={cn(focused ? styles.focusedCard : styles.splitCard)}>
           <CardHeader>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
+            <div className={styles.detailHeader}>
+              <div className={styles.detailHeaderMain}>
                 <CardTitle>Loading Case…</CardTitle>
                 <CardDescription>
                   Fetching the selected case detail from the canonical API.
@@ -564,7 +540,7 @@ export function CasesPage({
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="shrink-0"
+                className={styles.shrinkButton}
                 aria-label={
                   focused ? "Exit focused case view" : "Open focused case view"
                 }
@@ -577,10 +553,8 @@ export function CasesPage({
           </CardHeader>
           <CardContent
             className={cn(
-              "overflow-x-hidden text-sm text-muted-foreground",
-              focused
-                ? "min-h-0 flex-1 overflow-y-auto"
-                : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+              styles.loadingCardContent,
+              focused ? styles.detailContentFocused : styles.detailContentSplit,
             )}
           >
             Case details will appear here once loading completes.
@@ -590,19 +564,13 @@ export function CasesPage({
     }
 
     return (
-      <Card
-        className={cn(
-          focused
-            ? "flex h-full min-w-0 flex-col rounded-none border-0 shadow-none"
-            : "lg:flex lg:min-h-0 lg:min-w-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
-        )}
-      >
+      <Card className={cn(focused ? styles.focusedCard : styles.splitCard)}>
         <CardHeader>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1 space-y-4">
+          <div className={styles.detailHeader}>
+            <div className={styles.detailHeaderMain}>
               <CardTitle>
                 {isEditingTitle ? (
-                  <div className="space-y-2">
+                  <div className={styles.editGroup}>
                     <Input
                       autoFocus
                       maxLength={255}
@@ -629,14 +597,14 @@ export function CasesPage({
                         void saveTitle()
                       }}
                     />
-                    <div className="text-xs text-muted-foreground">
+                    <div className={styles.editHint}>
                       Enter to save • Esc to cancel
                     </div>
                   </div>
                 ) : (
                   <button
                     type="button"
-                    className="w-fit max-w-full cursor-text text-left underline-offset-4 hover:underline"
+                    className={styles.editButtonTitle}
                     title="Click to rename case title"
                     onClick={startTitleEdit}
                   >
@@ -646,7 +614,7 @@ export function CasesPage({
               </CardTitle>
               <CardDescription>
                 {isEditingDescription ? (
-                  <div className="space-y-2">
+                  <div className={styles.editGroup}>
                     <Textarea
                       autoFocus
                       rows={4}
@@ -674,21 +642,21 @@ export function CasesPage({
                         void saveDescription()
                       }}
                     />
-                    <div className="text-xs text-muted-foreground">
+                    <div className={styles.editHint}>
                       Enter to save • Shift+Enter for newline • Esc to cancel
                     </div>
                   </div>
                 ) : (
                   <button
                     type="button"
-                    className="w-full cursor-text text-left underline-offset-4 hover:underline"
+                    className={styles.editButtonDescription}
                     title="Click to rename case description"
                     onClick={startDescriptionEdit}
                   >
                     {detail.summary_current ? (
                       detail.summary_current
                     ) : (
-                      <span className="italic">
+                      <span className={styles.emptyDescription}>
                         No description captured for this case yet.
                       </span>
                     )}
@@ -697,12 +665,12 @@ export function CasesPage({
               </CardDescription>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className={styles.actionGroup}>
               <Button
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="shrink-0"
+                className={styles.shrinkButton}
                 aria-label={
                   focused ? "Exit focused case view" : "Open focused case view"
                 }
@@ -730,13 +698,11 @@ export function CasesPage({
 
         <CardContent
           className={cn(
-            "space-y-6 overflow-x-hidden",
-            focused
-              ? "min-h-0 flex-1 overflow-y-auto"
-              : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+            styles.detailContent,
+            focused ? styles.detailContentFocused : styles.detailContentSplit,
           )}
         >
-          <div className="flex flex-wrap gap-2">
+          <div className={styles.badgeRow}>
             <Badge variant={badgeVariant(detail.status ?? "open")}>
               {detail.status ?? "open"}
             </Badge>
@@ -756,62 +722,60 @@ export function CasesPage({
             ) : null}
           </div>
 
-          <div className="space-y-3">
-            <div className="font-medium">Notes</div>
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>Notes</div>
             {!hasStructuredNotes ? (
-              <p className="text-sm text-muted-foreground">
+              <p className={styles.smallMutedText}>
                 No case notes recorded for this Case yet.
               </p>
             ) : (
-              <div className="space-y-3 text-sm">
+              <div className={styles.notesContent}>
                 <div>
-                  <div className="font-medium">Request</div>
-                  <p className="text-muted-foreground">
+                  <div className={styles.sectionTitle}>Request</div>
+                  <p className={styles.mutedText}>
                     {detail.input_summary || "No request summary captured yet."}
                   </p>
                 </div>
                 <div>
-                  <div className="font-medium">Current summary</div>
-                  <p className="text-muted-foreground">
+                  <div className={styles.sectionTitle}>Current summary</div>
+                  <p className={styles.mutedText}>
                     {detail.summary_current || "No running summary yet."}
                   </p>
                 </div>
                 <div>
-                  <div className="font-medium">Source</div>
-                  <p className="text-muted-foreground">
-                    {detail.source || "—"}
-                  </p>
+                  <div className={styles.sectionTitle}>Source</div>
+                  <p className={styles.mutedText}>{detail.source || "—"}</p>
                 </div>
                 {detail.outcome ? (
                   <div>
-                    <div className="font-medium">Outcome</div>
-                    <p className="text-muted-foreground">{detail.outcome}</p>
+                    <div className={styles.sectionTitle}>Outcome</div>
+                    <p className={styles.mutedText}>{detail.outcome}</p>
                   </div>
                 ) : null}
               </div>
             )}
           </div>
 
-          <div className="space-y-3">
-            <div className="font-medium">Signals</div>
-            <div className="space-y-3">
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>Signals</div>
+            <div className={styles.signalGroups}>
               <div>
-                <div className="mb-2 text-sm font-medium">Files</div>
+                <div className={styles.signalTitle}>Files</div>
                 <ChipList items={files} emptyText="No files captured yet." />
               </div>
               <div>
-                <div className="mb-2 text-sm font-medium">Symbols</div>
+                <div className={styles.signalTitle}>Symbols</div>
                 <ChipList
                   items={symbols}
                   emptyText="No symbols captured yet."
                 />
               </div>
               <div>
-                <div className="mb-2 text-sm font-medium">Errors</div>
+                <div className={styles.signalTitle}>Errors</div>
                 <ChipList items={errors} emptyText="No errors captured yet." />
               </div>
               <div>
-                <div className="mb-2 text-sm font-medium">Symptoms</div>
+                <div className={styles.signalTitle}>Symptoms</div>
                 <ChipList
                   items={symptoms}
                   emptyText="No symptoms captured yet."
@@ -820,31 +784,39 @@ export function CasesPage({
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="font-medium">{`Commands (${detail.commands.length})`}</div>
+          <div className={styles.section}>
+            <div
+              className={styles.sectionTitle}
+            >{`Commands (${detail.commands.length})`}</div>
             <CommandList commands={detail.commands} />
           </div>
 
-          <div className="space-y-3">
-            <div className="font-medium">{`Hypotheses (${detail.hypotheses.length})`}</div>
+          <div className={styles.section}>
+            <div
+              className={styles.sectionTitle}
+            >{`Hypotheses (${detail.hypotheses.length})`}</div>
             <HypothesisList hypotheses={detail.hypotheses} />
           </div>
 
-          <div className="space-y-3">
-            <div className="font-medium">{`Changes (${detail.changes.length})`}</div>
+          <div className={styles.section}>
+            <div
+              className={styles.sectionTitle}
+            >{`Changes (${detail.changes.length})`}</div>
             <ChangeList changes={detail.changes} />
           </div>
 
-          <div className="space-y-3">
-            <div className="font-medium">{`Next steps (${detail.next_steps.length})`}</div>
+          <div className={styles.section}>
+            <div
+              className={styles.sectionTitle}
+            >{`Next steps (${detail.next_steps.length})`}</div>
             {detail.next_steps.length ? (
-              <div className="space-y-2 text-sm text-muted-foreground">
+              <div className={styles.nextStepsList}>
                 {detail.next_steps.map((step) => (
                   <p key={step}>• {step}</p>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className={styles.smallMutedText}>
                 No next steps recorded yet.
               </p>
             )}
@@ -861,22 +833,22 @@ export function CasesPage({
       visibleCases.length === 0)
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+    <div className={styles.page}>
       {isLoadingCases ? (
         <Card>
-          <CardContent className="text-sm text-muted-foreground">
+          <CardContent className={styles.statusCardContent}>
             Loading Cases…
           </CardContent>
         </Card>
       ) : casesQuery.isError ? (
         <Card>
-          <CardContent className="text-sm text-destructive">
+          <CardContent className={styles.errorCardContent}>
             Couldn’t load Cases.
           </CardContent>
         </Card>
       ) : visibleCases.length === 0 ? (
         <Card>
-          <CardContent className="text-sm text-muted-foreground">
+          <CardContent className={styles.statusCardContent}>
             No Cases yet.
           </CardContent>
         </Card>
@@ -884,15 +856,15 @@ export function CasesPage({
         <>
           <div
             className={cn(
-              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-stretch lg:overflow-hidden",
+              styles.splitLayout,
               isSplitViewOpen
-                ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
-                : "lg:grid-cols-1",
+                ? styles.splitLayoutOpen
+                : styles.splitLayoutClosed,
             )}
           >
             <Card
               data-testid="cases-primary-pane"
-              className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden"
+              className={styles.primaryPane}
             >
               <CardHeader>
                 <CardTitle>Cases</CardTitle>
@@ -905,8 +877,8 @@ export function CasesPage({
                   )}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-                <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+              <CardContent className={styles.primaryContent}>
+                <div className={styles.primaryTableWrap}>
                   <SplitDataTable
                     columns={CASE_COLUMNS}
                     data={visibleCases}
@@ -929,9 +901,7 @@ export function CasesPage({
                 </div>
 
                 {casesQuery.isFetchingNextPage ? (
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Loading more Cases…
-                  </p>
+                  <p className={styles.loadMoreText}>Loading more Cases…</p>
                 ) : null}
               </CardContent>
             </Card>
@@ -942,7 +912,7 @@ export function CasesPage({
           <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
             <DialogContent
               showCloseButton={false}
-              className="flex h-[calc(100dvh-2rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
+              className={styles.dialogContent}
             >
               {renderCaseDetailCard(true)}
             </DialogContent>

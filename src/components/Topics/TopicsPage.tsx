@@ -38,6 +38,7 @@ import { useIsMobile } from "@/hooks/useMobile"
 import { getClippedTextDisplay, getSignalChipDisplay } from "@/lib/display"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
+import styles from "./TopicsPage.module.css"
 
 const TOPICS_PAGE_SIZE = 25
 
@@ -95,21 +96,18 @@ const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
     header: "Topic",
     meta: {
       width: "18rem",
-      cellClassName: "align-top py-2 min-w-0",
+      cellClassName: styles.topicCell,
     },
     cell: ({ row }) => {
       const title = getClippedTextDisplay(row.original.title)
       const subtitle = getClippedTextDisplay(row.original.workflow_key)
 
       return (
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="block truncate font-medium" title={title.title}>
+        <div className={styles.tableTitleCell}>
+          <span className={styles.tableTitle} title={title.title}>
             {title.label}
           </span>
-          <span
-            className="block truncate text-xs text-muted-foreground"
-            title={subtitle.title}
-          >
+          <span className={styles.tableSubtitle} title={subtitle.title}>
             {subtitle.label}
           </span>
         </div>
@@ -121,7 +119,7 @@ const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
     header: "Status",
     meta: {
       width: "8rem",
-      cellClassName: "py-2 whitespace-nowrap",
+      cellClassName: styles.statusCell,
     },
     cell: ({ row }) => (
       <Badge variant={badgeVariant(row.original.status)}>
@@ -134,7 +132,7 @@ const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
     header: "Cases",
     meta: {
       width: "6rem",
-      cellClassName: "py-2 whitespace-nowrap",
+      cellClassName: styles.countCell,
     },
   },
   {
@@ -142,7 +140,7 @@ const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
     header: "Last used",
     meta: {
       width: "12rem",
-      cellClassName: "py-2 whitespace-nowrap",
+      cellClassName: styles.timestampCell,
     },
     cell: ({ row }) => formatTimestamp(row.original.last_used_at),
   },
@@ -349,19 +347,13 @@ export function TopicsPage({
   })
 
   const renderTopicDetailCard = (focused: boolean) => (
-    <Card
-      className={cn(
-        focused
-          ? "flex h-full min-w-0 flex-col rounded-none border-0 shadow-none"
-          : "lg:flex lg:min-h-0 lg:min-w-0 lg:max-h-full lg:flex-col lg:overflow-hidden",
-      )}
-    >
+    <Card className={cn(focused ? styles.focusedCard : styles.splitCard)}>
       <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-4">
+        <div className={styles.detailHeader}>
+          <div className={styles.detailHeaderMain}>
             <CardTitle>
               {isEditingTitle ? (
-                <div className="space-y-2">
+                <div className={styles.editGroup}>
                   <Input
                     autoFocus
                     maxLength={255}
@@ -388,14 +380,14 @@ export function TopicsPage({
                       void saveTitle()
                     }}
                   />
-                  <div className="text-xs text-muted-foreground">
+                  <div className={styles.editHint}>
                     Enter to save • Esc to cancel
                   </div>
                 </div>
               ) : (
                 <button
                   type="button"
-                  className="w-fit max-w-full cursor-text text-left underline-offset-4 hover:underline"
+                  className={styles.editButtonTitle}
                   title="Click to rename topic title"
                   onClick={startTitleEdit}
                 >
@@ -405,7 +397,7 @@ export function TopicsPage({
             </CardTitle>
             <CardDescription>
               {isEditingDescription ? (
-                <div className="space-y-2">
+                <div className={styles.editGroup}>
                   <Textarea
                     autoFocus
                     rows={4}
@@ -433,21 +425,21 @@ export function TopicsPage({
                       void saveDescription()
                     }}
                   />
-                  <div className="text-xs text-muted-foreground">
+                  <div className={styles.editHint}>
                     Enter to save • Shift+Enter for newline • Esc to cancel
                   </div>
                 </div>
               ) : (
                 <button
                   type="button"
-                  className="w-full cursor-text text-left underline-offset-4 hover:underline"
+                  className={styles.editButtonDescription}
                   title="Click to rename topic description"
                   onClick={startDescriptionEdit}
                 >
                   {selectedTopic?.description ? (
                     selectedTopic.description
                   ) : (
-                    <span className="italic">
+                    <span className={styles.emptyDescription}>
                       No description captured for this topic yet.
                     </span>
                   )}
@@ -456,12 +448,12 @@ export function TopicsPage({
             </CardDescription>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className={styles.actionGroup}>
             <Button
               type="button"
               variant="outline"
               size="icon-sm"
-              className="shrink-0"
+              className={styles.shrinkButton}
               aria-label={
                 focused ? "Exit focused topic view" : "Open focused topic view"
               }
@@ -491,13 +483,11 @@ export function TopicsPage({
 
       <CardContent
         className={cn(
-          "space-y-6 overflow-x-hidden",
-          focused
-            ? "min-h-0 flex-1 overflow-y-auto"
-            : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+          styles.detailContent,
+          focused ? styles.detailContentFocused : styles.detailContentSplit,
         )}
       >
-        <div className="flex flex-wrap gap-2">
+        <div className={styles.badgeRow}>
           <Badge variant={badgeVariant(selectedTopic?.status ?? "open")}>
             {selectedTopic?.status ?? "open"}
           </Badge>
@@ -507,31 +497,29 @@ export function TopicsPage({
           </Badge>
         </div>
 
-        <div className="space-y-2 text-sm">
+        <div className={styles.summaryMeta}>
           <div>
-            <div className="font-medium">Rollup summary</div>
-            <p className="text-muted-foreground">
+            <div className={styles.sectionTitle}>Rollup summary</div>
+            <p className={styles.mutedText}>
               {selectedTopic?.rollup_summary || "No rollup summary yet."}
             </p>
           </div>
           <div>
-            <div className="font-medium">Last updated</div>
-            <p className="text-muted-foreground">
+            <div className={styles.sectionTitle}>Last updated</div>
+            <p className={styles.mutedText}>
               {formatTimestamp(selectedTopic?.updated_at ?? null)}
             </p>
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="font-medium">Canonical signals</div>
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Canonical signals</div>
           {topicRollupQuery.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading rollup…</p>
+            <p className={styles.smallMutedText}>Loading rollup…</p>
           ) : topicRollupQuery.isError ? (
-            <p className="text-sm text-destructive">
-              Couldn’t load the Topic rollup.
-            </p>
+            <p className={styles.errorText}>Couldn’t load the Topic rollup.</p>
           ) : (
-            <div className="flex flex-wrap gap-2 text-xs">
+            <div className={styles.chipList}>
               {[
                 ...(topicRollupQuery.data?.canonical_files ?? []),
                 ...(topicRollupQuery.data?.canonical_errors ?? []),
@@ -544,12 +532,10 @@ export function TopicsPage({
                     <Badge
                       key={signal}
                       variant="outline"
-                      className="max-w-full"
+                      className={styles.chip}
                       title={display.title}
                     >
-                      <span className="block max-w-full truncate">
-                        {display.label}
-                      </span>
+                      <span className={styles.chipLabel}>{display.label}</span>
                     </Badge>
                   )
                 })}
@@ -557,7 +543,7 @@ export function TopicsPage({
                 topicRollupQuery.data?.canonical_files.length ||
                 topicRollupQuery.data?.canonical_errors.length
               ) ? (
-                <span className="text-muted-foreground">
+                <span className={styles.mutedText}>
                   No canonical signals yet.
                 </span>
               ) : null}
@@ -565,25 +551,25 @@ export function TopicsPage({
           )}
         </div>
 
-        <div className="space-y-3">
-          <div className="font-medium">Recent Cases</div>
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Recent Cases</div>
           {topicCasesQuery.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading Cases…</p>
+            <p className={styles.smallMutedText}>Loading Cases…</p>
           ) : topicCasesQuery.isError ? (
-            <p className="text-sm text-destructive">
+            <p className={styles.errorText}>
               Couldn’t load Cases for this Topic.
             </p>
           ) : (topicCasesQuery.data?.data.length ?? 0) === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className={styles.smallMutedText}>
               No Cases under this Topic yet.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className={styles.recentCasesList}>
               {topicCasesQuery.data?.data.map((caseItem) => (
                 <button
                   key={caseItem.id}
                   type="button"
-                  className="w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className={styles.recentCaseButton}
                   onClick={() =>
                     navigate({
                       to: "/cases",
@@ -591,13 +577,15 @@ export function TopicsPage({
                     })
                   }
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="font-medium">{caseItem.title}</div>
+                  <div className={styles.recentCaseHeader}>
+                    <div className={styles.recentCaseTitle}>
+                      {caseItem.title}
+                    </div>
                     <Badge variant={badgeVariant(caseItem.status)}>
                       {caseItem.status}
                     </Badge>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className={styles.recentCaseSummary}>
                     {caseItem.summary_current ||
                       caseItem.input_summary ||
                       "No summary yet."}
@@ -618,22 +606,22 @@ export function TopicsPage({
       visibleTopics.length === 0)
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+    <div className={styles.page}>
       {isLoadingTopics ? (
         <Card>
-          <CardContent className="text-sm text-muted-foreground">
+          <CardContent className={styles.statusCardContent}>
             Loading Topics…
           </CardContent>
         </Card>
       ) : topicsQuery.isError ? (
         <Card>
-          <CardContent className="text-sm text-destructive">
+          <CardContent className={styles.errorCardContent}>
             Couldn’t load Topics.
           </CardContent>
         </Card>
       ) : visibleTopics.length === 0 ? (
         <Card>
-          <CardContent className="text-sm text-muted-foreground">
+          <CardContent className={styles.statusCardContent}>
             No Topics yet.
           </CardContent>
         </Card>
@@ -641,15 +629,15 @@ export function TopicsPage({
         <>
           <div
             className={cn(
-              "grid gap-6 lg:min-h-0 lg:flex-1 lg:items-stretch lg:overflow-hidden",
+              styles.splitLayout,
               isSplitViewOpen
-                ? "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
-                : "lg:grid-cols-1",
+                ? styles.splitLayoutOpen
+                : styles.splitLayoutClosed,
             )}
           >
             <Card
               data-testid="topics-primary-pane"
-              className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden"
+              className={styles.primaryPane}
             >
               <CardHeader>
                 <CardTitle>Topics</CardTitle>
@@ -662,8 +650,8 @@ export function TopicsPage({
                   )}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-                <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+              <CardContent className={styles.primaryContent}>
+                <div className={styles.primaryTableWrap}>
                   <SplitDataTable
                     columns={TOPIC_COLUMNS}
                     data={visibleTopics}
@@ -686,9 +674,7 @@ export function TopicsPage({
                 </div>
 
                 {topicsQuery.isFetchingNextPage ? (
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Loading more Topics…
-                  </p>
+                  <p className={styles.loadMoreText}>Loading more Topics…</p>
                 ) : null}
               </CardContent>
             </Card>
@@ -699,7 +685,7 @@ export function TopicsPage({
           <Dialog open={isFocusedViewOpen} onOpenChange={setIsFocusedViewOpen}>
             <DialogContent
               showCloseButton={false}
-              className="flex h-[calc(100dvh-2rem)] max-w-[calc(100dvw-2rem)] flex-col overflow-hidden p-0"
+              className={styles.dialogContent}
             >
               {renderTopicDetailCard(true)}
             </DialogContent>

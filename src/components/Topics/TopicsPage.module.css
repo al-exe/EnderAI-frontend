@@ -1,0 +1,197 @@
+@reference "../../index.css";
+
+.page {
+  @apply flex min-h-0 flex-1 flex-col gap-6 overflow-hidden;
+}
+
+.statusCardContent {
+  @apply text-sm text-muted-foreground;
+}
+
+.errorCardContent {
+  @apply text-sm text-destructive;
+}
+
+.splitLayout {
+  @apply grid gap-6;
+}
+
+.focusedCard {
+  @apply flex h-full min-w-0 flex-col rounded-none border-0 shadow-none;
+}
+
+.detailHeader {
+  @apply flex items-start justify-between gap-3;
+}
+
+.detailHeaderMain {
+  @apply min-w-0 flex-1 space-y-4;
+}
+
+.editGroup {
+  @apply space-y-2;
+}
+
+.editHint {
+  @apply text-xs text-muted-foreground;
+}
+
+.editButtonTitle {
+  @apply w-fit max-w-full cursor-text text-left underline-offset-4 hover:underline;
+}
+
+.editButtonDescription {
+  @apply w-full cursor-text text-left underline-offset-4 hover:underline;
+}
+
+.emptyDescription {
+  @apply italic;
+}
+
+.actionGroup {
+  @apply flex shrink-0 items-center gap-2;
+}
+
+.shrinkButton {
+  @apply shrink-0;
+}
+
+.detailContent {
+  @apply space-y-6 overflow-x-hidden;
+}
+
+.detailContentFocused {
+  @apply min-h-0 flex-1 overflow-y-auto;
+}
+
+.badgeRow {
+  @apply flex flex-wrap gap-2;
+}
+
+.summaryMeta {
+  @apply space-y-2 text-sm;
+}
+
+.section {
+  @apply space-y-3;
+}
+
+.sectionTitle {
+  @apply font-medium;
+}
+
+.mutedText {
+  @apply text-muted-foreground;
+}
+
+.smallMutedText {
+  @apply text-sm text-muted-foreground;
+}
+
+.errorText {
+  @apply text-sm text-destructive;
+}
+
+.chipList {
+  @apply flex flex-wrap gap-2 text-xs;
+}
+
+.chip {
+  @apply max-w-full;
+}
+
+.chipLabel {
+  @apply block max-w-full truncate;
+}
+
+.recentCasesList {
+  @apply space-y-3;
+}
+
+.recentCaseButton {
+  @apply w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+}
+
+.recentCaseHeader {
+  @apply flex items-center justify-between gap-3;
+}
+
+.recentCaseTitle {
+  @apply font-medium;
+}
+
+.recentCaseSummary {
+  @apply mt-1 text-sm text-muted-foreground;
+}
+
+.loadMoreText {
+  @apply mt-3 text-sm text-muted-foreground;
+}
+
+.dialogContent {
+  @apply flex flex-col overflow-hidden p-0;
+  height: calc(100dvh - 2rem);
+  max-width: calc(100dvw - 2rem);
+}
+
+.tableTitleCell {
+  @apply flex min-w-0 flex-col gap-0.5;
+}
+
+.tableTitle {
+  @apply block truncate font-medium;
+}
+
+.tableSubtitle {
+  @apply block truncate text-xs text-muted-foreground;
+}
+
+.topicCell {
+  @apply min-w-0 py-2 align-top;
+}
+
+.statusCell {
+  @apply py-2 whitespace-nowrap;
+}
+
+.countCell {
+  @apply py-2 whitespace-nowrap;
+}
+
+.timestampCell {
+  @apply py-2 whitespace-nowrap;
+}
+
+@media (min-width: 1024px) {
+  .splitLayout {
+    @apply min-h-0 flex-1 items-stretch overflow-hidden;
+  }
+
+  .splitLayoutOpen {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+
+  .splitLayoutClosed {
+    grid-template-columns: 1fr;
+  }
+
+  .primaryPane {
+    @apply flex min-h-0 max-h-full flex-col overflow-hidden;
+  }
+
+  .primaryContent {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  .primaryTableWrap {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  .splitCard {
+    @apply flex min-h-0 min-w-0 max-h-full flex-col overflow-hidden;
+  }
+
+  .detailContentSplit {
+    @apply min-h-0 flex-1 overflow-y-auto;
+  }
+}

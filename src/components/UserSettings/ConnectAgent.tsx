@@ -29,6 +29,7 @@ import { handleError } from "@/utils"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import { Badge } from "../ui/badge"
 import { Label } from "../ui/label"
+import styles from "./ConnectAgent.module.css"
 
 interface RevealedCredential {
   credentialId: string
@@ -96,11 +97,11 @@ function SnippetBlock({
   testId?: string
 }) {
   return (
-    <div className="rounded-lg border bg-muted/20">
-      <div className="flex items-start justify-between gap-4 border-b px-4 py-3">
+    <div className={styles.snippetBlock}>
+      <div className={styles.snippetHeader}>
         <div>
-          <h4 className="font-medium">{title}</h4>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <h4 className={styles.sectionTitle}>{title}</h4>
+          <p className={styles.snippetDescription}>{description}</p>
         </div>
         <Button
           type="button"
@@ -108,14 +109,11 @@ function SnippetBlock({
           size="sm"
           onClick={() => onCopy(snippet)}
         >
-          <Copy className="size-4" />
+          <Copy className={styles.icon} />
           {copiedText === snippet ? "Copied" : "Copy"}
         </Button>
       </div>
-      <pre
-        className="overflow-x-auto px-4 py-3 text-xs leading-6"
-        data-testid={testId}
-      >
+      <pre className={styles.snippetPre} data-testid={testId}>
         <code>{snippet}</code>
       </pre>
     </div>
@@ -146,17 +144,17 @@ function CredentialCard({
   return (
     <div
       className={cn(
-        "w-full rounded-xl border px-4 py-4 text-left transition-colors",
+        styles.credentialCard,
         isSelected
-          ? "border-primary bg-primary/5"
-          : "border-border hover:border-primary/40",
-        isRevoked && "cursor-not-allowed opacity-70",
+          ? styles.credentialCardSelected
+          : styles.credentialCardDefault,
+        isRevoked && styles.credentialCardRevoked,
       )}
     >
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">{credential.label}</span>
+      <div className={styles.credentialHeader}>
+        <div className={styles.credentialMeta}>
+          <div className={styles.credentialBadgeRow}>
+            <span className={styles.credentialLabel}>{credential.label}</span>
             <Badge variant={isRevoked ? "destructive" : "secondary"}>
               {isRevoked ? "Revoked" : "Active"}
             </Badge>
@@ -164,7 +162,7 @@ function CredentialCard({
               <Badge variant="success">Tokens ready</Badge>
             ) : null}
           </div>
-          <div className="space-y-1 text-sm text-muted-foreground">
+          <div className={styles.credentialDetails}>
             <p>Last rotated: {formatTimestamp(credential.last_rotated_at)}</p>
             <p>Last used: {formatTimestamp(credential.last_used_at)}</p>
             <p>
@@ -173,7 +171,7 @@ function CredentialCard({
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className={styles.credentialActions}>
           <Button
             type="button"
             variant={isSelected ? "secondary" : "outline"}
@@ -197,7 +195,7 @@ function CredentialCard({
             }}
             disabled={isRevoked}
           >
-            <RotateCw className="size-4" />
+            <RotateCw className={styles.icon} />
             Rotate
           </LoadingButton>
           <LoadingButton
@@ -211,7 +209,7 @@ function CredentialCard({
             }}
             disabled={isRevoked}
           >
-            <Trash2 className="size-4" />
+            <Trash2 className={styles.icon} />
             Revoke
           </LoadingButton>
         </div>
@@ -318,22 +316,22 @@ const ConnectAgent = () => {
     : null
 
   return (
-    <div className="space-y-6">
+    <div className={styles.page}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <LaptopMinimal className="size-5" />
+          <CardTitle className={styles.titleRow}>
+            <LaptopMinimal className={styles.titleIcon} />
             Connect agent
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className={styles.mutedText}>
             Generate a per-user MCP token and the minimal EnderAI workflow
             snippet your agent needs.
           </p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className={styles.cardContent}>
           {credentialsQuery.error ? (
             <Alert variant="destructive">
-              <AlertTriangle className="size-4" />
+              <AlertTriangle className={styles.icon} />
               <AlertTitle>Couldn&apos;t load agent credentials</AlertTitle>
               <AlertDescription>
                 The frontend is up, but the backend credential endpoints
@@ -343,9 +341,9 @@ const ConnectAgent = () => {
             </Alert>
           ) : null}
 
-          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="space-y-4 rounded-xl border p-4">
-              <div className="space-y-2">
+          <div className={styles.setupGrid}>
+            <div className={styles.setupCard}>
+              <div className={styles.fieldGroup}>
                 <Label htmlFor="credential-label">Credential label</Label>
                 <Input
                   id="credential-label"
@@ -362,29 +360,49 @@ const ConnectAgent = () => {
                 loading={createMutation.isPending}
                 data-testid="create-agent-credential"
               >
-                <KeyRound className="size-4" />
+                <KeyRound className={styles.icon} />
                 Create credential
               </LoadingButton>
             </div>
 
-            <div className="rounded-xl border p-4">
-              <h3 className="font-medium">What this page gives you</h3>
-              <ul className="mt-3 space-y-3 text-sm text-muted-foreground">
-                <li className="flex gap-2">
-                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+            <div className={styles.benefitCard}>
+              <h3 className={styles.sectionTitle}>What this page gives you</h3>
+              <ul className={styles.benefitList}>
+                <li className={styles.benefitItem}>
+                  <CheckCircle2
+                    className={cn(
+                      styles.benefitIcon,
+                      styles.benefitIconSuccess,
+                    )}
+                  />
                   One per-user MCP token for the hosted EnderAI workflow.
                 </li>
-                <li className="flex gap-2">
-                  <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
+                <li className={styles.benefitItem}>
+                  <Shield
+                    className={cn(
+                      styles.benefitIcon,
+                      styles.benefitIconPrimary,
+                    )}
+                  />
                   Codex CLI setup snippets with the fixed hosted MCP endpoint.
                 </li>
-                <li className="flex gap-2">
-                  <RotateCw className="mt-0.5 size-4 shrink-0 text-primary" />A
-                  visible rotate/revoke path later without reusing your normal
+                <li className={styles.benefitItem}>
+                  <RotateCw
+                    className={cn(
+                      styles.benefitIcon,
+                      styles.benefitIconPrimary,
+                    )}
+                  />
+                  A visible rotate/revoke path later without reusing your normal
                   login token.
                 </li>
-                <li className="flex gap-2">
-                  <LaptopMinimal className="mt-0.5 size-4 shrink-0 text-primary" />
+                <li className={styles.benefitItem}>
+                  <LaptopMinimal
+                    className={cn(
+                      styles.benefitIcon,
+                      styles.benefitIconPrimary,
+                    )}
+                  />
                   A minimal workflow reminder so your AI workflow starts using
                   EnderAI correctly.
                 </li>
@@ -393,7 +411,7 @@ const ConnectAgent = () => {
           </div>
 
           <Alert>
-            <CheckCircle2 className="size-4" />
+            <CheckCircle2 className={styles.icon} />
             <AlertTitle>Where this goes</AlertTitle>
             <AlertDescription>
               Run the export snippet in the same shell that will launch terminal
@@ -404,9 +422,9 @@ const ConnectAgent = () => {
           </Alert>
 
           {envSnippet && clientSnippet ? (
-            <div className="space-y-4">
+            <div className={styles.tokenSection}>
               <Alert>
-                <CheckCircle2 className="size-4" />
+                <CheckCircle2 className={styles.icon} />
                 <AlertTitle>Fresh tokens ready</AlertTitle>
                 <AlertDescription>
                   This token is only shown right now. Save it now if you need it
@@ -450,7 +468,7 @@ const ConnectAgent = () => {
               ) : null}
 
               <Alert>
-                <Shield className="size-4" />
+                <Shield className={styles.icon} />
                 <AlertTitle>Why use the file-based shell setup</AlertTitle>
                 <AlertDescription>
                   Directly writing `export ENDERAI_MCP_TOKEN="..."` into
@@ -463,7 +481,7 @@ const ConnectAgent = () => {
             </div>
           ) : (
             <Alert>
-              <KeyRound className="size-4" />
+              <KeyRound className={styles.icon} />
               <AlertTitle>Create your first agent credential</AlertTitle>
               <AlertDescription>
                 Once you create a credential, this page will generate the token,
@@ -489,11 +507,9 @@ const ConnectAgent = () => {
         <CardHeader>
           <CardTitle>Credentials</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className={styles.credentialsContent}>
           {credentialsQuery.isLoading ? (
-            <p className="text-sm text-muted-foreground">
-              Loading credentials…
-            </p>
+            <p className={styles.mutedText}>Loading credentials…</p>
           ) : activeCredentials.length ? (
             activeCredentials.map((credential) => (
               <CredentialCard
@@ -517,9 +533,7 @@ const ConnectAgent = () => {
               />
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No active credentials yet.
-            </p>
+            <p className={styles.mutedText}>No active credentials yet.</p>
           )}
         </CardContent>
       </Card>
