@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAutoLoadMore } from "@/hooks/useAutoLoadMore"
 import useCustomToast from "@/hooks/useCustomToast"
 import { useIsMobile } from "@/hooks/useMobile"
+import { getClippedTextDisplay, getSignalChipDisplay } from "@/lib/display"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
@@ -94,16 +95,26 @@ const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
     header: "Topic",
     meta: {
       width: "18rem",
-      cellClassName: "align-top py-2",
+      cellClassName: "align-top py-2 min-w-0",
     },
-    cell: ({ row }) => (
-      <div className="flex flex-col gap-0.5">
-        <span className="font-medium">{row.original.title}</span>
-        <span className="text-xs text-muted-foreground">
-          {row.original.workflow_key}
-        </span>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const title = getClippedTextDisplay(row.original.title)
+      const subtitle = getClippedTextDisplay(row.original.workflow_key)
+
+      return (
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="block truncate font-medium" title={title.title}>
+            {title.label}
+          </span>
+          <span
+            className="block truncate text-xs text-muted-foreground"
+            title={subtitle.title}
+          >
+            {subtitle.label}
+          </span>
+        </div>
+      )
+    },
   },
   {
     accessorKey: "status",
@@ -526,11 +537,22 @@ export function TopicsPage({
                 ...(topicRollupQuery.data?.canonical_errors ?? []),
               ]
                 .slice(0, 8)
-                .map((signal) => (
-                  <Badge key={signal} variant="outline">
-                    {signal}
-                  </Badge>
-                ))}
+                .map((signal) => {
+                  const display = getSignalChipDisplay(signal)
+
+                  return (
+                    <Badge
+                      key={signal}
+                      variant="outline"
+                      className="max-w-full"
+                      title={display.title}
+                    >
+                      <span className="block max-w-full truncate">
+                        {display.label}
+                      </span>
+                    </Badge>
+                  )
+                })}
               {!(
                 topicRollupQuery.data?.canonical_files.length ||
                 topicRollupQuery.data?.canonical_errors.length
@@ -625,7 +647,10 @@ export function TopicsPage({
                 : "lg:grid-cols-1",
             )}
           >
-            <Card className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden">
+            <Card
+              data-testid="topics-primary-pane"
+              className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden"
+            >
               <CardHeader>
                 <CardTitle>Topics</CardTitle>
                 <CardDescription>

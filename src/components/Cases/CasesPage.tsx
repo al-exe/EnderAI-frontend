@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAutoLoadMore } from "@/hooks/useAutoLoadMore"
 import useCustomToast from "@/hooks/useCustomToast"
 import { useIsMobile } from "@/hooks/useMobile"
+import { getClippedTextDisplay, getSignalChipDisplay } from "@/lib/display"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
@@ -99,11 +100,20 @@ function ChipList({
 
   return (
     <div className="flex flex-wrap gap-2 text-xs">
-      {items.map((item) => (
-        <Badge key={item} variant="outline">
-          {item}
-        </Badge>
-      ))}
+      {items.map((item, index) => {
+        const display = getSignalChipDisplay(item)
+
+        return (
+          <Badge
+            key={`${item}-${index}`}
+            variant="outline"
+            className="max-w-full"
+            title={display.title}
+          >
+            <span className="block max-w-full truncate">{display.label}</span>
+          </Badge>
+        )
+      })}
     </div>
   )
 }
@@ -261,27 +271,47 @@ const CASE_COLUMNS: ColumnDef<CasePublic>[] = [
     header: "Case",
     meta: {
       width: "22rem",
-      cellClassName: "align-top py-2",
+      cellClassName: "align-top py-2 min-w-0",
     },
-    cell: ({ row }) => (
-      <div className="flex flex-col gap-0.5">
-        <span className="font-medium">{row.original.title}</span>
-        <span className="text-xs text-muted-foreground">
-          {row.original.summary_current ||
-            row.original.input_summary ||
-            "No summary yet"}
-        </span>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const title = getClippedTextDisplay(row.original.title)
+      const subtitle = getClippedTextDisplay(
+        row.original.summary_current ||
+          row.original.input_summary ||
+          "No summary yet",
+      )
+
+      return (
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="block truncate font-medium" title={title.title}>
+            {title.label}
+          </span>
+          <span
+            className="block truncate text-xs text-muted-foreground"
+            title={subtitle.title}
+          >
+            {subtitle.label}
+          </span>
+        </div>
+      )
+    },
   },
   {
     accessorKey: "topic_title",
     header: "Topic",
     meta: {
       width: "14rem",
-      cellClassName: "py-2",
+      cellClassName: "py-2 min-w-0",
     },
-    cell: ({ row }) => <span>{row.original.topic_title || "—"}</span>,
+    cell: ({ row }) => {
+      const topicTitle = getClippedTextDisplay(row.original.topic_title || "—")
+
+      return (
+        <span className="block truncate" title={topicTitle.title}>
+          {topicTitle.label}
+        </span>
+      )
+    },
   },
   {
     accessorKey: "status",
@@ -860,7 +890,10 @@ export function CasesPage({
                 : "lg:grid-cols-1",
             )}
           >
-            <Card className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden">
+            <Card
+              data-testid="cases-primary-pane"
+              className="lg:flex lg:min-h-0 lg:max-h-full lg:flex-col lg:overflow-hidden"
+            >
               <CardHeader>
                 <CardTitle>Cases</CardTitle>
                 <CardDescription>
