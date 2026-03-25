@@ -188,7 +188,11 @@ export function GlobalSearchBar() {
   const caseResults = searchQuery.data?.cases ?? []
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-2xl">
+    <div
+      ref={containerRef}
+      data-testid="global-search-container"
+      className="relative w-full lg:w-[calc((100%-1.5rem)*7/12)] lg:max-w-none"
+    >
       <div className="relative">
         <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
