@@ -43,6 +43,83 @@ test("Home route sets the browser tab title to Home", async ({ page }) => {
   await expect(page).toHaveTitle("Home")
 })
 
+test("Sidebar demo mode toggle sits above collapse and scopes Topics/Cases requests", async ({
+  page,
+}) => {
+  await mockAuth(page)
+
+  const topicRequests: string[] = []
+  const caseRequests: string[] = []
+
+  await page.route("**/api/v1/topics/**", async (route) => {
+    const url = new URL(route.request().url())
+
+    if (url.pathname === "/api/v1/topics/") {
+      topicRequests.push(route.request().url())
+      await route.fulfill({ json: { data: [], count: 0 } })
+      return
+    }
+
+    await route.fulfill({ status: 404, json: { detail: "Topic not found" } })
+  })
+
+  await page.route("**/api/v1/cases/**", async (route) => {
+    const url = new URL(route.request().url())
+
+    if (url.pathname === "/api/v1/cases/") {
+      caseRequests.push(route.request().url())
+      await route.fulfill({ json: { data: [], count: 0 } })
+      return
+    }
+
+    await route.fulfill({ status: 404, json: { detail: "Case not found" } })
+  })
+
+  await page.goto("/topics")
+
+  const demoToggle = page.getByTestId("demo-mode-toggle")
+  const collapseToggle = page.getByTestId("sidebar-collapse-toggle")
+
+  await expect(demoToggle).toBeVisible()
+  await expect(collapseToggle).toBeVisible()
+
+  const demoBox = await demoToggle.boundingBox()
+  const collapseBox = await collapseToggle.boundingBox()
+
+  expect(demoBox).not.toBeNull()
+  expect(collapseBox).not.toBeNull()
+  expect(demoBox!.y).toBeLessThan(collapseBox!.y)
+
+  await expect
+    .poll(() =>
+      topicRequests.some(
+        (url) => new URL(url).searchParams.get("demo") === null,
+      ),
+    )
+    .toBeTruthy()
+
+  await demoToggle.click()
+  await expect(demoToggle).toHaveAttribute("aria-checked", "true")
+
+  await expect
+    .poll(() =>
+      topicRequests.some(
+        (url) => new URL(url).searchParams.get("demo") === "true",
+      ),
+    )
+    .toBeTruthy()
+
+  await page.getByRole("link", { name: "Cases" }).click()
+
+  await expect
+    .poll(() =>
+      caseRequests.some(
+        (url) => new URL(url).searchParams.get("demo") === "true",
+      ),
+    )
+    .toBeTruthy()
+})
+
 test("Topics page matches the primary pane width and truncates long left-table text", async ({
   page,
 }) => {
@@ -161,7 +238,9 @@ test("Topics page matches the primary pane width and truncates long left-table t
   await expect(tableHeader).toHaveClass(/\bbg-muted\b/)
   await expect(tableHeader).not.toHaveClass(/bg-muted\/50/)
   expect(
-    await tableHeader.evaluate((element) => getComputedStyle(element).boxShadow),
+    await tableHeader.evaluate(
+      (element) => getComputedStyle(element).boxShadow,
+    ),
   ).not.toBe("none")
   expect(
     await firstHeaderCell.evaluate(

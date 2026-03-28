@@ -18,6 +18,7 @@ import {
   updateCase,
 } from "@/api/cases"
 import { SplitDataTable } from "@/components/Common/SplitDataTable"
+import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -327,6 +328,7 @@ export function CasesPage({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const isMobile = useIsMobile()
+  const { isDemoMode } = useDemoMode()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(
     initialSelectedCaseId,
@@ -341,6 +343,7 @@ export function CasesPage({
     useState<HTMLDivElement | null>(null)
   const [isSplitViewOpen, setIsSplitViewOpen] = useState(true)
   const [isFocusedViewOpen, setIsFocusedViewOpen] = useState(false)
+  const lastDemoModeRef = useRef(isDemoMode)
 
   useEffect(() => {
     if (initialSelectedCaseId) {
@@ -349,13 +352,28 @@ export function CasesPage({
     }
   }, [initialSelectedCaseId])
 
+  useEffect(() => {
+    if (lastDemoModeRef.current === isDemoMode) return
+
+    lastDemoModeRef.current = isDemoMode
+    setSelectedCaseId(null)
+    setIsSplitViewOpen(true)
+    setIsFocusedViewOpen(false)
+    void navigate({
+      to: "/cases",
+      search: {},
+      replace: true,
+    })
+  }, [isDemoMode, navigate])
+
   const casesQuery = useInfiniteQuery({
-    queryKey: ["cases"],
+    queryKey: ["cases", isDemoMode],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       readCases({
         skip: pageParam,
         limit: CASES_PAGE_SIZE,
+        demo: isDemoMode,
       }),
     getNextPageParam: (lastPage, allPages) => {
       const loaded = allPages.reduce(
@@ -384,8 +402,8 @@ export function CasesPage({
 
   const detailQuery = useQuery({
     enabled: Boolean(resolvedSelectedCaseId),
-    queryKey: ["case", resolvedSelectedCaseId],
-    queryFn: () => readCase(resolvedSelectedCaseId ?? ""),
+    queryKey: ["case", resolvedSelectedCaseId, isDemoMode],
+    queryFn: () => readCase(resolvedSelectedCaseId ?? "", { demo: isDemoMode }),
   })
 
   const detail = detailQuery.data ?? selectedCase
@@ -423,16 +441,23 @@ export function CasesPage({
       title?: string
       summaryCurrent?: string | null
     }) =>
-      updateCase(caseId, {
-        title,
-        summary_current: summaryCurrent,
-      }),
+      updateCase(
+        caseId,
+        {
+          title,
+          summary_current: summaryCurrent,
+        },
+        { demo: isDemoMode },
+      ),
     onSuccess: (updatedCase) => {
       queryClient.setQueryData<InfiniteData<CasesPublic> | undefined>(
-        ["cases"],
+        ["cases", isDemoMode],
         (current) => replaceCaseInPages(current, updatedCase),
       )
-      queryClient.setQueryData(["case", updatedCase.id], updatedCase)
+      queryClient.setQueryData(
+        ["case", updatedCase.id, isDemoMode],
+        updatedCase,
+      )
     },
     onError: handleError.bind(showErrorToast),
   })

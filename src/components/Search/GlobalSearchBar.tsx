@@ -4,6 +4,7 @@ import { Loader2, Search as SearchIcon } from "lucide-react"
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react"
 
 import { readGlobalSearch, type SearchHitPublic } from "@/api/search"
+import { useDemoMode } from "@/components/demo-mode-provider"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -20,7 +21,9 @@ type SearchEntry = {
 
 export function GlobalSearchBar() {
   const navigate = useNavigate()
+  const { isDemoMode } = useDemoMode()
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const lastDemoModeRef = useRef(isDemoMode)
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const [isFocused, setIsFocused] = useState(false)
@@ -46,9 +49,22 @@ export function GlobalSearchBar() {
     return () => document.removeEventListener("mousedown", handlePointerDown)
   }, [])
 
+  useEffect(() => {
+    if (lastDemoModeRef.current === isDemoMode) return
+
+    lastDemoModeRef.current = isDemoMode
+    setQuery("")
+    setDebouncedQuery("")
+    setIsFocused(false)
+    setActiveIndex(-1)
+  }, [isDemoMode])
+
   const searchQuery = useQuery({
-    queryKey: ["globalSearch", debouncedQuery],
-    queryFn: () => readGlobalSearch(debouncedQuery, LIMIT_PER_KIND),
+    queryKey: ["globalSearch", debouncedQuery, isDemoMode],
+    queryFn: () =>
+      readGlobalSearch(debouncedQuery, LIMIT_PER_KIND, {
+        demo: isDemoMode,
+      }),
     enabled: debouncedQuery.length >= MIN_QUERY_LENGTH,
     staleTime: 15_000,
   })

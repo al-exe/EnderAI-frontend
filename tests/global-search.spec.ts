@@ -9,6 +9,13 @@ const currentUser = {
   created_at: "2026-03-24T00:00:00Z",
 }
 
+test.use({
+  storageState: {
+    cookies: [],
+    origins: [],
+  },
+})
+
 test("Global search navigates to a case result and loads it by route param", async ({
   page,
 }) => {
@@ -114,6 +121,53 @@ test("Global search navigates to a case result and loads it by route param", asy
       )
       .first(),
   ).toBeVisible()
+})
+
+test("Global search sends demo=true when demo mode is enabled", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("access_token", "test-token")
+  })
+
+  await page.route("**/api/v1/users/me", async (route) => {
+    await route.fulfill({ json: currentUser })
+  })
+
+  const searchRequests: string[] = []
+  await page.route("**/api/v1/search/*", async (route) => {
+    searchRequests.push(route.request().url())
+    await route.fulfill({
+      json: {
+        topics: [],
+        cases: [],
+        topic_count: 0,
+        case_count: 0,
+      },
+    })
+  })
+
+  await page.goto("/")
+
+  await page.getByTestId("global-search-input").fill("Global")
+  await expect
+    .poll(() =>
+      searchRequests.some(
+        (url) => new URL(url).searchParams.get("demo") === null,
+      ),
+    )
+    .toBeTruthy()
+
+  await page.getByTestId("demo-mode-toggle").click()
+  await page.getByTestId("global-search-input").fill("Global")
+
+  await expect
+    .poll(() =>
+      searchRequests.some(
+        (url) => new URL(url).searchParams.get("demo") === "true",
+      ),
+    )
+    .toBeTruthy()
 })
 
 test("Global search navigates to a topic result and loads it by route param", async ({

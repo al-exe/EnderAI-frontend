@@ -27,6 +27,7 @@ export interface SearchResultsPublic {
 export function readGlobalSearch(
   q: string,
   limitPerKind = 5,
+  options: { demo?: boolean } = {},
 ): CancelablePromise<SearchResultsPublic> {
   return request(OpenAPI, {
     method: "GET",
@@ -34,6 +35,7 @@ export function readGlobalSearch(
     query: {
       q: q.trim(),
       limit_per_kind: limitPerKind,
+      demo: options.demo || undefined,
     },
   })
 }

@@ -58,6 +58,7 @@ export interface ReadTopicsParams {
   workflow_key?: string
   skip?: number
   limit?: number
+  demo?: boolean
 }
 
 export function readTopics(
@@ -72,28 +73,39 @@ export function readTopics(
       workflow_key: params.workflow_key?.trim() || undefined,
       skip: params.skip,
       limit: params.limit,
+      demo: params.demo || undefined,
     },
   })
 }
 
-export function readTopic(topicId: string): CancelablePromise<TopicPublic> {
+export function readTopic(
+  topicId: string,
+  options: { demo?: boolean } = {},
+): CancelablePromise<TopicPublic> {
   return request(OpenAPI, {
     method: "GET",
     url: "/api/v1/topics/{topic_id}",
     path: {
       topic_id: topicId,
     },
+    query: {
+      demo: options.demo || undefined,
+    },
   })
 }
 
 export function readTopicRollup(
   topicId: string,
+  options: { demo?: boolean } = {},
 ): CancelablePromise<TopicRollupPublic> {
   return request(OpenAPI, {
     method: "GET",
     url: "/api/v1/topics/{topic_id}/rollup",
     path: {
       topic_id: topicId,
+    },
+    query: {
+      demo: options.demo || undefined,
     },
   })
 }
@@ -106,6 +118,7 @@ export interface TopicUpdate {
 export function updateTopic(
   topicId: string,
   body: TopicUpdate,
+  options: { demo?: boolean } = {},
 ): CancelablePromise<TopicPublic> {
   const title = body.title?.trim()
   const description =
@@ -118,6 +131,9 @@ export function updateTopic(
     url: "/api/v1/topics/{topic_id}",
     path: {
       topic_id: topicId,
+    },
+    query: {
+      demo: options.demo || undefined,
     },
     body: {
       ...(title !== undefined ? { title } : {}),

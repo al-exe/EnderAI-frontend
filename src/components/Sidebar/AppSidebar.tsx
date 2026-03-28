@@ -1,6 +1,7 @@
 import {
   Box,
   Boxes,
+  FlaskConical,
   Home,
   PanelLeftClose,
   PanelLeftOpen,
@@ -9,6 +10,7 @@ import {
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
+import { useDemoMode } from "@/components/demo-mode-provider"
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +21,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
+import { cn } from "@/lib/utils"
 import { type Item, Main } from "./Main"
 import { User } from "./User"
 
@@ -50,6 +53,40 @@ function SidebarCollapseToggle() {
   )
 }
 
+function DemoModeToggle() {
+  const { isDemoMode, toggleDemoMode } = useDemoMode()
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        tooltip={isDemoMode ? "Disable demo mode" : "Enable demo mode"}
+        data-testid="demo-mode-toggle"
+        role="switch"
+        aria-checked={isDemoMode}
+        onClick={toggleDemoMode}
+      >
+        <FlaskConical className="size-[18px] text-muted-foreground" />
+        <span>Demo mode</span>
+        <div
+          aria-hidden="true"
+          className={cn(
+            "ml-auto hidden h-6 w-11 rounded-full border border-sidebar-border/70 bg-sidebar-accent/60 p-0.5 transition-colors group-data-[collapsible=icon]:hidden md:block",
+            isDemoMode && "bg-sidebar-primary/25",
+          )}
+        >
+          <div
+            className={cn(
+              "h-5 w-5 rounded-full bg-sidebar-foreground/50 shadow-sm transition-transform",
+              isDemoMode &&
+                "translate-x-5 bg-sidebar-primary text-sidebar-primary-foreground",
+            )}
+          />
+        </div>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
@@ -66,6 +103,7 @@ export function AppSidebar() {
         <Main items={items} />
       </SidebarContent>
       <SidebarFooter className="gap-1">
+        <DemoModeToggle />
         <SidebarCollapseToggle />
         <SidebarAppearance />
         <User user={currentUser} />
