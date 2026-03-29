@@ -20,6 +20,7 @@ import {
   updateTopic,
 } from "@/api/topics"
 import { SplitDataTable } from "@/components/Common/SplitDataTable"
+import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -154,6 +155,7 @@ export function TopicsPage({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const isMobile = useIsMobile()
+  const { isDemoMode } = useDemoMode()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(
     initialSelectedTopicId,
@@ -168,6 +170,7 @@ export function TopicsPage({
     useState<HTMLDivElement | null>(null)
   const [isSplitViewOpen, setIsSplitViewOpen] = useState(true)
   const [isFocusedViewOpen, setIsFocusedViewOpen] = useState(false)
+  const lastDemoModeRef = useRef(isDemoMode)
 
   useEffect(() => {
     if (initialSelectedTopicId) {
@@ -176,13 +179,28 @@ export function TopicsPage({
     }
   }, [initialSelectedTopicId])
 
+  useEffect(() => {
+    if (lastDemoModeRef.current === isDemoMode) return
+
+    lastDemoModeRef.current = isDemoMode
+    setSelectedTopicId(null)
+    setIsSplitViewOpen(true)
+    setIsFocusedViewOpen(false)
+    void navigate({
+      to: "/topics",
+      search: {},
+      replace: true,
+    })
+  }, [isDemoMode, navigate])
+
   const topicsQuery = useInfiniteQuery({
-    queryKey: ["topics"],
+    queryKey: ["topics", isDemoMode],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       readTopics({
         skip: pageParam,
         limit: TOPICS_PAGE_SIZE,
+        demo: isDemoMode,
       }),
     getNextPageParam: (lastPage, allPages) => {
       const loaded = allPages.reduce(
@@ -211,8 +229,9 @@ export function TopicsPage({
 
   const selectedTopicQuery = useQuery({
     enabled: Boolean(resolvedSelectedTopicId),
-    queryKey: ["topic", resolvedSelectedTopicId],
-    queryFn: () => readTopic(resolvedSelectedTopicId ?? ""),
+    queryKey: ["topic", resolvedSelectedTopicId, isDemoMode],
+    queryFn: () =>
+      readTopic(resolvedSelectedTopicId ?? "", { demo: isDemoMode }),
   })
 
   const selectedTopic = selectedTopicQuery.data ?? selectedTopicFromList
@@ -225,15 +244,20 @@ export function TopicsPage({
 
   const topicCasesQuery = useQuery({
     enabled: Boolean(selectedTopic?.id),
-    queryKey: ["topicCases", selectedTopic?.id],
+    queryKey: ["topicCases", selectedTopic?.id, isDemoMode],
     queryFn: () =>
-      readCases({ topic_id: selectedTopic?.id ?? undefined, limit: 20 }),
+      readCases({
+        topic_id: selectedTopic?.id ?? undefined,
+        limit: 20,
+        demo: isDemoMode,
+      }),
   })
 
   const topicRollupQuery = useQuery({
     enabled: Boolean(selectedTopic?.id),
-    queryKey: ["topicRollup", selectedTopic?.id],
-    queryFn: () => readTopicRollup(selectedTopic?.id ?? ""),
+    queryKey: ["topicRollup", selectedTopic?.id, isDemoMode],
+    queryFn: () =>
+      readTopicRollup(selectedTopic?.id ?? "", { demo: isDemoMode }),
   })
 
   const updateTopicMutation = useMutation({
@@ -245,15 +269,18 @@ export function TopicsPage({
       topicId: string
       title?: string
       description?: string | null
-    }) => updateTopic(topicId, { title, description }),
+    }) => updateTopic(topicId, { title, description }, { demo: isDemoMode }),
     onSuccess: (updatedTopic) => {
       queryClient.setQueryData<InfiniteData<TopicsPublic> | undefined>(
-        ["topics"],
+        ["topics", isDemoMode],
         (current) => replaceTopicInPages(current, updatedTopic),
       )
-      queryClient.setQueryData(["topic", updatedTopic.id], updatedTopic)
+      queryClient.setQueryData(
+        ["topic", updatedTopic.id, isDemoMode],
+        updatedTopic,
+      )
       queryClient.invalidateQueries({
-        queryKey: ["topicRollup", updatedTopic.id],
+        queryKey: ["topicRollup", updatedTopic.id, isDemoMode],
       })
     },
     onError: handleError.bind(showErrorToast),

@@ -93,6 +93,7 @@ export interface ReadCasesParams {
   q?: string
   skip?: number
   limit?: number
+  demo?: boolean
 }
 
 export function readCases(
@@ -107,16 +108,23 @@ export function readCases(
       q: params.q?.trim() || undefined,
       skip: params.skip,
       limit: params.limit,
+      demo: params.demo || undefined,
     },
   })
 }
 
-export function readCase(caseId: string): CancelablePromise<CasePublic> {
+export function readCase(
+  caseId: string,
+  options: { demo?: boolean } = {},
+): CancelablePromise<CasePublic> {
   return request(OpenAPI, {
     method: "GET",
     url: "/api/v1/cases/{case_id}",
     path: {
       case_id: caseId,
+    },
+    query: {
+      demo: options.demo || undefined,
     },
   })
 }
@@ -129,6 +137,7 @@ export interface CaseUpdate {
 export function updateCase(
   caseId: string,
   body: CaseUpdate,
+  options: { demo?: boolean } = {},
 ): CancelablePromise<CasePublic> {
   const title = body.title?.trim()
   const summaryCurrent =
@@ -141,6 +150,9 @@ export function updateCase(
     url: "/api/v1/cases/{case_id}",
     path: {
       case_id: caseId,
+    },
+    query: {
+      demo: options.demo || undefined,
     },
     body: {
       ...(title !== undefined ? { title } : {}),
