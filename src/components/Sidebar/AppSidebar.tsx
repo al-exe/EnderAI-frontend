@@ -55,6 +55,9 @@ function SidebarCollapseToggle() {
 
 function DemoModeToggle() {
   const { isDemoMode, toggleDemoMode } = useDemoMode()
+  const activeButtonClasses = isDemoMode
+    ? "bg-violet-600 text-white hover:bg-violet-700 hover:text-white active:bg-violet-700 active:text-white data-[active=true]:bg-violet-600 data-[active=true]:text-white data-[active=true]:hover:bg-violet-700 data-[active=true]:hover:text-white data-[active=true]:active:bg-violet-700 data-[active=true]:active:text-white"
+    : ""
 
   return (
     <SidebarMenuItem>
@@ -63,22 +66,28 @@ function DemoModeToggle() {
         data-testid="demo-mode-toggle"
         role="switch"
         aria-checked={isDemoMode}
+        isActive={isDemoMode}
+        className={activeButtonClasses}
         onClick={toggleDemoMode}
       >
-        <FlaskConical className="size-[18px] text-muted-foreground" />
+        <FlaskConical
+          className={cn(
+            "size-[18px] text-muted-foreground transition-colors",
+            isDemoMode && "text-violet-100",
+          )}
+        />
         <span>Demo mode</span>
         <div
           aria-hidden="true"
           className={cn(
             "ml-auto hidden h-6 w-11 rounded-full border border-sidebar-border/70 bg-sidebar-accent/60 p-0.5 transition-colors group-data-[collapsible=icon]:hidden md:block",
-            isDemoMode && "bg-sidebar-primary/25",
+            isDemoMode && "border-violet-300/30 bg-white/15",
           )}
         >
           <div
             className={cn(
               "h-5 w-5 rounded-full bg-sidebar-foreground/50 shadow-sm transition-transform",
-              isDemoMode &&
-                "translate-x-5 bg-sidebar-primary text-sidebar-primary-foreground",
+              isDemoMode && "translate-x-5 bg-white text-violet-700",
             )}
           />
         </div>
