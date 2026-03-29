@@ -34,6 +34,21 @@ function looksLikePath(value: string): boolean {
   return value.includes("/") || value.includes("\\")
 }
 
+function formatSentenceCase(value: string): string {
+  if (!/\s/.test(value)) return value
+
+  const normalized = value
+    .split(/(\s+)/)
+    .map((part) => {
+      if (!part.trim()) return part
+      if (part.toUpperCase() === part && /[A-Z]/.test(part)) return part
+      return part.toLowerCase()
+    })
+    .join("")
+
+  return `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}`
+}
+
 function normalizePath(value: string): string {
   const normalized = normalizeText(value).replace(/\\/g, "/")
   const segments = normalized.split("/").filter(Boolean)
@@ -77,9 +92,11 @@ export function getSignalChipDisplay(value: string | null | undefined): {
   }
 
   if (!looksLikePath(full)) {
+    const sentenceCased = formatSentenceCase(full)
+
     return {
-      label: truncateWithEllipsis(full),
-      title: full,
+      label: truncateWithEllipsis(sentenceCased),
+      title: sentenceCased,
     }
   }
 

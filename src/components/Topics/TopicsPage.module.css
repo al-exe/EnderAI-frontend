@@ -104,6 +104,30 @@
   @apply block max-w-full truncate;
 }
 
+.recordStack {
+  @apply space-y-3;
+}
+
+.recordCard {
+  @apply rounded-lg border p-3;
+}
+
+.monoText {
+  @apply font-mono text-xs;
+}
+
+.metaStack {
+  @apply mt-2 space-y-1 text-sm text-muted-foreground;
+}
+
+.signalGroups {
+  @apply space-y-3;
+}
+
+.signalTitle {
+  @apply mb-2 text-sm font-medium;
+}
+
 .recentCasesList {
   @apply space-y-3;
 }

@@ -40,6 +40,8 @@ import { handleError } from "@/utils"
 import styles from "./CasesPage.module.css"
 
 const CASES_PAGE_SIZE = 25
+const JIRA_BROWSE_BASE_URL = "https://alexlee4190.atlassian.net/browse"
+const GITHUB_PR_SEARCH_BASE_URL = "https://github.com/search"
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -89,12 +91,29 @@ function describeLoadedCount(
   return `${total} ${total === 1 ? singular : plural}`
 }
 
+function resolveChangeRefUrl(ref: string): string | null {
+  const normalized = ref.trim()
+
+  if (!normalized) return null
+  if (/^https?:\/\//i.test(normalized)) return normalized
+  if (/^KAN-\d+$/i.test(normalized)) {
+    return `${JIRA_BROWSE_BASE_URL}/${normalized.toUpperCase()}`
+  }
+  if (/^PR-\d+$/i.test(normalized)) {
+    return `${GITHUB_PR_SEARCH_BASE_URL}?q=${encodeURIComponent(`is:pr ${normalized.toUpperCase()}`)}&type=pullrequests`
+  }
+
+  return null
+}
+
 function ChipList({
   items,
   emptyText,
+  resolveUrl,
 }: {
   items: string[]
   emptyText: string
+  resolveUrl?: (item: string) => string | null
 }) {
   if (items.length === 0) {
     return <p className={styles.smallMutedText}>{emptyText}</p>
@@ -104,12 +123,29 @@ function ChipList({
     <div className={styles.chipList}>
       {items.map((item, index) => {
         const display = getSignalChipDisplay(item)
+        const url = resolveUrl?.(item) ?? null
+
+        if (url) {
+          return (
+            <Badge
+              key={`${item}-${index}`}
+              asChild
+              variant="outline"
+              className={cn(styles.chip, "normal-case")}
+              title={display.title}
+            >
+              <a href={url} target="_blank" rel="noreferrer">
+                <span className={styles.chipLabel}>{display.label}</span>
+              </a>
+            </Badge>
+          )
+        }
 
         return (
           <Badge
             key={`${item}-${index}`}
             variant="outline"
-            className={styles.chip}
+            className={cn(styles.chip, "normal-case")}
             title={display.title}
           >
             <span className={styles.chipLabel}>{display.label}</span>
@@ -239,6 +275,7 @@ function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
               <ChipList
                 items={change.refs}
                 emptyText="No refs captured for this change."
+                resolveUrl={resolveChangeRefUrl}
               />
             </div>
           ) : null}
