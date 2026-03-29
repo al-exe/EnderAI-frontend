@@ -124,6 +124,21 @@ test("Sidebar demo mode toggle sits above collapse and scopes Topics/Cases reque
   )
   expect(activeBackground).not.toBe("rgba(0, 0, 0, 0)")
 
+  const track = page.getByTestId("demo-mode-toggle-track")
+  const thumb = page.getByTestId("demo-mode-toggle-thumb")
+  const trackBox = await track.boundingBox()
+  const thumbBox = await thumb.boundingBox()
+
+  expect(trackBox).not.toBeNull()
+  expect(thumbBox).not.toBeNull()
+  expect(thumbBox!.height).toBeLessThan(trackBox!.height)
+  expect(thumbBox!.width).toBeLessThan(trackBox!.height)
+  expect(
+    Math.abs(
+      thumbBox!.y + thumbBox!.height / 2 - (trackBox!.y + trackBox!.height / 2),
+    ),
+  ).toBeLessThanOrEqual(1)
+
   await collapseToggle.click()
   await expect(demoToggle).toBeVisible()
 
