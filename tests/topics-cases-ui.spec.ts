@@ -118,6 +118,32 @@ test("Sidebar demo mode toggle sits above collapse and scopes Topics/Cases reque
       ),
     )
     .toBeTruthy()
+
+  const activeBackground = await demoToggle.evaluate(
+    (element) => window.getComputedStyle(element).backgroundColor,
+  )
+  expect(activeBackground).not.toBe("rgba(0, 0, 0, 0)")
+
+  await collapseToggle.click()
+  await expect(demoToggle).toBeVisible()
+
+  await expect
+    .poll(() =>
+      demoToggle.evaluate(
+        (element) => window.getComputedStyle(element).backgroundColor,
+      ),
+    )
+    .toBe(activeBackground)
+
+  await demoToggle.hover()
+
+  await expect
+    .poll(() =>
+      demoToggle.evaluate(
+        (element) => window.getComputedStyle(element).backgroundColor,
+      ),
+    )
+    .not.toBe(activeBackground)
 })
 
 test("Topics page matches the primary pane width and truncates long left-table text", async ({
