@@ -10,10 +10,9 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { Maximize2, Minimize2, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { readCases } from "@/api/cases"
+import { readCases, type CasePublic } from "@/api/cases"
 import {
   readTopic,
-  readTopicRollup,
   readTopics,
   type TopicPublic,
   type TopicsPublic,
@@ -32,6 +31,13 @@ import {
 } from "@/components/ui/card"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useAutoLoadMore } from "@/hooks/useAutoLoadMore"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -42,6 +48,13 @@ import { handleError } from "@/utils"
 import styles from "./TopicsPage.module.css"
 
 const TOPICS_PAGE_SIZE = 25
+const DEFAULT_TOPIC_STATUSES = [
+  "open",
+  "in progress",
+  "blocked",
+  "resolved",
+  "closed",
+] as const
 
 function formatTimestamp(value: string | null): string {
   if (!value) return "—"
@@ -60,6 +73,36 @@ function badgeVariant(
   if (["running", "active", "in progress"].includes(normalized))
     return "secondary"
   return "outline"
+}
+
+function formatStatusLabel(status: string): string {
+  return status.replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function getTopicStatusOptions(status: string | null | undefined): string[] {
+  const normalizedStatus = status?.trim().toLowerCase()
+
+  if (!normalizedStatus) return [...DEFAULT_TOPIC_STATUSES]
+
+  return Array.from(new Set([normalizedStatus, ...DEFAULT_TOPIC_STATUSES]))
+}
+
+function topicStatusTriggerClassName(status: string): string {
+  const normalized = status.trim().toLowerCase()
+
+  if (["done", "closed", "resolved"].includes(normalized)) {
+    return "border-transparent bg-emerald-500 text-white hover:bg-emerald-500/90 focus-visible:ring-emerald-500/20"
+  }
+
+  if (["failed", "error", "blocked"].includes(normalized)) {
+    return "border-transparent bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20"
+  }
+
+  if (["running", "active", "in progress"].includes(normalized)) {
+    return "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/90"
+  }
+
+  return "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
 }
 
 function replaceTopicInPages(
@@ -91,6 +134,63 @@ function describeLoadedCount(
   return `${total} ${total === 1 ? singular : plural}`
 }
 
+function SignalChipList({
+  items,
+  emptyText,
+}: {
+  items: string[]
+  emptyText: string
+}) {
+  if (items.length === 0) {
+    return <p className={styles.smallMutedText}>{emptyText}</p>
+  }
+
+  return (
+    <div className={styles.chipList}>
+      {items.map((item, index) => {
+        const display = getSignalChipDisplay(item)
+
+        return (
+          <Badge
+            key={`${item}-${index}`}
+            variant="outline"
+            className={cn(styles.chip, "normal-case")}
+            title={display.title}
+          >
+            <span className={styles.chipLabel}>{display.label}</span>
+          </Badge>
+        )
+      })}
+    </div>
+  )
+}
+
+function CommandList({ commands }: { commands: CasePublic["commands"] }) {
+  if (commands.length === 0) {
+    return <p className={styles.smallMutedText}>No commands captured yet.</p>
+  }
+
+  return (
+    <div className={styles.recordStack}>
+      {commands.map((command, index) => (
+        <div
+          key={`${command.cmd}-${command.ts ?? index}`}
+          className={styles.recordCard}
+        >
+          <div className={styles.monoText}>{command.cmd}</div>
+          {command.purpose || command.salient_result || command.ts ? (
+            <div className={styles.metaStack}>
+              {command.purpose ? <p>{command.purpose}</p> : null}
+              {command.salient_result ? <p>{command.salient_result}</p> : null}
+              {command.ts ? <p>{formatTimestamp(command.ts)}</p> : null}
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
   {
     accessorKey: "title",
@@ -101,7 +201,10 @@ const TOPIC_COLUMNS: ColumnDef<TopicPublic>[] = [
     },
     cell: ({ row }) => {
       const title = getClippedTextDisplay(row.original.title)
-      const subtitle = getClippedTextDisplay(row.original.workflow_key)
+      const subtitle = getClippedTextDisplay(
+        row.original.description?.trim() ||
+          "No description captured for this topic yet.",
+      )
 
       return (
         <div className={styles.tableTitleCell}>
@@ -248,28 +351,46 @@ export function TopicsPage({
     queryFn: () =>
       readCases({
         topic_id: selectedTopic?.id ?? undefined,
-        limit: 20,
+        limit: 500,
         demo: isDemoMode,
       }),
   })
 
-  const topicRollupQuery = useQuery({
-    enabled: Boolean(selectedTopic?.id),
-    queryKey: ["topicRollup", selectedTopic?.id, isDemoMode],
-    queryFn: () =>
-      readTopicRollup(selectedTopic?.id ?? "", { demo: isDemoMode }),
-  })
+  const aggregatedSignals = useMemo(() => {
+    const cases = topicCasesQuery.data?.data ?? []
+    const dedupe = (values: string[]) => Array.from(new Set(values))
+
+    return {
+      files: dedupe(cases.flatMap((caseItem) => caseItem.files)),
+      symbols: dedupe(cases.flatMap((caseItem) => caseItem.symbols)),
+      errors: dedupe(cases.flatMap((caseItem) => caseItem.errors)),
+      symptoms: dedupe(cases.flatMap((caseItem) => caseItem.symptoms)),
+    }
+  }, [topicCasesQuery.data])
+
+  const aggregatedCommands = useMemo(
+    () => topicCasesQuery.data?.data.flatMap((caseItem) => caseItem.commands) ?? [],
+    [topicCasesQuery.data],
+  )
+
+  const recentCases = useMemo(
+    () => topicCasesQuery.data?.data.slice(0, 20) ?? [],
+    [topicCasesQuery.data],
+  )
 
   const updateTopicMutation = useMutation({
     mutationFn: ({
       topicId,
       title,
       description,
+      status,
     }: {
       topicId: string
       title?: string
       description?: string | null
-    }) => updateTopic(topicId, { title, description }, { demo: isDemoMode }),
+      status?: string
+    }) =>
+      updateTopic(topicId, { title, description, status }, { demo: isDemoMode }),
     onSuccess: (updatedTopic) => {
       queryClient.setQueryData<InfiniteData<TopicsPublic> | undefined>(
         ["topics", isDemoMode],
@@ -279,9 +400,6 @@ export function TopicsPage({
         ["topic", updatedTopic.id, isDemoMode],
         updatedTopic,
       )
-      queryClient.invalidateQueries({
-        queryKey: ["topicRollup", updatedTopic.id, isDemoMode],
-      })
     },
     onError: handleError.bind(showErrorToast),
   })
@@ -356,6 +474,27 @@ export function TopicsPage({
         nextDescription
           ? "Topic description updated"
           : "Topic description cleared",
+      )
+    } catch {
+      return
+    }
+  }
+
+  const saveStatus = async (nextStatus: string) => {
+    if (!selectedTopic) return
+
+    const normalizedStatus = nextStatus.trim().toLowerCase()
+    const currentStatus = selectedTopic.status.trim().toLowerCase()
+
+    if (!normalizedStatus || normalizedStatus === currentStatus) return
+
+    try {
+      await updateTopicMutation.mutateAsync({
+        topicId: selectedTopic.id,
+        status: normalizedStatus,
+      })
+      showSuccessToast(
+        `Topic status updated to ${formatStatusLabel(normalizedStatus)}`,
       )
     } catch {
       return
@@ -515,10 +654,32 @@ export function TopicsPage({
         )}
       >
         <div className={styles.badgeRow}>
-          <Badge variant={badgeVariant(selectedTopic?.status ?? "open")}>
-            {selectedTopic?.status ?? "open"}
-          </Badge>
-          <Badge variant="outline">{selectedTopic?.workflow_key}</Badge>
+          <Select
+            value={(selectedTopic?.status ?? "open").trim().toLowerCase()}
+            disabled={!selectedTopic || updateTopicMutation.isPending}
+            onValueChange={(value) => {
+              void saveStatus(value)
+            }}
+          >
+            <SelectTrigger
+              size="sm"
+              aria-label="Topic status"
+              data-testid="topic-status-trigger"
+              className={cn(
+                "h-7 min-w-[8rem] rounded-full px-2.5 py-1 text-xs font-medium capitalize shadow-none [&_svg]:text-current",
+                topicStatusTriggerClassName(selectedTopic?.status ?? "open"),
+              )}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="start">
+              {getTopicStatusOptions(selectedTopic?.status).map((status) => (
+                <SelectItem key={status} value={status}>
+                  {formatStatusLabel(status)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Badge variant="outline">
             {selectedTopic?.case_count ?? 0} cases
           </Badge>
@@ -540,41 +701,59 @@ export function TopicsPage({
         </div>
 
         <div className={styles.section}>
-          <div className={styles.sectionTitle}>Canonical signals</div>
-          {topicRollupQuery.isLoading ? (
-            <p className={styles.smallMutedText}>Loading rollup…</p>
-          ) : topicRollupQuery.isError ? (
-            <p className={styles.errorText}>Couldn’t load the Topic rollup.</p>
+          <div className={styles.sectionTitle}>Signals</div>
+          {topicCasesQuery.isLoading ? (
+            <p className={styles.smallMutedText}>Loading Cases…</p>
+          ) : topicCasesQuery.isError ? (
+            <p className={styles.errorText}>
+              Couldn’t aggregate signals for this Topic.
+            </p>
           ) : (
-            <div className={styles.chipList}>
-              {[
-                ...(topicRollupQuery.data?.canonical_files ?? []),
-                ...(topicRollupQuery.data?.canonical_errors ?? []),
-              ]
-                .slice(0, 8)
-                .map((signal) => {
-                  const display = getSignalChipDisplay(signal)
-
-                  return (
-                    <Badge
-                      key={signal}
-                      variant="outline"
-                      className={styles.chip}
-                      title={display.title}
-                    >
-                      <span className={styles.chipLabel}>{display.label}</span>
-                    </Badge>
-                  )
-                })}
-              {!(
-                topicRollupQuery.data?.canonical_files.length ||
-                topicRollupQuery.data?.canonical_errors.length
-              ) ? (
-                <span className={styles.mutedText}>
-                  No canonical signals yet.
-                </span>
-              ) : null}
+            <div className={styles.signalGroups}>
+              <div>
+                <div className={styles.signalTitle}>Files</div>
+                <SignalChipList
+                  items={aggregatedSignals.files}
+                  emptyText="No files captured yet."
+                />
+              </div>
+              <div>
+                <div className={styles.signalTitle}>Symbols</div>
+                <SignalChipList
+                  items={aggregatedSignals.symbols}
+                  emptyText="No symbols captured yet."
+                />
+              </div>
+              <div>
+                <div className={styles.signalTitle}>Errors</div>
+                <SignalChipList
+                  items={aggregatedSignals.errors}
+                  emptyText="No errors captured yet."
+                />
+              </div>
+              <div>
+                <div className={styles.signalTitle}>Symptoms</div>
+                <SignalChipList
+                  items={aggregatedSignals.symptoms}
+                  emptyText="No symptoms captured yet."
+                />
+              </div>
             </div>
+          )}
+        </div>
+
+        <div className={styles.section}>
+          <div
+            className={styles.sectionTitle}
+          >{`Commands (${aggregatedCommands.length})`}</div>
+          {topicCasesQuery.isLoading ? (
+            <p className={styles.smallMutedText}>Loading Cases…</p>
+          ) : topicCasesQuery.isError ? (
+            <p className={styles.errorText}>
+              Couldn’t aggregate commands for this Topic.
+            </p>
+          ) : (
+            <CommandList commands={aggregatedCommands} />
           )}
         </div>
 
@@ -586,13 +765,13 @@ export function TopicsPage({
             <p className={styles.errorText}>
               Couldn’t load Cases for this Topic.
             </p>
-          ) : (topicCasesQuery.data?.data.length ?? 0) === 0 ? (
+          ) : recentCases.length === 0 ? (
             <p className={styles.smallMutedText}>
               No Cases under this Topic yet.
             </p>
           ) : (
             <div className={styles.recentCasesList}>
-              {topicCasesQuery.data?.data.map((caseItem) => (
+              {recentCases.map((caseItem) => (
                 <button
                   key={caseItem.id}
                   type="button"

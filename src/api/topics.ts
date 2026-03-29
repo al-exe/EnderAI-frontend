@@ -113,6 +113,7 @@ export function readTopicRollup(
 export interface TopicUpdate {
   title?: string
   description?: string | null
+  status?: string
 }
 
 export function updateTopic(
@@ -125,6 +126,7 @@ export function updateTopic(
     typeof body.description === "string"
       ? body.description.trim() || null
       : body.description
+  const status = body.status?.trim() || undefined
 
   return request(OpenAPI, {
     method: "PATCH",
@@ -138,6 +140,7 @@ export function updateTopic(
     body: {
       ...(title !== undefined ? { title } : {}),
       ...(body.description !== undefined ? { description } : {}),
+      ...(status !== undefined ? { status } : {}),
     },
   })
 }

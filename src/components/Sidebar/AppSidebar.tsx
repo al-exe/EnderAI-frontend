@@ -81,7 +81,7 @@ function DemoModeToggle() {
           aria-hidden="true"
           data-testid="demo-mode-toggle-track"
           className={cn(
-            "ml-auto hidden h-6 w-11 items-center rounded-full border border-sidebar-border/70 bg-sidebar-accent/60 px-0.5 transition-colors group-data-[collapsible=icon]:hidden md:flex",
+            "ml-auto hidden h-6 w-11 items-center rounded-full border border-sidebar-border/70 bg-sidebar-accent/60 px-[3px] transition-colors group-data-[collapsible=icon]:hidden md:flex",
             isDemoMode && "border-violet-300/30 bg-white/15",
           )}
         >
@@ -89,7 +89,7 @@ function DemoModeToggle() {
             data-testid="demo-mode-toggle-thumb"
             className={cn(
               "h-[15px] w-[15px] rounded-full bg-sidebar-foreground/50 shadow-sm transition-transform",
-              isDemoMode && "translate-x-[25px] bg-white text-violet-700",
+              isDemoMode && "translate-x-[21px] bg-white text-violet-700",
             )}
           />
         </div>

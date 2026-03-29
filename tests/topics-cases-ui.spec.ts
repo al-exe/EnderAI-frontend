@@ -166,101 +166,197 @@ test("Topics page matches the primary pane width and truncates long left-table t
 }) => {
   await mockAuth(page)
 
+  const statusUpdates: string[] = []
+  const topicCaseSignals = {
+    files: [
+      "mobile/src/sync/optimisticMerge.ts",
+      "backend/app/core/conflicts.py",
+      "mobile/tests/sync/optimistic-merge.spec.ts",
+    ],
+    symbols: [
+      "optimisticMerge",
+      "reconcile_conflict",
+      "ConflictResolutionError",
+    ],
+    errors: ["conflict reconciliation rejected client patch"],
+    symptoms: [
+      "notes visibly rewrote themselves after reconnect",
+      "support tickets mentioned disappearing bullet points",
+    ],
+  }
+  const topicCases = [
+    {
+      id: "case-1",
+      topic_id: "topic-1",
+      topic_title: longTopicTitle,
+      title: "Optimistic merge backend mismatch",
+      opened_at: "2026-03-24T00:00:00Z",
+      updated_at: "2026-03-24T00:00:00Z",
+      closed_at: null,
+      status: "open",
+      actor_id: null,
+      source: null,
+      input_summary: null,
+      summary_current: "Investigating merge-rule mismatch.",
+      files: topicCaseSignals.files.slice(0, 2),
+      symbols: topicCaseSignals.symbols.slice(0, 2),
+      errors: topicCaseSignals.errors,
+      symptoms: topicCaseSignals.symptoms.slice(0, 1),
+      commands: [
+        {
+          cmd: "pytest backend/tests/test_conflicts.py",
+          purpose: "compare backend reconciliation to optimistic merge",
+          salient_result: "backend rejected combinations the client accepted",
+          ts: null,
+        },
+      ],
+      hypotheses: [],
+      changes: [],
+      outcome: null,
+      next_steps: [],
+      context_pack_snapshot: {
+        topic_id: "topic-1",
+        case_id: "case-1",
+        confidence: "high",
+        alternative_topic_ids: [],
+        topic_summary: null,
+        matched_signals: [],
+        representative_cases: [],
+        recent_cases: [],
+        relevant_cases: [],
+        canonical_files: [],
+        canonical_symbols: [],
+        canonical_errors: [],
+        canonical_symptoms: [],
+        pinned_takeaways: [],
+        ambiguities: [],
+        questions: [],
+        negative_history: [],
+        builder_version: null,
+        created_at: null,
+      },
+    },
+    {
+      id: "case-2",
+      topic_id: "topic-1",
+      topic_title: longTopicTitle,
+      title: "Optimistic merge preview drift",
+      opened_at: "2026-03-24T00:00:00Z",
+      updated_at: "2026-03-24T00:00:00Z",
+      closed_at: null,
+      status: "open",
+      actor_id: null,
+      source: null,
+      input_summary: null,
+      summary_current: "Tracking frontend merge preview instability.",
+      files: topicCaseSignals.files.slice(2),
+      symbols: topicCaseSignals.symbols.slice(2),
+      errors: [],
+      symptoms: topicCaseSignals.symptoms.slice(1),
+      commands: [
+        {
+          cmd: "pnpm test optimistic-merge.spec.ts",
+          purpose: "reproduce jarring overwrite behavior",
+          salient_result: "UI showed divergent merge previews",
+          ts: null,
+        },
+      ],
+      hypotheses: [],
+      changes: [],
+      outcome: null,
+      next_steps: [],
+      context_pack_snapshot: {
+        topic_id: "topic-1",
+        case_id: "case-2",
+        confidence: "high",
+        alternative_topic_ids: [],
+        topic_summary: null,
+        matched_signals: [],
+        representative_cases: [],
+        recent_cases: [],
+        relevant_cases: [],
+        canonical_files: [],
+        canonical_symbols: [],
+        canonical_errors: [],
+        canonical_symptoms: [],
+        pinned_takeaways: [],
+        ambiguities: [],
+        questions: [],
+        negative_history: [],
+        builder_version: null,
+        created_at: null,
+      },
+    },
+  ]
+  let topic = {
+    id: "topic-1",
+    title: longTopicTitle,
+    slug: "topic-1",
+    description: "Topic description",
+    aliases: [],
+    status: "open",
+    workflow_key: longWorkflowKey,
+    owner_ids: [],
+    created_at: "2026-03-24T00:00:00Z",
+    updated_at: "2026-03-24T00:00:00Z",
+    last_used_at: "2026-03-24T00:00:00Z",
+    rollup_summary: "Topic summary",
+    rollup_version: 1,
+    canonical_files: [tempPath],
+    canonical_symbols: [],
+    canonical_errors: [],
+    canonical_symptoms: [],
+    pinned_takeaways: [],
+    ambiguity_notes: [],
+    open_questions: [],
+    negative_history: [],
+    representative_case_ids: [],
+    recent_case_ids: [],
+    vocabulary: [],
+    case_count: 2,
+  }
+
   await page.route("**/api/v1/topics/?skip=0&limit=25", async (route) => {
     await route.fulfill({
       json: {
-        data: [
-          {
-            id: "topic-1",
-            title: longTopicTitle,
-            slug: "topic-1",
-            description: "Topic description",
-            aliases: [],
-            status: "open",
-            workflow_key: longWorkflowKey,
-            owner_ids: [],
-            created_at: "2026-03-24T00:00:00Z",
-            updated_at: "2026-03-24T00:00:00Z",
-            last_used_at: "2026-03-24T00:00:00Z",
-            rollup_summary: "Topic summary",
-            rollup_version: 1,
-            canonical_files: [tempPath],
-            canonical_symbols: [],
-            canonical_errors: [],
-            canonical_symptoms: [],
-            pinned_takeaways: [],
-            ambiguity_notes: [],
-            open_questions: [],
-            negative_history: [],
-            representative_case_ids: [],
-            recent_case_ids: [],
-            vocabulary: [],
-            case_count: 1,
-          },
-        ],
+        data: [topic],
         count: 1,
       },
     })
   })
 
-  await page.route("**/api/v1/topics/topic-1", async (route) => {
-    await route.fulfill({
-      json: {
-        id: "topic-1",
-        title: longTopicTitle,
-        slug: "topic-1",
-        description: "Topic description",
-        aliases: [],
-        status: "open",
-        workflow_key: longWorkflowKey,
-        owner_ids: [],
-        created_at: "2026-03-24T00:00:00Z",
-        updated_at: "2026-03-24T00:00:00Z",
-        last_used_at: "2026-03-24T00:00:00Z",
-        rollup_summary: "Topic summary",
-        rollup_version: 1,
-        canonical_files: [tempPath],
-        canonical_symbols: [],
-        canonical_errors: [],
-        canonical_symptoms: [],
-        pinned_takeaways: [],
-        ambiguity_notes: [],
-        open_questions: [],
-        negative_history: [],
-        representative_case_ids: [],
-        recent_case_ids: [],
-        vocabulary: [],
-        case_count: 1,
-      },
-    })
-  })
+  await page.route("**/api/v1/topics/topic-1*", async (route) => {
+    if (route.request().method() === "PATCH") {
+      const patch = route.request().postDataJSON() as {
+        title?: string
+        description?: string | null
+        status?: string
+      }
 
-  await page.route("**/api/v1/topics/topic-1/rollup", async (route) => {
-    await route.fulfill({
-      json: {
-        brief: "Topic summary",
-        canonical_files: [tempPath],
-        canonical_symbols: [],
-        canonical_errors: [],
-        canonical_symptoms: [],
-        pinned_takeaways: [],
-        negative_history: [],
-        representative_case_ids: [],
-        aliases: [],
-        vocabulary: [],
-        ambiguity_notes: [],
-        open_questions: [],
-        case_count: 1,
-        recent_case_ids: [],
-        updated_at: "2026-03-24T00:00:00Z",
-      },
-    })
+      if (patch.status) statusUpdates.push(patch.status)
+
+      topic = {
+        ...topic,
+        ...(patch.title !== undefined ? { title: patch.title } : {}),
+        ...(patch.description !== undefined
+          ? { description: patch.description }
+          : {}),
+        ...(patch.status !== undefined ? { status: patch.status } : {}),
+      }
+
+      await route.fulfill({ json: topic })
+      return
+    }
+
+    await route.fulfill({ json: topic })
   })
 
   await page.route(
-    "**/api/v1/cases/?topic_id=topic-1&limit=20",
+    "**/api/v1/cases/?topic_id=topic-1&limit=500",
     async (route) => {
-      await route.fulfill({ json: { data: [], count: 0 } })
+      await route.fulfill({
+        json: { data: topicCases, count: topicCases.length },
+      })
     },
   )
 
@@ -291,15 +387,51 @@ test("Topics page matches the primary pane width and truncates long left-table t
 
   const firstRow = page.locator("tbody tr").first()
   const topicTitle = firstRow.locator("td").first().locator("span").first()
-  const workflowKey = firstRow.locator("td").first().locator("span").nth(1)
+  const topicSubtitle = firstRow.locator("td").first().locator("span").nth(1)
 
   await expect(topicTitle).toHaveText(/…$/)
   await expect(topicTitle).toHaveAttribute("title", longTopicTitle)
-  await expect(workflowKey).toHaveText(/…$/)
-  await expect(workflowKey).toHaveAttribute("title", longWorkflowKey)
+  await expect(topicSubtitle).toHaveText("Topic description")
+  await expect(topicSubtitle).toHaveAttribute("title", "Topic description")
+  await expect(page.getByText(longWorkflowKey)).toHaveCount(0)
 
-  const canonicalFileChip = page.getByTitle(normalizedPath).first()
-  await expect(canonicalFileChip).toContainText("…/Context_packs.py")
+  const topicStatusTrigger = page.getByTestId("topic-status-trigger")
+  await expect(topicStatusTrigger).toContainText("Open")
+
+  await topicStatusTrigger.click()
+  await page.getByRole("option", { name: "Closed" }).click()
+
+  await expect.poll(() => statusUpdates.at(-1)).toBe("closed")
+  await expect(topicStatusTrigger).toContainText("Closed")
+
+  await expect(page.getByText("Signals")).toBeVisible()
+  await expect(page.getByText("Commands (2)")).toBeVisible()
+  await expect(page.getByTitle("src/sync/optimisticMerge.ts")).toContainText(
+    "…/optimisticMerge.ts",
+  )
+  await expect(
+    page.getByTitle("backend/app/core/conflicts.py"),
+  ).toContainText("…/conflicts.py")
+  const errorSignal = page.getByText(
+    "Conflict reconciliation rejected client patch",
+  )
+  const symptomSignal = page.getByText(
+    "Notes visibly rewrote themselves after reconnect",
+  )
+  await expect(errorSignal).toBeVisible()
+  await expect(symptomSignal).toBeVisible()
+  await expect(errorSignal).toHaveText(
+    "Conflict reconciliation rejected client patch",
+  )
+  await expect(symptomSignal).toHaveText(
+    "Notes visibly rewrote themselves after reconnect",
+  )
+  await expect(
+    page.getByText("pytest backend/tests/test_conflicts.py"),
+  ).toBeVisible()
+  await expect(
+    page.getByText("pnpm test optimistic-merge.spec.ts"),
+  ).toBeVisible()
 })
 
 test("Cases page truncates long table text and normalizes file chips", async ({
@@ -387,7 +519,7 @@ test("Cases page truncates long table text and normalizes file chips", async ({
             kind: "code",
             summary: "Normalize displayed file paths in case detail.",
             files: [tempPath],
-            refs: [],
+            refs: ["PR-1019"],
             ts: "2026-03-24T00:00:00Z",
           },
         ],
@@ -434,5 +566,9 @@ test("Cases page truncates long table text and normalizes file chips", async ({
 
   const normalizedFileChip = page.getByTitle(normalizedPath).first()
   await expect(normalizedFileChip).toContainText("…/Context_packs.py")
+  await expect(page.getByRole("link", { name: "PR-1019" })).toHaveAttribute(
+    "href",
+    /github\.com\/search/,
+  )
   await expect(page.getByText("/Tmp/Enderai-Kan-119-Main")).toHaveCount(0)
 })
