@@ -36,17 +36,42 @@ test("Home page explains EnderAI and the product model", async ({ page }) => {
   await expect(
     page.getByText("EnderAI is product memory for AI-assisted work."),
   ).toBeVisible()
+  await expect(page.getByText("Welcome back, Alex")).toBeVisible()
+  await expect(
+    page.getByText(
+      "It gives agents a shared place to remember work done, commands run, decisions made, and outcomes reached so each new task can start with relevant context instead of rediscovery.",
+    ),
+  ).toBeVisible()
   await expect(page.getByText("The product model")).toBeVisible()
   await expect(
     page.getByText(
       "EnderAI is organized around two user-facing objects. A third system object, the ContextPack, powers agent hydration behind the scenes.",
     ),
-  ).toBeVisible()
+  ).toHaveCount(0)
+  await expect(page.getByText("Home docs")).toHaveCount(0)
+  await expect(
+    page.getByText(
+      "Add this guidance to your agent instructions so meaningful work is captured consistently.",
+    ),
+  ).toHaveCount(0)
   await expect(page.getByText("Topics").first()).toBeVisible()
   await expect(page.getByText("Cases").first()).toBeVisible()
   await expect(page.getByText("ContextPacks")).toBeVisible()
+  await expect(
+    page.getByText(
+      "A ContextPack is the synthesized briefing EnderAI builds for an agent at Case start.",
+    ),
+  ).toBeVisible()
   await expect(page.getByText("Search and demo mode")).toBeVisible()
+  await expect(
+    page.getByText("The agent starts meaningful work by starting a Case."),
+  ).toBeVisible()
   await expect(page.getByText("Open Settings -> Connect agent")).toBeVisible()
+  await expect(
+    page.getByText(
+      "Open Settings, create an MCP credential, add the generated config to your client, then ask the agent to verify the connection with",
+    ),
+  ).toBeVisible()
   await expect(page.getByText("enderai_begin_case").first()).toBeVisible()
   await expect(page.getByText("enderai_finish_case").first()).toBeVisible()
 })
