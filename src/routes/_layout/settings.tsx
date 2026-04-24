@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import type { ComponentType } from "react"
+import { z } from "zod"
 
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import ConnectAgent from "@/components/UserSettings/ConnectAgent"
@@ -7,7 +9,24 @@ import UserInformation from "@/components/UserSettings/UserInformation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useAuth from "@/hooks/useAuth"
 
-const tabsConfig = [
+const tabValues = [
+  "my-profile",
+  "connect-agent",
+  "password",
+  "danger-zone",
+] as const
+
+type SettingsTab = (typeof tabValues)[number]
+
+const searchSchema = z.object({
+  tab: z.enum(tabValues).optional(),
+})
+
+const tabsConfig: Array<{
+  value: SettingsTab
+  title: string
+  component: ComponentType
+}> = [
   { value: "my-profile", title: "My profile", component: UserInformation },
   { value: "connect-agent", title: "Connect agent", component: ConnectAgent },
   { value: "password", title: "Password", component: ChangePassword },
@@ -16,6 +35,7 @@ const tabsConfig = [
 
 export const Route = createFileRoute("/_layout/settings")({
   component: UserSettings,
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       {
@@ -27,6 +47,9 @@ export const Route = createFileRoute("/_layout/settings")({
 
 function UserSettings() {
   const { user: currentUser } = useAuth()
+  const navigate = useNavigate()
+  const { tab } = Route.useSearch()
+  const activeTab = tab ?? "my-profile"
   const finalTabs = tabsConfig
 
   if (!currentUser) {
@@ -43,7 +66,14 @@ function UserSettings() {
       </div>
 
       <Tabs
-        defaultValue="my-profile"
+        value={activeTab}
+        onValueChange={(value) => {
+          void navigate({
+            to: "/settings",
+            search: { tab: value as SettingsTab },
+            replace: true,
+          })
+        }}
         className="flex min-h-0 flex-1 flex-col overflow-hidden"
       >
         <TabsList className="shrink-0">

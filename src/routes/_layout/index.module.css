@@ -1,0 +1,210 @@
+@reference "../../index.css";
+
+.page {
+  @apply min-h-0 flex-1 overflow-y-auto pr-1;
+}
+
+.shell {
+  @apply mx-auto flex w-full max-w-7xl flex-col gap-6 pb-8;
+}
+
+.hero {
+  @apply relative isolate overflow-hidden border bg-card p-6 shadow-sm md:p-8;
+}
+
+.hero::before {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  content: "";
+  background:
+    radial-gradient(circle at 12% 12%, rgb(132 71 255 / 0.22), transparent 32%),
+    radial-gradient(circle at 88% 18%, rgb(16 185 129 / 0.16), transparent 28%),
+    linear-gradient(135deg, rgb(132 71 255 / 0.08), transparent 46%);
+}
+
+.hero::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgb(132 71 255 / 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(132 71 255 / 0.09) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(135deg, black, transparent 78%);
+}
+
+.heroGrid {
+  @apply relative grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)] lg:items-end;
+}
+
+.heroCopy {
+  @apply flex flex-col items-start gap-6;
+}
+
+.heroBadge,
+.connectBadge {
+  @apply gap-2 px-3 py-1;
+}
+
+.badgeIcon,
+.icon {
+  @apply size-4;
+}
+
+.heroText {
+  @apply max-w-4xl space-y-4;
+}
+
+.greeting,
+.sectionEyebrow,
+.panelKicker {
+  @apply text-xs font-semibold uppercase tracking-[0.24em] text-primary;
+}
+
+.heroTitle {
+  @apply max-w-4xl text-4xl font-semibold tracking-tight text-foreground md:text-6xl;
+}
+
+.heroDescription {
+  @apply max-w-3xl text-base leading-7 text-muted-foreground md:text-lg;
+}
+
+.heroActions,
+.connectActions {
+  @apply flex flex-wrap gap-3;
+}
+
+.heroPanel {
+  @apply border bg-background/85 p-5 shadow-sm backdrop-blur;
+}
+
+.panelHeader {
+  @apply flex items-start justify-between gap-4 border-b pb-4;
+}
+
+.panelTitle {
+  @apply mt-2 text-xl font-semibold tracking-tight;
+}
+
+.panelIcon {
+  @apply size-10 shrink-0 text-primary;
+}
+
+.flowList {
+  @apply mt-5 space-y-4;
+}
+
+.flowItem {
+  @apply grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4;
+}
+
+.flowItem h3,
+.setupStep h3 {
+  @apply font-medium;
+}
+
+.flowItem p,
+.setupStep p {
+  @apply mt-1 text-sm leading-6 text-muted-foreground;
+}
+
+.flowNumber {
+  @apply border bg-primary/10 px-3 py-2 text-center font-mono text-sm font-semibold text-primary;
+}
+
+.section {
+  @apply space-y-4;
+}
+
+.sectionHeader {
+  @apply grid gap-3 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] md:items-end;
+}
+
+.sectionTitle {
+  @apply mt-1 text-2xl font-semibold tracking-tight md:text-3xl;
+}
+
+.sectionDescription {
+  @apply max-w-3xl text-sm leading-6 text-muted-foreground md:text-base;
+}
+
+.modelGrid,
+.navigationGrid {
+  @apply grid gap-4 lg:grid-cols-3;
+}
+
+.modelCard,
+.navigationCard {
+  @apply overflow-hidden border shadow-sm transition-colors hover:border-primary/45;
+}
+
+.modelCardTop {
+  @apply flex items-start justify-between gap-3;
+}
+
+.cardIconWrap {
+  @apply flex size-11 items-center justify-center border bg-primary/10 text-primary;
+}
+
+.cardIcon {
+  @apply size-5;
+}
+
+.detailList {
+  @apply space-y-3 text-sm leading-6 text-muted-foreground;
+}
+
+.detailList li {
+  @apply flex gap-2;
+}
+
+.checkIcon {
+  @apply mt-0.5 size-4 shrink-0 text-emerald-500;
+}
+
+.cardContent {
+  @apply flex h-full flex-col items-start justify-between gap-4 text-sm leading-6 text-muted-foreground;
+}
+
+.connectSection {
+  @apply grid gap-6 border bg-card p-6 shadow-sm lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center;
+}
+
+.connectCopy {
+  @apply space-y-4;
+}
+
+.inlineCode {
+  @apply bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground;
+}
+
+.setupSteps {
+  @apply grid gap-3;
+}
+
+.setupStep {
+  @apply grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 border bg-background/70 p-4;
+}
+
+.setupIcon {
+  @apply size-6 text-primary;
+}
+
+.workflowSection {
+  @apply space-y-4;
+}
+
+.commandPanel {
+  @apply overflow-hidden border bg-zinc-950 text-zinc-50 shadow-sm;
+}
+
+.commandPanel pre {
+  @apply overflow-x-auto p-5 text-xs leading-6 md:text-sm;
+}
+
+.commandPanel code {
+  @apply font-mono;
+}
