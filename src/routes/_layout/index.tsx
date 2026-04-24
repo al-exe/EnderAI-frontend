@@ -2,7 +2,6 @@ import { createFileRoute, Link as RouterLink } from "@tanstack/react-router"
 import type { LucideIcon } from "lucide-react"
 import {
   ArrowRight,
-  BookOpen,
   Box,
   Boxes,
   CheckCircle2,
@@ -40,7 +39,8 @@ export const Route = createFileRoute("/_layout/")({
 
 function Dashboard() {
   const { user: currentUser } = useAuth()
-  const displayName = currentUser?.full_name || currentUser?.email || "there"
+  const firstName = currentUser?.full_name?.trim().split(/\s+/)[0]
+  const displayName = firstName || currentUser?.email || "there"
 
   return (
     <div className={styles.page}>
@@ -48,29 +48,25 @@ function Dashboard() {
         <section className={styles.hero}>
           <div className={styles.heroGrid}>
             <div className={styles.heroCopy}>
-              <Badge variant="secondary" className={styles.heroBadge}>
-                <BookOpen className={styles.badgeIcon} />
-                Home docs
-              </Badge>
               <div className={styles.heroText}>
                 <p className={styles.greeting}>Welcome back, {displayName}</p>
                 <h1 className={styles.heroTitle}>
                   EnderAI is product memory for AI-assisted work.
                 </h1>
                 <p className={styles.heroDescription}>
-                  It gives agents a shared place to remember durable work,
-                  active sessions, commands, decisions, and outcomes so each new
-                  task can start with relevant context instead of rediscovery.
+                  It gives agents a shared place to remember work done, commands
+                  run, decisions made, and outcomes reached so each new task can
+                  start with relevant context instead of rediscovery.
                 </p>
               </div>
               <div className={styles.heroActions}>
-                <Button asChild size="lg">
+                <Button asChild variant="outline" size="lg">
                   <RouterLink to="/topics">
                     Open Topics
                     <ArrowRight className={styles.icon} />
                   </RouterLink>
                 </Button>
-                <Button asChild variant="outline" size="lg">
+                <Button asChild size="lg">
                   <RouterLink
                     to="/settings"
                     search={{ tab: "connect-agent" }}
@@ -113,11 +109,6 @@ function Dashboard() {
               <p className={styles.sectionEyebrow}>What to use</p>
               <h2 className={styles.sectionTitle}>The product model</h2>
             </div>
-            <p className={styles.sectionDescription}>
-              EnderAI is organized around two user-facing objects. A third
-              system object, the ContextPack, powers agent hydration behind the
-              scenes.
-            </p>
           </div>
 
           <div className={styles.modelGrid}>
@@ -207,9 +198,8 @@ function Dashboard() {
             </Badge>
             <h2 className={styles.sectionTitle}>Connect your agent</h2>
             <p className={styles.sectionDescription}>
-              Open Settings, create a per-user MCP credential, add the generated
-              config to your client, then ask the agent to verify the connection
-              with{" "}
+              Open Settings, create an MCP credential, add the generated config
+              to your client, then ask the agent to verify the connection with{" "}
               <code className={styles.inlineCode}>enderai_session_info</code>.
             </p>
             <div className={styles.connectActions}>
@@ -243,10 +233,6 @@ function Dashboard() {
                 The minimum workflow your agent should follow
               </h2>
             </div>
-            <p className={styles.sectionDescription}>
-              Add this guidance to your agent instructions so meaningful work is
-              captured consistently.
-            </p>
           </div>
 
           <div className={styles.commandPanel}>
@@ -305,7 +291,7 @@ const workflowSteps = [
   {
     step: "01",
     title: "Begin a Case",
-    description: "The agent starts meaningful work with enderai_begin_case.",
+    description: "The agent starts meaningful work by starting a Case.",
   },
   {
     step: "02",
@@ -355,7 +341,7 @@ const modelCards: ModelCardProps[] = [
     label: "System-powered",
     title: "ContextPacks",
     description:
-      "A ContextPack is the synthesized briefing EnderAI builds for an agent at case start.",
+      "A ContextPack is the synthesized briefing EnderAI builds for an agent at Case start.",
     details: [
       "Selects relevant prior Topics and Cases.",
       "Includes matched signals, pinned takeaways, ambiguity notes, and confidence.",
