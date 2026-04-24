@@ -72,6 +72,13 @@ jobs:
       - name: SPA fallback for GitHub Pages
         run: cp dist/index.html dist/404.html
 
+      - name: Static route entrypoints for GitHub Pages
+        run: |
+          for route in login signup recover-password reset-password topics cases settings admin; do
+            mkdir -p "dist/$route"
+            cp dist/index.html "dist/$route/index.html"
+          done
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
