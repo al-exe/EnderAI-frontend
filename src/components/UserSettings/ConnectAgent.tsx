@@ -47,12 +47,9 @@ function formatTimestamp(value: string | null): string {
   }).format(new Date(value))
 }
 
-function buildEnvSnippet(mcpToken: string): string {
-  return `export ENDERAI_MCP_TOKEN="${mcpToken}"`
-}
-
 function buildCodexPersistentShellSnippet(mcpToken: string): string {
   const lines = [
+    `export ENDERAI_MCP_TOKEN="${mcpToken}"`,
     `printf '%s\n' '${mcpToken}' > ~/.enderai_mcp_token`,
     "chmod 600 ~/.enderai_mcp_token",
     `echo 'export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.enderai_mcp_token)"' >> ~/.bashrc`,
@@ -303,7 +300,6 @@ const ConnectAgent = () => {
       ? revealedCredential.mcpToken
       : null
   const hasTokensReady = mcpToken !== null
-  const envSnippet = hasTokensReady ? buildEnvSnippet(mcpToken ?? "") : null
   const clientSnippet = hasTokensReady
     ? buildCodexConfigSnippet(
         import.meta.env.VITE_HOSTED_MCP_URL ||
@@ -314,6 +310,7 @@ const ConnectAgent = () => {
   const codexPersistentShellSnippet = hasTokensReady
     ? buildCodexPersistentShellSnippet(mcpToken ?? "")
     : null
+  const startCodexSnippet = "codex"
 
   return (
     <div className={styles.page}>
@@ -324,8 +321,7 @@ const ConnectAgent = () => {
             Connect agent
           </CardTitle>
           <p className={styles.mutedText}>
-            Generate a per-user MCP token and the minimal EnderAI workflow
-            snippet your agent needs.
+            Generate an MCP token to get your agent connected to EnderAI.
           </p>
         </CardHeader>
         <CardContent className={styles.cardContent}>
@@ -375,7 +371,7 @@ const ConnectAgent = () => {
                       styles.benefitIconSuccess,
                     )}
                   />
-                  One per-user MCP token for the hosted EnderAI workflow.
+                  MCP token for EnderAI.
                 </li>
                 <li className={styles.benefitItem}>
                   <Shield
@@ -384,7 +380,7 @@ const ConnectAgent = () => {
                       styles.benefitIconPrimary,
                     )}
                   />
-                  Codex CLI setup snippets with the fixed hosted MCP endpoint.
+                  Codex setup snippets.
                 </li>
                 <li className={styles.benefitItem}>
                   <RotateCw
@@ -393,8 +389,7 @@ const ConnectAgent = () => {
                       styles.benefitIconPrimary,
                     )}
                   />
-                  A visible rotate/revoke path later without reusing your normal
-                  login token.
+                  Rotate and revoke controls.
                 </li>
                 <li className={styles.benefitItem}>
                   <LaptopMinimal
@@ -403,25 +398,13 @@ const ConnectAgent = () => {
                       styles.benefitIconPrimary,
                     )}
                   />
-                  A minimal workflow reminder so your AI workflow starts using
-                  EnderAI correctly.
+                  Agent workflow reminder.
                 </li>
               </ul>
             </div>
           </div>
 
-          <Alert>
-            <CheckCircle2 className={styles.icon} />
-            <AlertTitle>Where this goes</AlertTitle>
-            <AlertDescription>
-              Run the export snippet in the same shell that will launch terminal
-              `codex`, then add the TOML block to `~/.codex/config.toml`. If you
-              want future bash shells to pick up the token automatically, use
-              the persistent shell setup below.
-            </AlertDescription>
-          </Alert>
-
-          {envSnippet && clientSnippet ? (
+          {clientSnippet && codexPersistentShellSnippet ? (
             <div className={styles.tokenSection}>
               <Alert>
                 <CheckCircle2 className={styles.icon} />
@@ -433,19 +416,19 @@ const ConnectAgent = () => {
               </Alert>
 
               <SnippetBlock
-                title="Export this env var"
-                description="Run this in the same shell that will launch `codex`."
-                snippet={envSnippet}
+                title="Persist the token across new terminals"
+                description="Stores the token locally so Codex can launch with EnderAI connected."
+                snippet={codexPersistentShellSnippet}
                 copiedText={copiedText}
                 onCopy={(value) => {
                   void copy(value)
                 }}
-                testId="connect-agent-token"
+                testId="connect-agent-persistent-shell"
               />
 
               <SnippetBlock
                 title="Codex CLI config"
-                description="Add this block to `~/.codex/config.toml`, then launch `codex` from that same shell."
+                description="Add this block to `~/.codex/config.toml`."
                 snippet={clientSnippet}
                 copiedText={copiedText}
                 onCopy={(value) => {
@@ -454,30 +437,16 @@ const ConnectAgent = () => {
                 testId="connect-agent-config"
               />
 
-              {codexPersistentShellSnippet ? (
-                <SnippetBlock
-                  title="Optional: persist the token across new terminals"
-                  description="Stores the token in a local file with chmod 600 and loads it from ~/.bashrc so future shells can launch `codex` without re-running `export`."
-                  snippet={codexPersistentShellSnippet}
-                  copiedText={copiedText}
-                  onCopy={(value) => {
-                    void copy(value)
-                  }}
-                  testId="connect-agent-persistent-shell"
-                />
-              ) : null}
-
-              <Alert>
-                <Shield className={styles.icon} />
-                <AlertTitle>Why use the file-based shell setup</AlertTitle>
-                <AlertDescription>
-                  Directly writing `export ENDERAI_MCP_TOKEN="..."` into
-                  `~/.bashrc` also works, but it leaves the raw token in a
-                  config file that is easier to copy, sync, diff, or share by
-                  accident. The file-based flow is mainly about reducing that
-                  accidental disclosure risk.
-                </AlertDescription>
-              </Alert>
+              <SnippetBlock
+                title="Start Codex from terminal"
+                description="After the setup above, launch the Codex CLI from a terminal."
+                snippet={startCodexSnippet}
+                copiedText={copiedText}
+                onCopy={(value) => {
+                  void copy(value)
+                }}
+                testId="connect-agent-start-codex"
+              />
             </div>
           ) : (
             <Alert>

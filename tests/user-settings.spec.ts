@@ -384,7 +384,7 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
   await expect(page.getByText("Revoked install")).toHaveCount(0)
   await expect(
     page.getByText(
-      "Generate a per-user MCP token and the minimal EnderAI workflow snippet your agent needs.",
+      "Generate an MCP token to get your agent connected to EnderAI.",
     ),
   ).toBeVisible()
   await expect(page.getByText("Hosted MCP URL")).toHaveCount(0)
@@ -399,27 +399,19 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
   await page.getByTestId("create-agent-credential").click()
 
   await expect(page.getByText("Agent credential created")).toBeVisible()
-  await expect(page.getByText("Export this env var")).toBeVisible()
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
-    "mcp-token-abc",
-  )
+  await expect(page.getByText("Where this goes")).toHaveCount(0)
+  await expect(page.getByText("Export this env var")).toHaveCount(0)
   await expect(
     page.getByText(
       "Run the export snippet in the same shell that will launch terminal `codex`, then add the TOML block to `~/.codex/config.toml`.",
     ),
+  ).toHaveCount(0)
+  await expect(
+    page.getByText("Persist the token across new terminals"),
   ).toBeVisible()
-  await expect(page.getByTestId("connect-agent-token")).toContainText(
-    "ENDERAI_MCP_TOKEN",
-  )
-  await expect(page.getByTestId("connect-agent-token")).not.toContainText(
-    "ENDERAI_BACKEND_TOKEN",
-  )
-  await expect(page.getByTestId("connect-agent-config")).toContainText(
-    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
-  )
-  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
-    "X-EnderAI-Backend-Token",
-  )
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText('export ENDERAI_MCP_TOKEN="mcp-token-abc"')
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
   ).toContainText("~/.enderai_mcp_token")
@@ -430,13 +422,41 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
     page.getByTestId("connect-agent-persistent-shell"),
   ).toContainText("echo 'export ENDERAI_MCP_TOKEN=")
   await expect(
-    page.getByText("Why use the file-based shell setup"),
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).not.toContainText("ENDERAI_BACKEND_TOKEN")
+
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
+  )
+  await expect(
+    page.getByText("Add this block to `~/.codex/config.toml`."),
   ).toBeVisible()
+  await expect(
+    page.getByText("then launch `codex` from that same shell"),
+  ).toHaveCount(0)
+  await expect(page.getByTestId("connect-agent-config")).not.toContainText(
+    "X-EnderAI-Backend-Token",
+  )
+  await expect(
+    page.getByText("Optional: persist the token across new terminals"),
+  ).toHaveCount(0)
+  const persistStepTop = await page
+    .getByText("Persist the token across new terminals")
+    .boundingBox()
+  const configStepTop = await page.getByText("Codex CLI config").boundingBox()
+  expect(persistStepTop?.y).toBeLessThan(configStepTop?.y ?? 0)
+  await expect(page.getByText("Start Codex from terminal")).toBeVisible()
+  await expect(page.getByTestId("connect-agent-start-codex")).toContainText(
+    "codex",
+  )
+  await expect(
+    page.getByText("Why use the file-based shell setup"),
+  ).toHaveCount(0)
   await expect(
     page.getByText(
       'Directly writing `export ENDERAI_MCP_TOKEN="..."` into `~/.bashrc` also works',
     ),
-  ).toBeVisible()
+  ).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
     "enderai_begin_case",
   )
