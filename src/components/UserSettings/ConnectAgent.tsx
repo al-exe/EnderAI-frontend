@@ -36,6 +36,8 @@ interface RevealedCredential {
   mcpToken: string
 }
 
+const MCP_TOKEN_PLACEHOLDER = "PASTE_MCP_TOKEN_HERE"
+
 function formatTimestamp(value: string | null): string {
   if (!value) {
     return "Never"
@@ -299,16 +301,17 @@ const ConnectAgent = () => {
     revealedCredential?.credentialId === selectedCredentialId
       ? revealedCredential.mcpToken
       : null
-  const hasTokensReady = mcpToken !== null
-  const clientSnippet = hasTokensReady
-    ? buildCodexConfigSnippet(
-        import.meta.env.VITE_HOSTED_MCP_URL ||
-          "https://enderai-mcp.onrender.com/mcp",
-      )
-    : null
+  const selectedCredential = activeCredentials.find(
+    (credential) => credential.id === selectedCredentialId,
+  )
+  const hasSetupCredential = selectedCredential !== undefined
+  const clientSnippet = buildCodexConfigSnippet(
+    import.meta.env.VITE_HOSTED_MCP_URL ||
+      "https://enderai-mcp.onrender.com/mcp",
+  )
   const agentInstructionSnippet = buildAgentInstructionSnippet()
-  const codexPersistentShellSnippet = hasTokensReady
-    ? buildCodexPersistentShellSnippet(mcpToken ?? "")
+  const codexPersistentShellSnippet = hasSetupCredential
+    ? buildCodexPersistentShellSnippet(mcpToken ?? MCP_TOKEN_PLACEHOLDER)
     : null
   const startCodexSnippet = "codex"
 
@@ -404,16 +407,27 @@ const ConnectAgent = () => {
             </div>
           </div>
 
-          {clientSnippet && codexPersistentShellSnippet ? (
+          {hasSetupCredential && codexPersistentShellSnippet ? (
             <div className={styles.tokenSection}>
-              <Alert>
-                <CheckCircle2 className={styles.icon} />
-                <AlertTitle>Fresh tokens ready</AlertTitle>
-                <AlertDescription>
-                  This token is only shown right now. Save it now if you need it
-                  for setup.
-                </AlertDescription>
-              </Alert>
+              {mcpToken ? (
+                <Alert>
+                  <CheckCircle2 className={styles.icon} />
+                  <AlertTitle>Fresh token ready</AlertTitle>
+                  <AlertDescription>
+                    This token is only shown right now. Save it now if you need
+                    it for setup.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert>
+                  <RotateCw className={styles.icon} />
+                  <AlertTitle>Setup steps ready</AlertTitle>
+                  <AlertDescription>
+                    Rotate the selected credential to reveal a fresh token for
+                    the persistence command.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <SnippetBlock
                 title="Persist the token across new terminals"
