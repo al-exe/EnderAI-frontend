@@ -476,13 +476,22 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
   await page.reload()
   await page.getByRole("tab", { name: "Connect agent" }).click()
 
-  await expect(page.getByText("Rotate to reveal fresh tokens")).toHaveCount(0)
+  await expect(page.getByText("Setup steps ready")).toBeVisible()
+  await expect(
+    page.getByText("Persist the token across new terminals"),
+  ).toBeVisible()
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText('export ENDERAI_MCP_TOKEN="PASTE_MCP_TOKEN_HERE"')
+  await expect(page.getByTestId("connect-agent-config")).toContainText(
+    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
+  )
+  await expect(page.getByText("Start Codex from terminal")).toBeVisible()
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
     "enderai_begin_case",
   )
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
     "enderai_finish_case",
   )
-  await expect(page.getByTestId("connect-agent-token")).toHaveCount(0)
   await expect(page.getByText("Revoked install")).toHaveCount(0)
 })
