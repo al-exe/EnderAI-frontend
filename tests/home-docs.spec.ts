@@ -90,7 +90,7 @@ test("Connect agent CTA opens the settings tab directly", async ({ page }) => {
   ).toHaveAttribute("aria-selected", "true")
   await expect(
     page.getByText(
-      "Generate a per-user MCP token and the minimal EnderAI workflow snippet your agent needs.",
+      "Generate an MCP token to get your agent connected to EnderAI.",
     ),
   ).toBeVisible()
 })
