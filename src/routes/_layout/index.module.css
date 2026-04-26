@@ -130,14 +130,12 @@
   @apply max-w-3xl text-sm leading-6 text-muted-foreground md:text-base;
 }
 
-.modelGrid,
-.navigationGrid {
+.modelGrid {
   @apply grid gap-4 lg:grid-cols-3;
 }
 
-.modelCard,
-.navigationCard {
-  @apply overflow-hidden border shadow-sm transition-colors hover:border-primary/45;
+.modelCard {
+  @apply flex flex-col overflow-hidden border shadow-sm transition-colors hover:border-primary/45;
 }
 
 .modelCardTop {
@@ -152,6 +150,10 @@
   @apply size-5;
 }
 
+.modelCardContent {
+  @apply flex h-full flex-col items-start justify-between gap-6;
+}
+
 .detailList {
   @apply space-y-3 text-sm leading-6 text-muted-foreground;
 }
@@ -162,10 +164,6 @@
 
 .checkIcon {
   @apply mt-0.5 size-4 shrink-0 text-emerald-500;
-}
-
-.cardContent {
-  @apply flex h-full flex-col items-start justify-between gap-4 text-sm leading-6 text-muted-foreground;
 }
 
 .connectSection {

@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   FileText,
   KeyRound,
-  Search,
   Settings,
   Shield,
   Terminal,
@@ -118,78 +117,6 @@ function Dashboard() {
           </div>
         </section>
 
-        <section className={styles.navigationGrid}>
-          <Card className={styles.navigationCard}>
-            <CardHeader>
-              <div className={styles.cardIconWrap}>
-                <Box className={styles.cardIcon} />
-              </div>
-              <CardTitle>Topics</CardTitle>
-              <CardDescription>
-                Reusable workstreams such as a feature area, bug family, repo
-                subsystem, customer issue, or operational concern.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className={styles.cardContent}>
-              <p>
-                Use Topics to keep stable descriptions, aliases, status,
-                canonical files, symbols, errors, symptoms, and recent Cases in
-                one place.
-              </p>
-              <Button asChild variant="outline">
-                <RouterLink to="/topics">
-                  Browse Topics
-                  <ArrowRight className={styles.icon} />
-                </RouterLink>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className={styles.navigationCard}>
-            <CardHeader>
-              <div className={styles.cardIconWrap}>
-                <Boxes className={styles.cardIcon} />
-              </div>
-              <CardTitle>Cases</CardTitle>
-              <CardDescription>
-                Bounded work sessions under a Topic. Cases are where agents
-                record what happened during a specific task.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className={styles.cardContent}>
-              <p>
-                A Case can capture the request, current summary, files,
-                commands, hypotheses, changes, outcome, and next steps.
-              </p>
-              <Button asChild variant="outline">
-                <RouterLink to="/cases">
-                  Review Cases
-                  <ArrowRight className={styles.icon} />
-                </RouterLink>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className={styles.navigationCard}>
-            <CardHeader>
-              <div className={styles.cardIconWrap}>
-                <Search className={styles.cardIcon} />
-              </div>
-              <CardTitle>Search and demo mode</CardTitle>
-              <CardDescription>
-                Use the top search bar to jump across Topics and Cases. Use the
-                sidebar demo switch when you want safe sample data.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className={styles.cardContent}>
-              <p>
-                Demo mode scopes Topics, Cases, and Search to demo data so you
-                can explore the interface without touching real work history.
-              </p>
-            </CardContent>
-          </Card>
-        </section>
-
         <section className={styles.connectSection}>
           <div className={styles.connectCopy}>
             <Badge variant="outline" className={styles.connectBadge}>
@@ -252,6 +179,10 @@ type ModelCardProps = {
   title: string
   description: string
   details: string[]
+  action?: {
+    label: string
+    to: "/topics" | "/cases"
+  }
 }
 
 function ModelCard({
@@ -260,6 +191,7 @@ function ModelCard({
   title,
   description,
   details,
+  action,
 }: ModelCardProps) {
   return (
     <Card className={styles.modelCard}>
@@ -273,7 +205,7 @@ function ModelCard({
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className={styles.modelCardContent}>
         <ul className={styles.detailList}>
           {details.map((detail) => (
             <li key={detail}>
@@ -282,6 +214,14 @@ function ModelCard({
             </li>
           ))}
         </ul>
+        {action ? (
+          <Button asChild variant="outline">
+            <RouterLink to={action.to}>
+              {action.label}
+              <ArrowRight className={styles.icon} />
+            </RouterLink>
+          </Button>
+        ) : null}
       </CardContent>
     </Card>
   )
@@ -323,6 +263,10 @@ const modelCards: ModelCardProps[] = [
       "Holds aliases, status, summaries, files, symbols, errors, and symptoms.",
       "Gives future Cases a stable place to attach context.",
     ],
+    action: {
+      label: "Browse Topics",
+      to: "/topics",
+    },
   },
   {
     icon: Boxes,
@@ -335,13 +279,17 @@ const modelCards: ModelCardProps[] = [
       "Keeps next steps visible when work pauses or continues later.",
       "Provides the history that future agents can reuse.",
     ],
+    action: {
+      label: "Review Cases",
+      to: "/cases",
+    },
   },
   {
     icon: Shield,
     label: "System-powered",
-    title: "ContextPacks",
+    title: "Context Packs",
     description:
-      "A ContextPack is the synthesized briefing EnderAI builds for an agent at Case start.",
+      "A Context Pack is the synthesized briefing EnderAI builds for an agent at Case start.",
     details: [
       "Selects relevant prior Topics and Cases.",
       "Includes matched signals, pinned takeaways, ambiguity notes, and confidence.",
@@ -357,7 +305,7 @@ const connectionSteps: Array<{
 }> = [
   {
     icon: Settings,
-    title: "Open Settings -> Connect agent",
+    title: "Open Settings → Connect agent",
     description:
       "Generate or rotate the one MCP token your hosted EnderAI client needs.",
   },
