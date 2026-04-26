@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -75,6 +76,50 @@ function buildAgentInstructionSnippet(): string {
     "- Use `enderai_update_case` as material progress develops.",
     "- Use `enderai_finish_case` when the work is complete.",
     "- Prefer the guided case tools over raw `enderai_request` calls.",
+  ].join("\n")
+}
+
+function buildAiAssistedSetupSnippet({
+  persistentShellSnippet,
+  clientSnippet,
+  agentInstructionSnippet,
+  startCodexSnippet,
+}: {
+  persistentShellSnippet: string
+  clientSnippet: string
+  agentInstructionSnippet: string
+  startCodexSnippet: string
+}): string {
+  return [
+    "Complete this EnderAI MCP setup for me.",
+    "",
+    "# Persist the token",
+    "Save the token for me using these commands:",
+    "",
+    "```sh",
+    persistentShellSnippet,
+    "```",
+    "",
+    "# Setup CLI config",
+    "Add the following MCP server config to ~/.codex/config.toml or the relevant config file for this AI client:",
+    "",
+    "```toml",
+    clientSnippet,
+    "```",
+    "",
+    "# Add agent instruction",
+    "Add the following to the AI agent's instruction file, AGENTS.md, agent.md, or equivalent core instruction file:",
+    "",
+    "```text",
+    agentInstructionSnippet,
+    "```",
+    "",
+    "# Start Codex",
+    "After setup is complete, launch the Codex CLI from a terminal:",
+    "",
+    "```sh",
+    startCodexSnippet,
+    "```",
   ].join("\n")
 }
 
@@ -311,6 +356,15 @@ const ConnectAgent = () => {
     ? buildCodexPersistentShellSnippet(mcpToken)
     : null
   const startCodexSnippet = "codex"
+  const aiAssistedSetupSnippet =
+    clientSnippet && codexPersistentShellSnippet
+      ? buildAiAssistedSetupSnippet({
+          persistentShellSnippet: codexPersistentShellSnippet,
+          clientSnippet,
+          agentInstructionSnippet,
+          startCodexSnippet,
+        })
+      : null
 
   return (
     <div className={styles.page}>
@@ -406,47 +460,90 @@ const ConnectAgent = () => {
 
           {clientSnippet && codexPersistentShellSnippet ? (
             <div className={styles.tokenSection}>
-              <Alert>
-                <CheckCircle2 className={styles.icon} />
-                <AlertTitle>Fresh token ready</AlertTitle>
-                <AlertDescription>
-                  This token is only shown right now. Save it now if you need it
-                  for setup.
-                </AlertDescription>
-              </Alert>
+              <Tabs defaultValue="ai-assisted" className={styles.setupTabs}>
+                <TabsList className={styles.setupTabsList}>
+                  <TabsTrigger
+                    value="ai-assisted"
+                    className={styles.setupTabTrigger}
+                  >
+                    AI assisted setup
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="manual"
+                    className={styles.setupTabTrigger}
+                  >
+                    Manual setup
+                  </TabsTrigger>
+                </TabsList>
 
-              <SnippetBlock
-                title="Persist the token across new terminals"
-                description="Stores the token locally so Codex can launch with EnderAI connected."
-                snippet={codexPersistentShellSnippet}
-                copiedText={copiedText}
-                onCopy={(value) => {
-                  void copy(value)
-                }}
-                testId="connect-agent-persistent-shell"
-              />
+                <Alert>
+                  <CheckCircle2 className={styles.icon} />
+                  <AlertTitle>Fresh token ready</AlertTitle>
+                  <AlertDescription>
+                    This token is only shown right now. Save it now if you need
+                    it for setup.
+                  </AlertDescription>
+                </Alert>
 
-              <SnippetBlock
-                title="Codex CLI config"
-                description="Add this block to `~/.codex/config.toml`."
-                snippet={clientSnippet}
-                copiedText={copiedText}
-                onCopy={(value) => {
-                  void copy(value)
-                }}
-                testId="connect-agent-config"
-              />
+                <TabsContent value="ai-assisted" className={styles.setupTab}>
+                  <SnippetBlock
+                    title="Leverage AI to complete setup"
+                    description="Pass the following instructions to your AI of choice to help you complete setup."
+                    snippet={aiAssistedSetupSnippet ?? ""}
+                    copiedText={copiedText}
+                    onCopy={(value) => {
+                      void copy(value)
+                    }}
+                    testId="connect-agent-ai-setup"
+                  />
+                </TabsContent>
 
-              <SnippetBlock
-                title="Start Codex from terminal"
-                description="After the setup above, launch the Codex CLI from a terminal."
-                snippet={startCodexSnippet}
-                copiedText={copiedText}
-                onCopy={(value) => {
-                  void copy(value)
-                }}
-                testId="connect-agent-start-codex"
-              />
+                <TabsContent value="manual" className={styles.setupTab}>
+                  <SnippetBlock
+                    title="Persist the token across new terminals"
+                    description="Stores the token locally so Codex can launch with EnderAI connected."
+                    snippet={codexPersistentShellSnippet}
+                    copiedText={copiedText}
+                    onCopy={(value) => {
+                      void copy(value)
+                    }}
+                    testId="connect-agent-persistent-shell"
+                  />
+
+                  <SnippetBlock
+                    title="Codex CLI config"
+                    description="Add this block to `~/.codex/config.toml`."
+                    snippet={clientSnippet}
+                    copiedText={copiedText}
+                    onCopy={(value) => {
+                      void copy(value)
+                    }}
+                    testId="connect-agent-config"
+                  />
+
+                  <SnippetBlock
+                    title="Minimal agent instruction"
+                    description="Add this to your AI workflow's instruction file to start using EnderAI."
+                    snippet={agentInstructionSnippet}
+                    copiedText={copiedText}
+                    onCopy={(value) => {
+                      void copy(value)
+                    }}
+                    testId="connect-agent-instructions"
+                  />
+
+                  <SnippetBlock
+                    title="Start Codex from terminal"
+                    description="After the setup above, launch the Codex CLI from a terminal."
+                    snippet={startCodexSnippet}
+                    copiedText={copiedText}
+                    onCopy={(value) => {
+                      void copy(value)
+                    }}
+                    testId="connect-agent-start-codex"
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
           ) : (
             <Alert>
@@ -458,17 +555,6 @@ const ConnectAgent = () => {
               </AlertDescription>
             </Alert>
           )}
-
-          <SnippetBlock
-            title="Minimal agent instruction"
-            description="Add this to your AI workflow’s instruction file to start using EnderAI."
-            snippet={agentInstructionSnippet}
-            copiedText={copiedText}
-            onCopy={(value) => {
-              void copy(value)
-            }}
-            testId="connect-agent-instructions"
-          />
         </CardContent>
       </Card>
 

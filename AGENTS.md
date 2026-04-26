@@ -1,6 +1,12 @@
 # EnderAI — MCP-First Agent Rules (Portable Template)
 
-Last updated: 2026-03-22
+Last updated: 2026-04-26
+
+## Integration Pause
+- Do not use EnderAI MCP tools unless Alex explicitly asks to use EnderAI MCP again.
+- Do not use Jira or Atlassian tools unless Alex explicitly asks to use Jira again.
+- Ignore the MCP-first workflow and Jira delivery workflow below while this pause is active.
+- For code changes, work locally and use git/GitHub only when requested by the user or by normal repo workflow.
 
 This template is intended for agents and IDEs that use EnderAI through MCP.
 

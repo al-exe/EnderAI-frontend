@@ -124,6 +124,22 @@
   @apply space-y-4;
 }
 
+.setupTabs {
+  @apply space-y-4;
+}
+
+.setupTabsList {
+  @apply grid h-10 w-full grid-cols-2;
+}
+
+.setupTabTrigger {
+  @apply w-full;
+}
+
+.setupTab {
+  @apply space-y-4;
+}
+
 .credentialsContent {
   @apply space-y-3;
 }
