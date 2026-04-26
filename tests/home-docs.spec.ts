@@ -56,17 +56,20 @@ test("Home page explains EnderAI and the product model", async ({ page }) => {
   ).toHaveCount(0)
   await expect(page.getByText("Topics").first()).toBeVisible()
   await expect(page.getByText("Cases").first()).toBeVisible()
-  await expect(page.getByText("ContextPacks")).toBeVisible()
+  await expect(page.getByText("Context Packs")).toBeVisible()
+  await expect(page.getByText("ContextPacks")).toHaveCount(0)
   await expect(
     page.getByText(
-      "A ContextPack is the synthesized briefing EnderAI builds for an agent at Case start.",
+      "A Context Pack is the synthesized briefing EnderAI builds for an agent at Case start.",
     ),
   ).toBeVisible()
-  await expect(page.getByText("Search and demo mode")).toBeVisible()
+  await expect(page.getByText("Search and demo mode")).toHaveCount(0)
+  await expect(page.getByText("Browse Topics")).toBeVisible()
+  await expect(page.getByText("Review Cases")).toBeVisible()
   await expect(
     page.getByText("The agent starts meaningful work by starting a Case."),
   ).toBeVisible()
-  await expect(page.getByText("Open Settings -> Connect agent")).toBeVisible()
+  await expect(page.getByText("Open Settings → Connect agent")).toBeVisible()
   await expect(
     page.getByText(
       "Open Settings, create an MCP credential, add the generated config to your client, then ask the agent to verify the connection with",
