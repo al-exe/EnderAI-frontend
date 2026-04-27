@@ -255,7 +255,7 @@ test("Selected mode is preserved across sessions", async ({ page }) => {
   expect(isDarkMode).toBe(true)
 })
 
-test("Connect agent generates the hosted Codex setup and hides revoked credentials", async ({
+test("Connect agent generates the hosted MCP setup and hides revoked credentials", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -319,7 +319,7 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
     const createdCredential = {
       id: "agent-credential-1",
       user_id: "user-1",
-      label: "Codex laptop",
+      label: "AI laptop",
       created_at: "2026-03-14T20:00:00Z",
       updated_at: "2026-03-14T20:00:00Z",
       last_rotated_at: "2026-03-14T20:00:00Z",
@@ -395,20 +395,12 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
     page.getByRole("tab", { name: "Generic MCP client" }),
   ).toHaveCount(0)
 
-  await page.getByLabel("Credential label").fill("Codex laptop")
+  await page.getByLabel("Credential label").fill("AI laptop")
   await page.getByTestId("create-agent-credential").click()
 
   await expect(page.getByText("Agent credential created")).toBeVisible()
   await expect(page.getByText("Where this goes")).toHaveCount(0)
   await expect(page.getByText("Export this env var")).toHaveCount(0)
-  await expect(
-    page.getByText(
-      "Run the export snippet in the same shell that will launch terminal `codex`, then add the TOML block to `~/.codex/config.toml`.",
-    ),
-  ).toHaveCount(0)
-  await expect(
-    page.getByText("then launch `codex` from that same shell"),
-  ).toHaveCount(0)
   await expect(
     page.getByText("Optional: persist the token across new terminals"),
   ).toHaveCount(0)
@@ -429,7 +421,7 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
     'export ENDERAI_MCP_TOKEN="mcp-token-abc"',
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
-    "# Setup CLI config",
+    "# Set up MCP config",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
     'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
@@ -441,10 +433,10 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
     "enderai_begin_case",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
-    "# Start Codex",
+    "# Reconnect the AI client",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
-    "codex",
+    "Restart or reconnect your AI client",
   )
 
   await page.getByRole("tab", { name: "Manual setup" }).click()
@@ -470,7 +462,7 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
     'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
   )
   await expect(
-    page.getByText("Add this block to `~/.codex/config.toml`."),
+    page.getByText("Add this block to your AI client's MCP config file."),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-config")).not.toContainText(
     "X-EnderAI-Backend-Token",
@@ -478,12 +470,12 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
   const persistStepTop = await page
     .getByText("Persist the token across new terminals")
     .boundingBox()
-  const configStepTop = await page.getByText("Codex CLI config").boundingBox()
+  const configStepTop = await page.getByText("MCP client config").boundingBox()
   expect(persistStepTop?.y).toBeLessThan(configStepTop?.y ?? 0)
-  await expect(page.getByText("Start Codex from terminal")).toBeVisible()
-  await expect(page.getByTestId("connect-agent-start-codex")).toContainText(
-    "codex",
-  )
+  await expect(page.getByText("Reconnect AI client")).toBeVisible()
+  await expect(
+    page.getByTestId("connect-agent-reconnect-client"),
+  ).toContainText("Restart or reconnect your AI client")
   await expect(
     page.getByText("Why use the file-based shell setup"),
   ).toHaveCount(0)
@@ -507,11 +499,11 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
   const instructionStepTop = await page
     .getByText("Minimal agent instruction")
     .boundingBox()
-  const startStepTop = await page
-    .getByText("Start Codex from terminal")
+  const reconnectStepTop = await page
+    .getByText("Reconnect AI client")
     .boundingBox()
   expect(configStepTop?.y).toBeLessThan(instructionStepTop?.y ?? 0)
-  expect(instructionStepTop?.y).toBeLessThan(startStepTop?.y ?? 0)
+  expect(instructionStepTop?.y).toBeLessThan(reconnectStepTop?.y ?? 0)
   await expect(
     page.locator('[data-slot="card-title"]').filter({ hasText: "Credentials" }),
   ).toBeVisible()
@@ -534,14 +526,17 @@ test("Connect agent generates the hosted Codex setup and hides revoked credentia
   ).toHaveCount(0)
   await expect(page.getByRole("tab", { name: "Manual setup" })).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-ai-setup")).toHaveCount(0)
-  await expect(page.getByText("Start Codex from terminal")).toHaveCount(0)
+  await expect(page.getByText("Reconnect AI client")).toHaveCount(0)
+  await expect(page.getByTestId("connect-agent-reconnect-client")).toHaveCount(
+    0,
+  )
   await expect(page.getByTestId("connect-agent-instructions")).toHaveCount(0)
   await expect(page.getByText("Minimal agent instruction")).toHaveCount(0)
   await expect(page.getByText("Leverage AI to complete setup")).toHaveCount(0)
   await expect(page.getByText("enderai_finish_case")).toHaveCount(0)
   await expect(page.getByText("enderai_begin_case")).toHaveCount(0)
   await expect(page.getByText("# Add agent instruction")).toHaveCount(0)
-  await expect(page.getByText("# Start Codex")).toHaveCount(0)
-  await expect(page.getByText("# Setup CLI config")).toHaveCount(0)
+  await expect(page.getByText("# Reconnect the AI client")).toHaveCount(0)
+  await expect(page.getByText("# Set up MCP config")).toHaveCount(0)
   await expect(page.getByText("Revoked install")).toHaveCount(0)
 })

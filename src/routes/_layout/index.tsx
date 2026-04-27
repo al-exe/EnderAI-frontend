@@ -313,7 +313,7 @@ const connectionSteps: Array<{
     icon: KeyRound,
     title: "Install the generated snippets",
     description:
-      "Use the export command and Codex TOML block, or adapt the hosted MCP config for another client.",
+      "Use the export command and generated MCP config block for your AI client.",
   },
   {
     icon: FileText,

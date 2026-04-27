@@ -48,7 +48,7 @@ function formatTimestamp(value: string | null): string {
   }).format(new Date(value))
 }
 
-function buildCodexPersistentShellSnippet(mcpToken: string): string {
+function buildPersistentShellSnippet(mcpToken: string): string {
   const lines = [
     `export ENDERAI_MCP_TOKEN="${mcpToken}"`,
     `printf '%s\n' '${mcpToken}' > ~/.enderai_mcp_token`,
@@ -60,7 +60,7 @@ function buildCodexPersistentShellSnippet(mcpToken: string): string {
   return lines.join("\n")
 }
 
-function buildCodexConfigSnippet(hostedMcpUrl: string): string {
+function buildMcpConfigSnippet(hostedMcpUrl: string): string {
   return [
     "[mcp_servers.enderai-api]",
     `url = "${hostedMcpUrl}"`,
@@ -83,12 +83,12 @@ function buildAiAssistedSetupSnippet({
   persistentShellSnippet,
   clientSnippet,
   agentInstructionSnippet,
-  startCodexSnippet,
+  reconnectClientSnippet,
 }: {
   persistentShellSnippet: string
   clientSnippet: string
   agentInstructionSnippet: string
-  startCodexSnippet: string
+  reconnectClientSnippet: string
 }): string {
   return [
     "Complete this EnderAI MCP setup for me.",
@@ -100,8 +100,8 @@ function buildAiAssistedSetupSnippet({
     persistentShellSnippet,
     "```",
     "",
-    "# Setup CLI config",
-    "Add the following MCP server config to ~/.codex/config.toml or the relevant config file for this AI client:",
+    "# Set up MCP config",
+    "Add the following MCP server config to the relevant config file for this AI client:",
     "",
     "```toml",
     clientSnippet,
@@ -114,11 +114,11 @@ function buildAiAssistedSetupSnippet({
     agentInstructionSnippet,
     "```",
     "",
-    "# Start Codex",
-    "After setup is complete, launch the Codex CLI from a terminal:",
+    "# Reconnect the AI client",
+    "After setup is complete, restart or reconnect your AI client so it reloads the MCP config:",
     "",
     "```sh",
-    startCodexSnippet,
+    reconnectClientSnippet,
     "```",
   ].join("\n")
 }
@@ -346,23 +346,24 @@ const ConnectAgent = () => {
       : null
   const hasFreshToken = mcpToken !== null
   const clientSnippet = hasFreshToken
-    ? buildCodexConfigSnippet(
+    ? buildMcpConfigSnippet(
         import.meta.env.VITE_HOSTED_MCP_URL ||
           "https://enderai-mcp.onrender.com/mcp",
       )
     : null
   const agentInstructionSnippet = buildAgentInstructionSnippet()
-  const codexPersistentShellSnippet = hasFreshToken
-    ? buildCodexPersistentShellSnippet(mcpToken)
+  const persistentShellSnippet = hasFreshToken
+    ? buildPersistentShellSnippet(mcpToken)
     : null
-  const startCodexSnippet = "codex"
+  const reconnectClientSnippet =
+    "# Restart or reconnect your AI client after saving the MCP config."
   const aiAssistedSetupSnippet =
-    clientSnippet && codexPersistentShellSnippet
+    clientSnippet && persistentShellSnippet
       ? buildAiAssistedSetupSnippet({
-          persistentShellSnippet: codexPersistentShellSnippet,
+          persistentShellSnippet,
           clientSnippet,
           agentInstructionSnippet,
-          startCodexSnippet,
+          reconnectClientSnippet,
         })
       : null
 
@@ -434,7 +435,7 @@ const ConnectAgent = () => {
                       styles.benefitIconPrimary,
                     )}
                   />
-                  Codex setup snippets.
+                  AI client setup snippets.
                 </li>
                 <li className={styles.benefitItem}>
                   <RotateCw
@@ -458,7 +459,7 @@ const ConnectAgent = () => {
             </div>
           </div>
 
-          {clientSnippet && codexPersistentShellSnippet ? (
+          {clientSnippet && persistentShellSnippet ? (
             <div className={styles.tokenSection}>
               <Tabs defaultValue="ai-assisted" className={styles.setupTabs}>
                 <TabsList className={styles.setupTabsList}>
@@ -501,8 +502,8 @@ const ConnectAgent = () => {
                 <TabsContent value="manual" className={styles.setupTab}>
                   <SnippetBlock
                     title="Persist the token across new terminals"
-                    description="Stores the token locally so Codex can launch with EnderAI connected."
-                    snippet={codexPersistentShellSnippet}
+                    description="Stores the token locally so AI clients can launch with EnderAI connected."
+                    snippet={persistentShellSnippet}
                     copiedText={copiedText}
                     onCopy={(value) => {
                       void copy(value)
@@ -511,8 +512,8 @@ const ConnectAgent = () => {
                   />
 
                   <SnippetBlock
-                    title="Codex CLI config"
-                    description="Add this block to `~/.codex/config.toml`."
+                    title="MCP client config"
+                    description="Add this block to your AI client's MCP config file."
                     snippet={clientSnippet}
                     copiedText={copiedText}
                     onCopy={(value) => {
@@ -533,14 +534,14 @@ const ConnectAgent = () => {
                   />
 
                   <SnippetBlock
-                    title="Start Codex from terminal"
-                    description="After the setup above, launch the Codex CLI from a terminal."
-                    snippet={startCodexSnippet}
+                    title="Reconnect AI client"
+                    description="After the setup above, restart or reconnect your AI client from its terminal or app."
+                    snippet={reconnectClientSnippet}
                     copiedText={copiedText}
                     onCopy={(value) => {
                       void copy(value)
                     }}
-                    testId="connect-agent-start-codex"
+                    testId="connect-agent-reconnect-client"
                   />
                 </TabsContent>
               </Tabs>
@@ -551,7 +552,7 @@ const ConnectAgent = () => {
               <AlertTitle>Create your first agent credential</AlertTitle>
               <AlertDescription>
                 Once you create a credential, this page will generate the token,
-                Codex config, and workflow snippet you need.
+                MCP config, and workflow snippet you need.
               </AlertDescription>
             </Alert>
           )}
