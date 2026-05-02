@@ -1,18 +1,24 @@
-import { createFileRoute, Link as RouterLink } from "@tanstack/react-router"
+import { Link as RouterLink } from "@tanstack/react-router"
 import type { LucideIcon } from "lucide-react"
 import {
   ArrowRight,
   Box,
   Boxes,
   CheckCircle2,
+  Database,
   FileText,
+  GitBranch,
   KeyRound,
+  LogIn,
+  RefreshCcw,
   Settings,
   Shield,
+  Sparkles,
   Terminal,
   Zap,
 } from "lucide-react"
 
+import type { UserPublic } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,33 +28,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import useAuth from "@/hooks/useAuth"
-import styles from "./index.module.css"
+import { cn } from "@/lib/utils"
+import styles from "./HomePage.module.css"
 
-export const Route = createFileRoute("/_layout/")({
-  component: Dashboard,
-  head: () => ({
-    meta: [
-      {
-        title: "Home",
-      },
-    ],
-  }),
-})
+type HomePageProps = {
+  mode: "app" | "public"
+  signedIn?: boolean
+  user?: UserPublic | null
+}
 
-function Dashboard() {
-  const { user: currentUser } = useAuth()
-  const firstName = currentUser?.full_name?.trim().split(/\s+/)[0]
-  const displayName = firstName || currentUser?.email || "there"
+export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
+  const isPublic = mode === "public"
+  const canUseApp = !isPublic || signedIn
+  const firstName = user?.full_name?.trim().split(/\s+/)[0]
+  const displayName = firstName || user?.email || "there"
 
   return (
-    <div className={styles.page}>
+    <div className={cn(styles.page, isPublic && styles.publicPage)}>
+      {isPublic ? <PublicNav signedIn={signedIn} /> : null}
+
       <div className={styles.shell}>
         <section className={styles.hero}>
           <div className={styles.heroGrid}>
             <div className={styles.heroCopy}>
               <div className={styles.heroText}>
-                <p className={styles.greeting}>Welcome back, {displayName}</p>
+                <p className={styles.greeting}>
+                  {isPublic ? "EnderAI" : `Welcome back, ${displayName}`}
+                </p>
                 <h1 className={styles.heroTitle}>
                   EnderAI is product memory for AI-assisted work.
                 </h1>
@@ -59,46 +65,62 @@ function Dashboard() {
                 </p>
               </div>
               <div className={styles.heroActions}>
-                <Button asChild variant="outline" size="lg">
-                  <RouterLink to="/topics">
-                    Open Topics
-                    <ArrowRight className={styles.icon} />
-                  </RouterLink>
-                </Button>
-                <Button asChild size="lg">
-                  <RouterLink
-                    to="/settings"
-                    search={{ tab: "connect-agent" }}
-                    data-testid="home-connect-agent-link"
-                  >
-                    Connect agent
-                  </RouterLink>
-                </Button>
+                {isPublic ? (
+                  <>
+                    <Button asChild size="lg" className={styles.primaryCta}>
+                      <RouterLink to={signedIn ? "/home" : "/signup"}>
+                        <Sparkles className={styles.icon} />
+                        Use EnderAI now
+                      </RouterLink>
+                    </Button>
+                    <Button asChild variant="outline" size="lg">
+                      <RouterLink to={signedIn ? "/home" : "/login"}>
+                        <LogIn className={styles.icon} />
+                        {signedIn ? "Open Home" : "Log in now"}
+                      </RouterLink>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button asChild variant="outline" size="lg">
+                      <RouterLink to="/topics">
+                        Open Topics
+                        <ArrowRight className={styles.icon} />
+                      </RouterLink>
+                    </Button>
+                    <Button asChild size="lg">
+                      <RouterLink
+                        to="/settings"
+                        search={{ tab: "connect-agent" }}
+                        data-testid="home-connect-agent-link"
+                      >
+                        Connect agent
+                      </RouterLink>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
-            <div className={styles.heroPanel}>
-              <div className={styles.panelHeader}>
-                <div>
-                  <p className={styles.panelKicker}>Core loop</p>
-                  <h2 className={styles.panelTitle}>
-                    Start work. Hydrate context. Finish with memory.
-                  </h2>
-                </div>
-                <Zap className={styles.panelIcon} />
-              </div>
-              <div className={styles.flowList}>
-                {workflowSteps.map((step) => (
-                  <div className={styles.flowItem} key={step.title}>
-                    <span className={styles.flowNumber}>{step.step}</span>
-                    <div>
-                      <h3>{step.title}</h3>
-                      <p>{step.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <HeroGraphic />
+          </div>
+        </section>
+
+        <section className={styles.marketingSection}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.sectionEyebrow}>Why it helps</p>
+              <h2 className={styles.sectionTitle}>Agents start with memory.</h2>
             </div>
+            <p className={styles.sectionDescription}>
+              Keep useful context attached to the product work it came from.
+            </p>
+          </div>
+
+          <div className={styles.marketingGrid}>
+            {marketingTiles.map((tile) => (
+              <MarketingTile key={tile.title} {...tile} />
+            ))}
           </div>
         </section>
 
@@ -112,7 +134,11 @@ function Dashboard() {
 
           <div className={styles.modelGrid}>
             {modelCards.map((card) => (
-              <ModelCard key={card.title} {...card} />
+              <ModelCard
+                key={card.title}
+                {...card}
+                action={getModelAction(card.action, canUseApp)}
+              />
             ))}
           </div>
         </section>
@@ -131,10 +157,17 @@ function Dashboard() {
             </p>
             <div className={styles.connectActions}>
               <Button asChild>
-                <RouterLink to="/settings" search={{ tab: "connect-agent" }}>
-                  Open Connect Agent
-                  <ArrowRight className={styles.icon} />
-                </RouterLink>
+                {canUseApp ? (
+                  <RouterLink to="/settings" search={{ tab: "connect-agent" }}>
+                    Open Connect Agent
+                    <ArrowRight className={styles.icon} />
+                  </RouterLink>
+                ) : (
+                  <RouterLink to="/login">
+                    Log in to connect agent
+                    <ArrowRight className={styles.icon} />
+                  </RouterLink>
+                )}
               </Button>
             </div>
           </div>
@@ -173,16 +206,90 @@ function Dashboard() {
   )
 }
 
+function PublicNav({ signedIn }: { signedIn: boolean }) {
+  return (
+    <header className={styles.publicNav}>
+      <RouterLink to="/" className={styles.brandLink}>
+        EnderAI
+      </RouterLink>
+      <nav className={styles.publicNavActions} aria-label="Public navigation">
+        <Button asChild variant="ghost">
+          <RouterLink to={signedIn ? "/home" : "/login"}>
+            {signedIn ? "Open Home" : "Log in"}
+          </RouterLink>
+        </Button>
+        <Button asChild>
+          <RouterLink to={signedIn ? "/home" : "/signup"}>
+            {signedIn ? "Use now" : "Sign up"}
+          </RouterLink>
+        </Button>
+      </nav>
+    </header>
+  )
+}
+
+function HeroGraphic() {
+  return (
+    <div className={styles.heroGraphic}>
+      <div className={styles.graphicHeader}>
+        <Badge variant="outline" className={styles.connectBadge}>
+          <Zap className={styles.badgeIcon} />
+          Live context
+        </Badge>
+        <span className={styles.graphicStatus}>Ready for the next task</span>
+      </div>
+      <div className={styles.memoryFlow}>
+        {workflowSteps.map((step) => (
+          <div className={styles.flowItem} key={step.title}>
+            <span className={styles.flowNumber}>{step.step}</span>
+            <div>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className={styles.signalBoard}>
+        {signalPills.map((signal) => (
+          <span key={signal}>{signal}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+type MarketingTileProps = {
+  icon: LucideIcon
+  title: string
+  description: string
+}
+
+function MarketingTile({ icon: Icon, title, description }: MarketingTileProps) {
+  return (
+    <div className={styles.marketingTile}>
+      <div className={styles.marketingIconWrap}>
+        <Icon className={styles.marketingIcon} />
+      </div>
+      <div>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
+    </div>
+  )
+}
+
+type ModelAction = {
+  label: string
+  to: "/topics" | "/cases" | "/login"
+}
+
 type ModelCardProps = {
   icon: LucideIcon
   label: string
   title: string
   description: string
   details: string[]
-  action?: {
-    label: string
-    to: "/topics" | "/cases"
-  }
+  action?: ModelAction
 }
 
 function ModelCard({
@@ -227,6 +334,23 @@ function ModelCard({
   )
 }
 
+const getModelAction = (
+  action: ModelAction | undefined,
+  canUseApp: boolean,
+): ModelAction | undefined => {
+  if (!action) return undefined
+
+  if (canUseApp) return action
+
+  return {
+    label:
+      action.to === "/topics"
+        ? "Log in to browse Topics"
+        : "Log in to review Cases",
+    to: "/login",
+  }
+}
+
 const workflowSteps = [
   {
     step: "01",
@@ -248,6 +372,26 @@ const workflowSteps = [
     step: "04",
     title: "Close the loop",
     description: "The agent finishes the Case with outcome and next steps.",
+  },
+]
+
+const signalPills = ["commands", "files", "decisions", "symptoms", "next steps"]
+
+const marketingTiles: MarketingTileProps[] = [
+  {
+    icon: Database,
+    title: "Context that sticks",
+    description: "Keep summaries, files, errors, and decisions reusable.",
+  },
+  {
+    icon: GitBranch,
+    title: "Workstreams stay clear",
+    description: "Group repeated requests under durable Topics.",
+  },
+  {
+    icon: RefreshCcw,
+    title: "Handoffs get shorter",
+    description: "Give the next agent the briefing it needs up front.",
   },
 ]
 
@@ -293,7 +437,7 @@ const modelCards: ModelCardProps[] = [
     details: [
       "Selects relevant prior Topics and Cases.",
       "Includes matched signals, pinned takeaways, ambiguity notes, and confidence.",
-      "Works behind the scenes, so navigation stays focused on Topics and Cases.",
+      "Visible in Case detail and Topic context intelligence without becoming separate navigation.",
     ],
   },
 ]
@@ -305,7 +449,7 @@ const connectionSteps: Array<{
 }> = [
   {
     icon: Settings,
-    title: "Open Settings → Connect agent",
+    title: "Open Settings > Connect agent",
     description:
       "Generate or rotate the one MCP token your hosted EnderAI client needs.",
   },

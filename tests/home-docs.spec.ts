@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, type Page, test } from "@playwright/test"
 
 const currentUser = {
   id: "user-1",
@@ -16,7 +16,7 @@ test.use({
   },
 })
 
-test.beforeEach(async ({ page }) => {
+async function mockAuthenticatedHome(page: Page) {
   await page.addInitScript(() => {
     window.localStorage.setItem("access_token", "test-token")
   })
@@ -28,10 +28,11 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/api/v1/agent-credentials/", async (route) => {
     await route.fulfill({ json: { data: [], count: 0 } })
   })
-})
+}
 
 test("Home page explains EnderAI and the product model", async ({ page }) => {
-  await page.goto("/")
+  await mockAuthenticatedHome(page)
+  await page.goto("/home")
 
   await expect(
     page.getByText("EnderAI is product memory for AI-assisted work."),
@@ -63,13 +64,18 @@ test("Home page explains EnderAI and the product model", async ({ page }) => {
       "A Context Pack is the synthesized briefing EnderAI builds for an agent at Case start.",
     ),
   ).toBeVisible()
+  await expect(
+    page.getByText(
+      "Visible in Case detail and Topic context intelligence without becoming separate navigation.",
+    ),
+  ).toBeVisible()
   await expect(page.getByText("Search and demo mode")).toHaveCount(0)
   await expect(page.getByText("Browse Topics")).toBeVisible()
   await expect(page.getByText("Review Cases")).toBeVisible()
   await expect(
     page.getByText("The agent starts meaningful work by starting a Case."),
   ).toBeVisible()
-  await expect(page.getByText("Open Settings → Connect agent")).toBeVisible()
+  await expect(page.getByText("Open Settings > Connect agent")).toBeVisible()
   await expect(
     page.getByText(
       "Open Settings, create an MCP credential, add the generated config to your client, then ask the agent to verify the connection with",
@@ -79,8 +85,31 @@ test("Home page explains EnderAI and the product model", async ({ page }) => {
   await expect(page.getByText("enderai_finish_case").first()).toBeVisible()
 })
 
-test("Connect agent CTA opens the settings tab directly", async ({ page }) => {
+test("Landing page is public and points inaccessible actions to auth", async ({
+  page,
+}) => {
   await page.goto("/")
+
+  await expect(
+    page.getByText("EnderAI is product memory for AI-assisted work."),
+  ).toBeVisible()
+  await expect(page.getByText("Use EnderAI now").first()).toBeVisible()
+  await expect(page.getByText("Log in now")).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "Log in", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "Sign up", exact: true }),
+  ).toBeVisible()
+  await expect(page.getByText("Welcome back, Alex")).toHaveCount(0)
+  await expect(page.getByText("Log in to browse Topics")).toBeVisible()
+  await expect(page.getByText("Log in to review Cases")).toBeVisible()
+  await expect(page.getByText("Log in to connect agent")).toBeVisible()
+})
+
+test("Connect agent CTA opens the settings tab directly", async ({ page }) => {
+  await mockAuthenticatedHome(page)
+  await page.goto("/home")
 
   await page.getByTestId("home-connect-agent-link").click()
 

@@ -14,9 +14,10 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
-import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as LayoutTopicsRouteImport } from './routes/_layout/topics'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutHomeRouteImport } from './routes/_layout/home'
 import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 
@@ -44,10 +45,10 @@ const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LayoutIndexRoute = LayoutIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => LayoutRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutTopicsRoute = LayoutTopicsRouteImport.update({
   id: '/topics',
@@ -57,6 +58,11 @@ const LayoutTopicsRoute = LayoutTopicsRouteImport.update({
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutHomeRoute = LayoutHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutCasesRoute = LayoutCasesRouteImport.update({
@@ -71,29 +77,32 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof LayoutIndexRoute
+  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
   '/cases': typeof LayoutCasesRoute
+  '/home': typeof LayoutHomeRoute
   '/settings': typeof LayoutSettingsRoute
   '/topics': typeof LayoutTopicsRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
   '/cases': typeof LayoutCasesRoute
+  '/home': typeof LayoutHomeRoute
   '/settings': typeof LayoutSettingsRoute
   '/topics': typeof LayoutTopicsRoute
-  '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_layout': typeof LayoutRouteWithChildren
   '/login': typeof LoginRoute
   '/recover-password': typeof RecoverPasswordRoute
@@ -101,9 +110,9 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/cases': typeof LayoutCasesRoute
+  '/_layout/home': typeof LayoutHomeRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/topics': typeof LayoutTopicsRoute
-  '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -115,21 +124,24 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/cases'
+    | '/home'
     | '/settings'
     | '/topics'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/login'
     | '/recover-password'
     | '/reset-password'
     | '/signup'
     | '/admin'
     | '/cases'
+    | '/home'
     | '/settings'
     | '/topics'
-    | '/'
   id:
     | '__root__'
+    | '/'
     | '/_layout'
     | '/login'
     | '/recover-password'
@@ -137,12 +149,13 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_layout/admin'
     | '/_layout/cases'
+    | '/_layout/home'
     | '/_layout/settings'
     | '/_layout/topics'
-    | '/_layout/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   LayoutRoute: typeof LayoutRouteWithChildren
   LoginRoute: typeof LoginRoute
   RecoverPasswordRoute: typeof RecoverPasswordRoute
@@ -187,12 +200,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_layout/': {
-      id: '/_layout/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof LayoutIndexRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_layout/topics': {
       id: '/_layout/topics'
@@ -206,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof LayoutSettingsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/home': {
+      id: '/_layout/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof LayoutHomeRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/cases': {
@@ -228,23 +248,24 @@ declare module '@tanstack/react-router' {
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutCasesRoute: typeof LayoutCasesRoute
+  LayoutHomeRoute: typeof LayoutHomeRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutTopicsRoute: typeof LayoutTopicsRoute
-  LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutCasesRoute: LayoutCasesRoute,
+  LayoutHomeRoute: LayoutHomeRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutTopicsRoute: LayoutTopicsRoute,
-  LayoutIndexRoute: LayoutIndexRoute,
 }
 
 const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   LayoutRoute: LayoutRouteWithChildren,
   LoginRoute: LoginRoute,
   RecoverPasswordRoute: RecoverPasswordRoute,

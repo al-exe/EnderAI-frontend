@@ -104,7 +104,7 @@ test("Global search navigates to a case result and loads it by route param", asy
     })
   })
 
-  await page.goto("/")
+  await page.goto("/home")
   await page.getByTestId("global-search-input").fill("Search")
   await expect(page.getByText("Search-selected case")).toBeVisible()
 
@@ -147,7 +147,7 @@ test("Global search sends demo=true when demo mode is enabled", async ({
     })
   })
 
-  await page.goto("/")
+  await page.goto("/home")
 
   await page.getByTestId("global-search-input").fill("Global")
   await expect
@@ -272,7 +272,7 @@ test("Global search navigates to a topic result and loads it by route param", as
     },
   )
 
-  await page.goto("/")
+  await page.goto("/home")
   await page.getByTestId("global-search-input").fill("Global")
   await expect(page.getByText("Global search rollout")).toBeVisible()
 

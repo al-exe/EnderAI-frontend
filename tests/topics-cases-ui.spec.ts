@@ -38,7 +38,7 @@ async function mockAuth(page: Page) {
 test("Home route sets the browser tab title to Home", async ({ page }) => {
   await mockAuth(page)
 
-  await page.goto("/")
+  await page.goto("/home")
 
   await expect(page).toHaveTitle("Home")
 })

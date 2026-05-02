@@ -4,23 +4,43 @@
   @apply min-h-0 flex-1 overflow-y-auto pr-1;
 }
 
+.publicPage {
+  min-height: 100svh;
+  background:
+    linear-gradient(180deg, rgb(132 71 255 / 0.1), transparent 24rem),
+    linear-gradient(90deg, rgb(20 184 166 / 0.08), rgb(245 158 11 / 0.05));
+  @apply flex-none overflow-y-auto px-4 py-4 sm:px-6 lg:px-8;
+}
+
+.publicNav {
+  @apply mx-auto mb-6 flex h-16 w-full max-w-7xl items-center justify-between border-b bg-background/80 px-4 backdrop-blur md:px-6;
+}
+
+.brandLink {
+  @apply text-2xl font-semibold text-foreground;
+}
+
+.publicNavActions {
+  @apply flex items-center gap-2;
+}
+
 .shell {
   @apply mx-auto flex w-full max-w-7xl flex-col gap-6 pb-8;
 }
 
-.hero {
-  @apply relative isolate overflow-hidden border bg-card p-6 shadow-sm md:p-8;
+.publicPage .shell {
+  @apply pb-16;
 }
 
-.hero::before {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  content: "";
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background:
-    radial-gradient(circle at 12% 12%, rgb(132 71 255 / 0.22), transparent 32%),
-    radial-gradient(circle at 88% 18%, rgb(16 185 129 / 0.16), transparent 28%),
-    linear-gradient(135deg, rgb(132 71 255 / 0.08), transparent 46%);
+    linear-gradient(135deg, rgb(255 255 255 / 0.08), transparent 42%),
+    linear-gradient(180deg, rgb(132 71 255 / 0.12), transparent 60%),
+    var(--card);
+  @apply border p-6 md:p-8;
 }
 
 .hero::after {
@@ -30,14 +50,14 @@
   content: "";
   pointer-events: none;
   background-image:
-    linear-gradient(rgb(132 71 255 / 0.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(132 71 255 / 0.09) 1px, transparent 1px);
+    linear-gradient(rgb(132 71 255 / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(20 184 166 / 0.08) 1px, transparent 1px);
   background-size: 36px 36px;
   mask-image: linear-gradient(135deg, black, transparent 78%);
 }
 
 .heroGrid {
-  @apply relative grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)] lg:items-end;
+  @apply relative grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] lg:items-center;
 }
 
 .heroCopy {
@@ -58,13 +78,12 @@
 }
 
 .greeting,
-.sectionEyebrow,
-.panelKicker {
-  @apply text-xs font-semibold uppercase tracking-[0.24em] text-primary;
+.sectionEyebrow {
+  @apply text-xs font-semibold uppercase text-primary;
 }
 
 .heroTitle {
-  @apply max-w-4xl text-4xl font-semibold tracking-tight text-foreground md:text-6xl;
+  @apply max-w-4xl text-4xl font-semibold text-foreground md:text-6xl;
 }
 
 .heroDescription {
@@ -76,23 +95,23 @@
   @apply flex flex-wrap gap-3;
 }
 
-.heroPanel {
-  @apply border bg-background/85 p-5 shadow-sm backdrop-blur;
+.primaryCta {
+  @apply bg-emerald-500 text-zinc-950 hover:bg-emerald-400;
 }
 
-.panelHeader {
-  @apply flex items-start justify-between gap-4 border-b pb-4;
+.heroGraphic {
+  @apply border bg-background/88 p-5 shadow-sm backdrop-blur;
 }
 
-.panelTitle {
-  @apply mt-2 text-xl font-semibold tracking-tight;
+.graphicHeader {
+  @apply flex flex-wrap items-center justify-between gap-3 border-b pb-4;
 }
 
-.panelIcon {
-  @apply size-10 shrink-0 text-primary;
+.graphicStatus {
+  @apply text-sm font-medium text-emerald-500;
 }
 
-.flowList {
+.memoryFlow {
   @apply mt-5 space-y-4;
 }
 
@@ -101,20 +120,32 @@
 }
 
 .flowItem h3,
-.setupStep h3 {
+.setupStep h3,
+.marketingTile h3 {
   @apply font-medium;
 }
 
 .flowItem p,
-.setupStep p {
+.setupStep p,
+.marketingTile p {
   @apply mt-1 text-sm leading-6 text-muted-foreground;
 }
 
 .flowNumber {
-  @apply border bg-primary/10 px-3 py-2 text-center font-mono text-sm font-semibold text-primary;
+  @apply border border-primary/30 bg-primary/10 px-3 py-2 text-center font-mono text-sm font-semibold text-primary;
 }
 
-.section {
+.signalBoard {
+  @apply mt-5 flex flex-wrap gap-2 border-t pt-4;
+}
+
+.signalBoard span {
+  @apply border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground;
+}
+
+.marketingSection,
+.section,
+.workflowSection {
   @apply space-y-4;
 }
 
@@ -123,11 +154,27 @@
 }
 
 .sectionTitle {
-  @apply mt-1 text-2xl font-semibold tracking-tight md:text-3xl;
+  @apply mt-1 text-2xl font-semibold md:text-3xl;
 }
 
 .sectionDescription {
   @apply max-w-3xl text-sm leading-6 text-muted-foreground md:text-base;
+}
+
+.marketingGrid {
+  @apply grid gap-4 md:grid-cols-3;
+}
+
+.marketingTile {
+  @apply grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 border bg-card p-4;
+}
+
+.marketingIconWrap {
+  @apply flex size-11 items-center justify-center border bg-emerald-500/10 text-emerald-500;
+}
+
+.marketingIcon {
+  @apply size-5;
 }
 
 .modelGrid {
@@ -167,7 +214,7 @@
 }
 
 .connectSection {
-  @apply grid gap-6 border bg-card p-6 shadow-sm lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center;
+  @apply grid gap-6 border bg-card p-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center;
 }
 
 .connectCopy {
@@ -188,10 +235,6 @@
 
 .setupIcon {
   @apply size-6 text-primary;
-}
-
-.workflowSection {
-  @apply space-y-4;
 }
 
 .commandPanel {

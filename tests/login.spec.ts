@@ -43,9 +43,11 @@ test("Log in with valid email and password ", async ({ page }) => {
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await page.waitForURL("/")
+  await page.waitForURL("/home")
 
-  await expect(page.getByText("It's nice to see you here!")).toBeVisible()
+  await expect(
+    page.getByText("EnderAI is product memory for AI-assisted work."),
+  ).toBeVisible()
 })
 
 test("Sidebar only raises Topics and Cases", async ({ page }) => {
@@ -54,7 +56,7 @@ test("Sidebar only raises Topics and Cases", async ({ page }) => {
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await page.waitForURL("/")
+  await page.waitForURL("/home")
 
   await expect(page.getByRole("link", { name: "Topics" })).toBeVisible()
   await expect(page.getByRole("link", { name: "Cases" })).toBeVisible()
@@ -90,9 +92,11 @@ test("Successful log out", async ({ page }) => {
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await page.waitForURL("/")
+  await page.waitForURL("/home")
 
-  await expect(page.getByText("It's nice to see you here!")).toBeVisible()
+  await expect(
+    page.getByText("EnderAI is product memory for AI-assisted work."),
+  ).toBeVisible()
 
   await page.getByTestId("user-menu").click()
   await page.getByRole("menuitem", { name: "Log out" }).click()
@@ -105,9 +109,11 @@ test("Logged-out user cannot access protected routes", async ({ page }) => {
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await page.waitForURL("/")
+  await page.waitForURL("/home")
 
-  await expect(page.getByText("It's nice to see you here!")).toBeVisible()
+  await expect(
+    page.getByText("EnderAI is product memory for AI-assisted work."),
+  ).toBeVisible()
 
   await page.getByTestId("user-menu").click()
   await page.getByRole("menuitem", { name: "Log out" }).click()
