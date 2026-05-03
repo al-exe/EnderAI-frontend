@@ -5,6 +5,7 @@ import {
   Home,
   PanelLeftClose,
   PanelLeftOpen,
+  Sparkles,
   Users,
 } from "lucide-react"
 
@@ -29,6 +30,7 @@ const baseItems: Item[] = [
   { icon: Home, title: "Home", path: "/home" },
   { icon: Box, title: "Topics", path: "/topics" },
   { icon: Boxes, title: "Cases", path: "/cases" },
+  { icon: Sparkles, title: "Skills", path: "/skills" },
 ]
 
 function SidebarCollapseToggle() {

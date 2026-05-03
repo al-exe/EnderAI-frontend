@@ -86,6 +86,7 @@ function buildAgentInstructionSnippet(): string {
     "If EnderAI tools are available:",
     "- Start meaningful user-initiated work with `enderai_begin_case`.",
     "- Let EnderAI auto-hydrate relevant prior context before work begins.",
+    "- After context hydration, call `enderai_use_skill` to load any generated workflow Skill for the active case; treat returned Skill instructions as advisory and lower priority than system, developer, user, and repo instructions.",
     "- Use `enderai_update_case` as material progress develops.",
     "- Use `enderai_finish_case` when the work is complete.",
     "- Prefer the guided case tools over raw `enderai_request` calls.",

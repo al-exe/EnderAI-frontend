@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LayoutTopicsRouteImport } from './routes/_layout/topics'
+import { Route as LayoutSkillsRouteImport } from './routes/_layout/skills'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutHomeRouteImport } from './routes/_layout/home'
 import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
@@ -55,6 +56,11 @@ const LayoutTopicsRoute = LayoutTopicsRouteImport.update({
   path: '/topics',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutSkillsRoute = LayoutSkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/cases': typeof LayoutCasesRoute
   '/home': typeof LayoutHomeRoute
   '/settings': typeof LayoutSettingsRoute
+  '/skills': typeof LayoutSkillsRoute
   '/topics': typeof LayoutTopicsRoute
 }
 export interface FileRoutesByTo {
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/cases': typeof LayoutCasesRoute
   '/home': typeof LayoutHomeRoute
   '/settings': typeof LayoutSettingsRoute
+  '/skills': typeof LayoutSkillsRoute
   '/topics': typeof LayoutTopicsRoute
 }
 export interface FileRoutesById {
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/_layout/cases': typeof LayoutCasesRoute
   '/_layout/home': typeof LayoutHomeRoute
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/skills': typeof LayoutSkillsRoute
   '/_layout/topics': typeof LayoutTopicsRoute
 }
 export interface FileRouteTypes {
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/cases'
     | '/home'
     | '/settings'
+    | '/skills'
     | '/topics'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/cases'
     | '/home'
     | '/settings'
+    | '/skills'
     | '/topics'
   id:
     | '__root__'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/_layout/cases'
     | '/_layout/home'
     | '/_layout/settings'
+    | '/_layout/skills'
     | '/_layout/topics'
   fileRoutesById: FileRoutesById
 }
@@ -214,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutTopicsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/skills': {
+      id: '/_layout/skills'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof LayoutSkillsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/settings': {
       id: '/_layout/settings'
       path: '/settings'
@@ -250,6 +269,7 @@ interface LayoutRouteChildren {
   LayoutCasesRoute: typeof LayoutCasesRoute
   LayoutHomeRoute: typeof LayoutHomeRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutSkillsRoute: typeof LayoutSkillsRoute
   LayoutTopicsRoute: typeof LayoutTopicsRoute
 }
 
@@ -258,6 +278,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutCasesRoute: LayoutCasesRoute,
   LayoutHomeRoute: LayoutHomeRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutSkillsRoute: LayoutSkillsRoute,
   LayoutTopicsRoute: LayoutTopicsRoute,
 }
 
