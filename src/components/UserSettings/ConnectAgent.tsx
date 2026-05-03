@@ -50,11 +50,24 @@ function formatTimestamp(value: string | null): string {
 
 function buildPersistentShellSnippet(mcpToken: string): string {
   const lines = [
-    `export ENDERAI_MCP_TOKEN="${mcpToken}"`,
-    `printf '%s\n' '${mcpToken}' > ~/.enderai_mcp_token`,
+    `printf '%s\\n' '${mcpToken}' > ~/.enderai_mcp_token`,
     "chmod 600 ~/.enderai_mcp_token",
-    `echo 'export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.enderai_mcp_token)"' >> ~/.bashrc`,
-    "source ~/.bashrc",
+    `enderai_start="# >>> EnderAI MCP token >>>"`,
+    `enderai_end="# <<< EnderAI MCP token <<<"`,
+    `enderai_tmp="$(mktemp)"`,
+    `[ -f ~/.bashrc ] && awk -v start="$enderai_start" -v end="$enderai_end" '`,
+    `  $0 == start { skip = 1; next }`,
+    `  $0 == end { skip = 0; next }`,
+    `  !skip { print }`,
+    `' ~/.bashrc > "$enderai_tmp" || : > "$enderai_tmp"`,
+    `{`,
+    `  printf '%s\\n' "$enderai_start"`,
+    `  printf '%s\\n' 'export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.enderai_mcp_token)"'`,
+    `  printf '%s\\n\\n' "$enderai_end"`,
+    `  cat "$enderai_tmp"`,
+    `} > ~/.bashrc`,
+    `rm "$enderai_tmp"`,
+    `export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.enderai_mcp_token)"`,
   ]
 
   return lines.join("\n")

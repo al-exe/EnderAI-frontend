@@ -418,7 +418,10 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     "# Persist the token",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
-    'export ENDERAI_MCP_TOKEN="mcp-token-abc"',
+    "printf '%s\\n'",
+  )
+  await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
+    "mcp-token-abc",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
     "# Set up MCP config",
@@ -445,7 +448,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   ).toBeVisible()
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
-  ).toContainText('export ENDERAI_MCP_TOKEN="mcp-token-abc"')
+  ).toContainText("mcp-token-abc")
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
   ).toContainText("~/.enderai_mcp_token")
@@ -454,7 +457,13 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   ).toContainText("chmod 600 ~/.enderai_mcp_token")
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
-  ).toContainText("echo 'export ENDERAI_MCP_TOKEN=")
+  ).toContainText("# >>> EnderAI MCP token >>>")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText("awk -v start=")
+  await expect(
+    page.getByTestId("connect-agent-persistent-shell"),
+  ).toContainText('export ENDERAI_MCP_TOKEN="$(tr -d')
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
   ).not.toContainText("ENDERAI_BACKEND_TOKEN")
