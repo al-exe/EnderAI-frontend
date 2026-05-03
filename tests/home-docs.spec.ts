@@ -38,20 +38,20 @@ test("Home page explains EnderAI and the domain memory model", async ({
 
   await expect(
     page.getByText(
-      "EnderAI turns scattered company knowledge into executable context.",
+      "EnderAI turns messy team history into context agents can actually use.",
     ),
   ).toBeVisible()
   await expect(page.getByText("Welcome back, Alex")).toBeVisible()
   await expect(
     page.getByText(
-      "Every company runs on domain knowledge spread across people, tickets, code, docs, Slack, support history, databases, and past decisions.",
+      "Work leaves useful traces in tickets, pull requests, docs, Slack threads, incidents, support notes, commands, and one-off decisions.",
     ),
   ).toBeVisible()
   await expect(
-    page.getByText("The bottleneck is company context"),
+    page.getByText("The missing part is the local story"),
   ).toBeVisible()
   await expect(
-    page.getByText("Company knowledge becomes structured and actionable"),
+    page.getByText("Keep the useful parts of past work"),
   ).toBeVisible()
   await expect(
     page.getByText(
@@ -70,12 +70,12 @@ test("Home page explains EnderAI and the domain memory model", async ({
   await expect(page.getByText("ContextPacks")).toHaveCount(0)
   await expect(
     page.getByText(
-      "Context Packs are the synthesized briefings EnderAI builds before a human or agent starts work.",
+      "Context Packs are the briefings EnderAI assembles before work starts.",
     ),
   ).toBeVisible()
   await expect(
     page.getByText(
-      "Give agents the domain context needed to act safely and consistently.",
+      "Give agents enough background to stop guessing from scratch.",
     ),
   ).toBeVisible()
   await expect(page.getByText("Search and demo mode")).toHaveCount(0)
@@ -98,10 +98,10 @@ test("Landing page is public and points inaccessible actions to auth", async ({
 
   await expect(
     page.getByText(
-      "EnderAI turns scattered company knowledge into executable context.",
+      "EnderAI turns messy team history into context agents can actually use.",
     ),
   ).toBeVisible()
-  await expect(page.getByText("Build operational memory").first()).toBeVisible()
+  await expect(page.getByText("Try the demo").first()).toBeVisible()
   await expect(page.getByText("See how it works")).toBeVisible()
   await expect(
     page.getByRole("link", { name: "Log in", exact: true }),
@@ -125,8 +125,6 @@ test("Connect agent CTA opens the settings tab directly", async ({ page }) => {
     page.getByRole("tab", { name: "Connect agent" }),
   ).toHaveAttribute("aria-selected", "true")
   await expect(
-    page.getByText(
-      "Generate an MCP token to get your agent connected to EnderAI.",
-    ),
+    page.getByText("Token and config snippets for local MCP testing."),
   ).toBeVisible()
 })

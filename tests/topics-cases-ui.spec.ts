@@ -405,10 +405,10 @@ test("Topics page matches the primary pane width and truncates long left-table t
   await expect(topicStatusTrigger).toContainText("Closed")
 
   await expect(page.getByTestId("topic-context-intelligence")).toContainText(
-    "Context intelligence",
+    "Topic notes",
   )
   await expect(page.getByTestId("topic-context-intelligence")).toContainText(
-    "Durable Topic memory used to shape future Context Packs.",
+    "Promoted notes and signals for future briefings.",
   )
   await expect(
     page.getByText("Prefer server precedence for tombstones."),
@@ -606,7 +606,7 @@ test("Cases page truncates long table text and normalizes file chips", async ({
   const contextPack = page.getByTestId("case-context-pack")
   await expect(contextPack).toContainText("Context Pack")
   await expect(contextPack).toContainText(
-    "Agent briefing captured when this Case started.",
+    "Briefing captured when this Case started.",
   )
   await expect(contextPack).toContainText("high confidence")
   await expect(contextPack).toContainText("v1")

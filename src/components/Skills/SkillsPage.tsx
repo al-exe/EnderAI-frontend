@@ -4,7 +4,6 @@ import {
   Boxes,
   Copy,
   FileCode2,
-  Fingerprint,
   Search,
   Sparkles,
 } from "lucide-react"
@@ -60,13 +59,11 @@ function stringList(value: unknown): string[] {
 
 function getSourceTopic(skill: SkillPublic): {
   title: string | null
-  workflowKey: string | null
   summary: string | null
 } {
   const topic = asRecord(skill.source_snapshot.topic)
   return {
     title: stringValue(topic.title),
-    workflowKey: stringValue(topic.workflow_key),
     summary: stringValue(topic.summary),
   }
 }
@@ -162,8 +159,7 @@ function SkillDetail({ skill }: { skill: SkillPublic | null }) {
           <div>
             <h3 className={styles.emptyTitle}>Select a generated skill</h3>
             <p className={styles.smallMutedText}>
-              Skills turn Topic and Case history into reusable agent workflow
-              instructions.
+              Draft instructions generated from captured work.
             </p>
           </div>
         </CardContent>
@@ -205,25 +201,18 @@ function SkillDetail({ skill }: { skill: SkillPublic | null }) {
       </CardHeader>
       <CardContent className={styles.detailContent}>
         <section className={styles.section}>
-          <div className={styles.sectionHeading}>
-            <Fingerprint className={styles.sectionIcon} />
-            Provenance
-          </div>
-          <div className={styles.provenanceGrid}>
+          <div className={styles.sectionHeading}>Source</div>
+          <div className={styles.sourceGrid}>
             <div>
-              <span className={styles.provenanceLabel}>Source</span>
+              <span className={styles.sourceLabel}>Type</span>
               <p>{sourceTypeLabel(skill.source_type)}</p>
             </div>
             <div>
-              <span className={styles.provenanceLabel}>Topic</span>
+              <span className={styles.sourceLabel}>Topic</span>
               <p>{topic.title ?? skill.source_topic_id ?? "Unknown"}</p>
             </div>
             <div>
-              <span className={styles.provenanceLabel}>Workflow key</span>
-              <p>{topic.workflowKey ?? "Not captured"}</p>
-            </div>
-            <div>
-              <span className={styles.provenanceLabel}>Updated</span>
+              <span className={styles.sourceLabel}>Last updated</span>
               <p>{formatTimestamp(skill.updated_at)}</p>
             </div>
           </div>
@@ -330,14 +319,13 @@ export function SkillsPage() {
           <div>
             <div className={styles.eyebrow}>
               <Sparkles className={styles.icon} />
-              Generated AI Skills
+              Skills
             </div>
             <CardTitle className={styles.heroTitle}>
-              Reusable workflows from EnderAI memory
+              Generated instructions
             </CardTitle>
             <CardDescription className={styles.heroDescription}>
-              Skills compile Topics, Cases, and ContextPacks into agent-ready
-              workflow instructions with source provenance.
+              Draft snippets pulled from Topics, Cases, and Context Packs.
             </CardDescription>
           </div>
           <div className={styles.heroBadges}>
@@ -357,7 +345,7 @@ export function SkillsPage() {
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search skills by workflow, file, symbol, or error"
+            placeholder="Search skills"
             className={styles.searchInput}
           />
         </div>
@@ -366,8 +354,7 @@ export function SkillsPage() {
       {skillsQuery.error ? (
         <Card>
           <CardContent className={styles.errorContent}>
-            Couldn&apos;t load Skills. Confirm the backend skills endpoints are
-            deployed.
+            Couldn&apos;t load skills. Check the backend endpoint.
           </CardContent>
         </Card>
       ) : null}
@@ -380,7 +367,7 @@ export function SkillsPage() {
               Skill Library
             </CardTitle>
             <CardDescription>
-              Generated skills and the memories that produced them.
+              Generated snippets from captured work.
             </CardDescription>
           </CardHeader>
           <CardContent className={styles.listContent}>
@@ -391,8 +378,7 @@ export function SkillsPage() {
                 <Sparkles className={styles.emptyIcon} />
                 <p>No generated skills yet.</p>
                 <span>
-                  Generate skills from Topics, Cases, or ContextPacks, or turn
-                  on demo mode to browse examples.
+                  Turn on demo mode or generate one from a Topic or Case.
                 </span>
               </div>
             ) : (

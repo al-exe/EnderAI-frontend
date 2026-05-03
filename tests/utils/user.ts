@@ -25,7 +25,7 @@ export async function logInUser(page: Page, email: string, password: string) {
   await page.waitForURL("/home")
   await expect(
     page.getByText(
-      "EnderAI turns scattered company knowledge into executable context.",
+      "EnderAI turns messy team history into context agents can actually use.",
     ),
   ).toBeVisible()
 }

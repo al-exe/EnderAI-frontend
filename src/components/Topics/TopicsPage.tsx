@@ -237,9 +237,9 @@ function TopicContextIntelligence({
     <div className={styles.section} data-testid="topic-context-intelligence">
       <div className={styles.sectionHeader}>
         <div>
-          <div className={styles.sectionTitle}>Context intelligence</div>
+          <div className={styles.sectionTitle}>Topic notes</div>
           <p className={styles.sectionIntro}>
-            Durable Topic memory used to shape future Context Packs.
+            Promoted notes and signals for future briefings.
           </p>
         </div>
         <div className={styles.contextMeta}>
@@ -258,7 +258,7 @@ function TopicContextIntelligence({
       ) : (
         <div className={styles.contextPackStack}>
           <div className={styles.contextPanel}>
-            <div className={styles.signalTitle}>Briefing seed</div>
+            <div className={styles.signalTitle}>Briefing note</div>
             <p className={styles.mutedText}>
               {topic.rollup_summary || "No rollup summary yet."}
             </p>
@@ -296,7 +296,7 @@ function TopicContextIntelligence({
           </div>
 
           <div className={styles.contextPanel}>
-            <div className={styles.signalTitle}>Canonical signals</div>
+            <div className={styles.signalTitle}>Saved signals</div>
             <div className={styles.signalGroups}>
               <div>
                 <div className={styles.signalTitle}>Files</div>
@@ -856,7 +856,7 @@ export function TopicsPage({
 
         <div className={styles.summaryMeta}>
           <div>
-            <div className={styles.sectionTitle}>Rollup summary</div>
+            <div className={styles.sectionTitle}>Summary</div>
             <p className={styles.mutedText}>
               {selectedTopic?.rollup_summary || "No rollup summary yet."}
             </p>
