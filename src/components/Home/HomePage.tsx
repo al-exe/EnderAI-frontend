@@ -140,15 +140,11 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
         <section className={styles.agentExampleSection}>
           <div className={styles.sectionHeader}>
             <div>
-              <p className={styles.sectionEyebrow}>Codex example</p>
+              <p className={styles.sectionEyebrow}>Engineering example</p>
               <h2 className={styles.sectionTitle}>
                 A task starts with remembered context
               </h2>
             </div>
-            <p className={styles.sectionDescription}>
-              A mock flow showing the user request, the EnderAI case start, the
-              context returned, and how Codex continues the conversation.
-            </p>
           </div>
 
           <div className={styles.exampleFrame}>
@@ -160,15 +156,15 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     User request
                   </div>
                   <p className={styles.exampleQuote}>
-                    "Codex, the Topic detail page lost its context-pack signals
-                    after the refactor. Can you patch it?"
+                    "The deployment dashboard stopped showing release status
+                    after yesterday's refactor. Can you patch it?"
                   </p>
                 </div>
 
                 <div className={styles.exampleBlock}>
                   <div className={styles.exampleLabel}>
                     <Terminal className={styles.exampleLabelIcon} />
-                    Mock EnderAI call
+                    Mock EnderAI Call
                   </div>
                   <pre className={styles.exampleCode}>
                     <code>{mockEnderAiCall}</code>
@@ -197,13 +193,13 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                 >
                   <div className={styles.exampleLabel}>
                     <ArrowRight className={styles.exampleLabelIcon} />
-                    Codex continues
+                    Agent continues
                   </div>
                   <p className={styles.exampleQuote}>
-                    "I found the relevant prior Case and file signals. I will
-                    inspect the Topic detail rendering first, keep Context Packs
-                    system-powered, then update the failing Playwright assertion
-                    around hydrated signals."
+                    "I found the prior dashboard refactor and the release-status
+                    decision. I will inspect the deployment summary rendering
+                    first, preserve the cached status fallback, then update the
+                    regression test around active releases."
                   </p>
                 </div>
               </div>
@@ -452,38 +448,35 @@ const modelCards: ModelCardProps[] = [
 ]
 
 const mockEnderAiCall = `enderai_begin_case({
-  request_summary: "Patch Topic detail context-pack signals",
-  intent_key: "debug-topic-context-signals",
+  request_summary: "Patch missing release status on the deployment dashboard",
   signals: {
-    files: [
-      "src/components/Topics/TopicsPage.tsx",
-      "tests/topics-cases-ui.spec.ts"
-    ],
-    symptoms: ["context-pack signals disappeared after refactor"]
+    product_area: "Deployments",
+    components: ["Dashboard summary", "Release status card"],
+    symptoms: ["active releases no longer show their current status"]
   }
 })`
 
 const mockContextPack = [
   {
     label: "Topic",
-    value: "Topic / Case Context Pack Surface",
+    value: "Deployment dashboard reliability",
   },
   {
     label: "Prior Case",
-    value: "Added Context Pack visibility in Case and Topic detail",
+    value: "Refactored release cards to share one status formatter",
   },
   {
-    label: "Matched Files",
-    value:
-      "src/components/Topics/TopicsPage.tsx, src/components/Cases/CasesPage.tsx",
+    label: "Matched Signals",
+    value: "Deployments, release status, dashboard summary, active releases",
   },
   {
     label: "Remembered Decision",
     value:
-      "Context Packs are system-powered; show them as context intelligence, not primary navigation.",
+      "Keep the cached status fallback when live release metadata is delayed.",
   },
   {
     label: "Test Cue",
-    value: "Keep sticky table headers on bg-muted; Playwright checks the class.",
+    value:
+      "Regression coverage should include active, failed, and pending releases.",
   },
 ]
