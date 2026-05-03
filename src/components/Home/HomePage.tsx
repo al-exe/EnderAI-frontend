@@ -110,11 +110,8 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
           <div className={styles.sectionHeader}>
             <div>
               <p className={styles.sectionEyebrow}>Why it helps</p>
-              <h2 className={styles.sectionTitle}>Agents start with memory.</h2>
+              <h2 className={styles.sectionTitle}>Agents start with memory</h2>
             </div>
-            <p className={styles.sectionDescription}>
-              Keep useful context attached to the product work it came from.
-            </p>
           </div>
 
           <div className={styles.marketingGrid}>

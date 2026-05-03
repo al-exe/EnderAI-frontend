@@ -10,7 +10,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { Maximize2, Minimize2, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { readCases, type CasePublic } from "@/api/cases"
+import { type CasePublic, readCases } from "@/api/cases"
 import {
   readTopic,
   readTopics,
@@ -165,6 +165,26 @@ function SignalChipList({
   )
 }
 
+function TextList({
+  items,
+  emptyText,
+}: {
+  items: string[]
+  emptyText: string
+}) {
+  if (items.length === 0) {
+    return <p className={styles.smallMutedText}>{emptyText}</p>
+  }
+
+  return (
+    <ul className={styles.textList}>
+      {items.map((item, index) => (
+        <li key={`${item}-${index}`}>{item}</li>
+      ))}
+    </ul>
+  )
+}
+
 function CommandList({ commands }: { commands: CasePublic["commands"] }) {
   if (commands.length === 0) {
     return <p className={styles.smallMutedText}>No commands captured yet.</p>
@@ -187,6 +207,150 @@ function CommandList({ commands }: { commands: CasePublic["commands"] }) {
           ) : null}
         </div>
       ))}
+    </div>
+  )
+}
+
+function TopicContextIntelligence({
+  topic,
+}: {
+  topic: TopicPublic | undefined
+}) {
+  if (!topic) return null
+
+  const hasContextMaterial =
+    Boolean(topic.rollup_summary) ||
+    topic.canonical_files.length > 0 ||
+    topic.canonical_symbols.length > 0 ||
+    topic.canonical_errors.length > 0 ||
+    topic.canonical_symptoms.length > 0 ||
+    topic.pinned_takeaways.length > 0 ||
+    topic.ambiguity_notes.length > 0 ||
+    topic.open_questions.length > 0 ||
+    topic.negative_history.length > 0 ||
+    topic.representative_case_ids.length > 0 ||
+    topic.recent_case_ids.length > 0 ||
+    topic.aliases.length > 0 ||
+    topic.vocabulary.length > 0
+
+  return (
+    <div className={styles.section} data-testid="topic-context-intelligence">
+      <div className={styles.sectionHeader}>
+        <div>
+          <div className={styles.sectionTitle}>Context intelligence</div>
+          <p className={styles.sectionIntro}>
+            Durable Topic memory used to shape future Context Packs.
+          </p>
+        </div>
+        <div className={styles.contextMeta}>
+          <Badge variant="outline">{topic.case_count} cases</Badge>
+          <Badge variant="outline">Rollup v{topic.rollup_version}</Badge>
+          <Badge variant="outline">
+            Updated {formatTimestamp(topic.updated_at ?? null)}
+          </Badge>
+        </div>
+      </div>
+
+      {!hasContextMaterial ? (
+        <p className={styles.smallMutedText}>
+          No Topic-level context has been promoted yet.
+        </p>
+      ) : (
+        <div className={styles.contextPackStack}>
+          <div className={styles.contextPanel}>
+            <div className={styles.signalTitle}>Briefing seed</div>
+            <p className={styles.mutedText}>
+              {topic.rollup_summary || "No rollup summary yet."}
+            </p>
+          </div>
+
+          <div className={styles.contextGrid}>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Pinned takeaways</div>
+              <TextList
+                items={topic.pinned_takeaways}
+                emptyText="No takeaways promoted yet."
+              />
+            </div>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Open questions</div>
+              <TextList
+                items={topic.open_questions}
+                emptyText="No open questions promoted yet."
+              />
+            </div>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Negative history</div>
+              <TextList
+                items={topic.negative_history}
+                emptyText="No avoid-list promoted yet."
+              />
+            </div>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Ambiguity notes</div>
+              <TextList
+                items={topic.ambiguity_notes}
+                emptyText="No ambiguity notes promoted yet."
+              />
+            </div>
+          </div>
+
+          <div className={styles.contextPanel}>
+            <div className={styles.signalTitle}>Canonical signals</div>
+            <div className={styles.signalGroups}>
+              <div>
+                <div className={styles.signalTitle}>Files</div>
+                <SignalChipList
+                  items={topic.canonical_files}
+                  emptyText="No canonical files promoted yet."
+                />
+              </div>
+              <div>
+                <div className={styles.signalTitle}>Symbols</div>
+                <SignalChipList
+                  items={topic.canonical_symbols}
+                  emptyText="No canonical symbols promoted yet."
+                />
+              </div>
+              <div>
+                <div className={styles.signalTitle}>Errors</div>
+                <SignalChipList
+                  items={topic.canonical_errors}
+                  emptyText="No canonical errors promoted yet."
+                />
+              </div>
+              <div>
+                <div className={styles.signalTitle}>Symptoms</div>
+                <SignalChipList
+                  items={topic.canonical_symptoms}
+                  emptyText="No canonical symptoms promoted yet."
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.contextGrid}>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Vocabulary</div>
+              <SignalChipList
+                items={[...topic.aliases, ...topic.vocabulary]}
+                emptyText="No vocabulary promoted yet."
+              />
+            </div>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Case anchors</div>
+              <div className={styles.anchorStats}>
+                <Badge variant="outline">
+                  {topic.representative_case_ids.length} representative
+                </Badge>
+                <Badge variant="outline">
+                  {topic.recent_case_ids.length} recent
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -369,7 +533,8 @@ export function TopicsPage({
   }, [topicCasesQuery.data])
 
   const aggregatedCommands = useMemo(
-    () => topicCasesQuery.data?.data.flatMap((caseItem) => caseItem.commands) ?? [],
+    () =>
+      topicCasesQuery.data?.data.flatMap((caseItem) => caseItem.commands) ?? [],
     [topicCasesQuery.data],
   )
 
@@ -390,7 +555,11 @@ export function TopicsPage({
       description?: string | null
       status?: string
     }) =>
-      updateTopic(topicId, { title, description, status }, { demo: isDemoMode }),
+      updateTopic(
+        topicId,
+        { title, description, status },
+        { demo: isDemoMode },
+      ),
     onSuccess: (updatedTopic) => {
       queryClient.setQueryData<InfiniteData<TopicsPublic> | undefined>(
         ["topics", isDemoMode],
@@ -699,6 +868,8 @@ export function TopicsPage({
             </p>
           </div>
         </div>
+
+        <TopicContextIntelligence topic={selectedTopic ?? undefined} />
 
         <div className={styles.section}>
           <div className={styles.sectionTitle}>Signals</div>

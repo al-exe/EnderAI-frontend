@@ -76,8 +76,16 @@
   @apply space-y-3;
 }
 
+.sectionHeader {
+  @apply flex flex-wrap items-start justify-between gap-3;
+}
+
 .sectionTitle {
   @apply font-medium;
+}
+
+.sectionIntro {
+  @apply mt-1 text-sm text-muted-foreground;
 }
 
 .smallMutedText {
@@ -150,6 +158,38 @@
 
 .signalTitle {
   @apply mb-2 text-sm font-medium;
+}
+
+.contextMeta {
+  @apply flex flex-wrap gap-2;
+}
+
+.contextPackStack {
+  @apply space-y-3;
+}
+
+.contextGrid {
+  @apply grid gap-3;
+}
+
+.contextPanel {
+  @apply min-w-0 border-l pl-3;
+}
+
+.textList {
+  @apply list-disc space-y-1 pl-5 text-sm text-muted-foreground;
+}
+
+.relevantCaseStack {
+  @apply space-y-3;
+}
+
+.relevantCase {
+  @apply border-l pl-3;
+}
+
+.relevantCaseSignals {
+  @apply mt-3 grid gap-3;
 }
 
 .nextStepsList {
@@ -229,5 +269,13 @@
 
   .detailContentSplit {
     @apply min-h-0 flex-1 overflow-y-auto;
+  }
+
+  .contextGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .relevantCaseSignals {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

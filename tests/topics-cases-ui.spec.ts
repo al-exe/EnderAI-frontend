@@ -303,16 +303,16 @@ test("Topics page matches the primary pane width and truncates long left-table t
     rollup_summary: "Topic summary",
     rollup_version: 1,
     canonical_files: [tempPath],
-    canonical_symbols: [],
-    canonical_errors: [],
-    canonical_symptoms: [],
-    pinned_takeaways: [],
-    ambiguity_notes: [],
-    open_questions: [],
-    negative_history: [],
-    representative_case_ids: [],
-    recent_case_ids: [],
-    vocabulary: [],
+    canonical_symbols: ["reconcile_conflict"],
+    canonical_errors: ["server merge checksum mismatch"],
+    canonical_symptoms: ["offline note merge drift"],
+    pinned_takeaways: ["Prefer server precedence for tombstones."],
+    ambiguity_notes: ["Mobile offline edits still need product judgment."],
+    open_questions: ["Should conflict previews expose both branches?"],
+    negative_history: ["Do not rely on client timestamp ordering."],
+    representative_case_ids: ["case-1"],
+    recent_case_ids: ["case-1", "case-2"],
+    vocabulary: ["merge", "conflict"],
     case_count: 2,
   }
 
@@ -404,14 +404,35 @@ test("Topics page matches the primary pane width and truncates long left-table t
   await expect.poll(() => statusUpdates.at(-1)).toBe("closed")
   await expect(topicStatusTrigger).toContainText("Closed")
 
-  await expect(page.getByText("Signals")).toBeVisible()
+  await expect(page.getByTestId("topic-context-intelligence")).toContainText(
+    "Context intelligence",
+  )
+  await expect(page.getByTestId("topic-context-intelligence")).toContainText(
+    "Durable Topic memory used to shape future Context Packs.",
+  )
+  await expect(
+    page.getByText("Prefer server precedence for tombstones."),
+  ).toBeVisible()
+  await expect(
+    page.getByText("Should conflict previews expose both branches?"),
+  ).toBeVisible()
+  await expect(
+    page.getByText("Do not rely on client timestamp ordering."),
+  ).toBeVisible()
+  await expect(
+    page.getByText("Mobile offline edits still need product judgment."),
+  ).toBeVisible()
+  await expect(page.getByText("1 representative")).toBeVisible()
+  await expect(page.getByText("2 recent")).toBeVisible()
+
+  await expect(page.getByText("Signals", { exact: true })).toBeVisible()
   await expect(page.getByText("Commands (2)")).toBeVisible()
   await expect(page.getByTitle("src/sync/optimisticMerge.ts")).toContainText(
     "…/optimisticMerge.ts",
   )
-  await expect(
-    page.getByTitle("backend/app/core/conflicts.py"),
-  ).toContainText("…/conflicts.py")
+  await expect(page.getByTitle("backend/app/core/conflicts.py")).toContainText(
+    "…/conflicts.py",
+  )
   const errorSignal = page.getByText(
     "Conflict reconciliation rejected client patch",
   )
@@ -529,22 +550,38 @@ test("Cases page truncates long table text and normalizes file chips", async ({
           topic_id: "topic-1",
           case_id: "case-1",
           confidence: "high",
-          alternative_topic_ids: [],
-          topic_summary: null,
-          matched_signals: [],
-          representative_cases: [],
-          recent_cases: [],
-          relevant_cases: [],
-          canonical_files: [],
-          canonical_symbols: [],
-          canonical_errors: [],
-          canonical_symptoms: [],
-          pinned_takeaways: [],
-          ambiguities: [],
-          questions: [],
-          negative_history: [],
-          builder_version: null,
-          created_at: null,
+          alternative_topic_ids: ["topic-2"],
+          topic_summary:
+            "Context pack route investigations usually start with generated path normalization.",
+          matched_signals: ["context_packs.py", "path normalization"],
+          representative_cases: ["case-0"],
+          recent_cases: ["case-0"],
+          relevant_cases: [
+            {
+              case_id: "case-0",
+              title: "Prior context pack routing fix",
+              short_summary:
+                "Normalized generated route filenames before display.",
+              outcome: "Frontend now hides machine-local temp roots.",
+              key_files: [tempPath],
+              key_symbols: ["getSignalChipDisplay"],
+              key_errors: ["raw temp path leaked into UI"],
+              key_commands: [
+                "bunx playwright test tests/topics-cases-ui.spec.ts",
+              ],
+              why_selected: "Shares the same Context Pack route path.",
+            },
+          ],
+          canonical_files: [tempPath],
+          canonical_symbols: ["getSignalChipDisplay"],
+          canonical_errors: ["raw temp path leaked into UI"],
+          canonical_symptoms: ["file chip showed machine-local path"],
+          pinned_takeaways: ["Normalize generated file paths before display."],
+          ambiguities: ["Generated route names vary by platform casing."],
+          questions: ["Should path normalization run in the API layer?"],
+          negative_history: ["Do not render raw temp workspace prefixes."],
+          builder_version: "v1",
+          created_at: "2026-03-24T00:00:00Z",
         },
       },
     })
@@ -566,6 +603,27 @@ test("Cases page truncates long table text and normalizes file chips", async ({
 
   const normalizedFileChip = page.getByTitle(normalizedPath).first()
   await expect(normalizedFileChip).toContainText("…/Context_packs.py")
+  const contextPack = page.getByTestId("case-context-pack")
+  await expect(contextPack).toContainText("Context Pack")
+  await expect(contextPack).toContainText(
+    "Agent briefing captured when this Case started.",
+  )
+  await expect(contextPack).toContainText("high confidence")
+  await expect(contextPack).toContainText("v1")
+  await expect(contextPack).toContainText("path normalization")
+  await expect(contextPack).toContainText(
+    "Normalize generated file paths before display.",
+  )
+  await expect(contextPack).toContainText(
+    "Should path normalization run in the API layer?",
+  )
+  await expect(contextPack).toContainText(
+    "Do not render raw temp workspace prefixes.",
+  )
+  await expect(contextPack).toContainText("Prior context pack routing fix")
+  await expect(contextPack).toContainText(
+    "Shares the same Context Pack route path.",
+  )
   await expect(page.getByRole("link", { name: "PR-1019" })).toHaveAttribute(
     "href",
     /github\.com\/search/,

@@ -156,6 +156,26 @@ function ChipList({
   )
 }
 
+function TextList({
+  items,
+  emptyText,
+}: {
+  items: string[]
+  emptyText: string
+}) {
+  if (items.length === 0) {
+    return <p className={styles.smallMutedText}>{emptyText}</p>
+  }
+
+  return (
+    <ul className={styles.textList}>
+      {items.map((item, index) => (
+        <li key={`${item}-${index}`}>{item}</li>
+      ))}
+    </ul>
+  )
+}
+
 function hypothesisVariant(
   status: CasePublic["hypotheses"][number]["status"],
 ): "default" | "secondary" | "success" | "destructive" | "outline" {
@@ -284,6 +304,210 @@ function ChangeList({ changes }: { changes: CasePublic["changes"] }) {
           ) : null}
         </div>
       ))}
+    </div>
+  )
+}
+
+function ContextPackSection({
+  snapshot,
+}: {
+  snapshot: CasePublic["context_pack_snapshot"]
+}) {
+  const hasRelevantCases = snapshot.relevant_cases.length > 0
+  const hasBriefing =
+    Boolean(snapshot.topic_summary) ||
+    snapshot.matched_signals.length > 0 ||
+    snapshot.canonical_files.length > 0 ||
+    snapshot.canonical_symbols.length > 0 ||
+    snapshot.canonical_errors.length > 0 ||
+    snapshot.canonical_symptoms.length > 0 ||
+    snapshot.pinned_takeaways.length > 0 ||
+    snapshot.ambiguities.length > 0 ||
+    snapshot.questions.length > 0 ||
+    snapshot.negative_history.length > 0 ||
+    hasRelevantCases
+
+  return (
+    <div className={styles.section} data-testid="case-context-pack">
+      <div className={styles.sectionHeader}>
+        <div>
+          <div className={styles.sectionTitle}>Context Pack</div>
+          <p className={styles.sectionIntro}>
+            Agent briefing captured when this Case started.
+          </p>
+        </div>
+        <div className={styles.contextMeta}>
+          {snapshot.confidence ? (
+            <Badge variant="outline" className="capitalize">
+              {snapshot.confidence} confidence
+            </Badge>
+          ) : null}
+          {snapshot.builder_version ? (
+            <Badge variant="outline">{snapshot.builder_version}</Badge>
+          ) : null}
+          {snapshot.created_at ? (
+            <Badge variant="outline">
+              Built {formatTimestamp(snapshot.created_at)}
+            </Badge>
+          ) : null}
+        </div>
+      </div>
+
+      {!hasBriefing ? (
+        <p className={styles.smallMutedText}>
+          No Context Pack briefing was captured for this Case.
+        </p>
+      ) : (
+        <div className={styles.contextPackStack}>
+          {snapshot.topic_summary ? (
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Topic briefing</div>
+              <p className={styles.mutedText}>{snapshot.topic_summary}</p>
+            </div>
+          ) : null}
+
+          <div className={styles.contextGrid}>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Matched signals</div>
+              <ChipList
+                items={snapshot.matched_signals}
+                emptyText="No matched signals captured."
+              />
+            </div>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Pinned takeaways</div>
+              <TextList
+                items={snapshot.pinned_takeaways}
+                emptyText="No takeaways promoted yet."
+              />
+            </div>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Open questions</div>
+              <TextList
+                items={snapshot.questions}
+                emptyText="No open questions captured."
+              />
+            </div>
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Negative history</div>
+              <TextList
+                items={snapshot.negative_history}
+                emptyText="No avoid-list captured."
+              />
+            </div>
+          </div>
+
+          <div className={styles.contextPanel}>
+            <div className={styles.signalTitle}>Likely relevant code</div>
+            <div className={styles.signalGroups}>
+              <div>
+                <div className={styles.subsectionTitle}>Files</div>
+                <ChipList
+                  items={snapshot.canonical_files}
+                  emptyText="No canonical files selected."
+                />
+              </div>
+              <div>
+                <div className={styles.subsectionTitle}>Symbols</div>
+                <ChipList
+                  items={snapshot.canonical_symbols}
+                  emptyText="No canonical symbols selected."
+                />
+              </div>
+              <div>
+                <div className={styles.subsectionTitle}>Errors</div>
+                <ChipList
+                  items={snapshot.canonical_errors}
+                  emptyText="No canonical errors selected."
+                />
+              </div>
+              <div>
+                <div className={styles.subsectionTitle}>Symptoms</div>
+                <ChipList
+                  items={snapshot.canonical_symptoms}
+                  emptyText="No canonical symptoms selected."
+                />
+              </div>
+            </div>
+          </div>
+
+          {snapshot.ambiguities.length > 0 ? (
+            <div className={styles.contextPanel}>
+              <div className={styles.signalTitle}>Ambiguity notes</div>
+              <TextList
+                items={snapshot.ambiguities}
+                emptyText="No ambiguity notes captured."
+              />
+            </div>
+          ) : null}
+
+          <div className={styles.contextPanel}>
+            <div
+              className={styles.signalTitle}
+            >{`Relevant prior Cases (${snapshot.relevant_cases.length})`}</div>
+            {!hasRelevantCases ? (
+              <p className={styles.smallMutedText}>
+                No prior Cases were selected for this briefing.
+              </p>
+            ) : (
+              <div className={styles.relevantCaseStack}>
+                {snapshot.relevant_cases.map((relevantCase) => (
+                  <div
+                    key={relevantCase.case_id}
+                    className={styles.relevantCase}
+                  >
+                    <div className={styles.recordHeader}>
+                      <div className={styles.recordTitle}>
+                        {relevantCase.title}
+                      </div>
+                    </div>
+                    {relevantCase.why_selected ? (
+                      <p className={styles.smallMutedText}>
+                        {relevantCase.why_selected}
+                      </p>
+                    ) : null}
+                    {relevantCase.short_summary || relevantCase.outcome ? (
+                      <div className={styles.metaStack}>
+                        {relevantCase.short_summary ? (
+                          <p>{relevantCase.short_summary}</p>
+                        ) : null}
+                        {relevantCase.outcome ? (
+                          <p>{relevantCase.outcome}</p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    <div className={styles.relevantCaseSignals}>
+                      <ChipList
+                        items={relevantCase.key_files}
+                        emptyText="No files."
+                      />
+                      <ChipList
+                        items={relevantCase.key_symbols}
+                        emptyText="No symbols."
+                      />
+                      <ChipList
+                        items={relevantCase.key_errors}
+                        emptyText="No errors."
+                      />
+                    </div>
+                    {relevantCase.key_commands.length > 0 ? (
+                      <div className={styles.subsection}>
+                        <div className={styles.subsectionTitle}>
+                          Key commands
+                        </div>
+                        <TextList
+                          items={relevantCase.key_commands}
+                          emptyText="No commands."
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -817,6 +1041,8 @@ export function CasesPage({
               </div>
             )}
           </div>
+
+          <ContextPackSection snapshot={detail.context_pack_snapshot} />
 
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Signals</div>
