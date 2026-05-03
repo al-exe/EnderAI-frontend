@@ -120,13 +120,11 @@
 }
 
 .flowItem h3,
-.setupStep h3,
 .marketingTile h3 {
   @apply font-medium;
 }
 
 .flowItem p,
-.setupStep p,
 .marketingTile p {
   @apply mt-1 text-sm leading-6 text-muted-foreground;
 }
@@ -145,7 +143,7 @@
 
 .marketingSection,
 .section,
-.workflowSection {
+.agentExampleSection {
   @apply space-y-4;
 }
 
@@ -213,38 +211,66 @@
   @apply mt-0.5 size-4 shrink-0 text-emerald-500;
 }
 
-.connectSection {
-  @apply grid gap-6 border bg-card p-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center;
+.exampleFrame {
+  @apply overflow-hidden border bg-card shadow-sm;
 }
 
-.connectCopy {
-  @apply space-y-4;
+.exampleGrid {
+  @apply grid lg:grid-cols-2;
 }
 
-.inlineCode {
-  @apply bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground;
+.exampleColumn {
+  @apply min-w-0;
 }
 
-.setupSteps {
-  @apply grid gap-3;
+.exampleColumn + .exampleColumn {
+  @apply border-t lg:border-t-0 lg:border-l;
 }
 
-.setupStep {
-  @apply grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 border bg-background/70 p-4;
+.exampleBlock {
+  @apply p-5;
 }
 
-.setupIcon {
-  @apply size-6 text-primary;
+.exampleBlock + .exampleBlock {
+  @apply border-t;
 }
 
-.commandPanel {
-  @apply overflow-hidden border bg-zinc-950 text-zinc-50 shadow-sm;
+.exampleLabel {
+  @apply mb-3 flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground;
 }
 
-.commandPanel pre {
-  @apply overflow-x-auto p-5 text-xs leading-6 md:text-sm;
+.exampleLabelIcon {
+  @apply size-4 text-primary;
 }
 
-.commandPanel code {
+.exampleQuote {
+  @apply text-base leading-7 text-foreground;
+}
+
+.exampleCode {
+  @apply overflow-x-auto bg-zinc-950 p-4 text-xs leading-6 text-zinc-50 md:text-sm;
+}
+
+.exampleCode code {
   @apply font-mono;
+}
+
+.contextRows {
+  @apply divide-y;
+}
+
+.contextRow {
+  @apply grid gap-1 py-3 first:pt-0 last:pb-0;
+}
+
+.contextRow dt {
+  @apply text-xs font-semibold uppercase text-primary;
+}
+
+.contextRow dd {
+  @apply text-sm leading-6 text-muted-foreground;
+}
+
+.exampleReplyBlock {
+  @apply bg-emerald-500/10;
 }

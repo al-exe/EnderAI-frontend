@@ -6,12 +6,9 @@ import {
   Boxes,
   CheckCircle2,
   Database,
-  FileText,
   GitBranch,
-  KeyRound,
   LogIn,
   RefreshCcw,
-  Settings,
   Shield,
   Sparkles,
   Terminal,
@@ -140,62 +137,77 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
           </div>
         </section>
 
-        <section className={styles.connectSection}>
-          <div className={styles.connectCopy}>
-            <Badge variant="outline" className={styles.connectBadge}>
-              <Terminal className={styles.badgeIcon} />
-              MCP setup
-            </Badge>
-            <h2 className={styles.sectionTitle}>Connect your agent</h2>
-            <p className={styles.sectionDescription}>
-              Open Settings, create an MCP credential, add the generated config
-              to your client, then ask the agent to verify the connection with{" "}
-              <code className={styles.inlineCode}>enderai_session_info</code>.
-            </p>
-            <div className={styles.connectActions}>
-              <Button asChild>
-                {canUseApp ? (
-                  <RouterLink to="/settings" search={{ tab: "connect-agent" }}>
-                    Open Connect Agent
-                    <ArrowRight className={styles.icon} />
-                  </RouterLink>
-                ) : (
-                  <RouterLink to="/login">
-                    Log in to connect agent
-                    <ArrowRight className={styles.icon} />
-                  </RouterLink>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className={styles.setupSteps}>
-            {connectionSteps.map((step) => (
-              <div className={styles.setupStep} key={step.title}>
-                <step.icon className={styles.setupIcon} />
-                <div>
-                  <h3>{step.title}</h3>
-                  <p>{step.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.workflowSection}>
+        <section className={styles.agentExampleSection}>
           <div className={styles.sectionHeader}>
             <div>
-              <p className={styles.sectionEyebrow}>Agent instruction</p>
+              <p className={styles.sectionEyebrow}>Codex example</p>
               <h2 className={styles.sectionTitle}>
-                The minimum workflow your agent should follow
+                A task starts with remembered context
               </h2>
             </div>
+            <p className={styles.sectionDescription}>
+              A mock flow showing the user request, the EnderAI case start, the
+              context returned, and how Codex continues the conversation.
+            </p>
           </div>
 
-          <div className={styles.commandPanel}>
-            <pre>
-              <code>{agentInstructionSnippet}</code>
-            </pre>
+          <div className={styles.exampleFrame}>
+            <div className={styles.exampleGrid}>
+              <div className={styles.exampleColumn}>
+                <div className={styles.exampleBlock}>
+                  <div className={styles.exampleLabel}>
+                    <Sparkles className={styles.exampleLabelIcon} />
+                    User request
+                  </div>
+                  <p className={styles.exampleQuote}>
+                    "Codex, the Topic detail page lost its context-pack signals
+                    after the refactor. Can you patch it?"
+                  </p>
+                </div>
+
+                <div className={styles.exampleBlock}>
+                  <div className={styles.exampleLabel}>
+                    <Terminal className={styles.exampleLabelIcon} />
+                    Mock EnderAI call
+                  </div>
+                  <pre className={styles.exampleCode}>
+                    <code>{mockEnderAiCall}</code>
+                  </pre>
+                </div>
+              </div>
+
+              <div className={styles.exampleColumn}>
+                <div className={styles.exampleBlock}>
+                  <div className={styles.exampleLabel}>
+                    <Database className={styles.exampleLabelIcon} />
+                    EnderAI returns
+                  </div>
+                  <dl className={styles.contextRows}>
+                    {mockContextPack.map((item) => (
+                      <div className={styles.contextRow} key={item.label}>
+                        <dt>{item.label}</dt>
+                        <dd>{item.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+
+                <div
+                  className={cn(styles.exampleBlock, styles.exampleReplyBlock)}
+                >
+                  <div className={styles.exampleLabel}>
+                    <ArrowRight className={styles.exampleLabelIcon} />
+                    Codex continues
+                  </div>
+                  <p className={styles.exampleQuote}>
+                    "I found the relevant prior Case and file signals. I will
+                    inspect the Topic detail rendering first, keep Context Packs
+                    system-powered, then update the failing Playwright assertion
+                    around hydrated signals."
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div>
@@ -439,36 +451,39 @@ const modelCards: ModelCardProps[] = [
   },
 ]
 
-const connectionSteps: Array<{
-  icon: LucideIcon
-  title: string
-  description: string
-}> = [
+const mockEnderAiCall = `enderai_begin_case({
+  request_summary: "Patch Topic detail context-pack signals",
+  intent_key: "debug-topic-context-signals",
+  signals: {
+    files: [
+      "src/components/Topics/TopicsPage.tsx",
+      "tests/topics-cases-ui.spec.ts"
+    ],
+    symptoms: ["context-pack signals disappeared after refactor"]
+  }
+})`
+
+const mockContextPack = [
   {
-    icon: Settings,
-    title: "Open Settings > Connect agent",
-    description:
-      "Generate or rotate the one MCP token your hosted EnderAI client needs.",
+    label: "Topic",
+    value: "Topic / Case Context Pack Surface",
   },
   {
-    icon: KeyRound,
-    title: "Install the generated snippets",
-    description:
-      "Use the export command and generated MCP config block for your AI client.",
+    label: "Prior Case",
+    value: "Added Context Pack visibility in Case and Topic detail",
   },
   {
-    icon: FileText,
-    title: "Add the workflow instruction",
-    description:
-      "Tell the agent to begin, update, and finish Cases with EnderAI tools.",
+    label: "Matched Files",
+    value:
+      "src/components/Topics/TopicsPage.tsx, src/components/Cases/CasesPage.tsx",
+  },
+  {
+    label: "Remembered Decision",
+    value:
+      "Context Packs are system-powered; show them as context intelligence, not primary navigation.",
+  },
+  {
+    label: "Test Cue",
+    value: "Keep sticky table headers on bg-muted; Playwright checks the class.",
   },
 ]
-
-const agentInstructionSnippet = [
-  "If EnderAI tools are available:",
-  "- Start meaningful user-initiated work with `enderai_begin_case`.",
-  "- Let EnderAI auto-hydrate relevant prior context before work begins.",
-  "- Use `enderai_update_case` as material progress develops.",
-  "- Use `enderai_finish_case` when the work is complete.",
-  "- Prefer the guided case tools over raw `enderai_request` calls.",
-].join("\n")
