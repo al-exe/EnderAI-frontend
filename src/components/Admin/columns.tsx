@@ -9,6 +9,18 @@ export type UserTableData = UserPublic & {
   isCurrentUser: boolean
 }
 
+function formatLastSeen(value: string | null | undefined): string {
+  if (!value) return "Never"
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Unknown"
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date)
+}
+
 export const columns: ColumnDef<UserTableData>[] = [
   {
     accessorKey: "full_name",
@@ -62,6 +74,21 @@ export const columns: ColumnDef<UserTableData>[] = [
           {row.original.is_active ? "Active" : "Inactive"}
         </span>
       </div>
+    ),
+  },
+  {
+    accessorKey: "last_seen_at",
+    header: "Last Seen",
+    cell: ({ row }) => (
+      <span
+        className={cn(
+          "text-sm",
+          !row.original.last_seen_at && "text-muted-foreground",
+        )}
+        title={row.original.last_seen_at ?? undefined}
+      >
+        {formatLastSeen(row.original.last_seen_at)}
+      </span>
     ),
   },
   {
