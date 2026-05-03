@@ -1,0 +1,215 @@
+@reference "../../index.css";
+
+.page {
+  @apply flex min-h-0 flex-1 flex-col gap-5 overflow-hidden;
+}
+
+.heroCard {
+  @apply shrink-0 overflow-hidden border-0 bg-[linear-gradient(135deg,hsl(var(--card))_0%,hsl(var(--muted))_52%,rgba(16,185,129,0.12)_100%)] shadow-sm;
+}
+
+.heroHeader {
+  @apply flex flex-wrap items-start justify-between gap-4;
+}
+
+.eyebrow {
+  @apply mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300;
+}
+
+.heroTitle {
+  @apply text-2xl;
+}
+
+.heroDescription {
+  @apply max-w-3xl;
+}
+
+.heroBadges {
+  @apply flex flex-wrap gap-2;
+}
+
+.toolbar {
+  @apply shrink-0;
+}
+
+.searchBox {
+  @apply relative max-w-2xl;
+}
+
+.searchIcon {
+  @apply pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground;
+}
+
+.searchInput {
+  @apply pl-9;
+}
+
+.layout {
+  @apply grid min-h-0 flex-1 gap-5 overflow-hidden;
+}
+
+.listCard {
+  @apply min-h-0 overflow-hidden;
+}
+
+.listTitle {
+  @apply flex items-center gap-2;
+}
+
+.listContent {
+  @apply min-h-0 overflow-y-auto;
+}
+
+.skillList {
+  @apply space-y-3;
+}
+
+.skillCard {
+  @apply w-full rounded-xl border bg-card p-4 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+}
+
+.skillCardSelected {
+  @apply border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/20;
+}
+
+.skillCardHeader {
+  @apply flex items-start justify-between gap-3;
+}
+
+.skillCardTitle {
+  @apply font-medium leading-snug;
+}
+
+.skillCardDescription {
+  @apply mt-2 line-clamp-2 text-sm text-muted-foreground;
+}
+
+.skillCardMeta {
+  @apply mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground;
+}
+
+.detailCard {
+  @apply flex min-h-0 flex-col overflow-hidden;
+}
+
+.detailHeader {
+  @apply flex flex-wrap items-start justify-between gap-4;
+}
+
+.detailHeaderMain {
+  @apply min-w-0 flex-1 space-y-3;
+}
+
+.detailTitle {
+  @apply break-words text-2xl;
+}
+
+.detailContent {
+  @apply min-h-0 flex-1 space-y-6 overflow-y-auto;
+}
+
+.badgeRow {
+  @apply flex flex-wrap gap-2;
+}
+
+.section {
+  @apply space-y-3;
+}
+
+.sectionHeading {
+  @apply flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+}
+
+.sectionIcon {
+  @apply size-4 text-emerald-600;
+}
+
+.provenanceGrid {
+  @apply grid gap-3 rounded-xl border bg-muted/30 p-4 text-sm;
+}
+
+.provenanceLabel {
+  @apply text-xs uppercase tracking-[0.14em] text-muted-foreground;
+}
+
+.sourceSummary {
+  @apply rounded-xl border-l-4 border-emerald-500 bg-emerald-50/70 p-4 text-sm text-emerald-950 dark:bg-emerald-950/20 dark:text-emerald-100;
+}
+
+.signalGrid {
+  @apply grid gap-4;
+}
+
+.notesGrid {
+  @apply grid gap-4;
+}
+
+.signalGroup {
+  @apply min-w-0 space-y-2;
+}
+
+.signalTitle {
+  @apply text-sm font-medium;
+}
+
+.chipList {
+  @apply flex flex-wrap gap-2;
+}
+
+.chip {
+  @apply max-w-full normal-case;
+}
+
+.chipLabel {
+  @apply block max-w-full truncate;
+}
+
+.instructionsPre {
+  @apply max-h-[34rem] overflow-auto rounded-xl border bg-slate-950 p-4 text-xs leading-relaxed text-slate-100;
+}
+
+.smallMutedText {
+  @apply text-sm text-muted-foreground;
+}
+
+.errorContent {
+  @apply text-sm text-destructive;
+}
+
+.emptyState {
+  @apply flex min-h-64 items-center justify-center gap-4 text-center;
+}
+
+.emptyList {
+  @apply flex min-h-52 flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground;
+}
+
+.emptyIcon {
+  @apply size-8 text-emerald-600;
+}
+
+.emptyTitle {
+  @apply font-medium text-foreground;
+}
+
+.icon {
+  @apply size-4;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(20rem, 0.82fr) minmax(0, 1.35fr);
+  }
+
+  .signalGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .notesGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .provenanceGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
