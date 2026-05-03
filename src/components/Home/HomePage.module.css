@@ -248,7 +248,7 @@
 }
 
 .exampleCode {
-  @apply overflow-x-auto bg-zinc-950 p-4 text-xs leading-6 text-zinc-50 md:text-sm;
+  @apply overflow-x-hidden whitespace-pre-wrap break-words bg-zinc-950 p-4 text-xs leading-6 text-zinc-50 md:text-sm;
 }
 
 .exampleCode code {

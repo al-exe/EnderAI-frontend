@@ -164,7 +164,7 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                 <div className={styles.exampleBlock}>
                   <div className={styles.exampleLabel}>
                     <Terminal className={styles.exampleLabelIcon} />
-                    Mock EnderAI Call
+                    EnderAI Call
                   </div>
                   <pre className={styles.exampleCode}>
                     <code>{mockEnderAiCall}</code>
@@ -448,11 +448,17 @@ const modelCards: ModelCardProps[] = [
 ]
 
 const mockEnderAiCall = `enderai_begin_case({
-  request_summary: "Patch missing release status on the deployment dashboard",
+  request_summary:
+    "Patch missing release status on the deployment dashboard",
   signals: {
     product_area: "Deployments",
-    components: ["Dashboard summary", "Release status card"],
-    symptoms: ["active releases no longer show their current status"]
+    components: [
+      "Dashboard summary",
+      "Release status card"
+    ],
+    symptoms: [
+      "Active releases no longer show their current status"
+    ]
   }
 })`
 
