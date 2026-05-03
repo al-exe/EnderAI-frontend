@@ -124,11 +124,11 @@
   @apply size-4 text-emerald-600;
 }
 
-.provenanceGrid {
+.sourceGrid {
   @apply grid gap-3 rounded-xl border bg-muted/30 p-4 text-sm;
 }
 
-.provenanceLabel {
+.sourceLabel {
   @apply text-xs uppercase tracking-[0.14em] text-muted-foreground;
 }
 
@@ -209,7 +209,7 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .provenanceGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .sourceGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

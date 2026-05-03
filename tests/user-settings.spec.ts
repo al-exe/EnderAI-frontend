@@ -383,9 +383,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(page.getByLabel("Credential label")).toHaveValue("EnderAI token")
   await expect(page.getByText("Revoked install")).toHaveCount(0)
   await expect(
-    page.getByText(
-      "Generate an MCP token to get your agent connected to EnderAI.",
-    ),
+    page.getByText("Token and config snippets for local MCP testing."),
   ).toBeVisible()
   await expect(page.getByText("Hosted MCP URL")).toHaveCount(0)
   await expect(
@@ -408,11 +406,9 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     page.getByRole("tab", { name: "AI assisted setup" }),
   ).toHaveAttribute("aria-selected", "true")
   await expect(page.getByRole("tab", { name: "Manual setup" })).toBeVisible()
-  await expect(page.getByText("Leverage AI to complete setup")).toBeVisible()
+  await expect(page.getByText("Ask an agent to wire it up")).toBeVisible()
   await expect(
-    page.getByText(
-      "Pass the following instructions to your AI of choice to help you complete setup.",
-    ),
+    page.getByText("Paste this into the agent doing setup."),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
     "# Persist the token",
@@ -443,9 +439,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   )
 
   await page.getByRole("tab", { name: "Manual setup" }).click()
-  await expect(
-    page.getByText("Persist the token across new terminals"),
-  ).toBeVisible()
+  await expect(page.getByText("Persist token")).toBeVisible()
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
   ).toContainText("mcp-token-abc")
@@ -471,14 +465,12 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
   )
   await expect(
-    page.getByText("Add this block to your AI client's MCP config file."),
+    page.getByText("Add this block to your AI client's MCP config."),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-config")).not.toContainText(
     "X-EnderAI-Backend-Token",
   )
-  const persistStepTop = await page
-    .getByText("Persist the token across new terminals")
-    .boundingBox()
+  const persistStepTop = await page.getByText("Persist token").boundingBox()
   const configStepTop = await page.getByText("MCP client config").boundingBox()
   expect(persistStepTop?.y).toBeLessThan(configStepTop?.y ?? 0)
   await expect(page.getByText("Reconnect AI client")).toBeVisible()
@@ -520,9 +512,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await page.reload()
   await page.getByRole("tab", { name: "Connect agent" }).click()
 
-  await expect(
-    page.getByText("Persist the token across new terminals"),
-  ).toHaveCount(0)
+  await expect(page.getByText("Persist token")).toHaveCount(0)
   await expect(
     page.getByText('export ENDERAI_MCP_TOKEN="PASTE_MCP_TOKEN_HERE"'),
   ).toHaveCount(0)
@@ -541,7 +531,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   )
   await expect(page.getByTestId("connect-agent-instructions")).toHaveCount(0)
   await expect(page.getByText("Minimal agent instruction")).toHaveCount(0)
-  await expect(page.getByText("Leverage AI to complete setup")).toHaveCount(0)
+  await expect(page.getByText("Ask an agent to wire it up")).toHaveCount(0)
   await expect(page.getByText("enderai_finish_case")).toHaveCount(0)
   await expect(page.getByText("enderai_begin_case")).toHaveCount(0)
   await expect(page.getByText("# Add agent instruction")).toHaveCount(0)

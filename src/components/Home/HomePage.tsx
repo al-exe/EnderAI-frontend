@@ -51,19 +51,19 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
               <div className={styles.heroText}>
                 <p className={styles.greeting}>
                   {isPublic
-                    ? "Operational memory for AI automation"
+                    ? "Working memory for AI-assisted teams"
                     : `Welcome back, ${displayName}`}
                 </p>
                 <h1 className={styles.heroTitle}>
-                  EnderAI turns scattered company knowledge into executable
-                  context.
+                  EnderAI turns messy team history into context agents can
+                  actually use.
                 </h1>
                 <p className={styles.heroDescription}>
-                  Every company runs on domain knowledge spread across people,
-                  tickets, code, docs, Slack, support history, databases, and
-                  past decisions. EnderAI captures that raw context, organizes
-                  it into a living map of how the business works, and turns it
-                  into workflows humans and AI agents can use safely.
+                  Work leaves useful traces in tickets, pull requests, docs,
+                  Slack threads, incidents, support notes, commands, and one-off
+                  decisions. EnderAI captures those traces while work is
+                  happening, ties them to durable topics, and turns the useful
+                  parts into briefings and skills for the next person or agent.
                 </p>
               </div>
               <div className={styles.heroActions}>
@@ -72,7 +72,7 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     <Button asChild size="lg" className={styles.primaryCta}>
                       <RouterLink to={signedIn ? "/home" : "/signup"}>
                         <Sparkles className={styles.icon} />
-                        Build operational memory
+                        Try the demo
                       </RouterLink>
                     </Button>
                     <Button asChild variant="outline" size="lg">
@@ -120,14 +120,13 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
             <div>
               <p className={styles.sectionEyebrow}>Why it matters</p>
               <h2 className={styles.sectionTitle}>
-                The bottleneck is company context
+                The missing part is the local story
               </h2>
             </div>
             <p className={styles.sectionDescription}>
-              AI models can do real work, but agents still need the
-              company-specific context required to act correctly. EnderAI fills
-              the missing layer between raw company data and reliable
-              automation.
+              Most agent failures are not model failures. They come from missing
+              background: weird edge cases, prior fixes, approval paths, team
+              conventions, and what already got tried.
             </p>
           </div>
 
@@ -143,13 +142,13 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
             <div>
               <p className={styles.sectionEyebrow}>How it works</p>
               <h2 className={styles.sectionTitle}>
-                Company knowledge becomes structured and actionable
+                Keep the useful parts of past work
               </h2>
             </div>
             <p className={styles.sectionDescription}>
-              EnderAI is not search and not a chatbot over docs. It is the
-              operational memory layer that makes domain knowledge current,
-              structured, and executable.
+              EnderAI is closer to a work log that cleans itself up than a docs
+              chatbot. It keeps the requests, evidence, decisions, commands, and
+              outcomes that should shape the next pass.
             </p>
           </div>
 
@@ -230,8 +229,8 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     "I found the customer record, source-of-truth policy,
                     approval path, replica systems, validation checklist, and
                     prior correction cases. I will draft the correction steps,
-                    preserve an audit trail, and produce the reusable workflow
-                    for the next similar request."
+                    preserve an audit trail, and save the steps that should be
+                    reused next time."
                   </p>
                 </div>
               </div>
@@ -257,7 +256,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
         </Button>
         <Button asChild>
           <RouterLink to={signedIn ? "/home" : "/signup"}>
-            {signedIn ? "Use now" : "Sign up"}
+            {signedIn ? "Open app" : "Sign up"}
           </RouterLink>
         </Button>
       </nav>
@@ -271,7 +270,7 @@ function HeroGraphic() {
       <div className={styles.graphicHeader}>
         <Badge variant="outline" className={styles.connectBadge}>
           <Zap className={styles.badgeIcon} />
-          Live context
+          Demo context
         </Badge>
         <span className={styles.graphicStatus}>Ready for the next task</span>
       </div>
@@ -391,27 +390,27 @@ const getModelAction = (
 const workflowSteps = [
   {
     step: "01",
-    title: "Capture raw context",
+    title: "Capture the work",
     description:
       "Tickets, docs, code, commands, conversations, approvals, and outcomes are preserved.",
   },
   {
     step: "02",
-    title: "Structure the domain",
+    title: "Sort it into topics",
     description:
-      "EnderAI organizes the work into entities, systems, policies, risks, and workflows.",
+      "Related requests, files, decisions, policies, and edge cases land in the same bucket.",
   },
   {
     step: "03",
-    title: "Hydrate the next task",
+    title: "Brief the next run",
     description:
-      "Relevant prior context is packaged before a human or AI agent starts work.",
+      "The next person or agent starts with the notes that were worth keeping.",
   },
   {
     step: "04",
-    title: "Make it executable",
+    title: "Extract reusable steps",
     description:
-      "The result becomes checklists, audit trails, handoffs, tests, and agent instructions.",
+      "Repeated patterns become checklists, handoffs, tests, and agent instructions.",
   },
 ]
 
@@ -427,21 +426,21 @@ const signalPills = [
 const marketingTiles: MarketingTileProps[] = [
   {
     icon: Database,
-    title: "Capture raw context",
+    title: "Capture the work",
     description:
-      "Pull in the tickets, docs, code changes, commands, conversations, approvals, customer history, incidents, and decisions behind how work happens.",
+      "Keep the tickets, docs, code changes, commands, conversations, incidents, and decisions behind a real request.",
   },
   {
     icon: GitBranch,
-    title: "Structure the domain",
+    title: "Connect the pieces",
     description:
-      "Organize company knowledge into Topics, Cases, entities, systems, policies, risks, and edge cases so it becomes a living map.",
+      "Group related history around Topics so the next run can find the relevant systems, policies, risks, and edge cases.",
   },
   {
     icon: RefreshCcw,
-    title: "Make it executable",
+    title: "Reuse what worked",
     description:
-      "Turn that map into checklists, audit trails, handoffs, agent briefings, tests, and reusable workflow instructions.",
+      "Turn repeated fixes into small briefings, checklists, tests, and draft instructions for agents.",
   },
 ]
 
@@ -451,11 +450,11 @@ const modelCards: ModelCardProps[] = [
     label: "User-facing",
     title: "Topics",
     description:
-      "Topics are durable areas of company knowledge that should be reused across related work.",
+      "Topics are the buckets where related work history accumulates.",
     details: [
-      "Useful for products, systems, policies, customers, incidents, and operational areas.",
-      "Holds aliases, status, summaries, files, symbols, risks, and decisions.",
-      "Gives future Cases a stable place to inherit domain context.",
+      "Useful for products, systems, policies, customers, incidents, and messy operational areas.",
+      "Holds summaries, files, symbols, risks, decisions, and odd vocabulary.",
+      "Gives future Cases a starting point instead of a blank page.",
     ],
     action: {
       label: "Browse Topics",
@@ -466,12 +465,11 @@ const modelCards: ModelCardProps[] = [
     icon: Boxes,
     label: "User-facing",
     title: "Cases",
-    description:
-      "Cases are individual executions of work under a Topic, usually one request or task.",
+    description: "Cases are single runs of work under a Topic.",
     details: [
-      "Tracks input, raw context, commands, hypotheses, changes, approvals, and outcome.",
-      "Keeps validation evidence and next steps visible when work pauses or continues later.",
-      "Provides the concrete history future humans and agents can reuse.",
+      "Tracks the request, notes, commands, hypotheses, changes, and outcome.",
+      "Keeps validation evidence and next steps visible when work pauses.",
+      "Leaves concrete history future humans and agents can reuse.",
     ],
     action: {
       label: "Review Cases",
@@ -483,11 +481,11 @@ const modelCards: ModelCardProps[] = [
     label: "System-powered",
     title: "Context Packs",
     description:
-      "Context Packs are the synthesized briefings EnderAI builds before a human or agent starts work.",
+      "Context Packs are the briefings EnderAI assembles before work starts.",
     details: [
-      "Select relevant prior Topics, Cases, policies, systems, and decisions.",
-      "Include matched signals, pinned takeaways, ambiguity notes, risks, and confidence.",
-      "Give agents the domain context needed to act safely and consistently.",
+      "Pull in relevant prior Topics, Cases, policies, systems, and decisions.",
+      "Include matched signals, pinned takeaways, open questions, and avoid-lists.",
+      "Give agents enough background to stop guessing from scratch.",
     ],
   },
 ]

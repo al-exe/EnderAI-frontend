@@ -390,7 +390,7 @@ const ConnectAgent = () => {
             Connect agent
           </CardTitle>
           <p className={styles.mutedText}>
-            Generate an MCP token to get your agent connected to EnderAI.
+            Token and config snippets for local MCP testing.
           </p>
         </CardHeader>
         <CardContent className={styles.cardContent}>
@@ -431,7 +431,7 @@ const ConnectAgent = () => {
             </div>
 
             <div className={styles.benefitCard}>
-              <h3 className={styles.sectionTitle}>What this page gives you</h3>
+              <h3 className={styles.sectionTitle}>Setup bits</h3>
               <ul className={styles.benefitList}>
                 <li className={styles.benefitItem}>
                   <CheckCircle2
@@ -440,7 +440,7 @@ const ConnectAgent = () => {
                       styles.benefitIconSuccess,
                     )}
                   />
-                  MCP token for EnderAI.
+                  MCP token.
                 </li>
                 <li className={styles.benefitItem}>
                   <Shield
@@ -467,7 +467,7 @@ const ConnectAgent = () => {
                       styles.benefitIconPrimary,
                     )}
                   />
-                  Agent workflow reminder.
+                  Agent instruction snippet.
                 </li>
               </ul>
             </div>
@@ -502,8 +502,8 @@ const ConnectAgent = () => {
 
                 <TabsContent value="ai-assisted" className={styles.setupTab}>
                   <SnippetBlock
-                    title="Leverage AI to complete setup"
-                    description="Pass the following instructions to your AI of choice to help you complete setup."
+                    title="Ask an agent to wire it up"
+                    description="Paste this into the agent doing setup."
                     snippet={aiAssistedSetupSnippet ?? ""}
                     copiedText={copiedText}
                     onCopy={(value) => {
@@ -515,8 +515,8 @@ const ConnectAgent = () => {
 
                 <TabsContent value="manual" className={styles.setupTab}>
                   <SnippetBlock
-                    title="Persist the token across new terminals"
-                    description="Stores the token locally so AI clients can launch with EnderAI connected."
+                    title="Persist token"
+                    description="Writes the token to a local shell file."
                     snippet={persistentShellSnippet}
                     copiedText={copiedText}
                     onCopy={(value) => {
@@ -527,7 +527,7 @@ const ConnectAgent = () => {
 
                   <SnippetBlock
                     title="MCP client config"
-                    description="Add this block to your AI client's MCP config file."
+                    description="Add this block to your AI client's MCP config."
                     snippet={clientSnippet}
                     copiedText={copiedText}
                     onCopy={(value) => {
@@ -538,7 +538,7 @@ const ConnectAgent = () => {
 
                   <SnippetBlock
                     title="Minimal agent instruction"
-                    description="Add this to your AI workflow's instruction file to start using EnderAI."
+                    description="Smallest instruction block for testing EnderAI."
                     snippet={agentInstructionSnippet}
                     copiedText={copiedText}
                     onCopy={(value) => {
@@ -565,8 +565,8 @@ const ConnectAgent = () => {
               <KeyRound className={styles.icon} />
               <AlertTitle>Create your first agent credential</AlertTitle>
               <AlertDescription>
-                Once you create a credential, this page will generate the token,
-                MCP config, and workflow snippet you need.
+                Create a credential to generate the token, MCP config, and
+                instruction snippet.
               </AlertDescription>
             </Alert>
           )}

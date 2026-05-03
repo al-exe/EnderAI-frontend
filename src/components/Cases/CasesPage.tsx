@@ -333,7 +333,7 @@ function ContextPackSection({
         <div>
           <div className={styles.sectionTitle}>Context Pack</div>
           <p className={styles.sectionIntro}>
-            Agent briefing captured when this Case started.
+            Briefing captured when this Case started.
           </p>
         </div>
         <div className={styles.contextMeta}>
@@ -355,13 +355,13 @@ function ContextPackSection({
 
       {!hasBriefing ? (
         <p className={styles.smallMutedText}>
-          No Context Pack briefing was captured for this Case.
+          No briefing was captured for this Case.
         </p>
       ) : (
         <div className={styles.contextPackStack}>
           {snapshot.topic_summary ? (
             <div className={styles.contextPanel}>
-              <div className={styles.signalTitle}>Topic briefing</div>
+              <div className={styles.signalTitle}>Topic note</div>
               <p className={styles.mutedText}>{snapshot.topic_summary}</p>
             </div>
           ) : null}
@@ -398,7 +398,7 @@ function ContextPackSection({
           </div>
 
           <div className={styles.contextPanel}>
-            <div className={styles.signalTitle}>Likely relevant code</div>
+            <div className={styles.signalTitle}>Likely code</div>
             <div className={styles.signalGroups}>
               <div>
                 <div className={styles.subsectionTitle}>Files</div>
@@ -819,7 +819,7 @@ export function CasesPage({
               <div className={styles.detailHeaderMain}>
                 <CardTitle>Loading Case…</CardTitle>
                 <CardDescription>
-                  Fetching the selected case detail from the canonical API.
+                  Fetching the selected case detail.
                 </CardDescription>
               </div>
               <Button
@@ -843,7 +843,7 @@ export function CasesPage({
               focused ? styles.detailContentFocused : styles.detailContentSplit,
             )}
           >
-            Case details will appear here once loading completes.
+            Case details will appear here when loading finishes.
           </CardContent>
         </Card>
       )

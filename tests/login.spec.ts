@@ -47,7 +47,7 @@ test("Log in with valid email and password ", async ({ page }) => {
 
   await expect(
     page.getByText(
-      "EnderAI turns scattered company knowledge into executable context.",
+      "EnderAI turns messy team history into context agents can actually use.",
     ),
   ).toBeVisible()
 })
@@ -98,7 +98,7 @@ test("Successful log out", async ({ page }) => {
 
   await expect(
     page.getByText(
-      "EnderAI turns scattered company knowledge into executable context.",
+      "EnderAI turns messy team history into context agents can actually use.",
     ),
   ).toBeVisible()
 
@@ -117,7 +117,7 @@ test("Logged-out user cannot access protected routes", async ({ page }) => {
 
   await expect(
     page.getByText(
-      "EnderAI turns scattered company knowledge into executable context.",
+      "EnderAI turns messy team history into context agents can actually use.",
     ),
   ).toBeVisible()
 
