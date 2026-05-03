@@ -46,7 +46,9 @@ test("Log in with valid email and password ", async ({ page }) => {
   await page.waitForURL("/home")
 
   await expect(
-    page.getByText("EnderAI is product memory for AI-assisted work."),
+    page.getByText(
+      "EnderAI turns scattered company knowledge into executable context.",
+    ),
   ).toBeVisible()
 })
 
@@ -95,7 +97,9 @@ test("Successful log out", async ({ page }) => {
   await page.waitForURL("/home")
 
   await expect(
-    page.getByText("EnderAI is product memory for AI-assisted work."),
+    page.getByText(
+      "EnderAI turns scattered company knowledge into executable context.",
+    ),
   ).toBeVisible()
 
   await page.getByTestId("user-menu").click()
@@ -112,7 +116,9 @@ test("Logged-out user cannot access protected routes", async ({ page }) => {
   await page.waitForURL("/home")
 
   await expect(
-    page.getByText("EnderAI is product memory for AI-assisted work."),
+    page.getByText(
+      "EnderAI turns scattered company knowledge into executable context.",
+    ),
   ).toBeVisible()
 
   await page.getByTestId("user-menu").click()

@@ -50,15 +50,20 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
             <div className={styles.heroCopy}>
               <div className={styles.heroText}>
                 <p className={styles.greeting}>
-                  {isPublic ? "EnderAI" : `Welcome back, ${displayName}`}
+                  {isPublic
+                    ? "Operational memory for AI automation"
+                    : `Welcome back, ${displayName}`}
                 </p>
                 <h1 className={styles.heroTitle}>
-                  EnderAI is product memory for AI-assisted work.
+                  EnderAI turns scattered company knowledge into executable
+                  context.
                 </h1>
                 <p className={styles.heroDescription}>
-                  It gives agents a shared place to remember work done, commands
-                  run, decisions made, and outcomes reached so each new task can
-                  start with relevant context instead of rediscovery.
+                  Every company runs on domain knowledge spread across people,
+                  tickets, code, docs, Slack, support history, databases, and
+                  past decisions. EnderAI captures that raw context, organizes
+                  it into a living map of how the business works, and turns it
+                  into workflows humans and AI agents can use safely.
                 </p>
               </div>
               <div className={styles.heroActions}>
@@ -67,14 +72,21 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     <Button asChild size="lg" className={styles.primaryCta}>
                       <RouterLink to={signedIn ? "/home" : "/signup"}>
                         <Sparkles className={styles.icon} />
-                        Use EnderAI now
+                        Build operational memory
                       </RouterLink>
                     </Button>
                     <Button asChild variant="outline" size="lg">
-                      <RouterLink to={signedIn ? "/home" : "/login"}>
-                        <LogIn className={styles.icon} />
-                        {signedIn ? "Open Home" : "Log in now"}
-                      </RouterLink>
+                      {signedIn ? (
+                        <RouterLink to="/home">
+                          <LogIn className={styles.icon} />
+                          Open Home
+                        </RouterLink>
+                      ) : (
+                        <a href="#sensitive-data-example">
+                          <ArrowRight className={styles.icon} />
+                          See how it works
+                        </a>
+                      )}
                     </Button>
                   </>
                 ) : (
@@ -106,9 +118,17 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
         <section className={styles.marketingSection}>
           <div className={styles.sectionHeader}>
             <div>
-              <p className={styles.sectionEyebrow}>Why it helps</p>
-              <h2 className={styles.sectionTitle}>Agents start with memory</h2>
+              <p className={styles.sectionEyebrow}>Why it matters</p>
+              <h2 className={styles.sectionTitle}>
+                The bottleneck is company context
+              </h2>
             </div>
+            <p className={styles.sectionDescription}>
+              AI models can do real work, but agents still need the
+              company-specific context required to act correctly. EnderAI fills
+              the missing layer between raw company data and reliable
+              automation.
+            </p>
           </div>
 
           <div className={styles.marketingGrid}>
@@ -121,9 +141,16 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <div>
-              <p className={styles.sectionEyebrow}>What to use</p>
-              <h2 className={styles.sectionTitle}>The product model</h2>
+              <p className={styles.sectionEyebrow}>How it works</p>
+              <h2 className={styles.sectionTitle}>
+                Company knowledge becomes structured and actionable
+              </h2>
             </div>
+            <p className={styles.sectionDescription}>
+              EnderAI is not search and not a chatbot over docs. It is the
+              operational memory layer that makes domain knowledge current,
+              structured, and executable.
+            </p>
           </div>
 
           <div className={styles.modelGrid}>
@@ -137,12 +164,15 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
           </div>
         </section>
 
-        <section className={styles.agentExampleSection}>
+        <section
+          className={styles.agentExampleSection}
+          id="sensitive-data-example"
+        >
           <div className={styles.sectionHeader}>
             <div>
               <p className={styles.sectionEyebrow}>Engineering example</p>
               <h2 className={styles.sectionTitle}>
-                A task starts with remembered context
+                Example: sensitive data correction
               </h2>
             </div>
           </div>
@@ -156,8 +186,9 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     User request
                   </div>
                   <p className={styles.exampleQuote}>
-                    "The deployment dashboard stopped showing release status
-                    after yesterday's refactor. Can you patch it?"
+                    "A customer's sensitive profile field was imported
+                    incorrectly. Please correct it, prove downstream systems are
+                    clean, and leave an audit trail."
                   </p>
                 </div>
 
@@ -196,10 +227,11 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     Agent continues
                   </div>
                   <p className={styles.exampleQuote}>
-                    "I found the prior dashboard refactor and the release-status
-                    decision. I will inspect the deployment summary rendering
-                    first, preserve the cached status fallback, then update the
-                    regression test around active releases."
+                    "I found the customer record, source-of-truth policy,
+                    approval path, replica systems, validation checklist, and
+                    prior correction cases. I will draft the correction steps,
+                    preserve an audit trail, and produce the reusable workflow
+                    for the next similar request."
                   </p>
                 </div>
               </div>
@@ -359,44 +391,57 @@ const getModelAction = (
 const workflowSteps = [
   {
     step: "01",
-    title: "Begin a Case",
-    description: "The agent starts meaningful work by starting a Case.",
+    title: "Capture raw context",
+    description:
+      "Tickets, docs, code, commands, conversations, approvals, and outcomes are preserved.",
   },
   {
     step: "02",
-    title: "Hydrate context",
-    description: "EnderAI finds relevant prior Topics and Cases automatically.",
+    title: "Structure the domain",
+    description:
+      "EnderAI organizes the work into entities, systems, policies, risks, and workflows.",
   },
   {
     step: "03",
-    title: "Capture progress",
+    title: "Hydrate the next task",
     description:
-      "Updates, commands, files, and decisions are written as work develops.",
+      "Relevant prior context is packaged before a human or AI agent starts work.",
   },
   {
     step: "04",
-    title: "Close the loop",
-    description: "The agent finishes the Case with outcome and next steps.",
+    title: "Make it executable",
+    description:
+      "The result becomes checklists, audit trails, handoffs, tests, and agent instructions.",
   },
 ]
 
-const signalPills = ["commands", "files", "decisions", "symptoms", "next steps"]
+const signalPills = [
+  "tickets",
+  "docs",
+  "code",
+  "policies",
+  "customers",
+  "decisions",
+]
 
 const marketingTiles: MarketingTileProps[] = [
   {
     icon: Database,
-    title: "Context that sticks",
-    description: "Keep summaries, files, errors, and decisions reusable.",
+    title: "Capture raw context",
+    description:
+      "Pull in the tickets, docs, code changes, commands, conversations, approvals, customer history, incidents, and decisions behind how work happens.",
   },
   {
     icon: GitBranch,
-    title: "Workstreams stay clear",
-    description: "Group repeated requests under durable Topics.",
+    title: "Structure the domain",
+    description:
+      "Organize company knowledge into Topics, Cases, entities, systems, policies, risks, and edge cases so it becomes a living map.",
   },
   {
     icon: RefreshCcw,
-    title: "Handoffs get shorter",
-    description: "Give the next agent the briefing it needs up front.",
+    title: "Make it executable",
+    description:
+      "Turn that map into checklists, audit trails, handoffs, agent briefings, tests, and reusable workflow instructions.",
   },
 ]
 
@@ -406,11 +451,11 @@ const modelCards: ModelCardProps[] = [
     label: "User-facing",
     title: "Topics",
     description:
-      "A Topic is a durable area of work that should be reused across related sessions.",
+      "Topics are durable areas of company knowledge that should be reused across related work.",
     details: [
-      "Best for subsystems, features, recurring bugs, and operational areas.",
-      "Holds aliases, status, summaries, files, symbols, errors, and symptoms.",
-      "Gives future Cases a stable place to attach context.",
+      "Useful for products, systems, policies, customers, incidents, and operational areas.",
+      "Holds aliases, status, summaries, files, symbols, risks, and decisions.",
+      "Gives future Cases a stable place to inherit domain context.",
     ],
     action: {
       label: "Browse Topics",
@@ -422,11 +467,11 @@ const modelCards: ModelCardProps[] = [
     label: "User-facing",
     title: "Cases",
     description:
-      "A Case is one bounded work session under a Topic, usually one request or task.",
+      "Cases are individual executions of work under a Topic, usually one request or task.",
     details: [
-      "Tracks input, current summary, commands, hypotheses, changes, and outcome.",
-      "Keeps next steps visible when work pauses or continues later.",
-      "Provides the history that future agents can reuse.",
+      "Tracks input, raw context, commands, hypotheses, changes, approvals, and outcome.",
+      "Keeps validation evidence and next steps visible when work pauses or continues later.",
+      "Provides the concrete history future humans and agents can reuse.",
     ],
     action: {
       label: "Review Cases",
@@ -438,26 +483,28 @@ const modelCards: ModelCardProps[] = [
     label: "System-powered",
     title: "Context Packs",
     description:
-      "A Context Pack is the synthesized briefing EnderAI builds for an agent at Case start.",
+      "Context Packs are the synthesized briefings EnderAI builds before a human or agent starts work.",
     details: [
-      "Selects relevant prior Topics and Cases.",
-      "Includes matched signals, pinned takeaways, ambiguity notes, and confidence.",
-      "Visible in Case detail and Topic context intelligence without becoming separate navigation.",
+      "Select relevant prior Topics, Cases, policies, systems, and decisions.",
+      "Include matched signals, pinned takeaways, ambiguity notes, risks, and confidence.",
+      "Give agents the domain context needed to act safely and consistently.",
     ],
   },
 ]
 
 const mockEnderAiCall = `enderai_begin_case({
   request_summary:
-    "Patch missing release status on the deployment dashboard",
+    "Correct an incorrectly imported sensitive customer field",
   signals: {
-    product_area: "Deployments",
-    components: [
-      "Dashboard summary",
-      "Release status card"
+    product_area: "Customer data",
+    entities: [
+      "Customer profile",
+      "Sensitive profile field"
     ],
-    symptoms: [
-      "Active releases no longer show their current status"
+    requirements: [
+      "Confirm source of truth",
+      "Validate downstream replicas",
+      "Preserve audit trail"
     ]
   }
 })`
@@ -465,24 +512,25 @@ const mockEnderAiCall = `enderai_begin_case({
 const mockContextPack = [
   {
     label: "Topic",
-    value: "Deployment dashboard reliability",
+    value: "Sensitive customer data corrections",
   },
   {
     label: "Prior Case",
-    value: "Refactored release cards to share one status formatter",
+    value: "Corrected imported profile data after vendor mapping issue",
   },
   {
     label: "Matched Signals",
-    value: "Deployments, release status, dashboard summary, active releases",
+    value:
+      "Customer profile, source of truth, replica systems, compliance approval",
   },
   {
-    label: "Remembered Decision",
+    label: "Policy Cue",
     value:
-      "Keep the cached status fallback when live release metadata is delayed.",
+      "Security approval is required before modifying sensitive customer fields.",
   },
   {
-    label: "Test Cue",
+    label: "Validation Cue",
     value:
-      "Regression coverage should include active, failed, and pending releases.",
+      "Check primary storage, analytics replica, support view, and audit log.",
   },
 ]

@@ -24,7 +24,9 @@ export async function logInUser(page: Page, email: string, password: string) {
   await page.getByRole("button", { name: "Log In" }).click()
   await page.waitForURL("/home")
   await expect(
-    page.getByText("EnderAI is product memory for AI-assisted work."),
+    page.getByText(
+      "EnderAI turns scattered company knowledge into executable context.",
+    ),
   ).toBeVisible()
 }
 
