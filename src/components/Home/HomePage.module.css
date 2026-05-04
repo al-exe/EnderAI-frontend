@@ -133,14 +133,6 @@
   @apply border border-primary/30 bg-primary/10 px-3 py-2 text-center font-mono text-sm font-semibold text-primary;
 }
 
-.signalBoard {
-  @apply mt-5 flex flex-wrap gap-2 border-t pt-4;
-}
-
-.signalBoard span {
-  @apply border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground;
-}
-
 .marketingSection,
 .section,
 .agentExampleSection {

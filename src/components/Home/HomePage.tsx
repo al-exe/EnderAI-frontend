@@ -55,15 +55,15 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     : `Welcome back, ${displayName}`}
                 </p>
                 <h1 className={styles.heroTitle}>
-                  EnderAI turns messy team history into context agents can
-                  actually use.
+                  EnderAI turns the collective knowledge of the company into a
+                  reusable workflows for humans and AI to leverage.
                 </h1>
                 <p className={styles.heroDescription}>
-                  Work leaves useful traces in tickets, pull requests, docs,
-                  Slack threads, incidents, support notes, commands, and one-off
-                  decisions. EnderAI captures those traces while work is
-                  happening, ties them to durable topics, and turns the useful
-                  parts into briefings and skills for the next person or agent.
+                  Knowledge that matters is scattered across support tickets,
+                  hard to find documenation, email threads, and the minds of
+                  your best employees. EnderAI captures those raw contexts,
+                  stores them intelligently, and turns the useful parts into
+                  briefings and skills for the next person or agent.
                 </p>
               </div>
               <div className={styles.heroActions}>
@@ -119,15 +119,8 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
           <div className={styles.sectionHeader}>
             <div>
               <p className={styles.sectionEyebrow}>Why it matters</p>
-              <h2 className={styles.sectionTitle}>
-                The missing part is the local story
-              </h2>
+              <h2 className={styles.sectionTitle}>The missing part of the story</h2>
             </div>
-            <p className={styles.sectionDescription}>
-              Most agent failures are not model failures. They come from missing
-              background: weird edge cases, prior fixes, approval paths, team
-              conventions, and what already got tried.
-            </p>
           </div>
 
           <div className={styles.marketingGrid}>
@@ -145,11 +138,6 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                 Keep the useful parts of past work
               </h2>
             </div>
-            <p className={styles.sectionDescription}>
-              EnderAI is closer to a work log that cleans itself up than a docs
-              chatbot. It keeps the requests, evidence, decisions, commands, and
-              outcomes that should shape the next pass.
-            </p>
           </div>
 
           <div className={styles.modelGrid}>
@@ -285,11 +273,6 @@ function HeroGraphic() {
           </div>
         ))}
       </div>
-      <div className={styles.signalBoard}>
-        {signalPills.map((signal) => (
-          <span key={signal}>{signal}</span>
-        ))}
-      </div>
     </div>
   )
 }
@@ -414,15 +397,6 @@ const workflowSteps = [
   },
 ]
 
-const signalPills = [
-  "tickets",
-  "docs",
-  "code",
-  "policies",
-  "customers",
-  "decisions",
-]
-
 const marketingTiles: MarketingTileProps[] = [
   {
     icon: Database,
@@ -449,8 +423,7 @@ const modelCards: ModelCardProps[] = [
     icon: Box,
     label: "User-facing",
     title: "Topics",
-    description:
-      "Topics are the buckets where related work history accumulates.",
+    description: "Buckets where related work history accumulates.",
     details: [
       "Useful for products, systems, policies, customers, incidents, and messy operational areas.",
       "Holds summaries, files, symbols, risks, decisions, and odd vocabulary.",
@@ -465,7 +438,7 @@ const modelCards: ModelCardProps[] = [
     icon: Boxes,
     label: "User-facing",
     title: "Cases",
-    description: "Cases are single runs of work under a Topic.",
+    description: "Single runs of work under a Topic.",
     details: [
       "Tracks the request, notes, commands, hypotheses, changes, and outcome.",
       "Keeps validation evidence and next steps visible when work pauses.",
@@ -480,8 +453,7 @@ const modelCards: ModelCardProps[] = [
     icon: Shield,
     label: "System-powered",
     title: "Context Packs",
-    description:
-      "Context Packs are the briefings EnderAI assembles before work starts.",
+    description: "Briefings EnderAI assembles before work starts.",
     details: [
       "Pull in relevant prior Topics, Cases, policies, systems, and decisions.",
       "Include matched signals, pinned takeaways, open questions, and avoid-lists.",
