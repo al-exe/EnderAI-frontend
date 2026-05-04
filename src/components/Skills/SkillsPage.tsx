@@ -332,25 +332,6 @@ export function SkillsPage({
 
   return (
     <div className={styles.page}>
-      <Card className={styles.heroCard}>
-        <CardHeader className={styles.heroHeader}>
-          <div>
-            <div className={styles.eyebrow}>
-              <Sparkles className={styles.icon} />
-              Skills
-            </div>
-          </div>
-          <div className={styles.heroBadges}>
-            <Badge variant="secondary">
-              {isDemoMode ? "Demo mode" : "Live"}
-            </Badge>
-            <Badge variant="outline">
-              {skillsQuery.data?.count ?? 0} skills
-            </Badge>
-          </div>
-        </CardHeader>
-      </Card>
-
       {skillsQuery.error ? (
         <Card>
           <CardContent className={styles.errorContent}>
