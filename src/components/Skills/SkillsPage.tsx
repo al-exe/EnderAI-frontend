@@ -288,10 +288,16 @@ function SkillDetail({ skill }: { skill: SkillPublic | null }) {
   )
 }
 
-export function SkillsPage() {
+export function SkillsPage({
+  initialSelectedSkillId = null,
+}: {
+  initialSelectedSkillId?: string | null
+}) {
   const { isDemoMode } = useDemoMode()
   const [query, setQuery] = useState("")
-  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null)
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(
+    initialSelectedSkillId,
+  )
 
   const skillsQuery = useQuery({
     queryKey: ["skills", { demo: isDemoMode, query }],
@@ -300,17 +306,31 @@ export function SkillsPage() {
 
   const skills = skillsQuery.data?.data ?? []
   const selectedSkill =
-    skills.find((skill) => skill.id === selectedSkillId) ?? skills[0] ?? null
+    (selectedSkillId
+      ? skills.find((skill) => skill.id === selectedSkillId)
+      : skills[0]) ?? null
 
   useEffect(() => {
-    if (!selectedSkill) {
+    setSelectedSkillId(initialSelectedSkillId)
+  }, [initialSelectedSkillId])
+
+  useEffect(() => {
+    if (skillsQuery.isLoading) return
+
+    if (skills.length === 0) {
       setSelectedSkillId(null)
       return
     }
-    if (selectedSkill.id !== selectedSkillId) {
-      setSelectedSkillId(selectedSkill.id)
+
+    if (
+      selectedSkillId &&
+      skills.some((skill) => skill.id === selectedSkillId)
+    ) {
+      return
     }
-  }, [selectedSkill, selectedSkillId])
+
+    setSelectedSkillId(skills[0].id)
+  }, [selectedSkillId, skills, skillsQuery.isLoading])
 
   return (
     <div className={styles.page}>
@@ -322,11 +342,8 @@ export function SkillsPage() {
               Skills
             </div>
             <CardTitle className={styles.heroTitle}>
-              Generated instructions
+              🛠️ Generated Skills
             </CardTitle>
-            <CardDescription className={styles.heroDescription}>
-              Draft snippets pulled from Topics, Cases, and Context Packs.
-            </CardDescription>
           </div>
           <div className={styles.heroBadges}>
             <Badge variant="secondary">
@@ -366,9 +383,6 @@ export function SkillsPage() {
               <Boxes className={styles.icon} />
               Skill Library
             </CardTitle>
-            <CardDescription>
-              Generated snippets from captured work.
-            </CardDescription>
           </CardHeader>
           <CardContent className={styles.listContent}>
             {skillsQuery.isLoading ? (

@@ -55,8 +55,8 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     : `Welcome back, ${displayName}`}
                 </p>
                 <h1 className={styles.heroTitle}>
-                  EnderAI turns the collective knowledge of the company into a
-                  reusable workflows for humans and AI to leverage.
+                  EnderAI turns the collective knowledge of your company into
+                  reusable workflows for humans and AI.
                 </h1>
                 <p className={styles.heroDescription}>
                   Knowledge that matters is scattered across support tickets,

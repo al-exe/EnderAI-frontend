@@ -4,24 +4,27 @@ import { request } from "@/client/core/request"
 export interface SearchRouteSearch {
   topicId?: string | null
   caseId?: string | null
+  skillId?: string | null
 }
 
 export interface SearchHitPublic {
-  kind: "topic" | "case"
+  kind: "topic" | "case" | "skill"
   id: string
   title: string
   subtitle: string | null
   excerpt: string | null
   updated_at: string | null
-  route: "/topics" | "/cases"
+  route: "/topics" | "/cases" | "/skills"
   route_search: SearchRouteSearch
 }
 
 export interface SearchResultsPublic {
   topics: SearchHitPublic[]
   cases: SearchHitPublic[]
+  skills: SearchHitPublic[]
   topic_count: number
   case_count: number
+  skill_count: number
 }
 
 export function readGlobalSearch(
