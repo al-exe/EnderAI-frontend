@@ -20,7 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { cn } from "@/lib/utils"
 import styles from "./SkillsPage.module.css"
@@ -294,14 +293,13 @@ export function SkillsPage({
   initialSelectedSkillId?: string | null
 }) {
   const { isDemoMode } = useDemoMode()
-  const [query, setQuery] = useState("")
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(
     initialSelectedSkillId,
   )
 
   const skillsQuery = useQuery({
-    queryKey: ["skills", { demo: isDemoMode, query }],
-    queryFn: () => readSkills({ demo: isDemoMode, q: query, limit: 100 }),
+    queryKey: ["skills", { demo: isDemoMode }],
+    queryFn: () => readSkills({ demo: isDemoMode, limit: 100 }),
   })
 
   const skills = skillsQuery.data?.data ?? []
@@ -341,9 +339,6 @@ export function SkillsPage({
               <Sparkles className={styles.icon} />
               Skills
             </div>
-            <CardTitle className={styles.heroTitle}>
-              🛠️ Generated Skills
-            </CardTitle>
           </div>
           <div className={styles.heroBadges}>
             <Badge variant="secondary">
@@ -355,18 +350,6 @@ export function SkillsPage({
           </div>
         </CardHeader>
       </Card>
-
-      <div className={styles.toolbar}>
-        <div className={styles.searchBox}>
-          <Search className={styles.searchIcon} />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search skills"
-            className={styles.searchInput}
-          />
-        </div>
-      </div>
 
       {skillsQuery.error ? (
         <Card>
