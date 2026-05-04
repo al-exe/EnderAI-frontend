@@ -28,22 +28,6 @@
   @apply flex flex-wrap gap-2;
 }
 
-.toolbar {
-  @apply shrink-0;
-}
-
-.searchBox {
-  @apply relative max-w-2xl;
-}
-
-.searchIcon {
-  @apply pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground;
-}
-
-.searchInput {
-  @apply pl-9;
-}
-
 .layout {
   @apply grid min-h-0 flex-1 gap-5 overflow-hidden;
 }
@@ -69,7 +53,7 @@
 }
 
 .skillCardSelected {
-  @apply border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/20;
+  @apply border-emerald-500 shadow-[inset_3px_0_0_rgb(16_185_129)];
 }
 
 .skillCardHeader {
