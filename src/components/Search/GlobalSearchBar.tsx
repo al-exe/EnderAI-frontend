@@ -15,7 +15,7 @@ const LIMIT_PER_KIND = 5
 const DEBOUNCE_MS = 200
 
 type SearchEntry = {
-  group: "Topics" | "Cases"
+  group: "Topics" | "Cases" | "Skills"
   hit: SearchHitPublic
 }
 
@@ -78,8 +78,12 @@ export function GlobalSearchBar() {
       group: "Cases" as const,
       hit,
     }))
+    const skills = (searchQuery.data?.skills ?? []).map((hit) => ({
+      group: "Skills" as const,
+      hit,
+    }))
 
-    return [...topics, ...cases]
+    return [...topics, ...cases, ...skills]
   }, [searchQuery.data])
 
   useEffect(() => {
@@ -104,6 +108,16 @@ export function GlobalSearchBar() {
         to: "/topics",
         search: {
           topicId: hit.route_search.topicId ?? hit.id,
+        },
+      })
+      return
+    }
+
+    if (hit.kind === "skill") {
+      void navigate({
+        to: "/skills",
+        search: {
+          skillId: hit.route_search.skillId ?? hit.id,
         },
       })
       return
@@ -152,7 +166,7 @@ export function GlobalSearchBar() {
   }
 
   const renderGroup = (
-    title: "Topics" | "Cases",
+    title: "Topics" | "Cases" | "Skills",
     results: SearchHitPublic[],
     startIndex: number,
   ) => {
@@ -201,6 +215,7 @@ export function GlobalSearchBar() {
 
   const topicResults = searchQuery.data?.topics ?? []
   const caseResults = searchQuery.data?.cases ?? []
+  const skillResults = searchQuery.data?.skills ?? []
 
   return (
     <div
@@ -212,7 +227,7 @@ export function GlobalSearchBar() {
         <SearchIcon className={styles.searchIcon} />
         <Input
           value={query}
-          placeholder="Search Topics and Cases"
+          placeholder="Search Topics, Cases, and Skills"
           className={styles.input}
           data-testid="global-search-input"
           onFocus={() => setIsFocused(true)}
@@ -226,13 +241,22 @@ export function GlobalSearchBar() {
         <Card className={styles.resultsCard}>
           <CardContent className={styles.resultsContent}>
             {searchQuery.isFetching ? (
-              <div className={styles.status}>Searching Topics and Cases…</div>
+              <div className={styles.status}>
+                Searching Topics, Cases, and Skills…
+              </div>
             ) : entries.length === 0 ? (
-              <div className={styles.status}>No Topics or Cases matched.</div>
+              <div className={styles.status}>
+                No Topics, Cases, or Skills matched.
+              </div>
             ) : (
               <div>
                 {renderGroup("Topics", topicResults, 0)}
                 {renderGroup("Cases", caseResults, topicResults.length)}
+                {renderGroup(
+                  "Skills",
+                  skillResults,
+                  topicResults.length + caseResults.length,
+                )}
               </div>
             )}
           </CardContent>

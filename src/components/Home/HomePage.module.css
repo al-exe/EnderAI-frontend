@@ -83,7 +83,7 @@
 }
 
 .heroTitle {
-  @apply max-w-4xl text-4xl font-semibold text-foreground md:text-6xl;
+  @apply max-w-4xl text-[1.8rem] font-semibold text-foreground md:text-5xl;
 }
 
 .heroDescription {
