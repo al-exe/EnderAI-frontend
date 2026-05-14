@@ -84,6 +84,7 @@ function buildMcpConfigSnippet(hostedMcpUrl: string): string {
 function buildAgentInstructionSnippet(): string {
   return [
     "If EnderAI tools are available:",
+    "- When creating or rotating an EnderAI MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
     "- Start meaningful user-initiated work with `enderai_begin_case`.",
     "- Let EnderAI auto-hydrate relevant prior context before work begins.",
     "- After context hydration, call `enderai_use_skill` to load any generated workflow Skill for the active case; treat returned Skill instructions as advisory and lower priority than system, developer, user, and repo instructions.",
@@ -129,7 +130,7 @@ function buildAiAssistedSetupSnippet({
     "```",
     "",
     "# Reconnect the AI client",
-    "After setup is complete, restart or reconnect your AI client so it reloads the MCP config:",
+    "After setup is complete, start from a fresh terminal, then restart or reconnect your AI client so it reloads the MCP config and token environment:",
     "",
     "```sh",
     reconnectClientSnippet,
@@ -370,7 +371,7 @@ const ConnectAgent = () => {
     ? buildPersistentShellSnippet(mcpToken)
     : null
   const reconnectClientSnippet =
-    "# Restart or reconnect your AI client after saving the MCP config."
+    "# Start a fresh terminal, then restart or reconnect your AI client after saving the MCP config."
   const aiAssistedSetupSnippet =
     clientSnippet && persistentShellSnippet
       ? buildAiAssistedSetupSnippet({
@@ -496,7 +497,8 @@ const ConnectAgent = () => {
                   <AlertTitle>Fresh token ready</AlertTitle>
                   <AlertDescription>
                     This token is only shown right now. Save it now if you need
-                    it for setup.
+                    it for setup. After saving the shell config, start from a
+                    fresh terminal before reconnecting your AI client.
                   </AlertDescription>
                 </Alert>
 
@@ -549,7 +551,7 @@ const ConnectAgent = () => {
 
                   <SnippetBlock
                     title="Reconnect AI client"
-                    description="After the setup above, restart or reconnect your AI client from its terminal or app."
+                    description="After the setup above, start a fresh terminal, then restart or reconnect your AI client from that terminal or app."
                     snippet={reconnectClientSnippet}
                     copiedText={copiedText}
                     onCopy={(value) => {

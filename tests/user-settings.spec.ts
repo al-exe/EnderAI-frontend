@@ -4,7 +4,13 @@ import { createUser } from "./utils/privateApi.ts"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser, logOutUser } from "./utils/user"
 
-const tabs = ["My profile", "Connect agent", "Password", "Danger zone"]
+const tabs = [
+  "My profile",
+  "Connect agent",
+  "Billing",
+  "Password",
+  "Danger zone",
+]
 
 test("My profile tab is active by default", async ({ page }) => {
   await page.goto("/settings")
@@ -19,6 +25,60 @@ test("All tabs are visible", async ({ page }) => {
   for (const tab of tabs) {
     await expect(page.getByRole("tab", { name: tab })).toBeVisible()
   }
+})
+
+test.describe("Billing", () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test("Billing tab shows Stripe subscription state", async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem("access_token", "frontend-test-token")
+    })
+
+    await page.route("**/api/v1/users/me", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "user-1",
+          email: "frontend-test@example.com",
+          is_active: true,
+          is_superuser: false,
+          full_name: "Frontend Test User",
+          created_at: "2026-03-14T20:00:00Z",
+        }),
+      })
+    })
+
+    await page.route("**/api/v1/billing/status", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          has_customer: true,
+          subscription_status: "active",
+          subscription_current_period_end: "2026-06-14T20:00:00Z",
+          subscription_cancel_at_period_end: false,
+          price_id: "price_test",
+          is_subscription_active: true,
+        }),
+      })
+    })
+
+    await page.goto("/settings?tab=billing")
+
+    await expect(
+      page.locator('[data-slot="card-title"]').filter({ hasText: "Billing" }),
+    ).toBeVisible()
+    await expect(page.getByText("Active")).toBeVisible()
+    await expect(page.getByText("Renews automatically")).toBeVisible()
+    await expect(
+      page.getByRole("button", { name: "Subscribed" }),
+    ).toBeDisabled()
+    await expect(
+      page.getByRole("button", { name: "Manage billing" }),
+    ).toBeEnabled()
+  })
 })
 
 test.describe("Edit user profile", () => {
@@ -410,6 +470,11 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(
     page.getByText("Paste this into the agent doing setup."),
   ).toBeVisible()
+  await expect(
+    page.getByText(
+      "After saving the shell config, start from a fresh terminal",
+    ),
+  ).toBeVisible()
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
     "# Persist the token",
   )
@@ -435,7 +500,10 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     "# Reconnect the AI client",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
-    "Restart or reconnect your AI client",
+    "start from a fresh terminal",
+  )
+  await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
+    "token environment",
   )
 
   await page.getByRole("tab", { name: "Manual setup" }).click()
@@ -475,8 +543,13 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   expect(persistStepTop?.y).toBeLessThan(configStepTop?.y ?? 0)
   await expect(page.getByText("Reconnect AI client")).toBeVisible()
   await expect(
+    page.getByText(
+      "start a fresh terminal, then restart or reconnect your AI client",
+    ),
+  ).toBeVisible()
+  await expect(
     page.getByTestId("connect-agent-reconnect-client"),
-  ).toContainText("Restart or reconnect your AI client")
+  ).toContainText("Start a fresh terminal")
   await expect(
     page.getByText("Why use the file-based shell setup"),
   ).toHaveCount(0)
@@ -487,6 +560,12 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   ).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
     "enderai_begin_case",
+  )
+  await expect(page.getByTestId("connect-agent-instructions")).toContainText(
+    "creating or rotating an EnderAI MCP credential",
+  )
+  await expect(page.getByTestId("connect-agent-instructions")).toContainText(
+    "fresh terminal",
   )
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
     "auto-hydrate relevant prior context",
