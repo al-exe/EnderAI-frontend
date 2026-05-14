@@ -63,6 +63,10 @@ export type UserPublic = {
     id: string;
     created_at?: (string | null);
     last_seen_at?: (string | null);
+    stripe_subscription_status?: (string | null);
+    stripe_subscription_current_period_end?: (string | null);
+    stripe_subscription_cancel_at_period_end?: boolean;
+    stripe_price_id?: (string | null);
 };
 
 export type UserRegister = {

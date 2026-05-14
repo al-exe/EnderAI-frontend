@@ -21,6 +21,37 @@ function formatLastSeen(value: string | null | undefined): string {
   }).format(date)
 }
 
+function formatBillingPeriodEnd(value: string | null | undefined): string {
+  if (!value) return "No period end"
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Unknown period"
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+  }).format(date)
+}
+
+function formatSubscriptionStatus(value: string | null | undefined): string {
+  if (!value) return "No subscription"
+
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
+}
+
+function getBillingBadgeVariant(
+  value: string | null | undefined,
+): "success" | "destructive" | "secondary" | "outline" {
+  if (value === "active" || value === "trialing") return "success"
+  if (value === "past_due" || value === "unpaid") return "destructive"
+  if (!value || value === "canceled" || value === "incomplete_expired") {
+    return "secondary"
+  }
+  return "outline"
+}
+
 export const columns: ColumnDef<UserTableData>[] = [
   {
     accessorKey: "full_name",
@@ -61,7 +92,7 @@ export const columns: ColumnDef<UserTableData>[] = [
   },
   {
     accessorKey: "is_active",
-    header: "Status",
+    header: "Access",
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <span
@@ -75,6 +106,32 @@ export const columns: ColumnDef<UserTableData>[] = [
         </span>
       </div>
     ),
+  },
+  {
+    accessorKey: "stripe_subscription_status",
+    header: "Billing",
+    cell: ({ row }) => {
+      const status = row.original.stripe_subscription_status
+      const cancelsAtPeriodEnd =
+        row.original.stripe_subscription_cancel_at_period_end
+      const periodEnd = row.original.stripe_subscription_current_period_end
+
+      return (
+        <div className="flex flex-col items-start gap-1">
+          <Badge variant={getBillingBadgeVariant(status)}>
+            {formatSubscriptionStatus(status)}
+          </Badge>
+          {status ? (
+            <span className="text-xs text-muted-foreground">
+              {cancelsAtPeriodEnd ? "Cancels" : "Renews"}{" "}
+              {formatBillingPeriodEnd(periodEnd)}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">Not paid</span>
+          )}
+        </div>
+      )
+    },
   },
   {
     accessorKey: "last_seen_at",
