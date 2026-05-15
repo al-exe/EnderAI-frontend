@@ -6,6 +6,7 @@ import {
 import { BookOpenText, Home, Shield, SquareStack } from "lucide-react"
 
 import type { UserPublic } from "@/client"
+import { DemoModeToggle, V2ModeSwitch } from "@/components/Sidebar/ModeSwitches"
 import { User } from "@/components/Sidebar/User"
 import { Button } from "@/components/ui/button"
 import {
@@ -100,7 +101,9 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
         <SidebarContent>
           <TaskforceNav currentUser={currentUser} />
         </SidebarContent>
-        <SidebarFooter>
+        <SidebarFooter className="gap-1">
+          <DemoModeToggle />
+          <V2ModeSwitch active enabled={Boolean(currentUser.v2)} />
           <User user={currentUser} />
         </SidebarFooter>
       </Sidebar>

@@ -1,19 +1,15 @@
-import { useNavigate } from "@tanstack/react-router"
 import {
   Box,
   Boxes,
-  FlaskConical,
   Home,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
-  SquareStack,
   Users,
 } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
-import { useDemoMode } from "@/components/demo-mode-provider"
 import {
   Sidebar,
   SidebarContent,
@@ -24,8 +20,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
-import { cn } from "@/lib/utils"
 import { type Item, Main } from "./Main"
+import { DemoModeToggle, V2ModeSwitch } from "./ModeSwitches"
 import { User } from "./User"
 
 const baseItems: Item[] = [
@@ -52,91 +48,6 @@ function SidebarCollapseToggle() {
       >
         <Icon className="size-[18px] text-muted-foreground" />
         <span>{label}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-}
-
-function DemoModeToggle() {
-  const { isDemoMode, toggleDemoMode } = useDemoMode()
-  const activeButtonClasses = isDemoMode
-    ? "bg-violet-600 text-white hover:bg-violet-700 hover:text-white active:bg-violet-700 active:text-white data-[active=true]:bg-violet-600 data-[active=true]:text-white data-[active=true]:hover:bg-violet-700 data-[active=true]:hover:text-white data-[active=true]:active:bg-violet-700 data-[active=true]:active:text-white"
-    : ""
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        tooltip={isDemoMode ? "Disable demo mode" : "Enable demo mode"}
-        data-testid="demo-mode-toggle"
-        role="switch"
-        aria-checked={isDemoMode}
-        isActive={isDemoMode}
-        className={activeButtonClasses}
-        onClick={toggleDemoMode}
-      >
-        <FlaskConical
-          className={cn(
-            "size-[18px] text-muted-foreground transition-colors",
-            isDemoMode && "text-violet-100",
-          )}
-        />
-        <span>Demo mode</span>
-        <div
-          aria-hidden="true"
-          data-testid="demo-mode-toggle-track"
-          className={cn(
-            "ml-auto hidden h-6 w-11 items-center rounded-full border border-sidebar-border/70 bg-sidebar-accent/60 px-[3px] transition-colors group-data-[collapsible=icon]:hidden md:flex",
-            isDemoMode && "border-violet-300/30 bg-white/15",
-          )}
-        >
-          <div
-            data-testid="demo-mode-toggle-thumb"
-            className={cn(
-              "h-[15px] w-[15px] rounded-full bg-sidebar-foreground/50 shadow-sm transition-transform",
-              isDemoMode && "translate-x-[21px] bg-white text-violet-700",
-            )}
-          />
-        </div>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-}
-
-function V2ModeSwitch({ enabled }: { enabled: boolean }) {
-  const navigate = useNavigate()
-  const { isMobile, setOpenMobile } = useSidebar()
-
-  if (!enabled) return null
-
-  const handleSwitchToV2 = async () => {
-    if (isMobile) {
-      setOpenMobile(false)
-    }
-
-    await navigate({ to: "/v2/home" })
-  }
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        tooltip="Open Taskforce v2"
-        data-testid="v2-mode-switch"
-        role="switch"
-        aria-checked={false}
-        onClick={handleSwitchToV2}
-      >
-        <SquareStack className="size-[18px] text-muted-foreground" />
-        <span>Taskforce v2</span>
-        <div
-          aria-hidden="true"
-          data-testid="v2-mode-switch-track"
-          className="ml-auto hidden h-6 w-11 items-center rounded-full border border-sidebar-border/70 bg-sidebar-accent/60 px-[3px] group-data-[collapsible=icon]:hidden md:flex"
-        >
-          <div
-            data-testid="v2-mode-switch-thumb"
-            className="h-[15px] w-[15px] rounded-full bg-sidebar-foreground/50 shadow-sm"
-          />
-        </div>
       </SidebarMenuButton>
     </SidebarMenuItem>
   )
