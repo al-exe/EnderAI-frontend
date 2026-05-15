@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router"
 import {
   Box,
   Boxes,
@@ -101,16 +102,52 @@ function DemoModeToggle() {
   )
 }
 
+function V2ModeSwitch({ enabled }: { enabled: boolean }) {
+  const navigate = useNavigate()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  if (!enabled) return null
+
+  const handleSwitchToV2 = async () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+
+    await navigate({ to: "/v2/home" })
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        tooltip="Open Taskforce v2"
+        data-testid="v2-mode-switch"
+        role="switch"
+        aria-checked={false}
+        onClick={handleSwitchToV2}
+      >
+        <SquareStack className="size-[18px] text-muted-foreground" />
+        <span>Taskforce v2</span>
+        <div
+          aria-hidden="true"
+          data-testid="v2-mode-switch-track"
+          className="ml-auto hidden h-6 w-11 items-center rounded-full border border-sidebar-border/70 bg-sidebar-accent/60 px-[3px] group-data-[collapsible=icon]:hidden md:flex"
+        >
+          <div
+            data-testid="v2-mode-switch-thumb"
+            className="h-[15px] w-[15px] rounded-full bg-sidebar-foreground/50 shadow-sm"
+          />
+        </div>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
-  const userItems = currentUser?.v2
-    ? [...baseItems, { icon: SquareStack, title: "Taskforce", path: "/v2/home" }]
-    : baseItems
-
   const items = currentUser?.is_superuser
-    ? [...userItems, { icon: Users, title: "Admin", path: "/admin" }]
-    : userItems
+    ? [...baseItems, { icon: Users, title: "Admin", path: "/admin" }]
+    : baseItems
 
   return (
     <Sidebar collapsible="icon">
@@ -122,6 +159,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="gap-1">
         <DemoModeToggle />
+        <V2ModeSwitch enabled={Boolean(currentUser?.v2)} />
         <SidebarCollapseToggle />
         <SidebarAppearance />
         <User user={currentUser} />
