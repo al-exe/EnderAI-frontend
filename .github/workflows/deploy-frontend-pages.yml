@@ -74,7 +74,7 @@ jobs:
 
       - name: Static route entrypoints for GitHub Pages
         run: |
-          for route in login signup recover-password reset-password topics cases settings admin; do
+          for route in login signup recover-password reset-password topics cases settings admin v2 v2/home v2/library; do
             mkdir -p "dist/$route"
             cp dist/index.html "dist/$route/index.html"
           done

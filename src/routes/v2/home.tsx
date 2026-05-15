@@ -1,0 +1,24 @@
+import { createFileRoute } from "@tanstack/react-router"
+
+import { TaskforcePlaceholder } from "@/components/V2/TaskforceShell"
+
+export const Route = createFileRoute("/v2/home")({
+  component: TaskforceHome,
+  head: () => ({
+    meta: [
+      {
+        title: "Taskforce | Home",
+      },
+    ],
+  }),
+})
+
+function TaskforceHome() {
+  return (
+    <TaskforcePlaceholder
+      eyebrow="Taskforce"
+      title="Home"
+      description="Workspace placeholder."
+    />
+  )
+}

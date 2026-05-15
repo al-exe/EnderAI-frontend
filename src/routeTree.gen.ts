@@ -9,12 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as V2RouteImport } from './routes/v2'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as V2IndexRouteImport } from './routes/v2/index'
+import { Route as V2LibraryRouteImport } from './routes/v2/library'
+import { Route as V2HomeRouteImport } from './routes/v2/home'
 import { Route as LayoutTopicsRouteImport } from './routes/_layout/topics'
 import { Route as LayoutSkillsRouteImport } from './routes/_layout/skills'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
@@ -22,6 +26,11 @@ import { Route as LayoutHomeRouteImport } from './routes/_layout/home'
 import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 
+const V2Route = V2RouteImport.update({
+  id: '/v2',
+  path: '/v2',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -50,6 +59,21 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const V2IndexRoute = V2IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => V2Route,
+} as any)
+const V2LibraryRoute = V2LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => V2Route,
+} as any)
+const V2HomeRoute = V2HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => V2Route,
 } as any)
 const LayoutTopicsRoute = LayoutTopicsRouteImport.update({
   id: '/topics',
@@ -88,12 +112,16 @@ export interface FileRoutesByFullPath {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/v2': typeof V2RouteWithChildren
   '/admin': typeof LayoutAdminRoute
   '/cases': typeof LayoutCasesRoute
   '/home': typeof LayoutHomeRoute
   '/settings': typeof LayoutSettingsRoute
   '/skills': typeof LayoutSkillsRoute
   '/topics': typeof LayoutTopicsRoute
+  '/v2/home': typeof V2HomeRoute
+  '/v2/library': typeof V2LibraryRoute
+  '/v2/': typeof V2IndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,6 +135,9 @@ export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsRoute
   '/skills': typeof LayoutSkillsRoute
   '/topics': typeof LayoutTopicsRoute
+  '/v2/home': typeof V2HomeRoute
+  '/v2/library': typeof V2LibraryRoute
+  '/v2': typeof V2IndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,12 +147,16 @@ export interface FileRoutesById {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/v2': typeof V2RouteWithChildren
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/cases': typeof LayoutCasesRoute
   '/_layout/home': typeof LayoutHomeRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/skills': typeof LayoutSkillsRoute
   '/_layout/topics': typeof LayoutTopicsRoute
+  '/v2/home': typeof V2HomeRoute
+  '/v2/library': typeof V2LibraryRoute
+  '/v2/': typeof V2IndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,12 +166,16 @@ export interface FileRouteTypes {
     | '/recover-password'
     | '/reset-password'
     | '/signup'
+    | '/v2'
     | '/admin'
     | '/cases'
     | '/home'
     | '/settings'
     | '/skills'
     | '/topics'
+    | '/v2/home'
+    | '/v2/library'
+    | '/v2/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,6 +189,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/topics'
+    | '/v2/home'
+    | '/v2/library'
+    | '/v2'
   id:
     | '__root__'
     | '/'
@@ -158,12 +200,16 @@ export interface FileRouteTypes {
     | '/recover-password'
     | '/reset-password'
     | '/signup'
+    | '/v2'
     | '/_layout/admin'
     | '/_layout/cases'
     | '/_layout/home'
     | '/_layout/settings'
     | '/_layout/skills'
     | '/_layout/topics'
+    | '/v2/home'
+    | '/v2/library'
+    | '/v2/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -173,10 +219,18 @@ export interface RootRouteChildren {
   RecoverPasswordRoute: typeof RecoverPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  V2Route: typeof V2RouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/v2': {
+      id: '/v2'
+      path: '/v2'
+      fullPath: '/v2'
+      preLoaderRoute: typeof V2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -218,6 +272,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/v2/': {
+      id: '/v2/'
+      path: '/'
+      fullPath: '/v2/'
+      preLoaderRoute: typeof V2IndexRouteImport
+      parentRoute: typeof V2Route
+    }
+    '/v2/library': {
+      id: '/v2/library'
+      path: '/library'
+      fullPath: '/v2/library'
+      preLoaderRoute: typeof V2LibraryRouteImport
+      parentRoute: typeof V2Route
+    }
+    '/v2/home': {
+      id: '/v2/home'
+      path: '/home'
+      fullPath: '/v2/home'
+      preLoaderRoute: typeof V2HomeRouteImport
+      parentRoute: typeof V2Route
     }
     '/_layout/topics': {
       id: '/_layout/topics'
@@ -285,6 +360,20 @@ const LayoutRouteChildren: LayoutRouteChildren = {
 const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
+interface V2RouteChildren {
+  V2HomeRoute: typeof V2HomeRoute
+  V2LibraryRoute: typeof V2LibraryRoute
+  V2IndexRoute: typeof V2IndexRoute
+}
+
+const V2RouteChildren: V2RouteChildren = {
+  V2HomeRoute: V2HomeRoute,
+  V2LibraryRoute: V2LibraryRoute,
+  V2IndexRoute: V2IndexRoute,
+}
+
+const V2RouteWithChildren = V2Route._addFileChildren(V2RouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LayoutRoute: LayoutRouteWithChildren,
@@ -292,6 +381,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecoverPasswordRoute: RecoverPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  V2Route: V2RouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

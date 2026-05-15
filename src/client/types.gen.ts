@@ -61,6 +61,7 @@ export type UserPublic = {
     is_superuser?: boolean;
     full_name?: (string | null);
     id: string;
+    v2?: boolean;
     created_at?: (string | null);
     last_seen_at?: (string | null);
     stripe_subscription_status?: (string | null);
