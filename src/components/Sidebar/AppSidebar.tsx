@@ -6,6 +6,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
+  SquareStack,
   Users,
 } from "lucide-react"
 
@@ -103,9 +104,13 @@ function DemoModeToggle() {
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
-  const items = currentUser?.is_superuser
-    ? [...baseItems, { icon: Users, title: "Admin", path: "/admin" }]
+  const userItems = currentUser?.v2
+    ? [...baseItems, { icon: SquareStack, title: "Taskforce", path: "/v2/home" }]
     : baseItems
+
+  const items = currentUser?.is_superuser
+    ? [...userItems, { icon: Users, title: "Admin", path: "/admin" }]
+    : userItems
 
   return (
     <Sidebar collapsible="icon">
