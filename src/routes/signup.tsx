@@ -5,6 +5,7 @@ import {
   redirect,
 } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
+import { FcGoogle } from "react-icons/fc"
 import { z } from "zod"
 import { AuthLayout } from "@/components/Common/AuthLayout"
 import {
@@ -58,7 +59,7 @@ export const Route = createFileRoute("/signup")({
 })
 
 function SignUp() {
-  const { signUpMutation } = useAuth()
+  const { googleSignInMutation, signUpMutation } = useAuth()
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
@@ -78,6 +79,8 @@ function SignUp() {
     const { confirm_password: _confirm_password, ...submitData } = data
     signUpMutation.mutate(submitData)
   }
+
+  const authPending = signUpMutation.isPending || googleSignInMutation.isPending
 
   return (
     <AuthLayout>
@@ -169,8 +172,27 @@ function SignUp() {
               type="submit"
               className="w-full"
               loading={signUpMutation.isPending}
+              disabled={authPending}
             >
               Sign Up
+            </LoadingButton>
+
+            <div className="relative flex items-center py-1">
+              <div className="flex-grow border-t border-border" />
+              <span className="mx-3 text-xs text-muted-foreground">or</span>
+              <div className="flex-grow border-t border-border" />
+            </div>
+
+            <LoadingButton
+              type="button"
+              variant="outline"
+              className="w-full"
+              loading={googleSignInMutation.isPending}
+              disabled={authPending}
+              onClick={() => googleSignInMutation.mutate()}
+            >
+              <FcGoogle />
+              Continue with Google
             </LoadingButton>
           </div>
 

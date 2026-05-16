@@ -4,6 +4,8 @@ import { ApiError } from "@/client"
 const firebaseAuthMessages: Record<string, string> = {
   "auth/email-already-in-use": "An account already exists for this email.",
   "auth/invalid-credential": "Incorrect email or password",
+  "auth/popup-blocked": "Allow popups for this site, then try again.",
+  "auth/popup-closed-by-user": "Google sign-in was cancelled.",
   "auth/requires-recent-login": "Log in again before changing your password.",
   "auth/too-many-requests": "Too many attempts. Try again later.",
   "auth/user-disabled": "This account is disabled.",

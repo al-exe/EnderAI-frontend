@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   sendEmailVerification,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   updateProfile,
 } from "firebase/auth"
@@ -21,6 +23,9 @@ import useCustomToast from "./useCustomToast"
 const isLoggedIn = () => {
   return localStorage.getItem("access_token") !== null
 }
+
+const googleProvider = new GoogleAuthProvider()
+googleProvider.setCustomParameters({ prompt: "select_account" })
 
 const useAuth = () => {
   const navigate = useNavigate()
@@ -91,6 +96,27 @@ const useAuth = () => {
     },
   })
 
+  const googleSignInMutation = useMutation({
+    mutationFn: async () => {
+      const credential = await signInWithPopup(firebaseAuth, googleProvider)
+      const idToken = await credential.user.getIdToken()
+      const response = await exchangeFirebaseToken({
+        id_token: idToken,
+        full_name: credential.user.displayName,
+      })
+      localStorage.setItem("access_token", response.access_token)
+    },
+    onSuccess: () => {
+      navigate({ to: "/home" })
+    },
+    onError: (error) => {
+      showErrorToast(getAuthErrorMessage(error))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+    },
+  })
+
   const logout = () => {
     void signOut(firebaseAuth)
     localStorage.removeItem("access_token")
@@ -100,6 +126,7 @@ const useAuth = () => {
   return {
     signUpMutation,
     loginMutation,
+    googleSignInMutation,
     logout,
     user,
   }
