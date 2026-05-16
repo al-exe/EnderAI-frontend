@@ -5,6 +5,7 @@ import {
   redirect,
 } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
+import { FcGoogle } from "react-icons/fc"
 import { z } from "zod"
 
 import type { Body_login_login_access_token as AccessToken } from "@/client"
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/login")({
 })
 
 function Login() {
-  const { loginMutation } = useAuth()
+  const { googleSignInMutation, loginMutation } = useAuth()
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
@@ -66,6 +67,8 @@ function Login() {
     if (loginMutation.isPending) return
     loginMutation.mutate(data)
   }
+
+  const authPending = loginMutation.isPending || googleSignInMutation.isPending
 
   return (
     <AuthLayout>
@@ -126,6 +129,23 @@ function Login() {
 
             <LoadingButton type="submit" loading={loginMutation.isPending}>
               Log In
+            </LoadingButton>
+
+            <div className="relative flex items-center py-1">
+              <div className="flex-grow border-t border-border" />
+              <span className="mx-3 text-xs text-muted-foreground">or</span>
+              <div className="flex-grow border-t border-border" />
+            </div>
+
+            <LoadingButton
+              type="button"
+              variant="outline"
+              loading={googleSignInMutation.isPending}
+              disabled={authPending}
+              onClick={() => googleSignInMutation.mutate()}
+            >
+              <FcGoogle />
+              Continue with Google
             </LoadingButton>
           </div>
 
