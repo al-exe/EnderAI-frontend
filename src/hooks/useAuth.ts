@@ -1,14 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from "firebase/auth"
+import { exchangeFirebaseToken } from "@/api/auth"
 import {
   type Body_login_login_access_token as AccessToken,
-  LoginService,
   type UserPublic,
   type UserRegister,
   UsersService,
 } from "@/client"
-import { handleError } from "@/utils"
+import { firebaseAuth } from "@/lib/firebase"
+import { getAuthErrorMessage } from "@/lib/firebase-errors"
 import useCustomToast from "./useCustomToast"
 
 const isLoggedIn = () => {
@@ -27,21 +34,42 @@ const useAuth = () => {
   })
 
   const signUpMutation = useMutation({
-    mutationFn: (data: UserRegister) =>
-      UsersService.registerUser({ requestBody: data }),
-    onSuccess: () => {
-      navigate({ to: "/login" })
+    mutationFn: async (data: UserRegister) => {
+      const credential = await createUserWithEmailAndPassword(
+        firebaseAuth,
+        data.email,
+        data.password,
+      )
+      if (data.full_name) {
+        await updateProfile(credential.user, { displayName: data.full_name })
+      }
+      await sendEmailVerification(credential.user).catch(() => undefined)
+      const idToken = await credential.user.getIdToken()
+      const response = await exchangeFirebaseToken({
+        id_token: idToken,
+        full_name: data.full_name,
+      })
+      localStorage.setItem("access_token", response.access_token)
     },
-    onError: handleError.bind(showErrorToast),
+    onSuccess: () => {
+      navigate({ to: "/home" })
+    },
+    onError: (error) => {
+      showErrorToast(getAuthErrorMessage(error))
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] })
     },
   })
 
   const login = async (data: AccessToken) => {
-    const response = await LoginService.loginAccessToken({
-      formData: data,
-    })
+    const credential = await signInWithEmailAndPassword(
+      firebaseAuth,
+      data.username,
+      data.password,
+    )
+    const idToken = await credential.user.getIdToken()
+    const response = await exchangeFirebaseToken({ id_token: idToken })
     localStorage.setItem("access_token", response.access_token)
   }
 
@@ -50,10 +78,21 @@ const useAuth = () => {
     onSuccess: () => {
       navigate({ to: "/home" })
     },
-    onError: handleError.bind(showErrorToast),
+    onError: async (error) => {
+      const currentUser = firebaseAuth.currentUser
+      if (
+        currentUser &&
+        !currentUser.emailVerified &&
+        getAuthErrorMessage(error).startsWith("Verify your email")
+      ) {
+        await sendEmailVerification(currentUser).catch(() => undefined)
+      }
+      showErrorToast(getAuthErrorMessage(error))
+    },
   })
 
   const logout = () => {
+    void signOut(firebaseAuth)
     localStorage.removeItem("access_token")
     navigate({ to: "/login" })
   }
