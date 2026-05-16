@@ -1,9 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type UpdatePassword, UsersService } from "@/client"
 import {
   Form,
   FormControl,
@@ -15,7 +19,8 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useCustomToast from "@/hooks/useCustomToast"
-import { handleError } from "@/utils"
+import { getCurrentFirebaseUser } from "@/lib/firebase"
+import { getAuthErrorMessage } from "@/lib/firebase-errors"
 
 const formSchema = z
   .object({
@@ -52,13 +57,25 @@ const ChangePassword = () => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: UpdatePassword) =>
-      UsersService.updatePasswordMe({ requestBody: data }),
+    mutationFn: async (data: FormData) => {
+      const user = await getCurrentFirebaseUser()
+      if (!user?.email) {
+        throw new Error("Log in again before changing your password.")
+      }
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        data.current_password,
+      )
+      await reauthenticateWithCredential(user, credential)
+      await updatePassword(user, data.new_password)
+    },
     onSuccess: () => {
       showSuccessToast("Password updated successfully")
       form.reset()
     },
-    onError: handleError.bind(showErrorToast),
+    onError: (error) => {
+      showErrorToast(getAuthErrorMessage(error))
+    },
   })
 
   const onSubmit = async (data: FormData) => {

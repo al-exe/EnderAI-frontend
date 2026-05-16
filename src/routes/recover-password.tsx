@@ -5,6 +5,7 @@ import {
   Link as RouterLink,
   redirect,
 } from "@tanstack/react-router"
+import { sendPasswordResetEmail } from "firebase/auth"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -22,7 +23,11 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { isLoggedIn } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
-import { handleError } from "@/utils"
+import { firebaseAuth } from "@/lib/firebase"
+import {
+  getAuthErrorMessage,
+  isFirebaseUserNotFoundError,
+} from "@/lib/firebase-errors"
 
 const formSchema = z.object({
   email: z.email(),
@@ -61,6 +66,13 @@ function RecoverPassword() {
     await LoginService.recoverPassword({
       email: data.email,
     })
+    try {
+      await sendPasswordResetEmail(firebaseAuth, data.email)
+    } catch (error) {
+      if (!isFirebaseUserNotFoundError(error)) {
+        throw error
+      }
+    }
   }
 
   const mutation = useMutation({
@@ -69,7 +81,9 @@ function RecoverPassword() {
       showSuccessToast("Password recovery email sent successfully")
       form.reset()
     },
-    onError: handleError.bind(showErrorToast),
+    onError: (error) => {
+      showErrorToast(getAuthErrorMessage(error))
+    },
   })
 
   const onSubmit = async (data: FormData) => {

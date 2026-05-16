@@ -68,9 +68,6 @@ const UserInformation = () => {
     if (data.full_name !== currentUser?.full_name) {
       updateData.full_name = data.full_name
     }
-    if (data.email !== currentUser?.email) {
-      updateData.email = data.email
-    }
 
     mutation.mutate(updateData)
   }
@@ -119,22 +116,12 @@ const UserInformation = () => {
           <FormField
             control={form.control}
             name="email"
-            render={({ field }) =>
-              editMode ? (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              ) : (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <p className="py-2 truncate max-w-sm">{field.value}</p>
-                </FormItem>
-              )
-            }
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <p className="py-2 truncate max-w-sm">{field.value}</p>
+              </FormItem>
+            )}
           />
 
           <div className="flex gap-3">

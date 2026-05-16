@@ -52,7 +52,7 @@ export type UserCreate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
-    password: string;
+    password?: (string | null);
 };
 
 export type UserPublic = {

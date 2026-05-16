@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { sendPasswordResetEmail } from "firebase/auth"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
@@ -29,26 +30,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { firebaseAuth } from "@/lib/firebase"
 import { handleError } from "@/utils"
 
-const formSchema = z
-  .object({
-    email: z.email({ message: "Invalid email address" }),
-    full_name: z.string().optional(),
-    password: z
-      .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
-    confirm_password: z
-      .string()
-      .min(1, { message: "Please confirm your password" }),
-    is_superuser: z.boolean(),
-    is_active: z.boolean(),
-  })
-  .refine((data) => data.password === data.confirm_password, {
-    message: "The passwords don't match",
-    path: ["confirm_password"],
-  })
+const formSchema = z.object({
+  email: z.email({ message: "Invalid email address" }),
+  full_name: z.string().optional(),
+  is_superuser: z.boolean(),
+  is_active: z.boolean(),
+})
 
 type FormData = z.infer<typeof formSchema>
 
@@ -64,8 +54,6 @@ const AddUser = () => {
     defaultValues: {
       email: "",
       full_name: "",
-      password: "",
-      confirm_password: "",
       is_superuser: false,
       is_active: false,
     },
@@ -74,7 +62,10 @@ const AddUser = () => {
   const mutation = useMutation({
     mutationFn: (data: UserCreate) =>
       UsersService.createUser({ requestBody: data }),
-    onSuccess: () => {
+    onSuccess: async (_createdUser, variables) => {
+      await sendPasswordResetEmail(firebaseAuth, variables.email).catch(
+        () => undefined,
+      )
       showSuccessToast("User created successfully")
       form.reset()
       setIsOpen(false)
@@ -101,7 +92,8 @@ const AddUser = () => {
         <DialogHeader>
           <DialogTitle>Add User</DialogTitle>
           <DialogDescription>
-            Fill in the form below to add a new user to the system.
+            Create the user profile. The user can set their password through
+            password recovery.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -136,49 +128,6 @@ const AddUser = () => {
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input placeholder="Full name" type="text" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Set Password <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Password"
-                        type="password"
-                        {...field}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirm_password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Confirm Password{" "}
-                      <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Password"
-                        type="password"
-                        {...field}
-                        required
-                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
