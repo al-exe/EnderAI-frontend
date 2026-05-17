@@ -129,10 +129,16 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
 
   await page.getByTestId("human-evidence-affected-users").click()
 
+  // Anchor click opens split view: both Summary and Details visible/active.
+  await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
+    "data-state",
+    "active",
+  )
   await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
     "data-state",
     "active",
   )
+  await expect(page.getByText("Executive summary")).toBeVisible()
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).toBeVisible()
@@ -144,4 +150,19 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-active-evidence",
     "true",
   )
+
+  // Close button returns to Summary-only view.
+  await page.getByTestId("evidence-split-close").click()
+  await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
+    "data-state",
+    "active",
+  )
+  await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
+    "data-state",
+    "inactive",
+  )
+  await expect(page.getByText("Executive summary")).toBeVisible()
+  await expect(
+    page.getByText("latest-stale-network-bridge-issue.details.md"),
+  ).not.toBeVisible()
 })
