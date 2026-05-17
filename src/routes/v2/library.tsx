@@ -7,7 +7,6 @@ import {
 import { CalendarDays, FileText, Users } from "lucide-react"
 
 import { useDemoMode } from "@/components/demo-mode-provider"
-import { Badge } from "@/components/ui/badge"
 import { v2DemoDocuments } from "@/lib/v2-demo-documents"
 
 export const Route = createFileRoute("/v2/library")({
@@ -57,9 +56,8 @@ function TaskforceLibrary() {
             params={{ documentId: document.id }}
             className="flex min-h-[320px] flex-col border bg-card p-5 text-card-foreground transition-colors hover:border-sidebar-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start">
               <FileText className="mt-1 size-5 shrink-0 text-muted-foreground" />
-              <Badge variant="outline">{document.status}</Badge>
             </div>
 
             <div className="mt-4">

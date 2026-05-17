@@ -5,7 +5,6 @@ export type V2DemoDocument = {
   createdAt: string
   updatedAt: string
   collaborators: string[]
-  status: string
   aiGeneratedSummary: string
   humanSummary: string
   mainBody: Array<{
@@ -30,7 +29,6 @@ export const v2DemoDocuments: V2DemoDocument[] = [
     createdAt: "May 10",
     updatedAt: "May 12",
     collaborators: ["Alex Lee", "Nia Patel"],
-    status: "Resolved",
     aiGeneratedSummary:
       "XYZ Corp traffic hit stale bridge routes after a bridge-controller deploy. The recovery path was validated by refreshing the tenant bridge mapping and confirming post-refresh health checks.",
     humanSummary:
@@ -91,7 +89,6 @@ export const v2DemoDocuments: V2DemoDocument[] = [
     createdAt: "May 13",
     updatedAt: "May 14",
     collaborators: ["Alex Lee", "Jordan Kim"],
-    status: "Draft",
     aiGeneratedSummary:
       "The V2 document model should keep executive summaries short while making each claim traceable to a Details section or another source document.",
     humanSummary:
@@ -152,7 +149,6 @@ export const v2DemoDocuments: V2DemoDocument[] = [
     createdAt: "May 15",
     updatedAt: "May 17",
     collaborators: ["Alex Lee"],
-    status: "Ready",
     aiGeneratedSummary:
       "The hosted MCP setup now emphasizes file-backed token persistence, fresh-terminal reconnect steps, and a V2-specific document instruction set for V2-enabled users.",
     humanSummary:

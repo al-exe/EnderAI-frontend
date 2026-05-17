@@ -3,7 +3,6 @@ import { ArrowLeft } from "lucide-react"
 import { useState } from "react"
 
 import { useDemoMode } from "@/components/demo-mode-provider"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
@@ -87,12 +86,6 @@ function TaskforceDocumentDetail() {
         </p>
 
         <dl className="mt-6 grid gap-2 border-y py-4 text-sm">
-          <div className="grid grid-cols-[7rem_1fr] items-center gap-3">
-            <dt className="text-muted-foreground">Status</dt>
-            <dd>
-              <Badge variant="outline">{demoDocument.status}</Badge>
-            </dd>
-          </div>
           <div className="grid grid-cols-[7rem_1fr] gap-3">
             <dt className="text-muted-foreground">Created</dt>
             <dd>{demoDocument.createdAt}</dd>

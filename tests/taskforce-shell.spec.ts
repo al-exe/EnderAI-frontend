@@ -110,6 +110,9 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     page.getByText("Hosted MCP Credential Setup Refresh"),
   ).toBeVisible()
   await expect(page.getByText("AI detail seed")).toHaveCount(0)
+  await expect(page.getByText("Resolved", { exact: true })).toHaveCount(0)
+  await expect(page.getByText("Ready", { exact: true })).toHaveCount(0)
+  await expect(page.getByText("Draft", { exact: true })).toHaveCount(0)
 
   await page.getByText("Hosted MCP Credential Setup Refresh").click()
   await expect(page).toHaveURL(
