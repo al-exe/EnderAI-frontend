@@ -79,75 +79,87 @@ function TaskforceDocumentDetail() {
   const isSplit = viewMode === "split"
 
   return (
-    <section className="min-h-0 flex-1 overflow-y-auto">
+    <section
+      className={cn(
+        "flex min-h-0 flex-1 flex-col",
+        isSplit ? "overflow-y-auto md:overflow-hidden" : "overflow-y-auto",
+      )}
+    >
       <article
         className={cn(
-          "mx-auto flex w-full flex-col pb-16 transition-[max-width]",
-          isSplit ? "max-w-6xl" : "max-w-3xl",
+          "mx-auto flex w-full flex-col transition-[max-width]",
+          isSplit
+            ? "max-w-6xl md:min-h-0 md:flex-1 md:overflow-hidden"
+            : "max-w-3xl pb-16",
         )}
       >
-        <Button asChild variant="ghost" size="sm" className="-ml-3 mb-4">
-          <Link to="/v2/library">
-            <ArrowLeft className="size-4" />
-            Library
-          </Link>
-        </Button>
+        <div className={cn(isSplit && "md:shrink-0")}>
+          <Button asChild variant="ghost" size="sm" className="-ml-3 mb-4">
+            <Link to="/v2/library">
+              <ArrowLeft className="size-4" />
+              Library
+            </Link>
+          </Button>
 
-        <h1 className="text-4xl font-semibold tracking-tight text-foreground">
-          {demoDocument.title}
-        </h1>
-        <p className="mt-4 text-base leading-7 text-muted-foreground">
-          {demoDocument.description}
-        </p>
+          <h1 className="text-4xl font-semibold tracking-tight text-foreground">
+            {demoDocument.title}
+          </h1>
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
+            {demoDocument.description}
+          </p>
 
-        <dl className="mt-6 grid gap-2 border-y py-4 text-sm">
-          <div className="grid grid-cols-[7rem_1fr] gap-3">
-            <dt className="text-muted-foreground">Created</dt>
-            <dd>{demoDocument.createdAt}</dd>
-          </div>
-          <div className="grid grid-cols-[7rem_1fr] gap-3">
-            <dt className="text-muted-foreground">Updated</dt>
-            <dd>{demoDocument.updatedAt}</dd>
-          </div>
-          <div className="grid grid-cols-[7rem_1fr] gap-3">
-            <dt className="text-muted-foreground">Collaborators</dt>
-            <dd>{demoDocument.collaborators.join(", ")}</dd>
-          </div>
-        </dl>
+          <dl className="mt-6 grid gap-2 border-y py-4 text-sm">
+            <div className="grid grid-cols-[7rem_1fr] gap-3">
+              <dt className="text-muted-foreground">Created</dt>
+              <dd>{demoDocument.createdAt}</dd>
+            </div>
+            <div className="grid grid-cols-[7rem_1fr] gap-3">
+              <dt className="text-muted-foreground">Updated</dt>
+              <dd>{demoDocument.updatedAt}</dd>
+            </div>
+            <div className="grid grid-cols-[7rem_1fr] gap-3">
+              <dt className="text-muted-foreground">Collaborators</dt>
+              <dd>{demoDocument.collaborators.join(", ")}</dd>
+            </div>
+          </dl>
 
-        <div
-          role="tablist"
-          aria-label="Document view"
-          className="mt-6 inline-flex h-9 w-fit items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-        >
-          <ViewToggle
-            label="Summary"
-            active={summaryVisible}
-            onClick={() => {
-              setViewMode("summary")
-              setActiveEvidenceAnchorId(undefined)
-            }}
-          />
-          <ViewToggle
-            label="Details"
-            active={detailsVisible}
-            onClick={() => {
-              setViewMode("details")
-              setActiveEvidenceAnchorId(undefined)
-            }}
-          />
+          <div
+            role="tablist"
+            aria-label="Document view"
+            className="mt-6 inline-flex h-9 w-fit items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+          >
+            <ViewToggle
+              label="Summary"
+              active={summaryVisible}
+              onClick={() => {
+                setViewMode("summary")
+                setActiveEvidenceAnchorId(undefined)
+              }}
+            />
+            <ViewToggle
+              label="Details"
+              active={detailsVisible}
+              onClick={() => {
+                setViewMode("details")
+                setActiveEvidenceAnchorId(undefined)
+              }}
+            />
+          </div>
         </div>
 
         <div
           className={cn(
             "mt-8 gap-6",
-            isSplit ? "grid grid-cols-1 md:grid-cols-2" : "block",
+            isSplit
+              ? "grid grid-cols-1 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:overflow-hidden md:pb-4"
+              : "block",
           )}
         >
           {summaryVisible && (
             <SummaryPane
               demoDocument={demoDocument}
               onShowEvidence={showEvidence}
+              isSplit={isSplit}
             />
           )}
 
@@ -157,6 +169,7 @@ function TaskforceDocumentDetail() {
               activeEvidenceAnchorId={activeEvidenceAnchorId}
               showClose={isSplit}
               onClose={closeSplit}
+              isSplit={isSplit}
             />
           )}
         </div>
@@ -191,12 +204,19 @@ function ViewToggle({
 function SummaryPane({
   demoDocument,
   onShowEvidence,
+  isSplit,
 }: {
   demoDocument: V2DemoDocument
   onShowEvidence: (anchorId: string) => void
+  isSplit: boolean
 }) {
   return (
-    <div className="space-y-9">
+    <div
+      className={cn(
+        "space-y-9",
+        isSplit && "md:min-h-0 md:overflow-y-auto md:pb-4 md:pr-2",
+      )}
+    >
       <section className="space-y-3">
         <h2 className="text-xl font-semibold tracking-tight">
           Executive summary
@@ -253,18 +273,28 @@ function DetailsPane({
   activeEvidenceAnchorId,
   showClose,
   onClose,
+  isSplit,
 }: {
   demoDocument: V2DemoDocument
   activeEvidenceAnchorId: string | undefined
   showClose: boolean
   onClose: () => void
+  isSplit: boolean
 }) {
   return (
     <section
       aria-label={`${demoDocument.detailsFileName} markdown details`}
-      className="h-fit overflow-hidden rounded-md border bg-card md:sticky md:top-2"
+      className={cn(
+        "overflow-hidden rounded-md border bg-card",
+        isSplit && "md:flex md:min-h-0 md:flex-col",
+      )}
     >
-      <div className="flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-2 font-mono text-xs text-muted-foreground">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-2 font-mono text-xs text-muted-foreground",
+          isSplit && "md:shrink-0",
+        )}
+      >
         <span className="truncate">{demoDocument.detailsFileName}</span>
         {showClose && (
           <Button
@@ -281,7 +311,12 @@ function DetailsPane({
           </Button>
         )}
       </div>
-      <div className="px-5 py-4">
+      <div
+        className={cn(
+          "px-5 py-4",
+          isSplit && "md:min-h-0 md:flex-1 md:overflow-y-auto",
+        )}
+      >
         {demoDocument.detailsMarkdownSections.map((section) => (
           <pre
             key={section.anchorId}
