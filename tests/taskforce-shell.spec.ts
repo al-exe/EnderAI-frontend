@@ -119,9 +119,19 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     page.getByRole("tab", { name: "Human-readable" }),
   ).toHaveAttribute("data-state", "active")
   await expect(page.getByText("Executive summary")).toBeVisible()
+  await expect(page.getByText("Main body")).toBeVisible()
+  await expect(page.getByText("Evidence-backed claims")).toHaveCount(0)
   await expect(page.getByText("V2 Instruction Set")).not.toBeVisible()
 
-  await page.getByRole("tab", { name: "AI-friendly" }).click()
+  await page.getByTestId("human-evidence-v2-instructions").click()
 
+  await expect(page.getByRole("tab", { name: "AI-friendly" })).toHaveAttribute(
+    "data-state",
+    "active",
+  )
   await expect(page.getByText("V2 Instruction Set")).toBeVisible()
+  await expect(page.getByTestId("ai-evidence-v2-instructions")).toHaveAttribute(
+    "data-active-evidence",
+    "true",
+  )
 })

@@ -8,9 +8,11 @@ export type V2DemoDocument = {
   status: string
   aiGeneratedSummary: string
   humanSummary: string
-  humanClaims: Array<{
-    text: string
-    evidenceAnchorId: string
+  mainBody: Array<{
+    segments: Array<{
+      text: string
+      evidenceAnchorId?: string
+    }>
   }>
   aiSections: Array<{
     anchorId: string
@@ -33,14 +35,34 @@ export const v2DemoDocuments: V2DemoDocument[] = [
       "XYZ Corp traffic hit stale bridge routes after a bridge-controller deploy. The recovery path was validated by refreshing the tenant bridge mapping and confirming post-refresh health checks.",
     humanSummary:
       "XYZ Corp users hit stale bridge routing after a deploy; the validated fix is Alex's bridge refresh script.",
-    humanClaims: [
+    mainBody: [
       {
-        text: "XYZ Corp users hit stale bridge routing after a deploy.",
-        evidenceAnchorId: "affected-users",
+        segments: [
+          {
+            text: "After the bridge-controller deploy, ",
+          },
+          {
+            text: "XYZ Corp users hit stale bridge routing",
+            evidenceAnchorId: "affected-users",
+          },
+          {
+            text: ". The incident showed up as intermittent requests crossing old tenant bridge routes rather than the refreshed bridge mapping.",
+          },
+        ],
       },
       {
-        text: "The validated fix is Alex's bridge refresh script.",
-        evidenceAnchorId: "validated-fix",
+        segments: [
+          {
+            text: "The team recovered the tenant by running ",
+          },
+          {
+            text: "Alex's bridge refresh script and validating post-refresh probes",
+            evidenceAnchorId: "validated-fix",
+          },
+          {
+            text: ". The useful operational record is the sequence of logs, script execution, and health checks captured in the AI-friendly details.",
+          },
+        ],
       },
     ],
     aiSections: [
@@ -74,14 +96,34 @@ export const v2DemoDocuments: V2DemoDocument[] = [
       "The V2 document model should keep executive summaries short while making each claim traceable to an AI-friendly detail section or another source document.",
     humanSummary:
       "Human summaries should stay short, but each claim needs a direct path to detailed evidence.",
-    humanClaims: [
+    mainBody: [
       {
-        text: "Human summaries should stay short.",
-        evidenceAnchorId: "summary-shape",
+        segments: [
+          {
+            text: "The human-readable view should tell a short story first: what happened, why it matters, and what changed. ",
+          },
+          {
+            text: "It should stay succinct and executive-oriented",
+            evidenceAnchorId: "summary-shape",
+          },
+          {
+            text: " so a reader can understand the outcome without reading the full working log.",
+          },
+        ],
       },
       {
-        text: "Each claim needs a direct path to detailed evidence.",
-        evidenceAnchorId: "claim-evidence",
+        segments: [
+          {
+            text: "The detail should still be verifiable. ",
+          },
+          {
+            text: "Each important human-readable claim needs a direct path to supporting evidence",
+            evidenceAnchorId: "claim-evidence",
+          },
+          {
+            text: ", whether that evidence lives in the AI-friendly detail view or another linked document.",
+          },
+        ],
       },
     ],
     aiSections: [
@@ -115,14 +157,34 @@ export const v2DemoDocuments: V2DemoDocument[] = [
       "The hosted MCP setup now emphasizes file-backed token persistence, fresh-terminal reconnect steps, and a V2-specific document instruction set for V2-enabled users.",
     humanSummary:
       "Fresh terminals prevent stale MCP credentials from persisting after token creation or rotation.",
-    humanClaims: [
+    mainBody: [
       {
-        text: "Fresh terminals prevent stale MCP credentials from persisting.",
-        evidenceAnchorId: "fresh-terminal",
+        segments: [
+          {
+            text: "The credential setup flow was refreshed because token rotation can leave old environment values in already-open shells. ",
+          },
+          {
+            text: "Starting from a fresh terminal prevents stale MCP credentials from persisting",
+            evidenceAnchorId: "fresh-terminal",
+          },
+          {
+            text: " after a token is created or rotated.",
+          },
+        ],
       },
       {
-        text: "V2-enabled users should receive document creation instructions.",
-        evidenceAnchorId: "v2-instructions",
+        segments: [
+          {
+            text: "For V2-enabled users, the setup instructions now push agents toward Taskforce documents instead of legacy cases. ",
+          },
+          {
+            text: "Those users should receive document creation, update, and finalize instructions",
+            evidenceAnchorId: "v2-instructions",
+          },
+          {
+            text: " so meaningful work is captured as a human-readable summary backed by AI-friendly detail.",
+          },
+        ],
       },
     ],
     aiSections: [

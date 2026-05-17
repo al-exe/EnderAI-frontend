@@ -6,6 +6,7 @@ import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 import { findV2DemoDocument } from "@/lib/v2-demo-documents"
 
 export const Route = createFileRoute("/v2/library/$documentId")({
@@ -23,6 +24,7 @@ function TaskforceDocumentDetail() {
   const { documentId } = Route.useParams()
   const { isDemoMode } = useDemoMode()
   const [viewMode, setViewMode] = useState<"human" | "ai">("human")
+  const [activeEvidenceAnchorId, setActiveEvidenceAnchorId] = useState<string>()
   const demoDocument = findV2DemoDocument(documentId)
 
   if (!isDemoMode) {
@@ -58,6 +60,7 @@ function TaskforceDocumentDetail() {
   }
 
   const showEvidence = (anchorId: string) => {
+    setActiveEvidenceAnchorId(anchorId)
     setViewMode("ai")
     window.setTimeout(() => {
       window.document
@@ -129,18 +132,34 @@ function TaskforceDocumentDetail() {
 
           <section className="border bg-card p-5">
             <p className="text-xs font-medium uppercase text-muted-foreground">
-              Evidence-backed claims
+              Main body
             </p>
-            <div className="mt-3 space-y-2">
-              {demoDocument.humanClaims.map((claim) => (
-                <button
-                  key={claim.text}
-                  type="button"
-                  onClick={() => showEvidence(claim.evidenceAnchorId)}
-                  className="block w-full border border-dashed border-border px-3 py-2 text-left text-sm leading-6 transition-colors hover:border-sidebar-ring hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-                >
-                  {claim.text}
-                </button>
+            <div className="mt-3 space-y-4 text-sm leading-7 text-foreground">
+              {demoDocument.mainBody.map((paragraph, paragraphIndex) => (
+                <p key={paragraphIndex}>
+                  {paragraph.segments.map((segment, segmentIndex) => {
+                    const segmentKey = `${paragraphIndex}-${segmentIndex}`
+
+                    if (!segment.evidenceAnchorId) {
+                      return <span key={segmentKey}>{segment.text}</span>
+                    }
+
+                    const evidenceAnchorId = segment.evidenceAnchorId
+
+                    return (
+                      <button
+                        key={segmentKey}
+                        type="button"
+                        aria-label={`Show evidence for: ${segment.text}`}
+                        data-testid={`human-evidence-${evidenceAnchorId}`}
+                        onClick={() => showEvidence(evidenceAnchorId)}
+                        className="inline rounded-sm bg-purple-100/80 px-1 py-0.5 text-left text-purple-950 transition-colors hover:bg-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/70"
+                      >
+                        {segment.text}
+                      </button>
+                    )
+                  })}
+                </p>
               ))}
             </div>
           </section>
@@ -151,7 +170,11 @@ function TaskforceDocumentDetail() {
             <section
               key={section.anchorId}
               id={section.anchorId}
-              className="scroll-mt-6 border bg-card p-5"
+              className={cn(
+                "scroll-mt-6 border bg-card p-5 transition-colors",
+                activeEvidenceAnchorId === section.anchorId &&
+                  "border-purple-300 bg-purple-50/40 ring-2 ring-purple-200 dark:border-purple-700 dark:bg-purple-950/20 dark:ring-purple-900",
+              )}
             >
               <p className="text-xs font-medium uppercase text-muted-foreground">
                 {section.anchorId}
@@ -159,7 +182,17 @@ function TaskforceDocumentDetail() {
               <h2 className="mt-2 text-base font-semibold">
                 {section.heading}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              <p
+                data-testid={`ai-evidence-${section.anchorId}`}
+                data-active-evidence={
+                  activeEvidenceAnchorId === section.anchorId ? "true" : "false"
+                }
+                className={cn(
+                  "mt-3 rounded-sm text-sm leading-6 text-muted-foreground transition-colors",
+                  activeEvidenceAnchorId === section.anchorId &&
+                    "bg-purple-100/80 px-3 py-2 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
+                )}
+              >
                 {section.body}
               </p>
             </section>
