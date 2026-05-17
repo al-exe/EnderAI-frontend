@@ -114,9 +114,9 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(page.getByText("Ready", { exact: true })).toHaveCount(0)
   await expect(page.getByText("Draft", { exact: true })).toHaveCount(0)
 
-  await page.getByText("Hosted MCP Credential Setup Refresh").click()
+  await page.getByText("Latest Stale Network Bridge Issue").click()
   await expect(page).toHaveURL(
-    /\/v2\/library\/0fd8a545-a3b7-4a9f-bb65-1ecf76bd8b6d$/,
+    /\/v2\/library\/8c9b0f48-2f3f-4e8d-9f7d-b4f0607d6a32$/,
   )
   await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
     "data-state",
@@ -125,16 +125,22 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(page.getByText("Executive summary")).toBeVisible()
   await expect(page.getByText("Main body")).toBeVisible()
   await expect(page.getByText("Evidence-backed claims")).toHaveCount(0)
-  await expect(page.getByText("V2 Instruction Set")).not.toBeVisible()
+  await expect(page.getByText("Affected Users And Symptoms")).not.toBeVisible()
 
-  await page.getByTestId("human-evidence-v2-instructions").click()
+  await page.getByTestId("human-evidence-affected-users").click()
 
   await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
     "data-state",
     "active",
   )
-  await expect(page.getByText("V2 Instruction Set")).toBeVisible()
-  await expect(page.getByTestId("ai-evidence-v2-instructions")).toHaveAttribute(
+  await expect(
+    page.getByText("latest-stale-network-bridge-issue.details.md"),
+  ).toBeVisible()
+  await expect(page.getByText("## Affected Users And Symptoms")).toBeVisible()
+  await expect(
+    page.getByText("<!-- evidence-anchor: affected-users -->"),
+  ).toBeVisible()
+  await expect(page.getByTestId("ai-evidence-affected-users")).toHaveAttribute(
     "data-active-evidence",
     "true",
   )

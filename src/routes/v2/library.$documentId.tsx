@@ -162,40 +162,36 @@ function TaskforceDocumentDetail() {
             </section>
           </TabsContent>
 
-          <TabsContent value="ai" className="mt-8 space-y-8">
-            {demoDocument.aiSections.map((section) => (
-              <section
-                key={section.anchorId}
-                id={section.anchorId}
-                className={cn(
-                  "scroll-mt-6 space-y-3 border-l border-transparent pl-4 transition-colors",
-                  activeEvidenceAnchorId === section.anchorId &&
-                    "border-purple-300 bg-purple-50/40 py-3 pr-3 dark:border-purple-700 dark:bg-purple-950/20",
-                )}
-              >
-                <p className="text-xs font-medium uppercase text-muted-foreground">
-                  {section.anchorId}
-                </p>
-                <h2 className="text-xl font-semibold tracking-tight">
-                  {section.heading}
-                </h2>
-                <p
-                  data-testid={`ai-evidence-${section.anchorId}`}
-                  data-active-evidence={
-                    activeEvidenceAnchorId === section.anchorId
-                      ? "true"
-                      : "false"
-                  }
-                  className={cn(
-                    "rounded-sm text-base leading-7 text-muted-foreground transition-colors",
-                    activeEvidenceAnchorId === section.anchorId &&
-                      "bg-purple-100/80 px-3 py-2 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
-                  )}
-                >
-                  {section.body}
-                </p>
-              </section>
-            ))}
+          <TabsContent value="ai" className="mt-8">
+            <section
+              aria-label={`${demoDocument.detailsFileName} markdown details`}
+              className="overflow-hidden rounded-md border bg-card"
+            >
+              <div className="border-b bg-muted/40 px-4 py-2 font-mono text-xs text-muted-foreground">
+                {demoDocument.detailsFileName}
+              </div>
+              <div className="px-5 py-4">
+                {demoDocument.detailsMarkdownSections.map((section) => (
+                  <pre
+                    key={section.anchorId}
+                    id={section.anchorId}
+                    data-testid={`ai-evidence-${section.anchorId}`}
+                    data-active-evidence={
+                      activeEvidenceAnchorId === section.anchorId
+                        ? "true"
+                        : "false"
+                    }
+                    className={cn(
+                      "scroll-mt-6 whitespace-pre-wrap rounded-sm py-2 font-mono text-sm leading-6 text-foreground transition-colors",
+                      activeEvidenceAnchorId === section.anchorId &&
+                        "bg-purple-100/80 px-3 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
+                    )}
+                  >
+                    <code>{section.markdown}</code>
+                  </pre>
+                ))}
+              </div>
+            </section>
           </TabsContent>
         </Tabs>
       </article>
