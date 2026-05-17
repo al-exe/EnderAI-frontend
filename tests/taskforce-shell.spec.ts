@@ -73,6 +73,15 @@ test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {
   await expect(page.getByText("Taskforce").first()).toBeVisible()
 })
 
+test("Taskforce v2 wordmark links to v2 home", async ({ page }) => {
+  await mockTaskforceAuth(page)
+
+  await page.goto("/v2/library")
+  await page.getByRole("link", { name: "Taskforce" }).click()
+
+  await expect(page).toHaveURL(/\/v2\/home$/)
+})
+
 test("Taskforce v2 library shows document demo data only in demo mode", async ({
   page,
 }) => {

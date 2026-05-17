@@ -3,7 +3,7 @@ import {
   Link as RouterLink,
   useRouterState,
 } from "@tanstack/react-router"
-import { BookOpenText, Home, Shield, SquareStack } from "lucide-react"
+import { BookOpenText, Home, Shield } from "lucide-react"
 
 import type { UserPublic } from "@/client"
 import { SidebarAppearance } from "@/components/Common/Appearance"
@@ -44,17 +44,14 @@ function TaskforceMark() {
   return (
     <RouterLink
       to="/v2/home"
-      className="flex min-w-0 items-center gap-3 px-1 group-data-[collapsible=icon]:justify-center"
+      className="min-w-0 px-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0"
     >
-      <div className="flex size-9 shrink-0 items-center justify-center border border-sidebar-border bg-sidebar-accent text-sidebar-foreground">
-        <SquareStack className="size-4" />
-      </div>
-      <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-        <div className="truncate text-sm font-semibold leading-5">
-          Taskforce
-        </div>
-        <div className="truncate text-xs text-muted-foreground">v2</div>
-      </div>
+      <span className="text-[1.7rem] font-semibold group-data-[collapsible=icon]:hidden">
+        Taskforce
+      </span>
+      <span className="hidden text-[1.5rem] font-semibold group-data-[collapsible=icon]:block">
+        T
+      </span>
     </RouterLink>
   )
 }
