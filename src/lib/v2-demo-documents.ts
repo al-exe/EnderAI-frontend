@@ -26,8 +26,8 @@ export const v2DemoDocuments: V2DemoDocument[] = [
     title: "Latest Stale Network Bridge Issue",
     description:
       "Customer-impact investigation with a verified operator fix and command evidence.",
-    createdAt: "May 10",
-    updatedAt: "May 12",
+    createdAt: "May 10, 2026",
+    updatedAt: "May 12, 2026",
     collaborators: ["Alex Lee", "Nia Patel"],
     aiGeneratedSummary:
       "XYZ Corp traffic hit stale bridge routes after a bridge-controller deploy. The recovery path was validated by refreshing the tenant bridge mapping and confirming post-refresh health checks.",
@@ -166,8 +166,8 @@ export const v2DemoDocuments: V2DemoDocument[] = [
     title: "V2 Document Evidence Contract",
     description:
       "Design note for Summary claims backed by source anchors in Details.",
-    createdAt: "May 13",
-    updatedAt: "May 14",
+    createdAt: "May 13, 2026",
+    updatedAt: "May 14, 2026",
     collaborators: ["Alex Lee", "Jordan Kim"],
     aiGeneratedSummary:
       "The V2 document model should keep executive summaries short while making each claim traceable to a Details section or another source document.",
@@ -283,8 +283,8 @@ export const v2DemoDocuments: V2DemoDocument[] = [
     title: "Hosted MCP Credential Setup Refresh",
     description:
       "Setup guidance for connecting an AI client with file-backed token persistence.",
-    createdAt: "May 15",
-    updatedAt: "May 17",
+    createdAt: "May 15, 2026",
+    updatedAt: "May 17, 2026",
     collaborators: ["Alex Lee"],
     aiGeneratedSummary:
       "The hosted MCP setup now emphasizes file-backed token persistence, fresh-terminal reconnect steps, and a V2-specific document instruction set for V2-enabled users.",
