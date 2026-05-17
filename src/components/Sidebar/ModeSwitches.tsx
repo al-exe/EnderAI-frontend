@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router"
-import { FlaskConical, SquareStack } from "lucide-react"
+import { Component, FlaskConical } from "lucide-react"
 
 import { useDemoMode } from "@/components/demo-mode-provider"
 import {
@@ -83,7 +83,7 @@ export function V2ModeSwitch({ active = false, enabled }: V2ModeSwitchProps) {
         isActive={active}
         onClick={handleSwitchMode}
       >
-        <SquareStack className="size-[18px] text-muted-foreground transition-colors" />
+        <Component className="size-[18px] text-muted-foreground transition-colors" />
         <span>Taskforce v2</span>
         <div
           aria-hidden="true"

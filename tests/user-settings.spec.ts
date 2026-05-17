@@ -701,18 +701,16 @@ test("Connect agent shows V2 document instructions for V2-enabled users", async 
   await page.getByTestId("create-agent-credential").click()
 
   const aiSetup = page.getByTestId("connect-agent-ai-setup")
-  await expect(aiSetup).toContainText("V2 MCP document toolset")
-  await expect(aiSetup).toContainText("create a document at the start")
-  await expect(aiSetup).toContainText("human-friendly executive summary")
+  await expect(aiSetup).toContainText("Taskforce V2 MCP tools")
+  await expect(aiSetup).toContainText("Taskforce document at the start")
+  await expect(aiSetup).toContainText("human-readable executive summary")
   await expect(aiSetup).toContainText("AI-friendly detail view")
   await expect(aiSetup).toContainText("evidence anchors")
-  await expect(aiSetup).toContainText(
-    "prefer the V2 document tools for V2-enabled customers",
-  )
+  await expect(aiSetup).toContainText("prefer Taskforce V2 document tools")
   await expect(aiSetup).not.toContainText("enderai_begin_case")
 
   await page.getByRole("tab", { name: "Manual setup" }).click()
   const instructions = page.getByTestId("connect-agent-instructions")
-  await expect(instructions).toContainText("V2 MCP document toolset")
+  await expect(instructions).toContainText("Taskforce V2 MCP tools")
   await expect(instructions).not.toContainText("enderai_finish_case")
 })

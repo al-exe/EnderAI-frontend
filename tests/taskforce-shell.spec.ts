@@ -48,9 +48,16 @@ test("Taskforce v2 sidebar includes collapse and appearance controls", async ({
 
   const collapseToggle = page.getByTestId("sidebar-collapse-toggle")
   const appearanceButton = page.getByTestId("theme-button")
+  const documentLookup = page.getByTestId("v2-document-lookup-input")
 
   await expect(collapseToggle).toBeVisible()
   await expect(appearanceButton).toBeVisible()
+  await expect(documentLookup).toBeVisible()
+  await expect(documentLookup).toHaveAttribute(
+    "placeholder",
+    "Search documents",
+  )
+  await expect(page.getByText("Experimental workspace")).toHaveCount(0)
 
   await collapseToggle.click()
   await expect(collapseToggle).toBeVisible()
@@ -91,9 +98,7 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(page.getByText("Latest Stale Network Bridge Issue")).toHaveCount(
     0,
   )
-  await expect(
-    page.getByText("Turn on demo mode to preview V2 document examples."),
-  ).toBeVisible()
+  await expect(page.getByText("No documents yet.")).toBeVisible()
 
   await page.getByTestId("demo-mode-toggle").click()
 
@@ -104,5 +109,19 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(
     page.getByText("Hosted MCP Credential Setup Refresh"),
   ).toBeVisible()
-  await expect(page.getByText("evidence anchors").first()).toBeVisible()
+  await expect(page.getByText("AI detail seed")).toHaveCount(0)
+
+  await page.getByText("Hosted MCP Credential Setup Refresh").click()
+  await expect(page).toHaveURL(
+    /\/v2\/library\/0fd8a545-a3b7-4a9f-bb65-1ecf76bd8b6d$/,
+  )
+  await expect(
+    page.getByRole("tab", { name: "Human-readable" }),
+  ).toHaveAttribute("data-state", "active")
+  await expect(page.getByText("Executive summary")).toBeVisible()
+  await expect(page.getByText("V2 Instruction Set")).not.toBeVisible()
+
+  await page.getByRole("tab", { name: "AI-friendly" }).click()
+
+  await expect(page.getByText("V2 Instruction Set")).toBeVisible()
 })

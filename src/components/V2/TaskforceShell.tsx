@@ -3,7 +3,7 @@ import {
   Link as RouterLink,
   useRouterState,
 } from "@tanstack/react-router"
-import { BookOpenText, Home, Shield } from "lucide-react"
+import { BookOpenText, Component, Home, Search, Shield } from "lucide-react"
 
 import type { UserPublic } from "@/client"
 import { SidebarAppearance } from "@/components/Common/Appearance"
@@ -11,6 +11,7 @@ import { SidebarCollapseToggle } from "@/components/Common/SidebarCollapseToggle
 import { DemoModeToggle, V2ModeSwitch } from "@/components/Sidebar/ModeSwitches"
 import { User } from "@/components/Sidebar/User"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Sidebar,
   SidebarContent,
@@ -49,9 +50,7 @@ function TaskforceMark() {
       <span className="text-[1.7rem] font-semibold group-data-[collapsible=icon]:hidden">
         Taskforce
       </span>
-      <span className="hidden text-[1.5rem] font-semibold group-data-[collapsible=icon]:block">
-        T
-      </span>
+      <Component className="hidden size-5 group-data-[collapsible=icon]:block" />
     </RouterLink>
   )
 }
@@ -73,7 +72,10 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
   return (
     <SidebarMenu className="px-2">
       {items.map((item) => {
-        const isActive = currentPath === item.path
+        const isActive =
+          currentPath === item.path ||
+          (item.path === "/v2/library" &&
+            currentPath.startsWith("/v2/library/"))
 
         return (
           <SidebarMenuItem key={item.title}>
@@ -112,11 +114,15 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
         <header className="shrink-0 border-b bg-background px-5 md:px-8">
           <div className="flex h-16 items-center gap-3">
             <SidebarTrigger className="md:hidden" />
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold">Taskforce</div>
-              <div className="truncate text-xs text-muted-foreground">
-                Experimental workspace
-              </div>
+            <div className="relative w-full max-w-2xl">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                aria-label="Search documents"
+                className="pl-9"
+                data-testid="v2-document-lookup-input"
+                placeholder="Search documents"
+                readOnly
+              />
             </div>
           </div>
         </header>

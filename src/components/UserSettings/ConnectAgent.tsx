@@ -89,15 +89,16 @@ function buildAgentInstructionSnippet({
 }): string {
   if (v2Enabled) {
     return [
-      "If EnderAI tools are available:",
+      "If Taskforce V2 MCP tools are available:",
       "- When creating or rotating an EnderAI MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
-      "- Use the new V2 MCP document toolset for creating documents.",
-      "- For meaningful user-initiated work, create a document at the start of the work instead of starting a legacy Topic/Case workflow.",
-      "- Keep the document updated as work develops: capture the title, description, collaborators, high-level summary, files inspected, links accessed, commands run, code or config details, decisions, outcomes, and open questions.",
-      "- Maintain both document views: a succinct human-friendly executive summary and a comprehensive AI-friendly detail view.",
-      "- Back every human-summary claim with evidence anchors that navigate to the relevant AI-friendly document detail or to another source document.",
-      "- If legacy Topic/Case tools and V2 document tools are both available, prefer the V2 document tools for V2-enabled customers.",
-      "- Prefer the guided V2 document tools over raw `enderai_request` calls.",
+      "- Use Taskforce V2 document tools for meaningful user-initiated work instead of the legacy EnderAI V1 Topic/Case workflow.",
+      "- Create a Taskforce document at the start of the work with title, description, created/updated timestamps, collaborators, and an initial AI-generated high-level summary.",
+      "- Update the document as work develops with files inspected, links accessed, commands run, code/config details, decisions, outcomes, open questions, and any important context that explains what happened.",
+      "- Maintain two document views: a concise human-readable executive summary shown by default and a comprehensive AI-friendly detail view available on demand.",
+      "- Back every human-readable claim with evidence anchors that navigate to the relevant AI-friendly document detail or to another source document.",
+      "- Finalize the document when the work completes or stops so the human summary, AI details, outcomes, and follow-ups are current.",
+      "- If both Taskforce V2 document tools and legacy EnderAI V1 Topic/Case tools are available, prefer Taskforce V2 document tools.",
+      "- If Taskforce V2 document tools are unavailable, do not fabricate tool calls; tell the user they are unavailable and fall back only to tools the user explicitly approves.",
     ].join("\n")
   }
 
