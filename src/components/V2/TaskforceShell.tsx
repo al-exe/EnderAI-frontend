@@ -6,6 +6,8 @@ import {
 import { BookOpenText, Home, Shield, SquareStack } from "lucide-react"
 
 import type { UserPublic } from "@/client"
+import { SidebarAppearance } from "@/components/Common/Appearance"
+import { SidebarCollapseToggle } from "@/components/Common/SidebarCollapseToggle"
 import { DemoModeToggle, V2ModeSwitch } from "@/components/Sidebar/ModeSwitches"
 import { User } from "@/components/Sidebar/User"
 import { Button } from "@/components/ui/button"
@@ -62,7 +64,7 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
   const router = useRouterState()
   const currentPath = router.location.pathname
   const items = currentUser.is_superuser
-    ? [...taskforceItems, { icon: Shield, title: "Admin", path: "/admin" }]
+    ? [...taskforceItems, { icon: Shield, title: "Admin", path: "/v2/admin" }]
     : taskforceItems
 
   const handleMenuClick = () => {
@@ -104,6 +106,8 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
         <SidebarFooter className="gap-1">
           <DemoModeToggle />
           <V2ModeSwitch active enabled={Boolean(currentUser.v2)} />
+          <SidebarCollapseToggle />
+          <SidebarAppearance />
           <User user={currentUser} />
         </SidebarFooter>
       </Sidebar>

@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as V2IndexRouteImport } from './routes/v2/index'
 import { Route as V2LibraryRouteImport } from './routes/v2/library'
 import { Route as V2HomeRouteImport } from './routes/v2/home'
+import { Route as V2AdminRouteImport } from './routes/v2/admin'
 import { Route as LayoutTopicsRouteImport } from './routes/_layout/topics'
 import { Route as LayoutSkillsRouteImport } from './routes/_layout/skills'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
@@ -75,6 +76,11 @@ const V2HomeRoute = V2HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => V2Route,
 } as any)
+const V2AdminRoute = V2AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => V2Route,
+} as any)
 const LayoutTopicsRoute = LayoutTopicsRouteImport.update({
   id: '/topics',
   path: '/topics',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof LayoutSettingsRoute
   '/skills': typeof LayoutSkillsRoute
   '/topics': typeof LayoutTopicsRoute
+  '/v2/admin': typeof V2AdminRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRoute
   '/v2/': typeof V2IndexRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsRoute
   '/skills': typeof LayoutSkillsRoute
   '/topics': typeof LayoutTopicsRoute
+  '/v2/admin': typeof V2AdminRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRoute
   '/v2': typeof V2IndexRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/skills': typeof LayoutSkillsRoute
   '/_layout/topics': typeof LayoutTopicsRoute
+  '/v2/admin': typeof V2AdminRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRoute
   '/v2/': typeof V2IndexRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/topics'
+    | '/v2/admin'
     | '/v2/home'
     | '/v2/library'
     | '/v2/'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/topics'
+    | '/v2/admin'
     | '/v2/home'
     | '/v2/library'
     | '/v2'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/_layout/settings'
     | '/_layout/skills'
     | '/_layout/topics'
+    | '/v2/admin'
     | '/v2/home'
     | '/v2/library'
     | '/v2/'
@@ -294,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof V2HomeRouteImport
       parentRoute: typeof V2Route
     }
+    '/v2/admin': {
+      id: '/v2/admin'
+      path: '/admin'
+      fullPath: '/v2/admin'
+      preLoaderRoute: typeof V2AdminRouteImport
+      parentRoute: typeof V2Route
+    }
     '/_layout/topics': {
       id: '/_layout/topics'
       path: '/topics'
@@ -361,12 +380,14 @@ const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
 interface V2RouteChildren {
+  V2AdminRoute: typeof V2AdminRoute
   V2HomeRoute: typeof V2HomeRoute
   V2LibraryRoute: typeof V2LibraryRoute
   V2IndexRoute: typeof V2IndexRoute
 }
 
 const V2RouteChildren: V2RouteChildren = {
+  V2AdminRoute: V2AdminRoute,
   V2HomeRoute: V2HomeRoute,
   V2LibraryRoute: V2LibraryRoute,
   V2IndexRoute: V2IndexRoute,
