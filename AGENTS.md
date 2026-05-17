@@ -48,8 +48,8 @@ For V2-enabled users:
 1. create a Taskforce document at the start of meaningful work
 2. set title, description, created/updated timestamps, collaborators, and an initial AI-generated high-level summary
 3. keep the document updated with files inspected, links accessed, commands run, code/config details, decisions, outcomes, open questions, and important context that explains what happened
-4. maintain both document views: a concise human-readable executive summary shown by default and a comprehensive AI-friendly detail view available on demand
-5. back every human-readable claim with evidence anchors that navigate to the relevant AI-friendly detail or another source document
+4. maintain both document views: a concise Summary view shown by default and a comprehensive Details view available on demand
+5. back every Summary claim with evidence anchors that navigate to the relevant Details section or another source document
 6. finish/finalize the document when the work is complete or stops
 
 For approved V1 fallback:

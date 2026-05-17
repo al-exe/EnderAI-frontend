@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { ArrowLeft, CalendarDays, Users } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { useState } from "react"
 
 import { useDemoMode } from "@/components/demo-mode-provider"
@@ -70,135 +70,142 @@ function TaskforceDocumentDetail() {
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
-      <div className="shrink-0">
+    <section className="min-h-0 flex-1 overflow-y-auto">
+      <article className="mx-auto flex w-full max-w-3xl flex-col pb-16">
         <Button asChild variant="ghost" size="sm" className="-ml-3 mb-4">
           <Link to="/v2/library">
             <ArrowLeft className="size-4" />
             Library
           </Link>
         </Button>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">{demoDocument.title}</h1>
-          <Badge variant="outline">{demoDocument.status}</Badge>
-        </div>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+
+        <h1 className="text-4xl font-semibold tracking-tight text-foreground">
+          {demoDocument.title}
+        </h1>
+        <p className="mt-4 text-base leading-7 text-muted-foreground">
           {demoDocument.description}
         </p>
-        <dl className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="size-4" />
-            <dt className="sr-only">Updated</dt>
+
+        <dl className="mt-6 grid gap-2 border-y py-4 text-sm">
+          <div className="grid grid-cols-[7rem_1fr] items-center gap-3">
+            <dt className="text-muted-foreground">Status</dt>
             <dd>
-              Created {demoDocument.createdAt} - Updated{" "}
-              {demoDocument.updatedAt}
+              <Badge variant="outline">{demoDocument.status}</Badge>
             </dd>
           </div>
-          <div className="flex items-center gap-2">
-            <Users className="size-4" />
-            <dt className="sr-only">Collaborators</dt>
+          <div className="grid grid-cols-[7rem_1fr] gap-3">
+            <dt className="text-muted-foreground">Created</dt>
+            <dd>{demoDocument.createdAt}</dd>
+          </div>
+          <div className="grid grid-cols-[7rem_1fr] gap-3">
+            <dt className="text-muted-foreground">Updated</dt>
+            <dd>{demoDocument.updatedAt}</dd>
+          </div>
+          <div className="grid grid-cols-[7rem_1fr] gap-3">
+            <dt className="text-muted-foreground">Collaborators</dt>
             <dd>{demoDocument.collaborators.join(", ")}</dd>
           </div>
         </dl>
-      </div>
 
-      <Tabs
-        value={viewMode}
-        onValueChange={(value) => setViewMode(value as "human" | "ai")}
-      >
-        <TabsList>
-          <TabsTrigger value="human">Human-readable</TabsTrigger>
-          <TabsTrigger value="ai">AI-friendly</TabsTrigger>
-        </TabsList>
+        <Tabs
+          value={viewMode}
+          onValueChange={(value) => setViewMode(value as "human" | "ai")}
+          className="mt-6"
+        >
+          <TabsList>
+            <TabsTrigger value="human">Summary</TabsTrigger>
+            <TabsTrigger value="ai">Details</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="human" className="mt-4 max-w-3xl space-y-6">
-          <section className="border bg-card p-5">
-            <p className="text-xs font-medium uppercase text-muted-foreground">
-              AI-generated summary
-            </p>
-            <p className="mt-3 text-sm leading-6">
-              {demoDocument.aiGeneratedSummary}
-            </p>
-          </section>
-
-          <section className="border bg-card p-5">
-            <p className="text-xs font-medium uppercase text-muted-foreground">
-              Executive summary
-            </p>
-            <p className="mt-3 text-base leading-7">
-              {demoDocument.humanSummary}
-            </p>
-          </section>
-
-          <section className="border bg-card p-5">
-            <p className="text-xs font-medium uppercase text-muted-foreground">
-              Main body
-            </p>
-            <div className="mt-3 space-y-4 text-sm leading-7 text-foreground">
-              {demoDocument.mainBody.map((paragraph, paragraphIndex) => (
-                <p key={paragraphIndex}>
-                  {paragraph.segments.map((segment, segmentIndex) => {
-                    const segmentKey = `${paragraphIndex}-${segmentIndex}`
-
-                    if (!segment.evidenceAnchorId) {
-                      return <span key={segmentKey}>{segment.text}</span>
-                    }
-
-                    const evidenceAnchorId = segment.evidenceAnchorId
-
-                    return (
-                      <button
-                        key={segmentKey}
-                        type="button"
-                        aria-label={`Show evidence for: ${segment.text}`}
-                        data-testid={`human-evidence-${evidenceAnchorId}`}
-                        onClick={() => showEvidence(evidenceAnchorId)}
-                        className="inline rounded-sm bg-purple-100/80 px-1 py-0.5 text-left text-purple-950 transition-colors hover:bg-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/70"
-                      >
-                        {segment.text}
-                      </button>
-                    )
-                  })}
-                </p>
-              ))}
-            </div>
-          </section>
-        </TabsContent>
-
-        <TabsContent value="ai" className="mt-4 max-w-4xl space-y-4">
-          {demoDocument.aiSections.map((section) => (
-            <section
-              key={section.anchorId}
-              id={section.anchorId}
-              className={cn(
-                "scroll-mt-6 border bg-card p-5 transition-colors",
-                activeEvidenceAnchorId === section.anchorId &&
-                  "border-purple-300 bg-purple-50/40 ring-2 ring-purple-200 dark:border-purple-700 dark:bg-purple-950/20 dark:ring-purple-900",
-              )}
-            >
-              <p className="text-xs font-medium uppercase text-muted-foreground">
-                {section.anchorId}
-              </p>
-              <h2 className="mt-2 text-base font-semibold">
-                {section.heading}
+          <TabsContent value="human" className="mt-8 space-y-9">
+            <section className="space-y-3">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Executive summary
               </h2>
-              <p
-                data-testid={`ai-evidence-${section.anchorId}`}
-                data-active-evidence={
-                  activeEvidenceAnchorId === section.anchorId ? "true" : "false"
-                }
-                className={cn(
-                  "mt-3 rounded-sm text-sm leading-6 text-muted-foreground transition-colors",
-                  activeEvidenceAnchorId === section.anchorId &&
-                    "bg-purple-100/80 px-3 py-2 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
-                )}
-              >
-                {section.body}
+              <p className="text-lg leading-8">{demoDocument.humanSummary}</p>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Main body
+              </h2>
+              <div className="space-y-5 text-base leading-8 text-foreground">
+                {demoDocument.mainBody.map((paragraph, paragraphIndex) => (
+                  <p key={paragraphIndex}>
+                    {paragraph.segments.map((segment, segmentIndex) => {
+                      const segmentKey = `${paragraphIndex}-${segmentIndex}`
+
+                      if (!segment.evidenceAnchorId) {
+                        return <span key={segmentKey}>{segment.text}</span>
+                      }
+
+                      const evidenceAnchorId = segment.evidenceAnchorId
+
+                      return (
+                        <button
+                          key={segmentKey}
+                          type="button"
+                          aria-label={`Show evidence for: ${segment.text}`}
+                          data-testid={`human-evidence-${evidenceAnchorId}`}
+                          onClick={() => showEvidence(evidenceAnchorId)}
+                          className="inline rounded-sm bg-purple-100/80 px-1 py-0.5 text-left text-purple-950 transition-colors hover:bg-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/70"
+                        >
+                          {segment.text}
+                        </button>
+                      )
+                    })}
+                  </p>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-3 border-t pt-7">
+              <h2 className="text-base font-semibold tracking-tight text-muted-foreground">
+                AI-generated summary
+              </h2>
+              <p className="text-sm leading-7 text-muted-foreground">
+                {demoDocument.aiGeneratedSummary}
               </p>
             </section>
-          ))}
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+
+          <TabsContent value="ai" className="mt-8 space-y-8">
+            {demoDocument.aiSections.map((section) => (
+              <section
+                key={section.anchorId}
+                id={section.anchorId}
+                className={cn(
+                  "scroll-mt-6 space-y-3 border-l border-transparent pl-4 transition-colors",
+                  activeEvidenceAnchorId === section.anchorId &&
+                    "border-purple-300 bg-purple-50/40 py-3 pr-3 dark:border-purple-700 dark:bg-purple-950/20",
+                )}
+              >
+                <p className="text-xs font-medium uppercase text-muted-foreground">
+                  {section.anchorId}
+                </p>
+                <h2 className="text-xl font-semibold tracking-tight">
+                  {section.heading}
+                </h2>
+                <p
+                  data-testid={`ai-evidence-${section.anchorId}`}
+                  data-active-evidence={
+                    activeEvidenceAnchorId === section.anchorId
+                      ? "true"
+                      : "false"
+                  }
+                  className={cn(
+                    "rounded-sm text-base leading-7 text-muted-foreground transition-colors",
+                    activeEvidenceAnchorId === section.anchorId &&
+                      "bg-purple-100/80 px-3 py-2 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
+                  )}
+                >
+                  {section.body}
+                </p>
+              </section>
+            ))}
+          </TabsContent>
+        </Tabs>
+      </article>
     </section>
   )
 }

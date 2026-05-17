@@ -60,7 +60,7 @@ export const v2DemoDocuments: V2DemoDocument[] = [
             evidenceAnchorId: "validated-fix",
           },
           {
-            text: ". The useful operational record is the sequence of logs, script execution, and health checks captured in the AI-friendly details.",
+            text: ". The useful operational record is the sequence of logs, script execution, and health checks captured in Details.",
           },
         ],
       },
@@ -87,20 +87,20 @@ export const v2DemoDocuments: V2DemoDocument[] = [
     id: "5b7462e9-6b0e-4d48-81a2-07f052534a12",
     title: "V2 Document Evidence Contract",
     description:
-      "Design note for human-summary claims backed by AI-friendly source anchors.",
+      "Design note for Summary claims backed by source anchors in Details.",
     createdAt: "May 13",
     updatedAt: "May 14",
     collaborators: ["Alex Lee", "Jordan Kim"],
     status: "Draft",
     aiGeneratedSummary:
-      "The V2 document model should keep executive summaries short while making each claim traceable to an AI-friendly detail section or another source document.",
+      "The V2 document model should keep executive summaries short while making each claim traceable to a Details section or another source document.",
     humanSummary:
       "Human summaries should stay short, but each claim needs a direct path to detailed evidence.",
     mainBody: [
       {
         segments: [
           {
-            text: "The human-readable view should tell a short story first: what happened, why it matters, and what changed. ",
+            text: "The Summary view should tell a short story first: what happened, why it matters, and what changed. ",
           },
           {
             text: "It should stay succinct and executive-oriented",
@@ -117,11 +117,11 @@ export const v2DemoDocuments: V2DemoDocument[] = [
             text: "The detail should still be verifiable. ",
           },
           {
-            text: "Each important human-readable claim needs a direct path to supporting evidence",
+            text: "Each important Summary claim needs a direct path to supporting evidence",
             evidenceAnchorId: "claim-evidence",
           },
           {
-            text: ", whether that evidence lives in the AI-friendly detail view or another linked document.",
+            text: ", whether that evidence lives in Details or another linked document.",
           },
         ],
       },
@@ -130,12 +130,12 @@ export const v2DemoDocuments: V2DemoDocument[] = [
       {
         anchorId: "summary-shape",
         heading: "Human Summary Shape",
-        body: "The human-readable view is intentionally succinct and executive-oriented. It should capture intent, outcome, and high-level points without exposing the full capture log by default.",
+        body: "The Summary view is intentionally succinct and executive-oriented. It should capture intent, outcome, and high-level points without exposing the full capture log by default.",
       },
       {
         anchorId: "claim-evidence",
         heading: "Claim Evidence Links",
-        body: "Every human summary claim points to an evidence anchor in the AI-friendly view or another document. Related implementation references include `docs/topic-case-contextpack-model.md` and `src/routes/v2/library.tsx`.",
+        body: "Every Summary claim points to an evidence anchor in Details or another document. Related implementation references include `docs/topic-case-contextpack-model.md` and `src/routes/v2/library.tsx`.",
       },
       {
         anchorId: "commands",
@@ -182,7 +182,7 @@ export const v2DemoDocuments: V2DemoDocument[] = [
             evidenceAnchorId: "v2-instructions",
           },
           {
-            text: " so meaningful work is captured as a human-readable summary backed by AI-friendly detail.",
+            text: " so meaningful work is captured as a Summary backed by Details.",
           },
         ],
       },
@@ -196,7 +196,7 @@ export const v2DemoDocuments: V2DemoDocument[] = [
       {
         anchorId: "v2-instructions",
         heading: "V2 Instruction Set",
-        body: "V2-enabled users receive instructions to prefer the V2 MCP document toolset, create a document at the start of meaningful work, and maintain human-friendly and AI-friendly document views.",
+        body: "V2-enabled users receive instructions to prefer the V2 MCP document toolset, create a document at the start of meaningful work, and maintain Summary and Details document views.",
       },
       {
         anchorId: "files-commands",
