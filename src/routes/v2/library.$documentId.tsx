@@ -5,7 +5,10 @@ import { useState } from "react"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { findV2DemoDocument, type V2DemoDocument } from "@/lib/v2-demo-documents"
+import {
+  findV2DemoDocument,
+  type V2DemoDocument,
+} from "@/lib/v2-demo-documents"
 
 export const Route = createFileRoute("/v2/library/$documentId")({
   component: TaskforceDocumentDetail,
@@ -90,7 +93,7 @@ function TaskforceDocumentDetail() {
           "mx-auto flex w-full flex-col transition-[max-width]",
           isSplit
             ? "max-w-6xl md:min-h-0 md:flex-1 md:overflow-hidden"
-            : "max-w-3xl pb-16",
+            : "max-w-none pb-16",
         )}
       >
         <div className={cn(isSplit && "md:shrink-0")}>
@@ -112,9 +115,7 @@ function TaskforceDocumentDetail() {
           <p
             className={cn(
               "text-muted-foreground",
-              isSplit
-                ? "mt-1 text-sm leading-6"
-                : "mt-4 text-base leading-7",
+              isSplit ? "mt-1 text-sm leading-6" : "mt-4 text-base leading-7",
             )}
           >
             {demoDocument.description}

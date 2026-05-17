@@ -89,6 +89,76 @@ test("Taskforce v2 wordmark links to v2 home", async ({ page }) => {
   await expect(page).toHaveURL(/\/v2\/home$/)
 })
 
+test("Taskforce v2 document search filters demo documents and opens results", async ({
+  page,
+}) => {
+  await mockTaskforceAuth(page)
+
+  await page.goto("/v2/home")
+
+  const search = page.getByTestId("v2-document-lookup-input")
+  await expect(search).toBeVisible()
+
+  // Without demo mode, typing prompts the user to enable it.
+  await search.fill("bridge")
+  await expect(page.getByTestId("v2-document-lookup-hint")).toBeVisible()
+  await expect(page.getByTestId("v2-document-lookup-results")).toContainText(
+    "demo mode",
+  )
+
+  // Enabling demo mode replaces the hint with matching documents.
+  await search.fill("")
+  await page.getByTestId("demo-mode-toggle").click()
+  await search.fill("bridge")
+  await expect(
+    page
+      .getByText("Latest Stale Network Bridge Issue", { exact: true })
+      .first(),
+  ).toBeVisible()
+  await expect(
+    page.getByText("Hosted MCP Credential Setup Refresh"),
+  ).toHaveCount(0)
+
+  // Unrelated query produces an empty-state message.
+  await search.fill("zzzzznomatch")
+  await expect(page.getByTestId("v2-document-lookup-empty")).toBeVisible()
+
+  // Enter on the first result navigates to that document.
+  await search.fill("evidence contract")
+  await expect(
+    page.getByTestId(
+      "v2-document-lookup-result-5b7462e9-6b0e-4d48-81a2-07f052534a12",
+    ),
+  ).toBeVisible()
+  await search.press("Enter")
+  await expect(page).toHaveURL(
+    /\/v2\/library\/5b7462e9-6b0e-4d48-81a2-07f052534a12$/,
+  )
+  await expect(
+    page.getByRole("heading", { name: "V2 Document Evidence Contract" }),
+  ).toBeVisible()
+
+  // After navigation, the search input is reset.
+  await expect(search).toHaveValue("")
+
+  // Clicking a result navigates to a different document.
+  await search.fill("hosted mcp")
+  await page
+    .getByTestId(
+      "v2-document-lookup-result-0fd8a545-a3b7-4a9f-bb65-1ecf76bd8b6d",
+    )
+    .click()
+  await expect(page).toHaveURL(
+    /\/v2\/library\/0fd8a545-a3b7-4a9f-bb65-1ecf76bd8b6d$/,
+  )
+
+  // Escape closes the dropdown without navigating.
+  await search.fill("bridge")
+  await expect(page.getByTestId("v2-document-lookup-results")).toBeVisible()
+  await search.press("Escape")
+  await expect(page.getByTestId("v2-document-lookup-results")).toHaveCount(0)
+})
+
 test("Taskforce v2 library shows document demo data only in demo mode", async ({
   page,
 }) => {
