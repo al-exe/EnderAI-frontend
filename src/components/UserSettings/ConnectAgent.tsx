@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import useAuth from "@/hooks/useAuth"
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -81,7 +82,25 @@ function buildMcpConfigSnippet(hostedMcpUrl: string): string {
   ].join("\n")
 }
 
-function buildAgentInstructionSnippet(): string {
+function buildAgentInstructionSnippet({
+  v2Enabled,
+}: {
+  v2Enabled: boolean
+}): string {
+  if (v2Enabled) {
+    return [
+      "If EnderAI tools are available:",
+      "- When creating or rotating an EnderAI MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
+      "- Use the new V2 MCP document toolset for creating documents.",
+      "- For meaningful user-initiated work, create a document at the start of the work instead of starting a legacy Topic/Case workflow.",
+      "- Keep the document updated as work develops: capture the title, description, collaborators, high-level summary, files inspected, links accessed, commands run, code or config details, decisions, outcomes, and open questions.",
+      "- Maintain both document views: a succinct human-friendly executive summary and a comprehensive AI-friendly detail view.",
+      "- Back every human-summary claim with evidence anchors that navigate to the relevant AI-friendly document detail or to another source document.",
+      "- If legacy Topic/Case tools and V2 document tools are both available, prefer the V2 document tools for V2-enabled customers.",
+      "- Prefer the guided V2 document tools over raw `enderai_request` calls.",
+    ].join("\n")
+  }
+
   return [
     "If EnderAI tools are available:",
     "- When creating or rotating an EnderAI MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
@@ -278,6 +297,7 @@ function CredentialCard({
 const ConnectAgent = () => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
+  const { user: currentUser } = useAuth()
   const [copiedText, copy] = useCopyToClipboard()
   const [credentialLabel, setCredentialLabel] = useState("EnderAI token")
   const [selectedCredentialId, setSelectedCredentialId] = useState<
@@ -366,7 +386,9 @@ const ConnectAgent = () => {
           "https://enderai-mcp.onrender.com/mcp",
       )
     : null
-  const agentInstructionSnippet = buildAgentInstructionSnippet()
+  const agentInstructionSnippet = buildAgentInstructionSnippet({
+    v2Enabled: Boolean(currentUser?.v2),
+  })
   const persistentShellSnippet = hasFreshToken
     ? buildPersistentShellSnippet(mcpToken)
     : null

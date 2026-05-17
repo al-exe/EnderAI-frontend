@@ -72,3 +72,28 @@ test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {
   ).toBeVisible()
   await expect(page.getByText("Taskforce").first()).toBeVisible()
 })
+
+test("Taskforce v2 library shows document demo data only in demo mode", async ({
+  page,
+}) => {
+  await mockTaskforceAuth(page)
+
+  await page.goto("/v2/library")
+  await expect(page.getByText("Latest Stale Network Bridge Issue")).toHaveCount(
+    0,
+  )
+  await expect(
+    page.getByText("Turn on demo mode to preview V2 document examples."),
+  ).toBeVisible()
+
+  await page.getByTestId("demo-mode-toggle").click()
+
+  await expect(
+    page.getByText("Latest Stale Network Bridge Issue"),
+  ).toBeVisible()
+  await expect(page.getByText("V2 Document Evidence Contract")).toBeVisible()
+  await expect(
+    page.getByText("Hosted MCP Credential Setup Refresh"),
+  ).toBeVisible()
+  await expect(page.getByText("evidence anchors").first()).toBeVisible()
+})

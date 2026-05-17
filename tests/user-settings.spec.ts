@@ -543,9 +543,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   expect(persistStepTop?.y).toBeLessThan(configStepTop?.y ?? 0)
   await expect(page.getByText("Reconnect AI client")).toBeVisible()
   await expect(
-    page.getByText(
-      "start a fresh terminal, then restart or reconnect your AI client",
-    ),
+    page.getByText("After the setup above, start a fresh terminal"),
   ).toBeVisible()
   await expect(
     page.getByTestId("connect-agent-reconnect-client"),
@@ -617,4 +615,104 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(page.getByText("# Reconnect the AI client")).toHaveCount(0)
   await expect(page.getByText("# Set up MCP config")).toHaveCount(0)
   await expect(page.getByText("Revoked install")).toHaveCount(0)
+})
+
+test("Connect agent shows V2 document instructions for V2-enabled users", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("access_token", "frontend-test-token")
+  })
+
+  await page.route("**/api/v1/users/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "user-v2",
+        email: "frontend-v2-test@example.com",
+        is_active: true,
+        is_superuser: false,
+        full_name: "Frontend V2 Test User",
+        created_at: "2026-03-14T20:00:00Z",
+        v2: true,
+      }),
+    })
+  })
+
+  let credentials = {
+    data: [],
+    count: 0,
+  } as {
+    data: Array<{
+      id: string
+      user_id: string
+      label: string
+      created_at: string | null
+      updated_at: string | null
+      last_rotated_at: string | null
+      current_token_expires_at: string | null
+      last_used_at: string | null
+      revoked_at: string | null
+    }>
+    count: number
+  }
+
+  await page.route("**/api/v1/agent-credentials/", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(credentials),
+      })
+      return
+    }
+
+    const createdCredential = {
+      id: "agent-credential-v2",
+      user_id: "user-v2",
+      label: "V2 laptop",
+      created_at: "2026-03-14T20:00:00Z",
+      updated_at: "2026-03-14T20:00:00Z",
+      last_rotated_at: "2026-03-14T20:00:00Z",
+      current_token_expires_at: "2027-03-14T20:00:00Z",
+      last_used_at: null,
+      revoked_at: null,
+    }
+
+    credentials = {
+      data: [createdCredential],
+      count: 1,
+    }
+
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        credential: createdCredential,
+        mcp_access_token: "mcp-token-v2",
+        token_type: "bearer",
+      }),
+    })
+  })
+
+  await page.goto("/settings?tab=connect-agent")
+  await page.getByLabel("Credential label").fill("V2 laptop")
+  await page.getByTestId("create-agent-credential").click()
+
+  const aiSetup = page.getByTestId("connect-agent-ai-setup")
+  await expect(aiSetup).toContainText("V2 MCP document toolset")
+  await expect(aiSetup).toContainText("create a document at the start")
+  await expect(aiSetup).toContainText("human-friendly executive summary")
+  await expect(aiSetup).toContainText("AI-friendly detail view")
+  await expect(aiSetup).toContainText("evidence anchors")
+  await expect(aiSetup).toContainText(
+    "prefer the V2 document tools for V2-enabled customers",
+  )
+  await expect(aiSetup).not.toContainText("enderai_begin_case")
+
+  await page.getByRole("tab", { name: "Manual setup" }).click()
+  const instructions = page.getByTestId("connect-agent-instructions")
+  await expect(instructions).toContainText("V2 MCP document toolset")
+  await expect(instructions).not.toContainText("enderai_finish_case")
 })

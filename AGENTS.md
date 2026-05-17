@@ -1,6 +1,6 @@
 # EnderAI — MCP-First Agent Rules (Portable Template)
 
-Last updated: 2026-04-26
+Last updated: 2026-05-17
 
 ## Integration Pause
 - Do not use EnderAI MCP tools unless Alex explicitly asks to use EnderAI MCP again.
@@ -13,7 +13,8 @@ This template is intended for agents and IDEs that use EnderAI through MCP.
 It assumes:
 - EnderAI remote memory is the primary persistence layer
 - the hosted MCP endpoint is the main integration surface
-- the canonical workflow is `Topic / Case / ContextPack`
+- the V1 canonical workflow is `Topic / Case / ContextPack`
+- V2-enabled users should use the document MCP workflow when available
 
 ## Hard Constraint: MCP-Only Demo Mode
 When the user explicitly wants to prove EnderAI memory value across tools or machines, operate in MCP-only demo mode:
@@ -22,7 +23,12 @@ When the user explicitly wants to prove EnderAI memory value across tools or mac
 - if required context is missing, ask the user to permit local inspection or store the missing guidance in EnderAI first
 
 ## Required MCP Tools
-Prefer these tools:
+Prefer these V2 document tools for V2-enabled users when they are available:
+- the guided document creation/start tool
+- the guided document update/progress tool
+- the guided document finish/finalize tool
+
+For V1 users or servers without V2 document tools, prefer these legacy tools:
 - `enderai_begin_case`
 - `enderai_update_case`
 - `enderai_finish_case`
@@ -38,6 +44,13 @@ There is one user-scoped auth token in the normal hosted flow:
 The hosted MCP validates that token and reuses it for backend API calls on behalf of the same user.
 
 ## Meaningful Work Workflow
+For V2-enabled users:
+1. create a document at the start of meaningful work
+2. keep the document updated with title, description, collaborators, files inspected, links accessed, commands run, code/config details, decisions, outcomes, and open questions
+3. maintain both document views: a succinct human-friendly executive summary and a comprehensive AI-friendly detail view
+4. back every human-summary claim with evidence anchors that navigate to the relevant AI-friendly detail or another source document
+5. finish/finalize the document when the work is complete or stops
+
 For meaningful user-initiated work:
 1. call `enderai_begin_case`
 2. let EnderAI auto-hydrate relevant prior context before work begins
@@ -53,7 +66,8 @@ For repo-level fix requests, bug lists, or cleanup batches:
 4. merge after validation unless the user explicitly asks to hold the PR open
 
 ## Default Behavior
-- prefer guided case tools over raw `enderai_request`
+- for V2-enabled users, prefer guided V2 document tools over raw `enderai_request`
+- for V1 users, prefer guided case tools over raw `enderai_request`
 - use `enderai_request` mainly as an escape hatch for uncovered endpoints
 - avoid write-like `enderai_request` calls without an active case
 - do not store secrets in case updates or event data
@@ -62,9 +76,11 @@ For repo-level fix requests, bug lists, or cleanup batches:
 After connecting a client:
 1. run `enderai_session_info`
 2. verify the session is authenticated and ready
-3. start a real task and confirm the agent begins with `enderai_begin_case`
+3. for V2-enabled users, start a real task and confirm the agent creates a V2 document
+4. for V1 users, start a real task and confirm the agent begins with `enderai_begin_case`
 
 ## Common Failure Modes
 - a stale MCP session after a redeploy may require the client to reconnect
 - if the client sees EnderAI tools but does not use them, reinforce the workflow reminder in local instructions
+- if V2 document tools are unavailable, do not fabricate tool calls; report the missing V2 document toolset and fall back only to tools the user approves
 - if a write-like raw request is rejected, start with `enderai_begin_case` so EnderAI can auto-hydrate context first
