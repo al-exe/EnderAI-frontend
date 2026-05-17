@@ -101,32 +101,49 @@ function TaskforceDocumentDetail() {
             </Link>
           </Button>
 
-          <h1 className="text-4xl font-semibold tracking-tight text-foreground">
+          <h1
+            className={cn(
+              "font-semibold tracking-tight text-foreground",
+              isSplit ? "text-2xl" : "text-4xl",
+            )}
+          >
             {demoDocument.title}
           </h1>
-          <p className="mt-4 text-base leading-7 text-muted-foreground">
+          <p
+            className={cn(
+              "text-muted-foreground",
+              isSplit
+                ? "mt-1 text-sm leading-6"
+                : "mt-4 text-base leading-7",
+            )}
+          >
             {demoDocument.description}
           </p>
 
-          <dl className="mt-6 grid gap-2 border-y py-4 text-sm">
-            <div className="grid grid-cols-[7rem_1fr] gap-3">
-              <dt className="text-muted-foreground">Created</dt>
-              <dd>{demoDocument.createdAt}</dd>
-            </div>
-            <div className="grid grid-cols-[7rem_1fr] gap-3">
-              <dt className="text-muted-foreground">Updated</dt>
-              <dd>{demoDocument.updatedAt}</dd>
-            </div>
-            <div className="grid grid-cols-[7rem_1fr] gap-3">
-              <dt className="text-muted-foreground">Collaborators</dt>
-              <dd>{demoDocument.collaborators.join(", ")}</dd>
-            </div>
-          </dl>
+          {!isSplit && (
+            <dl className="mt-6 grid gap-2 border-y py-4 text-sm">
+              <div className="grid grid-cols-[7rem_1fr] gap-3">
+                <dt className="text-muted-foreground">Created</dt>
+                <dd>{demoDocument.createdAt}</dd>
+              </div>
+              <div className="grid grid-cols-[7rem_1fr] gap-3">
+                <dt className="text-muted-foreground">Updated</dt>
+                <dd>{demoDocument.updatedAt}</dd>
+              </div>
+              <div className="grid grid-cols-[7rem_1fr] gap-3">
+                <dt className="text-muted-foreground">Collaborators</dt>
+                <dd>{demoDocument.collaborators.join(", ")}</dd>
+              </div>
+            </dl>
+          )}
 
           <div
             role="tablist"
             aria-label="Document view"
-            className="mt-6 inline-flex h-9 w-fit items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+            className={cn(
+              "inline-flex h-9 w-fit items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground",
+              isSplit ? "mt-4" : "mt-6",
+            )}
           >
             <ViewToggle
               label="Summary"
@@ -149,10 +166,10 @@ function TaskforceDocumentDetail() {
 
         <div
           className={cn(
-            "mt-8 gap-6",
+            "gap-6",
             isSplit
-              ? "grid grid-cols-1 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:overflow-hidden md:pb-4"
-              : "block",
+              ? "mt-4 grid grid-cols-1 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:overflow-hidden md:pb-4"
+              : "mt-8 block",
           )}
         >
           {summaryVisible && (
