@@ -90,10 +90,8 @@ function TaskforceDocumentDetail() {
     >
       <article
         className={cn(
-          "mx-auto flex w-full flex-col transition-[max-width]",
-          isSplit
-            ? "max-w-6xl md:min-h-0 md:flex-1 md:overflow-hidden"
-            : "max-w-none pb-16",
+          "mx-auto flex w-full max-w-none flex-col",
+          isSplit ? "md:min-h-0 md:flex-1 md:overflow-hidden" : "pb-16",
         )}
       >
         <div className={cn(isSplit && "md:shrink-0")}>
