@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query"
 import {
   Outlet,
   Link as RouterLink,
@@ -14,7 +15,7 @@ import {
   useRef,
   useState,
 } from "react"
-
+import { readV2Documents, type V2DocumentPublic } from "@/api/v2Documents"
 import type { UserPublic } from "@/client"
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { SidebarCollapseToggle } from "@/components/Common/SidebarCollapseToggle"
@@ -37,7 +38,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
-import { type V2DemoDocument, v2DemoDocuments } from "@/lib/v2-demo-documents"
 
 type TaskforceShellProps = {
   currentUser: UserPublic
@@ -106,26 +106,26 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
 }
 
 type DocumentSearchMatch = {
-  document: V2DemoDocument
+  document: V2DocumentPublic
   snippet: string
 }
 
 const MAX_SEARCH_RESULTS = 8
 
-function collectSearchableFields(document: V2DemoDocument): string[] {
-  const bodyText = document.mainBody
+function collectSearchableFields(document: V2DocumentPublic): string[] {
+  const bodyText = document.main_body
     .map((paragraph) =>
       paragraph.segments.map((segment) => segment.text).join(""),
     )
     .join("\n")
-  const detailsText = document.detailsMarkdownSections
+  const detailsText = document.details_markdown_sections
     .map((section) => section.markdown)
     .join("\n")
   return [
     document.title,
     document.description,
-    document.humanSummary,
-    document.aiGeneratedSummary,
+    document.human_summary,
+    document.ai_generated_summary,
     bodyText,
     detailsText,
   ]
@@ -141,7 +141,7 @@ function extractSnippet(text: string, matchIndex: number, matchLength: number) {
 }
 
 function findMatch(
-  document: V2DemoDocument,
+  document: V2DocumentPublic,
   needle: string,
 ): DocumentSearchMatch | null {
   for (const text of collectSearchableFields(document)) {
@@ -206,11 +206,18 @@ function DocumentSearch() {
 
   const trimmedQuery = query.trim()
 
+  const documentsQuery = useQuery({
+    queryKey: ["v2-documents", { demo: isDemoMode }],
+    queryFn: () => readV2Documents({ demo: isDemoMode }),
+    enabled: isDemoMode,
+  })
+  const documents = documentsQuery.data?.data ?? []
+
   const results = useMemo<DocumentSearchMatch[]>(() => {
     if (!isDemoMode || !trimmedQuery) return []
     const needle = trimmedQuery.toLowerCase()
     const matches: DocumentSearchMatch[] = []
-    for (const document of v2DemoDocuments) {
+    for (const document of documents) {
       const match = findMatch(document, needle)
       if (match) {
         matches.push(match)
@@ -218,7 +225,7 @@ function DocumentSearch() {
       }
     }
     return matches
-  }, [isDemoMode, trimmedQuery])
+  }, [isDemoMode, trimmedQuery, documents])
 
   useEffect(() => {
     if (lastQueryRef.current === trimmedQuery) return

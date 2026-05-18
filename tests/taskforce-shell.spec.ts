@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
 
+import { mockV2Documents } from "./fixtures/v2-documents"
+
 const currentUser = {
   id: "user-1",
   email: "alex@example.com",
@@ -43,6 +45,7 @@ test("Taskforce v2 sidebar includes collapse and appearance controls", async ({
   page,
 }) => {
   await mockTaskforceAuth(page)
+  await mockV2Documents(page)
 
   await page.goto("/v2/home")
 
@@ -68,6 +71,7 @@ test("Taskforce v2 sidebar includes collapse and appearance controls", async ({
 
 test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {
   await mockTaskforceAuth(page)
+  await mockV2Documents(page)
 
   await page.goto("/v2/home")
   await page.getByRole("link", { name: "Admin" }).click()
@@ -82,6 +86,7 @@ test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {
 
 test("Taskforce v2 wordmark links to v2 home", async ({ page }) => {
   await mockTaskforceAuth(page)
+  await mockV2Documents(page)
 
   await page.goto("/v2/library")
   await page.getByRole("link", { name: "Taskforce" }).click()
@@ -93,6 +98,7 @@ test("Taskforce v2 document search filters demo documents and opens results", as
   page,
 }) => {
   await mockTaskforceAuth(page)
+  await mockV2Documents(page)
 
   await page.goto("/v2/home")
 
@@ -163,6 +169,7 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   page,
 }) => {
   await mockTaskforceAuth(page)
+  await mockV2Documents(page)
   await page.setViewportSize({ width: 1280, height: 420 })
 
   await page.goto("/v2/library")
