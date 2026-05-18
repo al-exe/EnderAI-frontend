@@ -110,12 +110,7 @@ function TaskforceDocumentDetail() {
           )}
         >
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <h1
-              className={cn(
-                "font-semibold tracking-tight text-foreground",
-                isSplit ? "text-2xl" : "text-3xl",
-              )}
-            >
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
               {demoDocument.title}
             </h1>
 
@@ -152,12 +147,7 @@ function TaskforceDocumentDetail() {
           </div>
         </div>
 
-        <p
-          className={cn(
-            "text-muted-foreground",
-            isSplit ? "mt-3 text-sm leading-6" : "mt-5 text-base leading-7",
-          )}
-        >
+        <p className="mt-5 text-base leading-7 text-muted-foreground">
           {demoDocument.description}
         </p>
 
@@ -167,7 +157,7 @@ function TaskforceDocumentDetail() {
           className={cn(
             "gap-6",
             isSplit
-              ? "mt-4 grid grid-cols-1 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:overflow-hidden md:pb-4"
+              ? "mt-8 grid grid-cols-1 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:overflow-hidden md:pb-4"
               : "mt-8 block",
           )}
         >
