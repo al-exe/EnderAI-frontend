@@ -219,6 +219,15 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
 
   const documentScroll = page.getByTestId("v2-document-scroll")
   const stickyHeader = page.getByTestId("v2-document-sticky-header")
+  await expect
+    .poll(
+      async () =>
+        documentScroll.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth,
+        ),
+      { message: "document page should not have horizontal overflow" },
+    )
+    .toBe(true)
   await documentScroll.evaluate((element) => {
     element.scrollTop = 500
   })
@@ -300,4 +309,63 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).not.toBeVisible()
+})
+
+test("Taskforce v2 document save uses document scope instead of sidebar demo mode", async ({
+  page,
+}) => {
+  await mockTaskforceAuth(page)
+
+  const liveDocument = {
+    id: "e7531338-c788-4d30-a4d4-7e3c2053e803",
+    title: "Live Editable Document",
+    description: "Document that should save outside demo mode.",
+    human_summary: "Live summary.",
+    ai_generated_summary: "AI summary.",
+    collaborators: ["Alex Lee"],
+    main_body: [{ segments: [{ text: "Live report body." }] }],
+    details_file_name: "live-editable-document.details.md",
+    details_markdown_sections: [
+      {
+        anchor_id: "live-details",
+        markdown: "## Live Details\nEvidence stays editable.",
+      },
+    ],
+    is_demo: false,
+    created_at: "2026-05-18T00:00:00Z",
+    updated_at: "2026-05-18T00:00:00Z",
+  }
+  const patchUrls: string[] = []
+
+  await page.route("**/api/v1/v2/documents/**", async (route) => {
+    const url = new URL(route.request().url())
+    const method = route.request().method()
+
+    if (url.pathname === `/api/v1/v2/documents/${liveDocument.id}`) {
+      if (method === "GET") {
+        await route.fulfill({ json: liveDocument })
+        return
+      }
+      if (method === "PATCH") {
+        patchUrls.push(route.request().url())
+        const body = JSON.parse(route.request().postData() ?? "{}")
+        await route.fulfill({ json: { ...liveDocument, ...body } })
+        return
+      }
+    }
+
+    await route.fulfill({ json: { data: [], count: 0 } })
+  })
+
+  await page.goto("/v2/home")
+  await page.getByTestId("demo-mode-toggle").click()
+  await page.goto(`/v2/library/${liveDocument.id}`)
+
+  await page.getByTestId("document-edit").click()
+  await page.getByTestId("edit-title").fill("Updated Live Editable Document")
+  await page.getByTestId("document-save").click()
+
+  await expect(page.getByText("Document saved.")).toBeVisible()
+  expect(patchUrls).toHaveLength(1)
+  expect(new URL(patchUrls[0]).searchParams.get("demo")).toBeNull()
 })

@@ -143,7 +143,7 @@ function TaskforceDocumentDetail() {
 
   const updateMutation = useMutation({
     mutationFn: (body: V2DocumentUpdate) =>
-      updateV2Document(documentId, body, { demo: isDemoMode }),
+      updateV2Document(documentId, body, { demo: document?.is_demo }),
     onSuccess: (data) => {
       queryClient.setQueryData(
         ["v2-document", documentId, { demo: isDemoMode }],
@@ -304,7 +304,7 @@ function TaskforceDocumentDetail() {
     >
       <article
         className={cn(
-          "mx-auto flex w-full max-w-none flex-col",
+          "mx-auto flex w-full max-w-none flex-col px-4 md:px-6 lg:px-8",
           isSplit ? "md:min-h-0 md:flex-1 md:overflow-hidden" : "pb-16",
         )}
       >
@@ -363,7 +363,7 @@ function TaskforceDocumentDetail() {
         <div
           data-testid="v2-document-sticky-header"
           className={cn(
-            "sticky top-0 z-20 -mx-6 border-b bg-background/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:-mx-8 md:px-8",
+            "sticky top-0 z-20 border-b bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80",
             isSplit && "md:shrink-0",
           )}
         >
