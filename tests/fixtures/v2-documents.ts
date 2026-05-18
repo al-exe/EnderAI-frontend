@@ -94,8 +94,14 @@ export async function mockV2Documents(page: Page) {
     const url = new URL(route.request().url())
     const pathname = url.pathname
     const method = route.request().method()
+    const isDemoRequest = url.searchParams.get("demo") === "true"
 
     if (pathname === "/api/v1/v2/documents/" && method === "GET") {
+      if (!isDemoRequest) {
+        await route.fulfill({ json: { data: [], count: 0 } })
+        return
+      }
+
       await route.fulfill({
         json: { data: documents, count: documents.length },
       })

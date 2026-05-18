@@ -309,7 +309,13 @@ function TaskforceDocumentDetail() {
         )}
       >
         <div className="-ml-3 mb-4 flex items-center justify-between">
-          <Button asChild variant="ghost" size="sm">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            data-testid="v2-document-back-link"
+            className="w-fit"
+          >
             <Link to="/v2/library">
               <ArrowLeft className="size-4" />
               Library

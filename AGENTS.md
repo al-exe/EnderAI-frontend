@@ -64,7 +64,8 @@ For repo-level fix requests, bug lists, or cleanup batches:
 1. create a Jira ticket with relevant context before coding unless the user explicitly says not to
 2. do the work on a branch and open a PR
 3. link the Jira ticket in the PR and add the PR URL back to Jira
-4. merge after validation unless the user explicitly asks to hold the PR open
+4. never commit, merge, or push directly to `master`/`main`; all work that will land there must exist as a PR first
+5. after validation, merge only through the PR when the user has explicitly asked to merge or deploy; otherwise leave the PR open and report it back
 
 ## Default Behavior
 - for V2-enabled users, prefer guided Taskforce V2 document tools over raw `enderai_request`

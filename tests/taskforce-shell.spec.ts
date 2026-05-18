@@ -196,6 +196,10 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(page).toHaveURL(
     /\/v2\/library\/8c9b0f48-2f3f-4e8d-9f7d-b4f0607d6a32$/,
   )
+  const backLinkWidth = await page
+    .getByTestId("v2-document-back-link")
+    .evaluate((element) => element.getBoundingClientRect().width)
+  expect(backLinkWidth).toBeLessThan(160)
   await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
     "data-state",
     "active",
