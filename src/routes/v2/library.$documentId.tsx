@@ -83,6 +83,7 @@ function TaskforceDocumentDetail() {
 
   return (
     <section
+      data-testid="v2-document-scroll"
       className={cn(
         "flex min-h-0 flex-1 flex-col",
         isSplit ? "overflow-y-auto md:overflow-hidden" : "overflow-y-auto",
@@ -94,92 +95,73 @@ function TaskforceDocumentDetail() {
           isSplit ? "md:min-h-0 md:flex-1 md:overflow-hidden" : "pb-16",
         )}
       >
-        <div className={cn(isSplit && "md:shrink-0")}>
-          <Button asChild variant="ghost" size="sm" className="-ml-3 mb-4">
-            <Link to="/v2/library">
-              <ArrowLeft className="size-4" />
-              Library
-            </Link>
-          </Button>
+        <Button asChild variant="ghost" size="sm" className="-ml-3 mb-4">
+          <Link to="/v2/library">
+            <ArrowLeft className="size-4" />
+            Library
+          </Link>
+        </Button>
 
-          <h1
-            className={cn(
-              "font-semibold tracking-tight text-foreground",
-              isSplit ? "text-2xl" : "text-4xl",
-            )}
-          >
-            {demoDocument.title}
-          </h1>
-          <p
-            className={cn(
-              "text-muted-foreground",
-              isSplit ? "mt-1 text-sm leading-6" : "mt-4 text-base leading-7",
-            )}
-          >
-            {demoDocument.description}
-          </p>
-
-          {!isSplit && (
-            <dl className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 border-y py-4 text-sm text-muted-foreground">
-              <dt className="sr-only">Created</dt>
-              <dd>
-                Created{" "}
-                <span className="text-foreground">
-                  {demoDocument.createdAt}
-                </span>
-              </dd>
-              <span aria-hidden="true">·</span>
-              <dt className="sr-only">Updated</dt>
-              <dd>
-                Updated{" "}
-                <span className="text-foreground">
-                  {demoDocument.updatedAt}
-                </span>
-              </dd>
-              <span aria-hidden="true">·</span>
-              <dt className="sr-only">Collaborators</dt>
-              <dd>
-                <span className="text-foreground">
-                  {demoDocument.collaborators.join(", ")}
-                </span>
-              </dd>
-            </dl>
+        <div
+          data-testid="v2-document-sticky-header"
+          className={cn(
+            "sticky top-0 z-20 -mx-6 border-b bg-background/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:-mx-8 md:px-8",
+            isSplit && "md:shrink-0",
           )}
+        >
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <h1
+              className={cn(
+                "font-semibold tracking-tight text-foreground",
+                isSplit ? "text-2xl" : "text-3xl",
+              )}
+            >
+              {demoDocument.title}
+            </h1>
 
-          <div
-            role="tablist"
-            aria-label="Document view"
-            className={cn(
-              "inline-flex h-9 w-fit items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground",
-              isSplit ? "mt-4" : "mt-6",
-            )}
-          >
-            <ViewToggle
-              label="Summary"
-              active={viewMode === "summary"}
-              onClick={() => {
-                setViewMode("summary")
-                setActiveEvidenceAnchorId(undefined)
-              }}
-            />
-            <ViewToggle
-              label="Details"
-              active={viewMode === "details"}
-              onClick={() => {
-                setViewMode("details")
-                setActiveEvidenceAnchorId(undefined)
-              }}
-            />
-            <ViewToggle
-              label="Split"
-              active={isSplit}
-              onClick={() => {
-                setViewMode("split")
-                setActiveEvidenceAnchorId(undefined)
-              }}
-            />
+            <div
+              role="tablist"
+              aria-label="Document view"
+              className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+            >
+              <ViewToggle
+                label="Summary"
+                active={viewMode === "summary"}
+                onClick={() => {
+                  setViewMode("summary")
+                  setActiveEvidenceAnchorId(undefined)
+                }}
+              />
+              <ViewToggle
+                label="Details"
+                active={viewMode === "details"}
+                onClick={() => {
+                  setViewMode("details")
+                  setActiveEvidenceAnchorId(undefined)
+                }}
+              />
+              <ViewToggle
+                label="Split"
+                active={isSplit}
+                onClick={() => {
+                  setViewMode("split")
+                  setActiveEvidenceAnchorId(undefined)
+                }}
+              />
+            </div>
           </div>
         </div>
+
+        <p
+          className={cn(
+            "text-muted-foreground",
+            isSplit ? "mt-3 text-sm leading-6" : "mt-5 text-base leading-7",
+          )}
+        >
+          {demoDocument.description}
+        </p>
+
+        <DocumentMetadata demoDocument={demoDocument} />
 
         <div
           className={cn(
@@ -209,6 +191,31 @@ function TaskforceDocumentDetail() {
         </div>
       </article>
     </section>
+  )
+}
+
+function DocumentMetadata({ demoDocument }: { demoDocument: V2DemoDocument }) {
+  return (
+    <dl className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 border-y py-4 text-sm text-muted-foreground">
+      <dt className="sr-only">Created</dt>
+      <dd>
+        Created{" "}
+        <span className="text-foreground">{demoDocument.createdAt}</span>
+      </dd>
+      <span aria-hidden="true">·</span>
+      <dt className="sr-only">Updated</dt>
+      <dd>
+        Updated{" "}
+        <span className="text-foreground">{demoDocument.updatedAt}</span>
+      </dd>
+      <span aria-hidden="true">·</span>
+      <dt className="sr-only">Collaborators</dt>
+      <dd>
+        <span className="text-foreground">
+          {demoDocument.collaborators.join(", ")}
+        </span>
+      </dd>
+    </dl>
   )
 }
 

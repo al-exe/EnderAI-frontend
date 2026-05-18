@@ -163,6 +163,7 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   page,
 }) => {
   await mockTaskforceAuth(page)
+  await page.setViewportSize({ width: 1280, height: 420 })
 
   await page.goto("/v2/library")
   await expect(page.getByText("Latest Stale Network Bridge Issue")).toHaveCount(
@@ -205,6 +206,21 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(page.getByText("Evidence-backed claims")).toHaveCount(0)
   await expect(page.getByText("Affected Users And Symptoms")).not.toBeVisible()
 
+  const documentScroll = page.getByTestId("v2-document-scroll")
+  const stickyHeader = page.getByTestId("v2-document-sticky-header")
+  await documentScroll.evaluate((element) => {
+    element.scrollTop = 500
+  })
+  await expect(stickyHeader).toBeInViewport()
+  await expect(
+    page.getByText(
+      "Customer-impact investigation with a verified operator fix and command evidence.",
+    ),
+  ).not.toBeInViewport()
+  await documentScroll.evaluate((element) => {
+    element.scrollTop = 0
+  })
+
   await page.getByRole("tab", { name: "Split" }).click()
   await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
     "data-state",
@@ -222,6 +238,9 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).toBeVisible()
+  await expect(page.getByText("Created May 10, 2026")).toBeVisible()
+  await expect(page.getByText("Updated May 12, 2026")).toBeVisible()
+  await expect(page.getByText("Alex Lee, Nia Patel")).toBeVisible()
 
   await page.getByRole("tab", { name: "Summary" }).click()
   await page.getByTestId("human-evidence-affected-users").click()
