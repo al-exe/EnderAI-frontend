@@ -77,9 +77,9 @@ function TaskforceDocumentDetail() {
     setActiveEvidenceAnchorId(undefined)
   }
 
-  const summaryVisible = viewMode === "summary" || viewMode === "split"
-  const detailsVisible = viewMode === "details" || viewMode === "split"
   const isSplit = viewMode === "split"
+  const summaryVisible = viewMode === "summary" || isSplit
+  const detailsVisible = viewMode === "details" || isSplit
 
   return (
     <section
@@ -120,19 +120,29 @@ function TaskforceDocumentDetail() {
           </p>
 
           {!isSplit && (
-            <dl className="mt-6 grid gap-2 border-y py-4 text-sm">
-              <div className="grid grid-cols-[7rem_1fr] gap-3">
-                <dt className="text-muted-foreground">Created</dt>
-                <dd>{demoDocument.createdAt}</dd>
-              </div>
-              <div className="grid grid-cols-[7rem_1fr] gap-3">
-                <dt className="text-muted-foreground">Updated</dt>
-                <dd>{demoDocument.updatedAt}</dd>
-              </div>
-              <div className="grid grid-cols-[7rem_1fr] gap-3">
-                <dt className="text-muted-foreground">Collaborators</dt>
-                <dd>{demoDocument.collaborators.join(", ")}</dd>
-              </div>
+            <dl className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 border-y py-4 text-sm text-muted-foreground">
+              <dt className="sr-only">Created</dt>
+              <dd>
+                Created{" "}
+                <span className="text-foreground">
+                  {demoDocument.createdAt}
+                </span>
+              </dd>
+              <span aria-hidden="true">·</span>
+              <dt className="sr-only">Updated</dt>
+              <dd>
+                Updated{" "}
+                <span className="text-foreground">
+                  {demoDocument.updatedAt}
+                </span>
+              </dd>
+              <span aria-hidden="true">·</span>
+              <dt className="sr-only">Collaborators</dt>
+              <dd>
+                <span className="text-foreground">
+                  {demoDocument.collaborators.join(", ")}
+                </span>
+              </dd>
             </dl>
           )}
 
@@ -146,7 +156,7 @@ function TaskforceDocumentDetail() {
           >
             <ViewToggle
               label="Summary"
-              active={summaryVisible}
+              active={viewMode === "summary"}
               onClick={() => {
                 setViewMode("summary")
                 setActiveEvidenceAnchorId(undefined)
@@ -154,9 +164,17 @@ function TaskforceDocumentDetail() {
             />
             <ViewToggle
               label="Details"
-              active={detailsVisible}
+              active={viewMode === "details"}
               onClick={() => {
                 setViewMode("details")
+                setActiveEvidenceAnchorId(undefined)
+              }}
+            />
+            <ViewToggle
+              label="Split"
+              active={isSplit}
+              onClick={() => {
+                setViewMode("split")
                 setActiveEvidenceAnchorId(undefined)
               }}
             />
@@ -234,14 +252,12 @@ function SummaryPane({
       )}
     >
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold tracking-tight">
-          Executive summary
-        </h2>
+        <h2 className="text-xl font-semibold tracking-tight">Overview</h2>
         <p className="text-lg leading-8">{demoDocument.humanSummary}</p>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold tracking-tight">Main body</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Report</h2>
         <div className="space-y-5 text-base leading-8 text-foreground">
           {demoDocument.mainBody.map((paragraph, paragraphIndex) => (
             <p key={paragraphIndex}>
@@ -270,15 +286,6 @@ function SummaryPane({
             </p>
           ))}
         </div>
-      </section>
-
-      <section className="space-y-3 border-t pt-7">
-        <h2 className="text-base font-semibold tracking-tight text-muted-foreground">
-          AI-generated summary
-        </h2>
-        <p className="text-sm leading-7 text-muted-foreground">
-          {demoDocument.aiGeneratedSummary}
-        </p>
       </section>
     </div>
   )

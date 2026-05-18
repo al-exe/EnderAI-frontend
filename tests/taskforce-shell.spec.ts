@@ -192,23 +192,54 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-state",
     "active",
   )
-  await expect(page.getByText("Executive summary")).toBeVisible()
-  await expect(page.getByText("Main body")).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
+    "data-state",
+    "inactive",
+  )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
+    "data-state",
+    "inactive",
+  )
+  await expect(page.getByText("Overview")).toBeVisible()
+  await expect(page.getByText("Report")).toBeVisible()
   await expect(page.getByText("Evidence-backed claims")).toHaveCount(0)
   await expect(page.getByText("Affected Users And Symptoms")).not.toBeVisible()
 
-  await page.getByTestId("human-evidence-affected-users").click()
-
-  // Anchor click opens split view: both Summary and Details visible/active.
+  await page.getByRole("tab", { name: "Split" }).click()
   await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
     "data-state",
-    "active",
+    "inactive",
   )
   await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
     "data-state",
+    "inactive",
+  )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
+    "data-state",
     "active",
   )
-  await expect(page.getByText("Executive summary")).toBeVisible()
+  await expect(page.getByText("Overview")).toBeVisible()
+  await expect(
+    page.getByText("latest-stale-network-bridge-issue.details.md"),
+  ).toBeVisible()
+
+  await page.getByRole("tab", { name: "Summary" }).click()
+  await page.getByTestId("human-evidence-affected-users").click()
+
+  // Anchor click opens split view with both Summary and Details visible.
+  await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
+    "data-state",
+    "inactive",
+  )
+  await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
+    "data-state",
+    "inactive",
+  )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
+    "data-state",
+    "active",
+  )
+  await expect(page.getByText("Overview")).toBeVisible()
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).toBeVisible()
@@ -231,7 +262,11 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-state",
     "inactive",
   )
-  await expect(page.getByText("Executive summary")).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
+    "data-state",
+    "inactive",
+  )
+  await expect(page.getByText("Overview")).toBeVisible()
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).not.toBeVisible()
