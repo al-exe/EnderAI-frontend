@@ -1,14 +1,20 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { ArrowLeft, X } from "lucide-react"
-import { useState } from "react"
+import { ArrowLeft, Link as LinkIcon, Pencil, X } from "lucide-react"
+import { useMemo, useRef, useState } from "react"
 
+import {
+  readV2Document,
+  updateV2Document,
+  type V2DocumentDetailsSection,
+  type V2DocumentParagraph,
+  type V2DocumentPublic,
+  type V2DocumentUpdate,
+} from "@/api/v2Documents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
+import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
-import {
-  findV2DemoDocument,
-  type V2DemoDocument,
-} from "@/lib/v2-demo-documents"
 
 export const Route = createFileRoute("/v2/library/$documentId")({
   component: TaskforceDocumentDetail,
@@ -23,44 +29,141 @@ export const Route = createFileRoute("/v2/library/$documentId")({
 
 type ViewMode = "summary" | "details" | "split"
 
+type AnchorPick = {
+  paragraphIndex: number
+  segmentIndex: number
+  start: number
+  end: number
+  text: string
+}
+
+type DetailsPick = {
+  sectionIndex: number
+  start: number
+  end: number
+  text: string
+}
+
+type EditableDoc = {
+  title: string
+  description: string
+  human_summary: string
+  ai_generated_summary: string
+  collaborators: string
+  details_file_name: string
+  main_body: V2DocumentParagraph[]
+  details_markdown_sections: V2DocumentDetailsSection[]
+}
+
+function toEditable(document: V2DocumentPublic): EditableDoc {
+  return {
+    title: document.title,
+    description: document.description,
+    human_summary: document.human_summary,
+    ai_generated_summary: document.ai_generated_summary,
+    collaborators: document.collaborators.join(", "),
+    details_file_name: document.details_file_name,
+    main_body: document.main_body.map((p) => ({
+      segments: p.segments.map((s) => ({ ...s })),
+    })),
+    details_markdown_sections: document.details_markdown_sections.map((s) => ({
+      ...s,
+    })),
+  }
+}
+
+function toUpdatePayload(edit: EditableDoc): V2DocumentUpdate {
+  return {
+    title: edit.title.trim(),
+    description: edit.description,
+    human_summary: edit.human_summary,
+    ai_generated_summary: edit.ai_generated_summary,
+    collaborators: edit.collaborators
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean),
+    details_file_name: edit.details_file_name,
+    main_body: edit.main_body,
+    details_markdown_sections: edit.details_markdown_sections,
+  }
+}
+
+function formatDateOnly(value: string | null): string {
+  if (!value) return "—"
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  }).format(new Date(value))
+}
+
+function shortAnchorId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `evidence-${crypto.randomUUID().slice(0, 8)}`
+  }
+  return `evidence-${Math.random().toString(36).slice(2, 10)}`
+}
+
+function getOffsetWithin(
+  root: Node,
+  target: Node,
+  targetOffset: number,
+): number {
+  if (!root.contains(target)) return -1
+  let offset = 0
+  const walker = window.document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  let node = walker.nextNode()
+  while (node) {
+    if (node === target) {
+      return offset + targetOffset
+    }
+    offset += node.textContent?.length ?? 0
+    node = walker.nextNode()
+  }
+  return -1
+}
+
 function TaskforceDocumentDetail() {
   const { documentId } = Route.useParams()
   const { isDemoMode } = useDemoMode()
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+
   const [viewMode, setViewMode] = useState<ViewMode>("summary")
   const [activeEvidenceAnchorId, setActiveEvidenceAnchorId] = useState<string>()
-  const demoDocument = findV2DemoDocument(documentId)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editState, setEditState] = useState<EditableDoc | null>(null)
+  const [anchorMode, setAnchorMode] = useState(false)
+  const [summaryPick, setSummaryPick] = useState<AnchorPick | null>(null)
+  const [detailsPick, setDetailsPick] = useState<DetailsPick | null>(null)
 
-  if (!isDemoMode) {
-    return (
-      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
-        <div className="w-full max-w-3xl">
-          <h1 className="text-2xl font-semibold">Demo document unavailable</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-            Turn on demo mode from the sidebar to view this document.
-          </p>
-          <Button asChild variant="outline" className="mt-6">
-            <Link to="/v2/library">Back to library</Link>
-          </Button>
-        </div>
-      </section>
-    )
-  }
+  const documentQuery = useQuery({
+    queryKey: ["v2-document", documentId, { demo: isDemoMode }],
+    queryFn: () => readV2Document(documentId, { demo: isDemoMode }),
+  })
 
-  if (!demoDocument) {
-    return (
-      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
-        <div className="w-full max-w-3xl">
-          <h1 className="text-2xl font-semibold">Document not found</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-            No V2 demo document exists for `{documentId}`.
-          </p>
-          <Button asChild variant="outline" className="mt-6">
-            <Link to="/v2/library">Back to library</Link>
-          </Button>
-        </div>
-      </section>
-    )
-  }
+  const updateMutation = useMutation({
+    mutationFn: (body: V2DocumentUpdate) =>
+      updateV2Document(documentId, body, { demo: isDemoMode }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(
+        ["v2-document", documentId, { demo: isDemoMode }],
+        data,
+      )
+      queryClient.invalidateQueries({
+        queryKey: ["v2-documents", { demo: isDemoMode }],
+      })
+      showSuccessToast("Document saved.")
+    },
+    onError: () => {
+      showErrorToast("Could not save document.")
+    },
+  })
+
+  const document = documentQuery.data
+
+  const isSplit = viewMode === "split"
+  const summaryVisible = viewMode === "summary" || isSplit
+  const detailsVisible = viewMode === "details" || isSplit
 
   const showEvidence = (anchorId: string) => {
     setActiveEvidenceAnchorId(anchorId)
@@ -75,11 +178,121 @@ function TaskforceDocumentDetail() {
   const closeSplit = () => {
     setViewMode("summary")
     setActiveEvidenceAnchorId(undefined)
+    setAnchorMode(false)
+    setSummaryPick(null)
+    setDetailsPick(null)
   }
 
-  const isSplit = viewMode === "split"
-  const summaryVisible = viewMode === "summary" || isSplit
-  const detailsVisible = viewMode === "details" || isSplit
+  const enterEdit = () => {
+    if (!document) return
+    setEditState(toEditable(document))
+    setIsEditing(true)
+    setAnchorMode(false)
+    setSummaryPick(null)
+    setDetailsPick(null)
+  }
+
+  const cancelEdit = () => {
+    setIsEditing(false)
+    setEditState(null)
+  }
+
+  const saveEdit = () => {
+    if (!editState) return
+    updateMutation.mutate(toUpdatePayload(editState), {
+      onSuccess: () => {
+        setIsEditing(false)
+        setEditState(null)
+      },
+    })
+  }
+
+  const confirmAnchor = () => {
+    if (!document || !summaryPick || !detailsPick) return
+
+    const anchorId = shortAnchorId()
+
+    const nextMainBody: V2DocumentParagraph[] = document.main_body.map(
+      (paragraph, pIdx) => {
+        if (pIdx !== summaryPick.paragraphIndex) return paragraph
+        const nextSegments = paragraph.segments.flatMap((segment, sIdx) => {
+          if (sIdx !== summaryPick.segmentIndex) return [segment]
+          const text = segment.text
+          const before = text.slice(0, summaryPick.start)
+          const middle = text.slice(summaryPick.start, summaryPick.end)
+          const after = text.slice(summaryPick.end)
+          const out: V2DocumentParagraph["segments"] = []
+          if (before) out.push({ text: before })
+          out.push({ text: middle, evidence_anchor_id: anchorId })
+          if (after) out.push({ text: after })
+          return out
+        })
+        return { segments: nextSegments }
+      },
+    )
+
+    const nextDetailsSections: V2DocumentDetailsSection[] =
+      document.details_markdown_sections.flatMap((section, idx) => {
+        if (idx !== detailsPick.sectionIndex) return [section]
+        const md = section.markdown
+        const before = md.slice(0, detailsPick.start)
+        const middle = md.slice(detailsPick.start, detailsPick.end)
+        const after = md.slice(detailsPick.end)
+        const out: V2DocumentDetailsSection[] = []
+        if (before.trim()) {
+          out.push({ anchor_id: `${section.anchor_id}-pre`, markdown: before })
+        }
+        out.push({ anchor_id: anchorId, markdown: middle })
+        if (after.trim()) {
+          out.push({ anchor_id: `${section.anchor_id}-post`, markdown: after })
+        }
+        return out
+      })
+
+    updateMutation.mutate(
+      {
+        main_body: nextMainBody,
+        details_markdown_sections: nextDetailsSections,
+      },
+      {
+        onSuccess: () => {
+          setAnchorMode(false)
+          setSummaryPick(null)
+          setDetailsPick(null)
+          setActiveEvidenceAnchorId(anchorId)
+        },
+      },
+    )
+  }
+
+  if (documentQuery.isLoading) {
+    return (
+      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
+        <div className="w-full max-w-3xl text-sm text-muted-foreground">
+          Loading document…
+        </div>
+      </section>
+    )
+  }
+
+  if (!document) {
+    return (
+      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
+        <div className="w-full max-w-3xl">
+          <h1 className="text-2xl font-semibold">Document not found</h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+            No document exists for `{documentId}`.
+          </p>
+          <Button asChild variant="outline" className="mt-6">
+            <Link to="/v2/library">Back to library</Link>
+          </Button>
+        </div>
+      </section>
+    )
+  }
+
+  const editing = isEditing && editState !== null
+  const anchorReady = anchorMode && summaryPick && detailsPick
 
   return (
     <section
@@ -95,12 +308,51 @@ function TaskforceDocumentDetail() {
           isSplit ? "md:min-h-0 md:flex-1 md:overflow-hidden" : "pb-16",
         )}
       >
-        <Button asChild variant="ghost" size="sm" className="-ml-3 mb-4">
-          <Link to="/v2/library">
-            <ArrowLeft className="size-4" />
-            Library
-          </Link>
-        </Button>
+        <div className="-ml-3 mb-4 flex items-center justify-between">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/v2/library">
+              <ArrowLeft className="size-4" />
+              Library
+            </Link>
+          </Button>
+
+          <div className="flex items-center gap-2">
+            {!editing && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={enterEdit}
+                data-testid="document-edit"
+              >
+                <Pencil className="size-4" />
+                Edit
+              </Button>
+            )}
+            {editing && (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={cancelEdit}
+                  disabled={updateMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={saveEdit}
+                  disabled={updateMutation.isPending}
+                  data-testid="document-save"
+                >
+                  {updateMutation.isPending ? "Saving…" : "Save"}
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
 
         <div
           data-testid="v2-document-sticky-header"
@@ -110,48 +362,118 @@ function TaskforceDocumentDetail() {
           )}
         >
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              {demoDocument.title}
-            </h1>
+            {editing ? (
+              <input
+                type="text"
+                value={editState.title}
+                onChange={(event) =>
+                  setEditState({ ...editState, title: event.target.value })
+                }
+                className="w-full border bg-background px-3 py-1 text-3xl font-semibold tracking-tight text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring md:max-w-xl"
+                data-testid="edit-title"
+              />
+            ) : (
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+                {document.title}
+              </h1>
+            )}
 
-            <div
-              role="tablist"
-              aria-label="Document view"
-              className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-            >
-              <ViewToggle
-                label="Summary"
-                active={viewMode === "summary"}
-                onClick={() => {
-                  setViewMode("summary")
-                  setActiveEvidenceAnchorId(undefined)
-                }}
-              />
-              <ViewToggle
-                label="Details"
-                active={viewMode === "details"}
-                onClick={() => {
-                  setViewMode("details")
-                  setActiveEvidenceAnchorId(undefined)
-                }}
-              />
-              <ViewToggle
-                label="Split"
-                active={isSplit}
-                onClick={() => {
-                  setViewMode("split")
-                  setActiveEvidenceAnchorId(undefined)
-                }}
-              />
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                role="tablist"
+                aria-label="Document view"
+                className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+              >
+                <ViewToggle
+                  label="Summary"
+                  active={viewMode === "summary"}
+                  onClick={() => {
+                    setViewMode("summary")
+                    setActiveEvidenceAnchorId(undefined)
+                    setAnchorMode(false)
+                  }}
+                />
+                <ViewToggle
+                  label="Details"
+                  active={viewMode === "details"}
+                  onClick={() => {
+                    setViewMode("details")
+                    setActiveEvidenceAnchorId(undefined)
+                    setAnchorMode(false)
+                  }}
+                />
+                <ViewToggle
+                  label="Split"
+                  active={isSplit}
+                  onClick={() => {
+                    setViewMode("split")
+                    setActiveEvidenceAnchorId(undefined)
+                  }}
+                />
+              </div>
+
+              {isSplit && !editing && (
+                <Button
+                  type="button"
+                  variant={anchorMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    if (anchorMode) {
+                      setAnchorMode(false)
+                      setSummaryPick(null)
+                      setDetailsPick(null)
+                    } else {
+                      setAnchorMode(true)
+                    }
+                  }}
+                  data-testid="anchor-mode-toggle"
+                >
+                  <LinkIcon className="size-4" />
+                  {anchorMode ? "Cancel link" : "Link evidence"}
+                </Button>
+              )}
+
+              {anchorMode && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={confirmAnchor}
+                  disabled={!anchorReady || updateMutation.isPending}
+                  data-testid="anchor-confirm"
+                >
+                  {updateMutation.isPending ? "Linking…" : "Confirm anchor"}
+                </Button>
+              )}
             </div>
           </div>
         </div>
 
-        <p className="mt-5 text-base leading-7 text-muted-foreground">
-          {demoDocument.description}
-        </p>
+        {editing ? (
+          <textarea
+            value={editState.description}
+            onChange={(event) =>
+              setEditState({ ...editState, description: event.target.value })
+            }
+            rows={2}
+            className="mt-5 w-full border bg-background px-3 py-2 text-sm leading-6 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            data-testid="edit-description"
+          />
+        ) : (
+          <p className="mt-5 text-base leading-7 text-muted-foreground">
+            {document.description}
+          </p>
+        )}
 
-        <DocumentMetadata demoDocument={demoDocument} />
+        <DocumentMetadata
+          document={document}
+          editing={editing}
+          editState={editState}
+          setEditState={setEditState}
+        />
+
+        {anchorMode && (
+          <AnchorHelper summaryPick={summaryPick} detailsPick={detailsPick} />
+        )}
 
         <div
           className={cn(
@@ -163,19 +485,31 @@ function TaskforceDocumentDetail() {
         >
           {summaryVisible && (
             <SummaryPane
-              demoDocument={demoDocument}
+              document={document}
+              editing={editing}
+              editState={editState}
+              setEditState={setEditState}
               onShowEvidence={showEvidence}
               isSplit={isSplit}
+              anchorMode={anchorMode}
+              summaryPick={summaryPick}
+              setSummaryPick={setSummaryPick}
             />
           )}
 
           {detailsVisible && (
             <DetailsPane
-              demoDocument={demoDocument}
+              document={document}
+              editing={editing}
+              editState={editState}
+              setEditState={setEditState}
               activeEvidenceAnchorId={activeEvidenceAnchorId}
               showClose={isSplit}
               onClose={closeSplit}
               isSplit={isSplit}
+              anchorMode={anchorMode}
+              detailsPick={detailsPick}
+              setDetailsPick={setDetailsPick}
             />
           )}
         </div>
@@ -184,26 +518,56 @@ function TaskforceDocumentDetail() {
   )
 }
 
-function DocumentMetadata({ demoDocument }: { demoDocument: V2DemoDocument }) {
+function DocumentMetadata({
+  document,
+  editing,
+  editState,
+  setEditState,
+}: {
+  document: V2DocumentPublic
+  editing: boolean
+  editState: EditableDoc | null
+  setEditState: (next: EditableDoc) => void
+}) {
   return (
     <dl className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 border-y py-4 text-sm text-muted-foreground">
       <dt className="sr-only">Created</dt>
       <dd>
         Created{" "}
-        <span className="text-foreground">{demoDocument.createdAt}</span>
+        <span className="text-foreground">
+          {formatDateOnly(document.created_at)}
+        </span>
       </dd>
       <span aria-hidden="true">·</span>
       <dt className="sr-only">Updated</dt>
       <dd>
         Updated{" "}
-        <span className="text-foreground">{demoDocument.updatedAt}</span>
+        <span className="text-foreground">
+          {formatDateOnly(document.updated_at)}
+        </span>
       </dd>
       <span aria-hidden="true">·</span>
       <dt className="sr-only">Collaborators</dt>
       <dd>
-        <span className="text-foreground">
-          {demoDocument.collaborators.join(", ")}
-        </span>
+        {editing && editState ? (
+          <input
+            type="text"
+            value={editState.collaborators}
+            onChange={(event) =>
+              setEditState({
+                ...editState,
+                collaborators: event.target.value,
+              })
+            }
+            placeholder="Comma-separated"
+            className="min-w-[16rem] border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            data-testid="edit-collaborators"
+          />
+        ) : (
+          <span className="text-foreground">
+            {document.collaborators.join(", ")}
+          </span>
+        )}
       </dd>
     </dl>
   )
@@ -232,15 +596,103 @@ function ViewToggle({
   )
 }
 
+function AnchorHelper({
+  summaryPick,
+  detailsPick,
+}: {
+  summaryPick: AnchorPick | null
+  detailsPick: DetailsPick | null
+}) {
+  return (
+    <div
+      className="mt-3 rounded-md border border-dashed border-purple-300 bg-purple-50/60 px-3 py-2 text-xs text-purple-900 dark:border-purple-900 dark:bg-purple-950/30 dark:text-purple-100"
+      data-testid="anchor-helper"
+    >
+      <p className="font-medium">Linking evidence</p>
+      <ol className="mt-1 list-decimal space-y-0.5 pl-5">
+        <li>
+          {summaryPick ? (
+            <>
+              Summary selected: <em>"{summaryPick.text}"</em>
+            </>
+          ) : (
+            "Select text in Summary (within a non-anchored span)."
+          )}
+        </li>
+        <li>
+          {detailsPick ? (
+            <>
+              Details selected: <em>"{detailsPick.text.slice(0, 60)}…"</em>
+            </>
+          ) : (
+            "Select text in Details (within a single section)."
+          )}
+        </li>
+        <li>Confirm to create the anchor.</li>
+      </ol>
+    </div>
+  )
+}
+
 function SummaryPane({
-  demoDocument,
+  document,
+  editing,
+  editState,
+  setEditState,
   onShowEvidence,
   isSplit,
+  anchorMode,
+  summaryPick,
+  setSummaryPick,
 }: {
-  demoDocument: V2DemoDocument
+  document: V2DocumentPublic
+  editing: boolean
+  editState: EditableDoc | null
+  setEditState: (next: EditableDoc) => void
   onShowEvidence: (anchorId: string) => void
   isSplit: boolean
+  anchorMode: boolean
+  summaryPick: AnchorPick | null
+  setSummaryPick: (pick: AnchorPick | null) => void
 }) {
+  const reportRef = useRef<HTMLDivElement | null>(null)
+
+  const handleSummarySelection = () => {
+    if (!anchorMode || !reportRef.current) return
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      return
+    }
+    const range = selection.getRangeAt(0)
+    const startSpan = (range.startContainer.parentElement?.closest(
+      "[data-segment-key]",
+    ) ?? null) as HTMLElement | null
+    const endSpan = (range.endContainer.parentElement?.closest(
+      "[data-segment-key]",
+    ) ?? null) as HTMLElement | null
+    if (!startSpan || !endSpan || startSpan !== endSpan) return
+    if (startSpan.dataset.anchored === "true") return
+
+    const key = startSpan.dataset.segmentKey
+    if (!key) return
+    const [pIdxStr, sIdxStr] = key.split("-")
+    const paragraphIndex = Number(pIdxStr)
+    const segmentIndex = Number(sIdxStr)
+
+    const start = getOffsetWithin(
+      startSpan,
+      range.startContainer,
+      range.startOffset,
+    )
+    const end = getOffsetWithin(startSpan, range.endContainer, range.endOffset)
+    if (start < 0 || end < 0 || end <= start) return
+
+    const text = startSpan.textContent?.slice(start, end) ?? ""
+    if (!text) return
+
+    setSummaryPick({ paragraphIndex, segmentIndex, start, end, text })
+  }
+
   return (
     <div
       className={cn(
@@ -250,60 +702,259 @@ function SummaryPane({
     >
       <section className="space-y-3">
         <h2 className="text-xl font-semibold tracking-tight">Overview</h2>
-        <p className="text-lg leading-8">{demoDocument.humanSummary}</p>
+        {editing && editState ? (
+          <textarea
+            value={editState.human_summary}
+            onChange={(event) =>
+              setEditState({ ...editState, human_summary: event.target.value })
+            }
+            rows={3}
+            className="w-full border bg-background px-3 py-2 text-base leading-7 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            data-testid="edit-human-summary"
+          />
+        ) : (
+          <p className="text-lg leading-8">{document.human_summary}</p>
+        )}
       </section>
+
+      {editing && editState && document.ai_generated_summary && (
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight">
+            AI summary (reference)
+          </h2>
+          <textarea
+            value={editState.ai_generated_summary}
+            onChange={(event) =>
+              setEditState({
+                ...editState,
+                ai_generated_summary: event.target.value,
+              })
+            }
+            rows={3}
+            className="w-full border bg-background px-3 py-2 text-sm leading-6 text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            data-testid="edit-ai-summary"
+          />
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold tracking-tight">Report</h2>
-        <div className="space-y-5 text-base leading-8 text-foreground">
-          {demoDocument.mainBody.map((paragraph, paragraphIndex) => (
-            <p key={paragraphIndex}>
-              {paragraph.segments.map((segment, segmentIndex) => {
-                const segmentKey = `${paragraphIndex}-${segmentIndex}`
+        {editing && editState ? (
+          <EditableMainBody
+            paragraphs={editState.main_body}
+            onChange={(next) => setEditState({ ...editState, main_body: next })}
+          />
+        ) : (
+          // biome-ignore lint/a11y/noStaticElementInteractions: captures text selection for evidence anchoring
+          <div
+            ref={reportRef}
+            onMouseUp={handleSummarySelection}
+            onKeyUp={handleSummarySelection}
+            className={cn(
+              "space-y-5 text-base leading-8 text-foreground",
+              anchorMode && "cursor-text select-text",
+            )}
+          >
+            {document.main_body.map((paragraph, paragraphIndex) => (
+              <p key={paragraphIndex}>
+                {paragraph.segments.map((segment, segmentIndex) => {
+                  const segmentKey = `${paragraphIndex}-${segmentIndex}`
+                  const isAnchored = Boolean(segment.evidence_anchor_id)
+                  const isPicked =
+                    summaryPick?.paragraphIndex === paragraphIndex &&
+                    summaryPick?.segmentIndex === segmentIndex
 
-                if (!segment.evidenceAnchorId) {
-                  return <span key={segmentKey}>{segment.text}</span>
-                }
+                  if (!isAnchored) {
+                    return (
+                      <span
+                        key={segmentKey}
+                        data-segment-key={segmentKey}
+                        data-anchored="false"
+                        className={cn(
+                          isPicked && "bg-purple-100 dark:bg-purple-950/60",
+                        )}
+                      >
+                        {segment.text}
+                      </span>
+                    )
+                  }
 
-                const evidenceAnchorId = segment.evidenceAnchorId
-
-                return (
-                  <button
-                    key={segmentKey}
-                    type="button"
-                    aria-label={`Show evidence for: ${segment.text}`}
-                    data-testid={`human-evidence-${evidenceAnchorId}`}
-                    onClick={() => onShowEvidence(evidenceAnchorId)}
-                    className="inline rounded-sm bg-purple-100/80 px-1 py-0.5 text-left text-purple-950 transition-colors hover:bg-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/70"
-                  >
-                    {segment.text}
-                  </button>
-                )
-              })}
-            </p>
-          ))}
-        </div>
+                  const evidenceAnchorId = segment.evidence_anchor_id as string
+                  return (
+                    <button
+                      key={segmentKey}
+                      type="button"
+                      data-segment-key={segmentKey}
+                      data-anchored="true"
+                      aria-label={`Show evidence for: ${segment.text}`}
+                      data-testid={`human-evidence-${evidenceAnchorId}`}
+                      onClick={() => {
+                        if (anchorMode) return
+                        onShowEvidence(evidenceAnchorId)
+                      }}
+                      className="inline rounded-sm bg-purple-100/80 px-1 py-0.5 text-left text-purple-950 transition-colors hover:bg-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/70"
+                    >
+                      {segment.text}
+                    </button>
+                  )
+                })}
+              </p>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )
 }
 
+function EditableMainBody({
+  paragraphs,
+  onChange,
+}: {
+  paragraphs: V2DocumentParagraph[]
+  onChange: (next: V2DocumentParagraph[]) => void
+}) {
+  const updateSegmentText = (
+    paragraphIndex: number,
+    segmentIndex: number,
+    text: string,
+  ) => {
+    const next = paragraphs.map((p, pIdx) => {
+      if (pIdx !== paragraphIndex) return p
+      return {
+        segments: p.segments.map((s, sIdx) =>
+          sIdx === segmentIndex ? { ...s, text } : s,
+        ),
+      }
+    })
+    onChange(next)
+  }
+
+  return (
+    <div className="space-y-4">
+      {paragraphs.map((paragraph, paragraphIndex) => (
+        <div
+          key={paragraphIndex}
+          className="rounded-md border bg-card/40 p-3 text-sm leading-6"
+        >
+          <p className="mb-2 text-xs uppercase text-muted-foreground">
+            Paragraph {paragraphIndex + 1}
+          </p>
+          <div className="space-y-2">
+            {paragraph.segments.map((segment, segmentIndex) => {
+              const anchored = Boolean(segment.evidence_anchor_id)
+              return (
+                <div
+                  key={segmentIndex}
+                  className="flex items-start gap-2"
+                  data-testid={`edit-segment-${paragraphIndex}-${segmentIndex}`}
+                >
+                  {anchored && (
+                    <span
+                      className="mt-2 inline-flex items-center gap-1 rounded-sm bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-purple-900 dark:bg-purple-950/60 dark:text-purple-100"
+                      title={segment.evidence_anchor_id ?? undefined}
+                    >
+                      <LinkIcon className="size-3" />
+                      anchored
+                    </span>
+                  )}
+                  <textarea
+                    value={segment.text}
+                    onChange={(event) =>
+                      updateSegmentText(
+                        paragraphIndex,
+                        segmentIndex,
+                        event.target.value,
+                      )
+                    }
+                    rows={Math.max(1, Math.ceil(segment.text.length / 80))}
+                    className="w-full border bg-background px-2 py-1 text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                  />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function DetailsPane({
-  demoDocument,
+  document,
+  editing,
+  editState,
+  setEditState,
   activeEvidenceAnchorId,
   showClose,
   onClose,
   isSplit,
+  anchorMode,
+  detailsPick,
+  setDetailsPick,
 }: {
-  demoDocument: V2DemoDocument
+  document: V2DocumentPublic
+  editing: boolean
+  editState: EditableDoc | null
+  setEditState: (next: EditableDoc) => void
   activeEvidenceAnchorId: string | undefined
   showClose: boolean
   onClose: () => void
   isSplit: boolean
+  anchorMode: boolean
+  detailsPick: DetailsPick | null
+  setDetailsPick: (pick: DetailsPick | null) => void
 }) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  const sections = useMemo(
+    () =>
+      editing && editState
+        ? editState.details_markdown_sections
+        : document.details_markdown_sections,
+    [editing, editState, document],
+  )
+
+  const fileName =
+    editing && editState
+      ? editState.details_file_name
+      : document.details_file_name
+
+  const handleDetailsSelection = () => {
+    if (!anchorMode || !containerRef.current) return
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      return
+    }
+    const range = selection.getRangeAt(0)
+    const startBlock = (range.startContainer.parentElement?.closest(
+      "[data-section-key]",
+    ) ?? null) as HTMLElement | null
+    const endBlock = (range.endContainer.parentElement?.closest(
+      "[data-section-key]",
+    ) ?? null) as HTMLElement | null
+    if (!startBlock || !endBlock || startBlock !== endBlock) return
+
+    const key = startBlock.dataset.sectionKey
+    if (!key) return
+    const sectionIndex = Number(key)
+
+    const start = getOffsetWithin(
+      startBlock,
+      range.startContainer,
+      range.startOffset,
+    )
+    const end = getOffsetWithin(startBlock, range.endContainer, range.endOffset)
+    if (start < 0 || end < 0 || end <= start) return
+    const text = startBlock.textContent?.slice(start, end) ?? ""
+    if (!text) return
+
+    setDetailsPick({ sectionIndex, start, end, text })
+  }
+
   return (
     <section
-      aria-label={`${demoDocument.detailsFileName} markdown details`}
+      aria-label={`${fileName} markdown details`}
       className={cn(
         "overflow-hidden rounded-md border bg-card",
         isSplit && "md:flex md:min-h-0 md:flex-col",
@@ -315,7 +966,22 @@ function DetailsPane({
           isSplit && "md:shrink-0",
         )}
       >
-        <span className="truncate">{demoDocument.detailsFileName}</span>
+        {editing && editState ? (
+          <input
+            type="text"
+            value={editState.details_file_name}
+            onChange={(event) =>
+              setEditState({
+                ...editState,
+                details_file_name: event.target.value,
+              })
+            }
+            className="min-w-0 flex-1 truncate border bg-background px-2 py-1 font-mono text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            data-testid="edit-details-filename"
+          />
+        ) : (
+          <span className="truncate">{fileName}</span>
+        )}
         {showClose && (
           <Button
             type="button"
@@ -331,29 +997,63 @@ function DetailsPane({
           </Button>
         )}
       </div>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: captures text selection for evidence anchoring */}
       <div
+        ref={containerRef}
+        onMouseUp={handleDetailsSelection}
+        onKeyUp={handleDetailsSelection}
         className={cn(
           "px-5 py-4",
           isSplit && "md:min-h-0 md:flex-1 md:overflow-y-auto",
+          anchorMode && "cursor-text select-text",
         )}
       >
-        {demoDocument.detailsMarkdownSections.map((section) => (
-          <pre
-            key={section.anchorId}
-            id={section.anchorId}
-            data-testid={`ai-evidence-${section.anchorId}`}
-            data-active-evidence={
-              activeEvidenceAnchorId === section.anchorId ? "true" : "false"
-            }
-            className={cn(
-              "scroll-mt-6 whitespace-pre-wrap rounded-sm py-2 font-mono text-sm leading-6 text-foreground transition-colors",
-              activeEvidenceAnchorId === section.anchorId &&
-                "bg-purple-100/80 px-3 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
-            )}
-          >
-            <code>{section.markdown}</code>
-          </pre>
-        ))}
+        {sections.map((section, sectionIndex) => {
+          const isActive = activeEvidenceAnchorId === section.anchor_id
+          const isPicked = detailsPick?.sectionIndex === sectionIndex
+
+          if (editing && editState) {
+            return (
+              <textarea
+                key={`${section.anchor_id}-${sectionIndex}`}
+                value={section.markdown}
+                onChange={(event) => {
+                  const next = editState.details_markdown_sections.map(
+                    (s, idx) =>
+                      idx === sectionIndex
+                        ? { ...s, markdown: event.target.value }
+                        : s,
+                  )
+                  setEditState({
+                    ...editState,
+                    details_markdown_sections: next,
+                  })
+                }}
+                rows={Math.max(4, section.markdown.split("\n").length)}
+                className="mb-3 w-full border bg-background px-3 py-2 font-mono text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                data-testid={`edit-section-${section.anchor_id}`}
+              />
+            )
+          }
+
+          return (
+            <pre
+              key={`${section.anchor_id}-${sectionIndex}`}
+              id={section.anchor_id}
+              data-section-key={sectionIndex}
+              data-testid={`ai-evidence-${section.anchor_id}`}
+              data-active-evidence={isActive ? "true" : "false"}
+              className={cn(
+                "scroll-mt-6 whitespace-pre-wrap rounded-sm py-2 font-mono text-sm leading-6 text-foreground transition-colors",
+                isActive &&
+                  "bg-purple-100/80 px-3 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
+                isPicked && "outline outline-2 outline-purple-400",
+              )}
+            >
+              <code>{section.markdown}</code>
+            </pre>
+          )
+        })}
       </div>
     </section>
   )
