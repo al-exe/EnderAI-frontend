@@ -1,18 +1,55 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { ArrowLeft, Link as LinkIcon, Pencil, X } from "lucide-react"
+import {
+  ArrowLeft,
+  Building2,
+  Eye,
+  Folder,
+  Link as LinkIcon,
+  Lock,
+  Pencil,
+  Share2,
+  X,
+} from "lucide-react"
 import { useMemo, useRef, useState } from "react"
 
 import {
+  type OrganizationMemberPublic,
+  readMyOrganization,
+} from "@/api/organizations"
+import {
   readV2Document,
+  readV2DocumentFolders,
+  readV2DocumentShares,
+  replaceV2DocumentShares,
   updateV2Document,
   type V2DocumentDetailsSection,
+  type V2DocumentFolderPublic,
   type V2DocumentParagraph,
   type V2DocumentPublic,
+  type V2DocumentSharePermission,
   type V2DocumentUpdate,
+  type V2DocumentVisibility,
 } from "@/api/v2Documents"
 import { useDemoMode } from "@/components/demo-mode-provider"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 
@@ -50,10 +87,14 @@ type EditableDoc = {
   human_summary: string
   ai_generated_summary: string
   collaborators: string
+  folder_id: string | null
+  visibility: V2DocumentVisibility
   details_file_name: string
   main_body: V2DocumentParagraph[]
   details_markdown_sections: V2DocumentDetailsSection[]
 }
+
+type ShareDraft = Record<string, V2DocumentSharePermission>
 
 function toEditable(document: V2DocumentPublic): EditableDoc {
   return {
@@ -62,6 +103,8 @@ function toEditable(document: V2DocumentPublic): EditableDoc {
     human_summary: document.human_summary,
     ai_generated_summary: document.ai_generated_summary,
     collaborators: document.collaborators.join(", "),
+    folder_id: document.folder_id ?? null,
+    visibility: document.visibility,
     details_file_name: document.details_file_name,
     main_body: document.main_body.map((p) => ({
       segments: p.segments.map((s) => ({ ...s })),
@@ -82,6 +125,8 @@ function toUpdatePayload(edit: EditableDoc): V2DocumentUpdate {
       .split(",")
       .map((c) => c.trim())
       .filter(Boolean),
+    folder_id: edit.folder_id,
+    visibility: edit.visibility,
     details_file_name: edit.details_file_name,
     main_body: edit.main_body,
     details_markdown_sections: edit.details_markdown_sections,
@@ -127,6 +172,7 @@ function TaskforceDocumentDetail() {
   const { isDemoMode } = useDemoMode()
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
+  const { user } = useAuth()
 
   const [viewMode, setViewMode] = useState<ViewMode>("summary")
   const [activeEvidenceAnchorId, setActiveEvidenceAnchorId] = useState<string>()
@@ -135,10 +181,35 @@ function TaskforceDocumentDetail() {
   const [anchorMode, setAnchorMode] = useState(false)
   const [summaryPick, setSummaryPick] = useState<AnchorPick | null>(null)
   const [detailsPick, setDetailsPick] = useState<DetailsPick | null>(null)
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [shareDraft, setShareDraft] = useState<ShareDraft>({})
 
   const documentQuery = useQuery({
     queryKey: ["v2-document", documentId, { demo: isDemoMode }],
     queryFn: () => readV2Document(documentId, { demo: isDemoMode }),
+  })
+
+  const document = documentQuery.data
+  const isOwner = Boolean(document && user?.id === document.owner_id)
+  const canEditDocument = Boolean(document && document.user_access !== "viewer")
+  const canManageDocument = isOwner && !isDemoMode
+
+  const foldersQuery = useQuery({
+    queryKey: ["v2-document-folders", { demo: isDemoMode }],
+    queryFn: () => readV2DocumentFolders({ demo: isDemoMode }),
+    enabled: Boolean(document),
+  })
+
+  const organizationQuery = useQuery({
+    queryKey: ["organization-me"],
+    queryFn: readMyOrganization,
+    enabled: canManageDocument,
+  })
+
+  const sharesQuery = useQuery({
+    queryKey: ["v2-document-shares", documentId],
+    queryFn: () => readV2DocumentShares(documentId),
+    enabled: canManageDocument,
   })
 
   const updateMutation = useMutation({
@@ -159,7 +230,31 @@ function TaskforceDocumentDetail() {
     },
   })
 
-  const document = documentQuery.data
+  const shareMutation = useMutation({
+    mutationFn: () =>
+      replaceV2DocumentShares(documentId, {
+        shares: Object.entries(shareDraft).map(([user_id, permission]) => ({
+          user_id,
+          permission,
+        })),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["v2-document", documentId, { demo: isDemoMode }],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["v2-document-shares", documentId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["v2-documents", { demo: isDemoMode }],
+      })
+      setShareDialogOpen(false)
+      showSuccessToast("Sharing updated.")
+    },
+    onError: () => {
+      showErrorToast("Could not update sharing.")
+    },
+  })
 
   const isSplit = viewMode === "split"
   const summaryVisible = viewMode === "summary" || isSplit
@@ -184,7 +279,7 @@ function TaskforceDocumentDetail() {
   }
 
   const enterEdit = () => {
-    if (!document) return
+    if (!document || !canEditDocument) return
     setEditState(toEditable(document))
     setIsEditing(true)
     setAnchorMode(false)
@@ -205,6 +300,16 @@ function TaskforceDocumentDetail() {
         setEditState(null)
       },
     })
+  }
+
+  const openShareDialog = () => {
+    const shares = sharesQuery.data?.data ?? document?.shared_with ?? []
+    setShareDraft(
+      Object.fromEntries(
+        shares.map((share) => [share.user_id, share.permission]),
+      ),
+    )
+    setShareDialogOpen(true)
   }
 
   const confirmAnchor = () => {
@@ -323,7 +428,25 @@ function TaskforceDocumentDetail() {
           </Button>
 
           <div className="flex items-center gap-2">
-            {!editing && (
+            {canManageDocument && !editing && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openShareDialog}
+                data-testid="document-share"
+              >
+                <Share2 className="size-4" />
+                Share
+              </Button>
+            )}
+            {!canEditDocument && (
+              <Badge variant="outline">
+                <Eye className="size-3" />
+                View only
+              </Badge>
+            )}
+            {!editing && canEditDocument && (
               <Button
                 type="button"
                 variant="outline"
@@ -418,7 +541,7 @@ function TaskforceDocumentDetail() {
                 />
               </div>
 
-              {isSplit && !editing && (
+              {isSplit && !editing && canEditDocument && (
                 <Button
                   type="button"
                   variant={anchorMode ? "default" : "outline"}
@@ -475,7 +598,22 @@ function TaskforceDocumentDetail() {
           editing={editing}
           editState={editState}
           setEditState={setEditState}
+          folders={foldersQuery.data?.data ?? []}
+          canManageLibrary={canManageDocument}
         />
+
+        {canManageDocument && (
+          <DocumentShareDialog
+            open={shareDialogOpen}
+            onOpenChange={setShareDialogOpen}
+            members={organizationQuery.data?.members ?? []}
+            ownerId={document.owner_id}
+            shareDraft={shareDraft}
+            setShareDraft={setShareDraft}
+            onSave={() => shareMutation.mutate()}
+            isSaving={shareMutation.isPending}
+          />
+        )}
 
         {anchorMode && (
           <AnchorHelper summaryPick={summaryPick} detailsPick={detailsPick} />
@@ -529,53 +667,229 @@ function DocumentMetadata({
   editing,
   editState,
   setEditState,
+  folders,
+  canManageLibrary,
 }: {
   document: V2DocumentPublic
   editing: boolean
   editState: EditableDoc | null
   setEditState: (next: EditableDoc) => void
+  folders: V2DocumentFolderPublic[]
+  canManageLibrary: boolean
 }) {
+  const visibilityLabel =
+    document.visibility === "organization" ? "Organization" : "Private"
+
   return (
-    <dl className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 border-y py-4 text-sm text-muted-foreground">
-      <dt className="sr-only">Created</dt>
-      <dd>
-        Created{" "}
-        <span className="text-foreground">
+    <dl className="mt-5 grid gap-3 border-y py-4 text-sm text-muted-foreground md:grid-cols-2 xl:grid-cols-4">
+      <div className="min-w-0">
+        <dt className="text-xs uppercase tracking-wide">Created</dt>
+        <dd className="mt-1 text-foreground">
           {formatDateOnly(document.created_at)}
-        </span>
-      </dd>
-      <span aria-hidden="true">·</span>
-      <dt className="sr-only">Updated</dt>
-      <dd>
-        Updated{" "}
-        <span className="text-foreground">
+        </dd>
+      </div>
+      <div className="min-w-0">
+        <dt className="text-xs uppercase tracking-wide">Updated</dt>
+        <dd className="mt-1 text-foreground">
           {formatDateOnly(document.updated_at)}
-        </span>
-      </dd>
-      <span aria-hidden="true">·</span>
-      <dt className="sr-only">Collaborators</dt>
-      <dd>
-        {editing && editState ? (
-          <input
-            type="text"
-            value={editState.collaborators}
-            onChange={(event) =>
-              setEditState({
-                ...editState,
-                collaborators: event.target.value,
-              })
-            }
-            placeholder="Comma-separated"
-            className="min-w-[16rem] border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-            data-testid="edit-collaborators"
-          />
-        ) : (
-          <span className="text-foreground">
-            {document.collaborators.join(", ")}
-          </span>
-        )}
-      </dd>
+        </dd>
+      </div>
+      <div className="min-w-0">
+        <dt className="text-xs uppercase tracking-wide">Folder</dt>
+        <dd className="mt-1">
+          {editing && editState && canManageLibrary ? (
+            <Select
+              value={editState.folder_id ?? "__none"}
+              onValueChange={(value) =>
+                setEditState({
+                  ...editState,
+                  folder_id: value === "__none" ? null : value,
+                })
+              }
+            >
+              <SelectTrigger className="w-full" size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none">Unfiled</SelectItem>
+                {folders.map((folder) => (
+                  <SelectItem key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <span className="inline-flex min-w-0 items-center gap-1.5 text-foreground">
+              <Folder className="size-4 shrink-0 text-muted-foreground" />
+              <span className="truncate">
+                {document.folder_name ?? "Unfiled"}
+              </span>
+            </span>
+          )}
+        </dd>
+      </div>
+      <div className="min-w-0">
+        <dt className="text-xs uppercase tracking-wide">Access</dt>
+        <dd className="mt-1">
+          {editing && editState && canManageLibrary ? (
+            <Select
+              value={editState.visibility}
+              onValueChange={(value) =>
+                setEditState({
+                  ...editState,
+                  visibility: value as V2DocumentVisibility,
+                })
+              }
+            >
+              <SelectTrigger className="w-full" size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="private">Private</SelectItem>
+                <SelectItem value="organization">Organization</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-foreground">
+              {document.visibility === "organization" ? (
+                <Building2 className="size-4 text-muted-foreground" />
+              ) : (
+                <Lock className="size-4 text-muted-foreground" />
+              )}
+              {visibilityLabel}
+            </span>
+          )}
+        </dd>
+      </div>
+      <div className="min-w-0 md:col-span-2 xl:col-span-4">
+        <dt className="text-xs uppercase tracking-wide">Collaborators</dt>
+        <dd className="mt-1">
+          {editing && editState ? (
+            <input
+              type="text"
+              value={editState.collaborators}
+              onChange={(event) =>
+                setEditState({
+                  ...editState,
+                  collaborators: event.target.value,
+                })
+              }
+              placeholder="Comma-separated"
+              className="w-full border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              data-testid="edit-collaborators"
+            />
+          ) : (
+            <span className="text-foreground">
+              {document.collaborators.join(", ")}
+            </span>
+          )}
+        </dd>
+      </div>
     </dl>
+  )
+}
+
+function DocumentShareDialog({
+  open,
+  onOpenChange,
+  members,
+  ownerId,
+  shareDraft,
+  setShareDraft,
+  onSave,
+  isSaving,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  members: OrganizationMemberPublic[]
+  ownerId: string
+  shareDraft: ShareDraft
+  setShareDraft: (draft: ShareDraft) => void
+  onSave: () => void
+  isSaving: boolean
+}) {
+  const shareableMembers = members.filter((member) => member.id !== ownerId)
+  const assignedCount = Object.keys(shareDraft).length
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[560px]">
+        <DialogHeader>
+          <DialogTitle>Share document</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+          {shareableMembers.length === 0 && (
+            <div className="border bg-card p-4 text-sm text-muted-foreground">
+              No organization members available.
+            </div>
+          )}
+          {shareableMembers.map((member) => {
+            const permission = shareDraft[member.id]
+            const checked = Boolean(permission)
+            return (
+              <div
+                key={member.id}
+                className="grid grid-cols-[auto_minmax(0,1fr)_130px] items-center gap-3 border p-3"
+              >
+                <Checkbox
+                  id={`share-${member.id}`}
+                  checked={checked}
+                  onCheckedChange={(nextChecked) => {
+                    const next = { ...shareDraft }
+                    if (nextChecked === true) {
+                      next[member.id] = permission ?? "editor"
+                    } else {
+                      delete next[member.id]
+                    }
+                    setShareDraft(next)
+                  }}
+                />
+                <label htmlFor={`share-${member.id}`} className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-foreground">
+                    {member.full_name || member.email}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {member.email}
+                  </span>
+                </label>
+                <Select
+                  value={permission ?? "editor"}
+                  disabled={!checked}
+                  onValueChange={(value) =>
+                    setShareDraft({
+                      ...shareDraft,
+                      [member.id]: value as V2DocumentSharePermission,
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-full" size="sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="editor">Editor</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )
+          })}
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
+          >
+            Cancel
+          </Button>
+          <Button type="button" onClick={onSave} disabled={isSaving}>
+            {isSaving ? "Saving" : `Save ${assignedCount}`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
