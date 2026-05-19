@@ -17,6 +17,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V2IndexRouteImport } from './routes/v2/index'
+import { Route as V2MetricsRouteImport } from './routes/v2/metrics'
 import { Route as V2LibraryRouteImport } from './routes/v2/library'
 import { Route as V2HomeRouteImport } from './routes/v2/home'
 import { Route as V2AdminRouteImport } from './routes/v2/admin'
@@ -26,6 +27,7 @@ import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutHomeRouteImport } from './routes/_layout/home'
 import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as V2MetricsMethodologyRouteImport } from './routes/v2/metrics.methodology'
 import { Route as V2LibraryDocumentIdRouteImport } from './routes/v2/library.$documentId'
 
 const V2Route = V2RouteImport.update({
@@ -65,6 +67,11 @@ const IndexRoute = IndexRouteImport.update({
 const V2IndexRoute = V2IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => V2Route,
+} as any)
+const V2MetricsRoute = V2MetricsRouteImport.update({
+  id: '/metrics',
+  path: '/metrics',
   getParentRoute: () => V2Route,
 } as any)
 const V2LibraryRoute = V2LibraryRouteImport.update({
@@ -112,6 +119,11 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
+const V2MetricsMethodologyRoute = V2MetricsMethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
+  getParentRoute: () => V2MetricsRoute,
+} as any)
 const V2LibraryDocumentIdRoute = V2LibraryDocumentIdRouteImport.update({
   id: '/$documentId',
   path: '/$documentId',
@@ -134,8 +146,10 @@ export interface FileRoutesByFullPath {
   '/v2/admin': typeof V2AdminRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
+  '/v2/metrics': typeof V2MetricsRouteWithChildren
   '/v2/': typeof V2IndexRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
+  '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -152,8 +166,10 @@ export interface FileRoutesByTo {
   '/v2/admin': typeof V2AdminRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
+  '/v2/metrics': typeof V2MetricsRouteWithChildren
   '/v2': typeof V2IndexRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
+  '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -173,8 +189,10 @@ export interface FileRoutesById {
   '/v2/admin': typeof V2AdminRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
+  '/v2/metrics': typeof V2MetricsRouteWithChildren
   '/v2/': typeof V2IndexRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
+  '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -194,8 +212,10 @@ export interface FileRouteTypes {
     | '/v2/admin'
     | '/v2/home'
     | '/v2/library'
+    | '/v2/metrics'
     | '/v2/'
     | '/v2/library/$documentId'
+    | '/v2/metrics/methodology'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -212,8 +232,10 @@ export interface FileRouteTypes {
     | '/v2/admin'
     | '/v2/home'
     | '/v2/library'
+    | '/v2/metrics'
     | '/v2'
     | '/v2/library/$documentId'
+    | '/v2/metrics/methodology'
   id:
     | '__root__'
     | '/'
@@ -232,8 +254,10 @@ export interface FileRouteTypes {
     | '/v2/admin'
     | '/v2/home'
     | '/v2/library'
+    | '/v2/metrics'
     | '/v2/'
     | '/v2/library/$documentId'
+    | '/v2/metrics/methodology'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -304,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof V2IndexRouteImport
       parentRoute: typeof V2Route
     }
+    '/v2/metrics': {
+      id: '/v2/metrics'
+      path: '/metrics'
+      fullPath: '/v2/metrics'
+      preLoaderRoute: typeof V2MetricsRouteImport
+      parentRoute: typeof V2Route
+    }
     '/v2/library': {
       id: '/v2/library'
       path: '/library'
@@ -367,6 +398,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/v2/metrics/methodology': {
+      id: '/v2/metrics/methodology'
+      path: '/methodology'
+      fullPath: '/v2/metrics/methodology'
+      preLoaderRoute: typeof V2MetricsMethodologyRouteImport
+      parentRoute: typeof V2MetricsRoute
+    }
     '/v2/library/$documentId': {
       id: '/v2/library/$documentId'
       path: '/$documentId'
@@ -410,10 +448,23 @@ const V2LibraryRouteWithChildren = V2LibraryRoute._addFileChildren(
   V2LibraryRouteChildren,
 )
 
+interface V2MetricsRouteChildren {
+  V2MetricsMethodologyRoute: typeof V2MetricsMethodologyRoute
+}
+
+const V2MetricsRouteChildren: V2MetricsRouteChildren = {
+  V2MetricsMethodologyRoute: V2MetricsMethodologyRoute,
+}
+
+const V2MetricsRouteWithChildren = V2MetricsRoute._addFileChildren(
+  V2MetricsRouteChildren,
+)
+
 interface V2RouteChildren {
   V2AdminRoute: typeof V2AdminRoute
   V2HomeRoute: typeof V2HomeRoute
   V2LibraryRoute: typeof V2LibraryRouteWithChildren
+  V2MetricsRoute: typeof V2MetricsRouteWithChildren
   V2IndexRoute: typeof V2IndexRoute
 }
 
@@ -421,6 +472,7 @@ const V2RouteChildren: V2RouteChildren = {
   V2AdminRoute: V2AdminRoute,
   V2HomeRoute: V2HomeRoute,
   V2LibraryRoute: V2LibraryRouteWithChildren,
+  V2MetricsRoute: V2MetricsRouteWithChildren,
   V2IndexRoute: V2IndexRoute,
 }
 

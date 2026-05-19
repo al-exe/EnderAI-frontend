@@ -5,7 +5,14 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router"
-import { BookOpenText, Component, Home, Search, Shield } from "lucide-react"
+import {
+  BarChart3,
+  BookOpenText,
+  Component,
+  Home,
+  Search,
+  Shield,
+} from "lucide-react"
 import {
   Fragment,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -52,6 +59,7 @@ type TaskforceNavItem = {
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Home, title: "Home", path: "/v2/home" },
   { icon: BookOpenText, title: "Library", path: "/v2/library" },
+  { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
 ]
 
 function TaskforceMark() {
