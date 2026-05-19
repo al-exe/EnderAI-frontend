@@ -91,13 +91,11 @@ function buildAgentInstructionSnippet({
     return [
       "If Taskforce V2 MCP tools are available:",
       "- When creating or rotating an EnderAI MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
-      "- Use Taskforce V2 document tools for meaningful user-initiated work instead of the legacy EnderAI V1 Topic/Case workflow.",
-      "- Create a Taskforce document at the start of the work with title, description, created/updated timestamps, collaborators, and an initial AI-generated high-level summary.",
-      "- Update the document as work develops with files inspected, links accessed, commands run, code/config details, decisions, outcomes, open questions, and any important context that explains what happened.",
-      "- Maintain two document views: a concise Summary view shown by default and a comprehensive Details view available on demand.",
-      "- Back every Summary claim with evidence anchors that navigate to the relevant Details section or to another source document.",
-      "- Finalize the document when the work completes or stops so the human summary, AI details, outcomes, and follow-ups are current.",
-      "- If both Taskforce V2 document tools and legacy EnderAI V1 Topic/Case tools are available, prefer Taskforce V2 document tools.",
+      "- Start meaningful user-initiated work with `enderai_begin_document`. It scores existing documents against the request, reuses + self-heals a strong match, or creates a fresh one. Read the returned `match_reasons`, `candidate_summaries`, and `self_healed_fields` before continuing.",
+      "- Use `enderai_update_document` as material progress develops (commands, files, links, decisions, changes, open questions, progress notes). Pass `details_sections` with stable `anchor_id`s to upsert specific Details sections, and `summary_points` for new Summary claims.",
+      "- Back every Summary claim with `evidence_anchor_id` segments that point at a Details section. Do not edit `human_summary` unless the user explicitly asks.",
+      "- Use `enderai_finish_document` when the work completes or pauses; it writes an Outcome section (status, outcome, validation, follow-ups) and clears the active document pointer.",
+      "- Prefer Taskforce V2 document tools over the legacy V1 `enderai_begin_case` workflow and over raw `enderai_request` when both are available.",
       "- If Taskforce V2 document tools are unavailable, do not fabricate tool calls; tell the user they are unavailable and fall back only to tools the user explicitly approves.",
     ].join("\n")
   }
