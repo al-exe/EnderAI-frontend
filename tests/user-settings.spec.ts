@@ -6,6 +6,7 @@ import { logInUser, logOutUser } from "./utils/user"
 
 const tabs = [
   "My profile",
+  "Organization",
   "Connect agent",
   "Billing",
   "Password",
@@ -25,6 +26,182 @@ test("All tabs are visible", async ({ page }) => {
   for (const tab of tabs) {
     await expect(page.getByRole("tab", { name: tab })).toBeVisible()
   }
+})
+
+test.describe("Organization", () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test("Organization tab shows members, invitations, and admin actions", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem("access_token", "frontend-test-token")
+    })
+
+    let organization = {
+      id: "org-1",
+      name: "Frontend Test Organization",
+      created_at: "2026-03-14T20:00:00Z",
+      updated_at: "2026-03-14T20:00:00Z",
+      organization_role: "admin",
+      members: [
+        {
+          id: "user-1",
+          email: "admin@example.com",
+          full_name: "Admin User",
+          organization_role: "admin",
+        },
+        {
+          id: "user-2",
+          email: "member@example.com",
+          full_name: "Member User",
+          organization_role: "member",
+        },
+      ],
+      invitations: [
+        {
+          id: "invite-1",
+          organization_id: "org-1",
+          organization_name: "Frontend Test Organization",
+          invited_email: "pending@example.com",
+          invited_by_user_id: "user-1",
+          created_at: "2026-03-15T20:00:00Z",
+          accepted_at: null,
+          revoked_at: null,
+        },
+      ],
+    }
+
+    await page.route("**/api/v1/users/me", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "user-1",
+          email: "admin@example.com",
+          is_active: true,
+          is_superuser: false,
+          full_name: "Admin User",
+          created_at: "2026-03-14T20:00:00Z",
+        }),
+      })
+    })
+
+    await page.route("**/api/v1/organizations/me", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(organization),
+      })
+    })
+
+    await page.route("**/api/v1/organizations/invitations", async (route) => {
+      if (route.request().method() === "POST") {
+        const invite = {
+          id: "invite-2",
+          organization_id: "org-1",
+          organization_name: "Frontend Test Organization",
+          invited_email: "new@example.com",
+          invited_by_user_id: "user-1",
+          created_at: "2026-03-16T20:00:00Z",
+          accepted_at: null,
+          revoked_at: null,
+        }
+        organization = {
+          ...organization,
+          invitations: [...organization.invitations, invite],
+        }
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify(invite),
+        })
+        return
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [
+            {
+              id: "invite-incoming",
+              organization_id: "org-2",
+              organization_name: "Partner Organization",
+              invited_email: "admin@example.com",
+              invited_by_user_id: "partner-admin",
+              created_at: "2026-03-17T20:00:00Z",
+              accepted_at: null,
+              revoked_at: null,
+            },
+          ],
+          count: 1,
+        }),
+      })
+    })
+
+    await page.route(
+      "**/api/v1/organizations/invitations/invite-incoming/accept",
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            ...organization,
+            id: "org-2",
+            name: "Partner Organization",
+            organization_role: "member",
+          }),
+        })
+      },
+    )
+
+    await page.route(
+      "**/api/v1/organizations/members/user-2",
+      async (route) => {
+        organization = {
+          ...organization,
+          members: organization.members.map((member) =>
+            member.id === "user-2"
+              ? { ...member, organization_role: "admin" }
+              : member,
+          ),
+        }
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(organization.members[1]),
+        })
+      },
+    )
+
+    await page.goto("/settings?tab=organization")
+
+    await expect(
+      page
+        .locator('[data-slot="card-title"]')
+        .filter({ hasText: "Organization" }),
+    ).toBeVisible()
+    await expect(page.getByText("Frontend Test Organization")).toBeVisible()
+    await expect(page.getByText("Partner Organization")).toBeVisible()
+    await expect(page.getByText("member@example.com")).toBeVisible()
+    await expect(page.getByText("pending@example.com")).toBeVisible()
+
+    await page.getByLabel("Invitation email").fill("new@example.com")
+    await page.getByRole("button", { name: "Invite" }).click()
+    await expect(page.getByText("Invitation sent")).toBeVisible()
+    await expect(page.getByText("new@example.com")).toBeVisible()
+
+    await page
+      .getByRole("row", { name: /Member User/ })
+      .getByRole("combobox")
+      .click()
+    await page.getByRole("option", { name: "Admin" }).click()
+    await expect(page.getByText("Member role updated")).toBeVisible()
+
+    await page.getByRole("button", { name: "Accept" }).click()
+    await expect(page.getByText("Invitation accepted")).toBeVisible()
+  })
 })
 
 test.describe("Billing", () => {

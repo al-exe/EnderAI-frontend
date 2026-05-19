@@ -6,12 +6,14 @@ import Billing from "@/components/UserSettings/Billing"
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import ConnectAgent from "@/components/UserSettings/ConnectAgent"
 import DeleteAccount from "@/components/UserSettings/DeleteAccount"
+import Organization from "@/components/UserSettings/Organization"
 import UserInformation from "@/components/UserSettings/UserInformation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useAuth from "@/hooks/useAuth"
 
 const tabValues = [
   "my-profile",
+  "organization",
   "connect-agent",
   "billing",
   "password",
@@ -30,6 +32,7 @@ const tabsConfig: Array<{
   component: ComponentType
 }> = [
   { value: "my-profile", title: "My profile", component: UserInformation },
+  { value: "organization", title: "Organization", component: Organization },
   { value: "connect-agent", title: "Connect agent", component: ConnectAgent },
   { value: "billing", title: "Billing", component: Billing },
   { value: "password", title: "Password", component: ChangePassword },
@@ -77,7 +80,7 @@ function UserSettings() {
         }}
         className="flex min-h-0 flex-1 flex-col overflow-hidden"
       >
-        <TabsList className="shrink-0">
+        <TabsList className="max-w-full shrink-0 justify-start overflow-x-auto">
           {finalTabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.title}
