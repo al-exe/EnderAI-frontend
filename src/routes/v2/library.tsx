@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import {
   createFileRoute,
   Link,
@@ -15,10 +15,9 @@ import {
   Share2,
   Users,
 } from "lucide-react"
-import { type FormEvent, type ReactNode, useMemo, useState } from "react"
+import { type ReactNode, useMemo, useState } from "react"
 
 import {
-  createV2DocumentFolder,
   readV2DocumentFolders,
   readV2Documents,
   type V2DocumentFolderPublic,
@@ -28,14 +27,7 @@ import {
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import useCustomToast from "@/hooks/useCustomToast"
+import { FolderCreateDialog } from "@/components/V2/Library/FolderControls"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/v2/library")({
@@ -60,12 +52,8 @@ function formatDateOnly(value: string | null): string {
 function TaskforceLibrary() {
   const { isDemoMode } = useDemoMode()
   const router = useRouterState()
-  const queryClient = useQueryClient()
-  const { showSuccessToast, showErrorToast } = useCustomToast()
   const [selectedFolderId, setSelectedFolderId] = useState("all")
-  const [folderName, setFolderName] = useState("")
-  const [folderVisibility, setFolderVisibility] =
-    useState<V2DocumentVisibility>("private")
+  const [createFolderOpen, setCreateFolderOpen] = useState(false)
 
   const documentsQuery = useQuery({
     queryKey: ["v2-documents", { demo: isDemoMode }],
@@ -75,24 +63,6 @@ function TaskforceLibrary() {
   const foldersQuery = useQuery({
     queryKey: ["v2-document-folders", { demo: isDemoMode }],
     queryFn: () => readV2DocumentFolders({ demo: isDemoMode }),
-  })
-
-  const createFolderMutation = useMutation({
-    mutationFn: () =>
-      createV2DocumentFolder({
-        name: folderName.trim(),
-        visibility: folderVisibility,
-      }),
-    onSuccess: () => {
-      setFolderName("")
-      queryClient.invalidateQueries({
-        queryKey: ["v2-document-folders", { demo: isDemoMode }],
-      })
-      showSuccessToast("Folder created.")
-    },
-    onError: () => {
-      showErrorToast("Could not create folder.")
-    },
   })
 
   const documents = documentsQuery.data?.data ?? []
@@ -126,12 +96,6 @@ function TaskforceLibrary() {
   const isFolderEmpty =
     !isLoading && documents.length > 0 && visibleDocuments.length === 0
 
-  const submitFolder = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!folderName.trim() || isDemoMode) return
-    createFolderMutation.mutate()
-  }
-
   if (router.location.pathname.startsWith("/v2/library/")) {
     return <Outlet />
   }
@@ -141,43 +105,24 @@ function TaskforceLibrary() {
       <div className="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <h1 className="text-2xl font-semibold">Library</h1>
         {!isDemoMode && (
-          <form
-            className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto"
-            onSubmit={submitFolder}
+          <Button
+            type="button"
+            size="sm"
+            className="w-fit"
+            onClick={() => setCreateFolderOpen(true)}
           >
-            <input
-              type="text"
-              value={folderName}
-              onChange={(event) => setFolderName(event.target.value)}
-              placeholder="New folder"
-              className="h-9 min-w-0 border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:w-48"
-              data-testid="new-folder-name"
-            />
-            <Select
-              value={folderVisibility}
-              onValueChange={(value) =>
-                setFolderVisibility(value as V2DocumentVisibility)
-              }
-            >
-              <SelectTrigger className="w-full sm:w-36" size="sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="organization">Organization</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!folderName.trim() || createFolderMutation.isPending}
-            >
-              <FolderPlus className="size-4" />
-              {createFolderMutation.isPending ? "Creating" : "Create"}
-            </Button>
-          </form>
+            <FolderPlus className="size-4" />
+            Create folder
+          </Button>
         )}
       </div>
+
+      <FolderCreateDialog
+        open={createFolderOpen}
+        onOpenChange={setCreateFolderOpen}
+        demo={isDemoMode}
+        onCreated={(folder) => setSelectedFolderId(folder.id)}
+      />
 
       {isLoading && (
         <div className="border bg-card p-6 text-sm text-muted-foreground">
@@ -365,8 +310,12 @@ function DocumentCard({ document }: { document: V2DocumentPublic }) {
         </div>
         <div className="flex items-center gap-2">
           <Users className="size-4" />
-          <dt className="sr-only">Collaborators</dt>
-          <dd>{document.collaborators.join(", ")}</dd>
+          <dt className="sr-only">Access</dt>
+          <dd>
+            {sharedCount > 0
+              ? `${sharedCount} shared member${sharedCount === 1 ? "" : "s"}`
+              : "Only owner"}
+          </dd>
         </div>
       </dl>
 
