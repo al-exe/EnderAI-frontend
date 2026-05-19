@@ -37,7 +37,6 @@ const formSchema = z.object({
   email: z.email({ message: "Invalid email address" }),
   full_name: z.string().optional(),
   is_superuser: z.boolean(),
-  is_active: z.boolean(),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -55,7 +54,6 @@ const AddUser = () => {
       email: "",
       full_name: "",
       is_superuser: false,
-      is_active: false,
     },
   })
 
@@ -146,22 +144,6 @@ const AddUser = () => {
                       />
                     </FormControl>
                     <FormLabel className="font-normal">Is superuser?</FormLabel>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel className="font-normal">Is active?</FormLabel>
                   </FormItem>
                 )}
               />
