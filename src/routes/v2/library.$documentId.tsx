@@ -8,6 +8,7 @@ import {
   Link as LinkIcon,
   Lock,
   Pencil,
+  Search,
   Share2,
   X,
 } from "lucide-react"
@@ -28,6 +29,7 @@ import {
   type V2DocumentParagraph,
   type V2DocumentPublic,
   type V2DocumentSharePermission,
+  type V2DocumentSharePublic,
   type V2DocumentUpdate,
   type V2DocumentVisibility,
 } from "@/api/v2Documents"
@@ -36,12 +38,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -49,6 +50,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  FolderCreateDialog,
+  FolderPickerDropdown,
+} from "@/components/V2/Library/FolderControls"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -86,7 +91,6 @@ type EditableDoc = {
   description: string
   human_summary: string
   ai_generated_summary: string
-  collaborators: string
   folder_id: string | null
   visibility: V2DocumentVisibility
   details_file_name: string
@@ -102,7 +106,6 @@ function toEditable(document: V2DocumentPublic): EditableDoc {
     description: document.description,
     human_summary: document.human_summary,
     ai_generated_summary: document.ai_generated_summary,
-    collaborators: document.collaborators.join(", "),
     folder_id: document.folder_id ?? null,
     visibility: document.visibility,
     details_file_name: document.details_file_name,
@@ -121,10 +124,6 @@ function toUpdatePayload(edit: EditableDoc): V2DocumentUpdate {
     description: edit.description,
     human_summary: edit.human_summary,
     ai_generated_summary: edit.ai_generated_summary,
-    collaborators: edit.collaborators
-      .split(",")
-      .map((c) => c.trim())
-      .filter(Boolean),
     folder_id: edit.folder_id,
     visibility: edit.visibility,
     details_file_name: edit.details_file_name,
@@ -181,8 +180,9 @@ function TaskforceDocumentDetail() {
   const [anchorMode, setAnchorMode] = useState(false)
   const [summaryPick, setSummaryPick] = useState<AnchorPick | null>(null)
   const [detailsPick, setDetailsPick] = useState<DetailsPick | null>(null)
-  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [accessOpen, setAccessOpen] = useState(false)
   const [shareDraft, setShareDraft] = useState<ShareDraft>({})
+  const [createFolderOpen, setCreateFolderOpen] = useState(false)
 
   const documentQuery = useQuery({
     queryKey: ["v2-document", documentId, { demo: isDemoMode }],
@@ -223,6 +223,9 @@ function TaskforceDocumentDetail() {
       queryClient.invalidateQueries({
         queryKey: ["v2-documents", { demo: isDemoMode }],
       })
+      queryClient.invalidateQueries({
+        queryKey: ["v2-document-folders", { demo: isDemoMode }],
+      })
       showSuccessToast("Document saved.")
     },
     onError: () => {
@@ -248,7 +251,7 @@ function TaskforceDocumentDetail() {
       queryClient.invalidateQueries({
         queryKey: ["v2-documents", { demo: isDemoMode }],
       })
-      setShareDialogOpen(false)
+      setAccessOpen(false)
       showSuccessToast("Sharing updated.")
     },
     onError: () => {
@@ -302,14 +305,22 @@ function TaskforceDocumentDetail() {
     })
   }
 
-  const openShareDialog = () => {
+  const seedShareDraft = () => {
     const shares = sharesQuery.data?.data ?? document?.shared_with ?? []
     setShareDraft(
       Object.fromEntries(
         shares.map((share) => [share.user_id, share.permission]),
       ),
     )
-    setShareDialogOpen(true)
+  }
+
+  const setAccessDropdownOpen = (open: boolean) => {
+    if (open) seedShareDraft()
+    setAccessOpen(open)
+  }
+
+  const moveDocumentToFolder = (folderId: string | null) => {
+    updateMutation.mutate({ folder_id: folderId })
   }
 
   const confirmAnchor = () => {
@@ -428,18 +439,6 @@ function TaskforceDocumentDetail() {
           </Button>
 
           <div className="flex items-center gap-2">
-            {canManageDocument && !editing && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={openShareDialog}
-                data-testid="document-share"
-              >
-                <Share2 className="size-4" />
-                Share
-              </Button>
-            )}
             {!canEditDocument && (
               <Badge variant="outline">
                 <Eye className="size-3" />
@@ -600,20 +599,27 @@ function TaskforceDocumentDetail() {
           setEditState={setEditState}
           folders={foldersQuery.data?.data ?? []}
           canManageLibrary={canManageDocument}
+          organizationMembers={organizationQuery.data?.members ?? []}
+          shares={sharesQuery.data?.data ?? document.shared_with ?? []}
+          ownerId={document.owner_id}
+          accessOpen={accessOpen}
+          onAccessOpenChange={setAccessDropdownOpen}
+          shareDraft={shareDraft}
+          setShareDraft={setShareDraft}
+          onSaveAccess={() => shareMutation.mutate()}
+          isSavingAccess={shareMutation.isPending}
+          isLoadingAccess={sharesQuery.isLoading || organizationQuery.isLoading}
+          onMoveFolder={moveDocumentToFolder}
+          isMovingFolder={updateMutation.isPending}
+          onCreateFolder={() => setCreateFolderOpen(true)}
         />
 
-        {canManageDocument && (
-          <DocumentShareDialog
-            open={shareDialogOpen}
-            onOpenChange={setShareDialogOpen}
-            members={organizationQuery.data?.members ?? []}
-            ownerId={document.owner_id}
-            shareDraft={shareDraft}
-            setShareDraft={setShareDraft}
-            onSave={() => shareMutation.mutate()}
-            isSaving={shareMutation.isPending}
-          />
-        )}
+        <FolderCreateDialog
+          open={createFolderOpen}
+          onOpenChange={setCreateFolderOpen}
+          demo={isDemoMode}
+          onCreated={(folder) => moveDocumentToFolder(folder.id)}
+        />
 
         {anchorMode && (
           <AnchorHelper summaryPick={summaryPick} detailsPick={detailsPick} />
@@ -669,6 +675,19 @@ function DocumentMetadata({
   setEditState,
   folders,
   canManageLibrary,
+  organizationMembers,
+  shares,
+  ownerId,
+  accessOpen,
+  onAccessOpenChange,
+  shareDraft,
+  setShareDraft,
+  onSaveAccess,
+  isSavingAccess,
+  isLoadingAccess,
+  onMoveFolder,
+  isMovingFolder,
+  onCreateFolder,
 }: {
   document: V2DocumentPublic
   editing: boolean
@@ -676,9 +695,23 @@ function DocumentMetadata({
   setEditState: (next: EditableDoc) => void
   folders: V2DocumentFolderPublic[]
   canManageLibrary: boolean
+  organizationMembers: OrganizationMemberPublic[]
+  shares: V2DocumentSharePublic[]
+  ownerId: string
+  accessOpen: boolean
+  onAccessOpenChange: (open: boolean) => void
+  shareDraft: ShareDraft
+  setShareDraft: (next: ShareDraft) => void
+  onSaveAccess: () => void
+  isSavingAccess: boolean
+  isLoadingAccess: boolean
+  onMoveFolder: (folderId: string | null) => void
+  isMovingFolder: boolean
+  onCreateFolder: () => void
 }) {
   const visibilityLabel =
     document.visibility === "organization" ? "Organization" : "Private"
+  const sharedCount = shares.length
 
   return (
     <dl className="mt-5 grid gap-3 border-y py-4 text-sm text-muted-foreground md:grid-cols-2 xl:grid-cols-4">
@@ -697,28 +730,15 @@ function DocumentMetadata({
       <div className="min-w-0">
         <dt className="text-xs uppercase tracking-wide">Folder</dt>
         <dd className="mt-1">
-          {editing && editState && canManageLibrary ? (
-            <Select
-              value={editState.folder_id ?? "__none"}
-              onValueChange={(value) =>
-                setEditState({
-                  ...editState,
-                  folder_id: value === "__none" ? null : value,
-                })
-              }
-            >
-              <SelectTrigger className="w-full" size="sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none">Unfiled</SelectItem>
-                {folders.map((folder) => (
-                  <SelectItem key={folder.id} value={folder.id}>
-                    {folder.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {canManageLibrary ? (
+            <FolderPickerDropdown
+              folders={folders}
+              currentFolderId={document.folder_id ?? null}
+              disabled={isMovingFolder}
+              onSelect={onMoveFolder}
+              onCreateFolder={onCreateFolder}
+              triggerLabel={document.folder_name ?? "Unfiled"}
+            />
           ) : (
             <span className="inline-flex min-w-0 items-center gap-1.5 text-foreground">
               <Folder className="size-4 shrink-0 text-muted-foreground" />
@@ -730,7 +750,7 @@ function DocumentMetadata({
         </dd>
       </div>
       <div className="min-w-0">
-        <dt className="text-xs uppercase tracking-wide">Access</dt>
+        <dt className="text-xs uppercase tracking-wide">Visibility</dt>
         <dd className="mt-1">
           {editing && editState && canManageLibrary ? (
             <Select
@@ -763,25 +783,26 @@ function DocumentMetadata({
         </dd>
       </div>
       <div className="min-w-0 md:col-span-2 xl:col-span-4">
-        <dt className="text-xs uppercase tracking-wide">Collaborators</dt>
+        <dt className="text-xs uppercase tracking-wide">Access</dt>
         <dd className="mt-1">
-          {editing && editState ? (
-            <input
-              type="text"
-              value={editState.collaborators}
-              onChange={(event) =>
-                setEditState({
-                  ...editState,
-                  collaborators: event.target.value,
-                })
-              }
-              placeholder="Comma-separated"
-              className="w-full border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-              data-testid="edit-collaborators"
+          {canManageLibrary ? (
+            <DocumentAccessDropdown
+              open={accessOpen}
+              onOpenChange={onAccessOpenChange}
+              members={organizationMembers}
+              ownerId={ownerId}
+              shares={shares}
+              shareDraft={shareDraft}
+              setShareDraft={setShareDraft}
+              onSave={onSaveAccess}
+              isSaving={isSavingAccess}
+              isLoading={isLoadingAccess}
             />
           ) : (
             <span className="text-foreground">
-              {document.collaborators.join(", ")}
+              {sharedCount > 0
+                ? `${sharedCount} member${sharedCount === 1 ? "" : "s"}`
+                : "Only owner"}
             </span>
           )}
         </dd>
@@ -790,106 +811,161 @@ function DocumentMetadata({
   )
 }
 
-function DocumentShareDialog({
+function DocumentAccessDropdown({
   open,
   onOpenChange,
   members,
   ownerId,
+  shares,
   shareDraft,
   setShareDraft,
   onSave,
   isSaving,
+  isLoading,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   members: OrganizationMemberPublic[]
   ownerId: string
+  shares: V2DocumentSharePublic[]
   shareDraft: ShareDraft
   setShareDraft: (draft: ShareDraft) => void
   onSave: () => void
   isSaving: boolean
+  isLoading: boolean
 }) {
+  const [query, setQuery] = useState("")
   const shareableMembers = members.filter((member) => member.id !== ownerId)
+  const filteredMembers = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return shareableMembers
+    return shareableMembers.filter((member) =>
+      [member.full_name, member.email]
+        .filter(Boolean)
+        .some((value) => value?.toLowerCase().includes(needle)),
+    )
+  }, [query, shareableMembers])
   const assignedCount = Object.keys(shareDraft).length
+  const persistedCount = shares.length
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader>
-          <DialogTitle>Share document</DialogTitle>
-        </DialogHeader>
-        <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
-          {shareableMembers.length === 0 && (
-            <div className="border bg-card p-4 text-sm text-muted-foreground">
+    <DropdownMenu
+      open={open}
+      onOpenChange={(nextOpen) => {
+        onOpenChange(nextOpen)
+        if (!nextOpen) setQuery("")
+      }}
+    >
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          data-testid="document-access"
+        >
+          <Share2 className="size-4" />
+          {persistedCount > 0
+            ? `${persistedCount} member${persistedCount === 1 ? "" : "s"}`
+            : "Only owner"}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-[360px] p-2">
+        <div className="relative mb-2">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => event.stopPropagation()}
+            placeholder="Search organization users"
+            className="h-8 pl-8"
+          />
+        </div>
+        <div className="max-h-72 space-y-1 overflow-y-auto">
+          {isLoading && (
+            <div className="px-2 py-3 text-sm text-muted-foreground">
+              Loading access…
+            </div>
+          )}
+          {!isLoading && shareableMembers.length === 0 && (
+            <div className="px-2 py-3 text-sm text-muted-foreground">
               No organization members available.
             </div>
           )}
-          {shareableMembers.map((member) => {
-            const permission = shareDraft[member.id]
-            const checked = Boolean(permission)
-            return (
-              <div
-                key={member.id}
-                className="grid grid-cols-[auto_minmax(0,1fr)_130px] items-center gap-3 border p-3"
-              >
-                <Checkbox
-                  id={`share-${member.id}`}
-                  checked={checked}
-                  onCheckedChange={(nextChecked) => {
-                    const next = { ...shareDraft }
-                    if (nextChecked === true) {
-                      next[member.id] = permission ?? "editor"
-                    } else {
-                      delete next[member.id]
-                    }
-                    setShareDraft(next)
-                  }}
-                />
-                <label htmlFor={`share-${member.id}`} className="min-w-0">
-                  <span className="block truncate text-sm font-medium text-foreground">
-                    {member.full_name || member.email}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {member.email}
-                  </span>
-                </label>
-                <Select
-                  value={permission ?? "editor"}
-                  disabled={!checked}
-                  onValueChange={(value) =>
-                    setShareDraft({
-                      ...shareDraft,
-                      [member.id]: value as V2DocumentSharePermission,
-                    })
-                  }
-                >
-                  <SelectTrigger className="w-full" size="sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="editor">Editor</SelectItem>
-                    <SelectItem value="viewer">Viewer</SelectItem>
-                  </SelectContent>
-                </Select>
+          {!isLoading &&
+            filteredMembers.length === 0 &&
+            shareableMembers.length > 0 && (
+              <div className="px-2 py-3 text-sm text-muted-foreground">
+                No users found.
               </div>
-            )
-          })}
+            )}
+          {!isLoading &&
+            filteredMembers.map((member) => {
+              const permission = shareDraft[member.id]
+              const checked = Boolean(permission)
+              return (
+                <div
+                  key={member.id}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border p-2"
+                >
+                  <Checkbox
+                    id={`share-${member.id}`}
+                    checked={checked}
+                    onCheckedChange={(nextChecked) => {
+                      const next = { ...shareDraft }
+                      if (nextChecked === true) {
+                        next[member.id] = permission ?? "editor"
+                      } else {
+                        delete next[member.id]
+                      }
+                      setShareDraft(next)
+                    }}
+                  />
+                  <label htmlFor={`share-${member.id}`} className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-foreground">
+                      {member.full_name || member.email}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {member.email}
+                    </span>
+                  </label>
+                  <div className="flex rounded-md border p-0.5">
+                    {(["viewer", "editor"] as V2DocumentSharePermission[]).map(
+                      (option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          disabled={!checked}
+                          onClick={() =>
+                            setShareDraft({
+                              ...shareDraft,
+                              [member.id]: option,
+                            })
+                          }
+                          className={cn(
+                            "rounded px-2 py-1 text-xs capitalize disabled:opacity-40",
+                            permission === option &&
+                              "bg-foreground text-background",
+                          )}
+                        >
+                          {option}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
+              )
+            })}
         </div>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-          >
-            Cancel
+        <div className="mt-2 flex items-center justify-between border-t pt-2">
+          <span className="text-xs text-muted-foreground">
+            {assignedCount} selected
+          </span>
+          <Button type="button" size="sm" onClick={onSave} disabled={isSaving}>
+            {isSaving ? "Saving" : "Save access"}
           </Button>
-          <Button type="button" onClick={onSave} disabled={isSaving}>
-            {isSaving ? "Saving" : `Save ${assignedCount}`}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
