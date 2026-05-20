@@ -959,6 +959,8 @@ function TaskforceDocumentDetail() {
           onCreateFolder={() => setCreateFolderOpen(true)}
           onToggleFavorite={toggleFavorite}
           isTogglingFavorite={favoriteMutation.isPending}
+          onUpdateDates={(dates) => updateMutation.mutate(dates)}
+          isUpdatingDates={updateMutation.isPending}
         />
 
         <FolderCreateDialog
@@ -1036,6 +1038,8 @@ function DocumentMetadata({
   onCreateFolder,
   onToggleFavorite,
   isTogglingFavorite,
+  onUpdateDates,
+  isUpdatingDates,
 }: {
   document: V2DocumentPublic
   folders: V2DocumentFolderPublic[]
@@ -1056,13 +1060,27 @@ function DocumentMetadata({
   onCreateFolder: () => void
   onToggleFavorite: () => void
   isTogglingFavorite: boolean
+  onUpdateDates: (dates: { created_at?: string; updated_at?: string }) => void
+  isUpdatingDates: boolean
 }) {
   const sharedCount = shares.length
-  const dateLabel = `Created ${formatDateOnly(document.created_at)} · Updated ${formatDateOnly(document.updated_at)}`
 
   return (
     <div className="mt-5 flex flex-wrap items-center gap-2 border-y py-3 text-sm text-muted-foreground">
-      <span className="whitespace-nowrap text-xs">{dateLabel}</span>
+      <DocumentDateField
+        label="Created"
+        value={document.created_at}
+        canEdit={canManageLibrary}
+        disabled={isUpdatingDates}
+        onChange={(iso) => onUpdateDates({ created_at: iso })}
+      />
+      <DocumentDateField
+        label="Updated"
+        value={document.updated_at}
+        canEdit={canManageLibrary}
+        disabled={isUpdatingDates}
+        onChange={(iso) => onUpdateDates({ updated_at: iso })}
+      />
 
       {canManageLibrary ? (
         <FolderPickerDropdown
@@ -1123,6 +1141,66 @@ function DocumentMetadata({
         {document.is_favorite ? "Favorited" : "Favorite"}
       </Button>
     </div>
+  )
+}
+
+function DocumentDateField({
+  label,
+  value,
+  canEdit,
+  disabled,
+  onChange,
+}: {
+  label: string
+  value: string | null
+  canEdit: boolean
+  disabled: boolean
+  onChange: (iso: string) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const inputValue = value ? value.slice(0, 10) : ""
+  const display = `${label} ${formatDateOnly(value)}`
+
+  if (!canEdit) {
+    return (
+      <span className="whitespace-nowrap text-xs text-muted-foreground">
+        {display}
+      </span>
+    )
+  }
+
+  if (editing) {
+    return (
+      <input
+        type="date"
+        // biome-ignore lint/a11y/noAutofocus: opened by an explicit click, focus belongs here
+        autoFocus
+        defaultValue={inputValue}
+        disabled={disabled}
+        aria-label={`${label} date`}
+        className="rounded border border-input bg-background px-1.5 py-0.5 text-xs text-foreground"
+        onBlur={() => setEditing(false)}
+        onChange={(event) => {
+          const next = event.target.value
+          if (next && next !== inputValue) {
+            const iso = new Date(`${next}T00:00:00Z`).toISOString()
+            onChange(iso)
+          }
+          setEditing(false)
+        }}
+      />
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className="cursor-pointer whitespace-nowrap rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+      onClick={() => setEditing(true)}
+      disabled={disabled}
+    >
+      {display}
+    </button>
   )
 }
 

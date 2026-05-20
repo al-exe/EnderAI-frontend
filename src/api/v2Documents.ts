@@ -69,6 +69,8 @@ export interface V2DocumentUpdate {
   main_body?: V2DocumentParagraph[]
   details_file_name?: string
   details_markdown_sections?: V2DocumentDetailsSection[]
+  created_at?: string
+  updated_at?: string
 }
 
 export interface V2DocumentCreate {
