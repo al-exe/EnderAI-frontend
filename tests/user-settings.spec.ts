@@ -88,6 +88,22 @@ test.describe("Organization", () => {
     })
 
     await page.route("**/api/v1/organizations/me", async (route) => {
+      if (route.request().method() === "PATCH") {
+        const body = JSON.parse(route.request().postData() ?? "{}") as {
+          name?: string
+        }
+        organization = {
+          ...organization,
+          name: body.name ?? organization.name,
+        }
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(organization),
+        })
+        return
+      }
+
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -159,6 +175,17 @@ test.describe("Organization", () => {
     await page.route(
       "**/api/v1/organizations/members/user-2",
       async (route) => {
+        if (route.request().method() === "DELETE") {
+          organization = {
+            ...organization,
+            members: organization.members.filter(
+              (member) => member.id !== "user-2",
+            ),
+          }
+          await route.fulfill({ status: 204 })
+          return
+        }
+
         organization = {
           ...organization,
           members: organization.members.map((member) =>
@@ -187,6 +214,11 @@ test.describe("Organization", () => {
     await expect(page.getByText("member@example.com")).toBeVisible()
     await expect(page.getByText("pending@example.com")).toBeVisible()
 
+    await page.getByLabel("Organization name").fill("Renamed Organization")
+    await page.getByRole("button", { name: "Save name" }).click()
+    await expect(page.getByText("Organization name updated")).toBeVisible()
+    await expect(page.getByText("Renamed Organization")).toBeVisible()
+
     await page.getByLabel("Invitation email").fill("new@example.com")
     await page.getByRole("button", { name: "Invite" }).click()
     await expect(page.getByText("Invitation sent")).toBeVisible()
@@ -198,6 +230,13 @@ test.describe("Organization", () => {
       .click()
     await page.getByRole("option", { name: "Admin" }).click()
     await expect(page.getByText("Member role updated")).toBeVisible()
+
+    await page
+      .getByRole("row", { name: /Member User/ })
+      .getByRole("button", { name: "Remove" })
+      .click()
+    await expect(page.getByText("Member removed")).toBeVisible()
+    await expect(page.getByText("member@example.com")).toHaveCount(0)
 
     await page.getByRole("button", { name: "Accept" }).click()
     await expect(page.getByText("Invitation accepted")).toBeVisible()

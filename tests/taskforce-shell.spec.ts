@@ -10,6 +10,7 @@ const currentUser = {
   full_name: "Alex Lee",
   created_at: "2026-03-24T00:00:00Z",
   v2: true,
+  subscription_tier: "free",
 }
 
 test.use({
@@ -82,6 +83,37 @@ test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {
     page.getByText("Manage user accounts and permissions"),
   ).toBeVisible()
   await expect(page.getByText("Taskforce").first()).toBeVisible()
+})
+
+test("Community Upgrade link opens membership tiers with current and selected indicators", async ({
+  page,
+}) => {
+  await mockTaskforceAuth(page)
+  await mockV2Documents(page)
+
+  await page.goto("/v2/home")
+  await page.getByRole("link", { name: "Upgrade" }).click()
+
+  await expect(page).toHaveURL(/\/v2\/pricing$/)
+  await expect(
+    page.getByRole("heading", {
+      name: "Choose the membership tier for how you use Taskforce.",
+    }),
+  ).toBeVisible()
+  await expect(page.getByTestId("membership-plan-free")).toContainText(
+    "You already have this tier",
+  )
+  await expect(page.getByTestId("membership-plan-free")).toContainText(
+    "Selected",
+  )
+  await expect(page.getByTestId("membership-plan-pro")).toContainText("$4.99")
+  await expect(page.getByTestId("membership-plan-max")).toContainText("TBD")
+
+  await page.getByTestId("membership-plan-pro").click()
+  await expect(page.getByTestId("membership-plan-pro")).toContainText(
+    "Selected",
+  )
+  await expect(page.getByText("Selected: Pro")).toBeVisible()
 })
 
 test("Taskforce v2 wordmark links to v2 home", async ({ page }) => {

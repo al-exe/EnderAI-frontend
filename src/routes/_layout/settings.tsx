@@ -69,7 +69,6 @@ function UserSettings() {
     <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
       <div className="shrink-0">
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Account and local setup.</p>
       </div>
 
       <Tabs
