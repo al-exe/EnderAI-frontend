@@ -775,71 +775,71 @@ function TaskforceDocumentDetail() {
           isSplit ? "md:min-h-0 md:flex-1 md:overflow-hidden" : "pb-16",
         )}
       >
-        <div className="-ml-3 mb-4 flex items-center justify-between">
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            data-testid="v2-document-back-link"
-            className="w-fit"
-          >
-            <Link to="/v2/library">
-              <ArrowLeft className="size-4" />
-              Library
-            </Link>
-          </Button>
-
-          <div className="flex items-center gap-2">
-            {!canEditDocument && (
-              <Badge variant="outline">
-                <Eye className="size-3" />
-                View only
-              </Badge>
-            )}
-            {!editing && canEditDocument && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={enterEdit}
-                data-testid="document-edit"
-              >
-                <Pencil className="size-4" />
-                Edit
-              </Button>
-            )}
-            {editing && (
-              <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={cancelEdit}
-                  disabled={updateMutation.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={saveEdit}
-                  disabled={updateMutation.isPending}
-                  data-testid="document-save"
-                >
-                  {updateMutation.isPending ? "Saving…" : "Save"}
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
         <div
           data-testid="v2-document-sticky-header"
           className={cn(
-            "sticky top-0 z-20 border-b bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+            "sticky top-0 z-20 -mx-4 border-b bg-background/95 px-4 pt-3 pb-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8",
             isSplit && "md:shrink-0",
           )}
         >
+          <div className="-ml-3 mb-3 flex items-center justify-between">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              data-testid="v2-document-back-link"
+              className="w-fit"
+            >
+              <Link to="/v2/library">
+                <ArrowLeft className="size-4" />
+                Library
+              </Link>
+            </Button>
+
+            <div className="flex items-center gap-2">
+              {!canEditDocument && (
+                <Badge variant="outline">
+                  <Eye className="size-3" />
+                  View only
+                </Badge>
+              )}
+              {!editing && canEditDocument && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={enterEdit}
+                  data-testid="document-edit"
+                >
+                  <Pencil className="size-4" />
+                  Edit
+                </Button>
+              )}
+              {editing && (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={cancelEdit}
+                    disabled={updateMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={saveEdit}
+                    disabled={updateMutation.isPending}
+                    data-testid="document-save"
+                  >
+                    {updateMutation.isPending ? "Saving…" : "Save"}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {editing ? (
               <PlainInlineEditor
@@ -926,16 +926,16 @@ function TaskforceDocumentDetail() {
 
         {editing ? (
           <PlainInlineEditor
-            value={editState.description}
+            value={editState.ai_generated_summary}
             onChange={(next) =>
-              setEditState({ ...editState, description: next })
+              setEditState({ ...editState, ai_generated_summary: next })
             }
             className="mt-5 text-base leading-7 text-muted-foreground"
             data-testid="edit-description"
           />
         ) : (
           <p className="mt-5 text-base leading-7 text-muted-foreground">
-            {document.description}
+            {document.ai_generated_summary || document.description}
           </p>
         )}
 
@@ -1412,45 +1412,6 @@ function SummaryPane({
       )}
     >
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold tracking-tight">Overview</h2>
-        {editing && editState ? (
-          <RichTextField
-            value={editState.human_summary}
-            onChange={(next) =>
-              setEditState({ ...editState, human_summary: next })
-            }
-            className="text-lg leading-8"
-            data-testid="edit-human-summary"
-          />
-        ) : (
-          <MarkdownBlocks
-            markdown={document.human_summary}
-            className="text-lg leading-8"
-          />
-        )}
-      </section>
-
-      {editing && editState && document.ai_generated_summary && (
-        <section className="space-y-3">
-          <h2 className="text-xl font-semibold tracking-tight">
-            AI summary (reference)
-          </h2>
-          <RichTextField
-            value={editState.ai_generated_summary}
-            onChange={(next) =>
-              setEditState({
-                ...editState,
-                ai_generated_summary: next,
-              })
-            }
-            className="text-sm leading-6 text-muted-foreground"
-            data-testid="edit-ai-summary"
-          />
-        </section>
-      )}
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold tracking-tight">Report</h2>
         {editing && editState ? (
           <EditableMainBody
             paragraphs={editState.main_body}
@@ -1540,6 +1501,16 @@ function SummaryPane({
   )
 }
 
+function paragraphsToMarkdown(paragraphs: V2DocumentParagraph[]): string {
+  return paragraphs
+    .map((paragraph) => paragraph.segments.map((s) => s.text).join(""))
+    .join("\n\n")
+}
+
+function markdownToParagraphs(markdown: string): V2DocumentParagraph[] {
+  return [{ segments: [{ text: markdown }] }]
+}
+
 function EditableMainBody({
   paragraphs,
   onChange,
@@ -1547,59 +1518,15 @@ function EditableMainBody({
   paragraphs: V2DocumentParagraph[]
   onChange: (next: V2DocumentParagraph[]) => void
 }) {
-  const updateSegmentText = (
-    paragraphIndex: number,
-    segmentIndex: number,
-    text: string,
-  ) => {
-    const next = paragraphs.map((p, pIdx) => {
-      if (pIdx !== paragraphIndex) return p
-      return {
-        segments: p.segments.map((s, sIdx) =>
-          sIdx === segmentIndex ? { ...s, text } : s,
-        ),
-      }
-    })
-    onChange(next)
-  }
+  const markdown = useMemo(() => paragraphsToMarkdown(paragraphs), [paragraphs])
 
   return (
-    <div className="space-y-5">
-      {paragraphs.map((paragraph, paragraphIndex) => (
-        <div key={paragraphIndex} className="space-y-1 text-base leading-8">
-          {paragraph.segments.map((segment, segmentIndex) => {
-            const anchored = Boolean(segment.evidence_anchor_id)
-            return (
-              <div
-                key={segmentIndex}
-                className={cn(
-                  "rounded-sm",
-                  anchored &&
-                    "border-l-2 border-purple-300 pl-3 dark:border-purple-700",
-                )}
-                data-testid={`edit-segment-${paragraphIndex}-${segmentIndex}`}
-              >
-                {anchored && (
-                  <span
-                    className="mb-1 inline-flex items-center gap-1 rounded-sm bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-purple-900 dark:bg-purple-950/60 dark:text-purple-100"
-                    title={segment.evidence_anchor_id ?? undefined}
-                  >
-                    <LinkIcon className="size-3" />
-                    anchored
-                  </span>
-                )}
-                <RichTextField
-                  value={segment.text}
-                  onChange={(next) =>
-                    updateSegmentText(paragraphIndex, segmentIndex, next)
-                  }
-                />
-              </div>
-            )
-          })}
-        </div>
-      ))}
-    </div>
+    <RichTextField
+      value={markdown}
+      onChange={(next) => onChange(markdownToParagraphs(next))}
+      className="text-base leading-8"
+      data-testid="edit-main-body"
+    />
   )
 }
 
