@@ -41,14 +41,19 @@ function formatSubscriptionStatus(value: string | null | undefined): string {
     .join(" ")
 }
 
-function getBillingBadgeVariant(
-  value: string | null | undefined,
-): "success" | "destructive" | "secondary" | "outline" {
-  if (value === "active" || value === "trialing") return "success"
-  if (value === "past_due" || value === "unpaid") return "destructive"
-  if (!value || value === "canceled" || value === "incomplete_expired") {
-    return "secondary"
-  }
+function formatSubscriptionTier(
+  value: UserPublic["subscription_tier"] | undefined,
+): string {
+  if (!value) return "Free"
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function getTierBadgeVariant(
+  value: UserPublic["subscription_tier"] | undefined,
+): "default" | "success" | "secondary" | "outline" {
+  if (value === "admin") return "default"
+  if (value === "pro" || value === "max") return "success"
+  if (value === "free" || !value) return "secondary"
   return "outline"
 }
 
@@ -91,26 +96,31 @@ export const columns: ColumnDef<UserTableData>[] = [
     ),
   },
   {
-    accessorKey: "stripe_subscription_status",
-    header: "Billing",
+    accessorKey: "subscription_tier",
+    header: "Tier",
     cell: ({ row }) => {
       const status = row.original.stripe_subscription_status
       const cancelsAtPeriodEnd =
         row.original.stripe_subscription_cancel_at_period_end
       const periodEnd = row.original.stripe_subscription_current_period_end
+      const tier = row.original.subscription_tier ?? "free"
 
       return (
         <div className="flex flex-col items-start gap-1">
-          <Badge variant={getBillingBadgeVariant(status)}>
-            {formatSubscriptionStatus(status)}
+          <Badge variant={getTierBadgeVariant(tier)}>
+            {formatSubscriptionTier(tier)}
           </Badge>
           {status ? (
             <span className="text-xs text-muted-foreground">
-              {cancelsAtPeriodEnd ? "Cancels" : "Renews"}{" "}
+              {formatSubscriptionStatus(status)}
+              {" - "}
+              {cancelsAtPeriodEnd ? "cancels" : "renews"}{" "}
               {formatBillingPeriodEnd(periodEnd)}
             </span>
           ) : (
-            <span className="text-xs text-muted-foreground">Not paid</span>
+            <span className="text-xs text-muted-foreground">
+              No Stripe plan
+            </span>
           )}
         </div>
       )

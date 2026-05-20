@@ -1,7 +1,7 @@
 import { type CancelablePromise, OpenAPI } from "@/client"
 import { request } from "@/client/core/request"
 
-export type SearchTier = "free" | "pro" | "max"
+export type SearchTier = "free" | "pro" | "max" | "admin"
 export type SearchRoute = "managed" | "byok:anthropic" | "byok:openai"
 export type SearchReason = "upgrade_required" | "byok_required"
 export type ByokProvider = "anthropic" | "openai"

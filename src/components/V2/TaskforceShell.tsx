@@ -70,8 +70,8 @@ const upgradeItem: TaskforceNavItem = {
   path: "/v2/pricing",
 }
 
-function hasActiveSubscription(user: UserPublic): boolean {
-  return ["active", "trialing"].includes(user.stripe_subscription_status ?? "")
+function hasPaidTier(user: UserPublic): boolean {
+  return ["pro", "max", "admin"].includes(user.subscription_tier ?? "free")
 }
 
 function TaskforceMark() {
@@ -94,7 +94,7 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
   const currentPath = router.location.pathname
   const items = [
     ...taskforceItems,
-    ...(!hasActiveSubscription(currentUser) ? [upgradeItem] : []),
+    ...(!hasPaidTier(currentUser) ? [upgradeItem] : []),
     ...(currentUser.is_superuser
       ? [{ icon: Shield, title: "Admin", path: "/v2/admin" }]
       : []),

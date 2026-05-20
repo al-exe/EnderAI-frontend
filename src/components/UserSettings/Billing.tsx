@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { CreditCard, ExternalLink, RefreshCw } from "lucide-react"
 
 import {
+  type BillingStatusPublic,
   createBillingPortalSession,
   createCheckoutSession,
   readBillingStatus,
@@ -37,6 +38,13 @@ function formatStatus(value: string | null): string {
     .join(" ")
 }
 
+function formatTier(
+  value: BillingStatusPublic["subscription_tier"] | undefined,
+) {
+  if (!value) return "Free"
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 const Billing = () => {
   const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
@@ -62,7 +70,8 @@ const Billing = () => {
   })
 
   const billingStatus = billingStatusQuery.data
-  const isSubscribed = billingStatus?.is_subscription_active ?? false
+  const tier = billingStatus?.subscription_tier ?? "free"
+  const isPaidTier = tier === "pro" || tier === "max" || tier === "admin"
   const hasCustomer = billingStatus?.has_customer ?? false
 
   return (
@@ -97,12 +106,18 @@ const Billing = () => {
                   renewal events.
                 </p>
               </div>
-              <Badge variant={isSubscribed ? "success" : "secondary"}>
-                {formatStatus(billingStatus?.subscription_status ?? null)}
+              <Badge variant={isPaidTier ? "success" : "secondary"}>
+                {formatTier(tier)}
               </Badge>
             </div>
 
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-muted-foreground">Stripe status</dt>
+                <dd className="font-medium">
+                  {formatStatus(billingStatus?.subscription_status ?? null)}
+                </dd>
+              </div>
               <div>
                 <dt className="text-muted-foreground">Current period ends</dt>
                 <dd className="font-medium">
@@ -116,7 +131,7 @@ const Billing = () => {
                 <dd className="font-medium">
                   {billingStatus?.subscription_cancel_at_period_end
                     ? "Cancels at period end"
-                    : isSubscribed
+                    : billingStatus?.is_subscription_active
                       ? "Renews automatically"
                       : "Not active"}
                 </dd>
@@ -136,11 +151,11 @@ const Billing = () => {
             <LoadingButton
               type="button"
               loading={checkoutMutation.isPending}
-              disabled={isSubscribed}
+              disabled={isPaidTier}
               onClick={() => checkoutMutation.mutate()}
             >
               <ExternalLink className="h-4 w-4" />
-              {isSubscribed ? "Subscribed" : "Subscribe"}
+              {isPaidTier ? `${formatTier(tier)} tier` : "Subscribe"}
             </LoadingButton>
 
             <LoadingButton
