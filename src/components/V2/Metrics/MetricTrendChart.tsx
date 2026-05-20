@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react"
 import type { MetricSeriesPoint } from "@/api/v2Metrics"
 
 type Props = {
@@ -5,12 +6,99 @@ type Props = {
   series: MetricSeriesPoint[]
 }
 
+const PLOT_WIDTH = 600
+const PLOT_HEIGHT = 200
+const PADDING_LEFT = 56
+const PADDING_RIGHT = 16
+const PADDING_TOP = 12
+const PADDING_BOTTOM = 28
+const INNER_WIDTH = PLOT_WIDTH - PADDING_LEFT - PADDING_RIGHT
+const INNER_HEIGHT = PLOT_HEIGHT - PADDING_TOP - PADDING_BOTTOM
+
 function toNumber(s: string): number {
   const n = Number.parseFloat(s)
   return Number.isFinite(n) ? n : 0
 }
 
+function formatNumber(value: number): string {
+  if (Math.abs(value) >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`
+  }
+  if (Math.abs(value) >= 1_000) {
+    return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}k`
+  }
+  return value.toLocaleString("en-US", { maximumFractionDigits: 0 })
+}
+
+function formatDay(day: string): string {
+  const parsed = new Date(day)
+  if (Number.isNaN(parsed.getTime())) return day
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(parsed)
+}
+
+type Plotted = {
+  point: MetricSeriesPoint
+  value: number
+  x: number
+  y: number
+}
+
 export function MetricTrendChart({ title, series }: Props) {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
+
+  const { plotted, yMax, yMin, polylinePoints, areaPoints } = useMemo(() => {
+    if (series.length === 0) {
+      return {
+        plotted: [] as Plotted[],
+        yMax: 1,
+        yMin: 0,
+        polylinePoints: "",
+        areaPoints: "",
+      }
+    }
+    const values = series.map((p) => toNumber(p.value))
+    const rawMax = Math.max(...values, 0)
+    const rawMin = Math.min(...values, 0)
+    const maxNice = niceCeiling(rawMax || 1)
+    const minNice = rawMin < 0 ? -niceCeiling(-rawMin) : 0
+    const span = Math.max(maxNice - minNice, 1)
+
+    const stepX =
+      series.length > 1 ? INNER_WIDTH / (series.length - 1) : INNER_WIDTH / 2
+    const plotted: Plotted[] = series.map((point, index) => {
+      const value = values[index]
+      const x =
+        series.length === 1
+          ? PADDING_LEFT + INNER_WIDTH / 2
+          : PADDING_LEFT + index * stepX
+      const y =
+        PADDING_TOP + INNER_HEIGHT - ((value - minNice) / span) * INNER_HEIGHT
+      return { point, value, x, y }
+    })
+
+    const polylinePoints = plotted
+      .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+      .join(" ")
+    const baselineY = PADDING_TOP + INNER_HEIGHT
+    const areaPoints = [
+      `${plotted[0].x.toFixed(1)},${baselineY.toFixed(1)}`,
+      ...plotted.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`),
+      `${plotted[plotted.length - 1].x.toFixed(1)},${baselineY.toFixed(1)}`,
+    ].join(" ")
+
+    return {
+      plotted,
+      yMax: maxNice,
+      yMin: minNice,
+      polylinePoints,
+      areaPoints,
+    }
+  }, [series])
+
   if (series.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-background p-4 shadow-sm">
@@ -21,39 +109,222 @@ export function MetricTrendChart({ title, series }: Props) {
       </div>
     )
   }
-  const values = series.map((p) => toNumber(p.value))
-  const max = Math.max(...values, 1)
-  const min = Math.min(...values, 0)
-  const span = Math.max(max - min, 1)
-  const width = 600
-  const height = 120
-  const stepX = series.length > 1 ? width / (series.length - 1) : 0
-  const points = values
-    .map((v, i) => {
-      const x = i * stepX
-      const y = height - ((v - min) / span) * height
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(" ")
+
+  const yTicks = buildYTicks(yMin, yMax, 4)
+  const xTickIndexes = buildXTickIndexes(series.length, 5)
+  const baselineY = PADDING_TOP + INNER_HEIGHT
+  const hovered = hoverIndex != null ? plotted[hoverIndex] : null
+
+  const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (plotted.length === 0) return
+    const svg = event.currentTarget
+    const rect = svg.getBoundingClientRect()
+    const ratioX = (event.clientX - rect.left) / rect.width
+    const svgX = ratioX * PLOT_WIDTH
+    let nearest = 0
+    let nearestDist = Infinity
+    for (let i = 0; i < plotted.length; i++) {
+      const dist = Math.abs(plotted[i].x - svgX)
+      if (dist < nearestDist) {
+        nearestDist = dist
+        nearest = i
+      }
+    }
+    setHoverIndex(nearest)
+  }
+
   return (
     <div className="rounded-lg border border-border bg-background p-4 shadow-sm">
       <h3 className="mb-3 text-sm font-medium text-muted-foreground">
         {title}
       </h3>
-      <svg
-        role="img"
-        aria-label={title}
-        viewBox={`0 0 ${width} ${height}`}
-        className="h-32 w-full"
-        preserveAspectRatio="none"
-      >
-        <polyline
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          points={points}
-        />
-      </svg>
+      <div className="relative">
+        <svg
+          role="img"
+          aria-label={title}
+          viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT}`}
+          className="block h-48 w-full"
+          preserveAspectRatio="xMidYMid meet"
+          onPointerMove={handlePointerMove}
+          onPointerLeave={() => setHoverIndex(null)}
+        >
+          <title>{title}</title>
+          {yTicks.map((tick) => {
+            const y =
+              PADDING_TOP +
+              INNER_HEIGHT -
+              ((tick - yMin) / Math.max(yMax - yMin, 1)) * INNER_HEIGHT
+            return (
+              <g key={tick}>
+                <line
+                  x1={PADDING_LEFT}
+                  x2={PLOT_WIDTH - PADDING_RIGHT}
+                  y1={y}
+                  y2={y}
+                  stroke="currentColor"
+                  strokeOpacity="0.1"
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <text
+                  x={PADDING_LEFT - 8}
+                  y={y}
+                  textAnchor="end"
+                  dominantBaseline="central"
+                  fontSize="10"
+                  fill="currentColor"
+                  fillOpacity="0.6"
+                >
+                  {formatNumber(tick)}
+                </text>
+              </g>
+            )
+          })}
+
+          <line
+            x1={PADDING_LEFT}
+            x2={PADDING_LEFT}
+            y1={PADDING_TOP}
+            y2={baselineY}
+            stroke="currentColor"
+            strokeOpacity="0.3"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+          <line
+            x1={PADDING_LEFT}
+            x2={PLOT_WIDTH - PADDING_RIGHT}
+            y1={baselineY}
+            y2={baselineY}
+            stroke="currentColor"
+            strokeOpacity="0.3"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+
+          {plotted.length > 1 && (
+            <polygon
+              points={areaPoints}
+              fill="currentColor"
+              fillOpacity="0.08"
+            />
+          )}
+          {plotted.length > 1 && (
+            <polyline
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              vectorEffect="non-scaling-stroke"
+              points={polylinePoints}
+            />
+          )}
+          {plotted.map((p, idx) => (
+            <circle
+              key={p.point.day}
+              cx={p.x}
+              cy={p.y}
+              r={hoverIndex === idx ? 4 : 2.5}
+              fill="currentColor"
+              fillOpacity={hoverIndex === idx ? 1 : 0.7}
+            />
+          ))}
+
+          {hovered && (
+            <line
+              x1={hovered.x}
+              x2={hovered.x}
+              y1={PADDING_TOP}
+              y2={baselineY}
+              stroke="currentColor"
+              strokeOpacity="0.35"
+              strokeDasharray="4 4"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+
+          {xTickIndexes.map((index) => {
+            const point = plotted[index]
+            if (!point) return null
+            return (
+              <text
+                key={point.point.day}
+                x={point.x}
+                y={baselineY + 16}
+                textAnchor={
+                  index === 0
+                    ? "start"
+                    : index === series.length - 1
+                      ? "end"
+                      : "middle"
+                }
+                fontSize="10"
+                fill="currentColor"
+                fillOpacity="0.6"
+              >
+                {formatDay(point.point.day)}
+              </text>
+            )
+          })}
+
+          {hovered && (
+            <foreignObject
+              x={Math.min(
+                Math.max(hovered.x - 60, PADDING_LEFT),
+                PLOT_WIDTH - PADDING_RIGHT - 120,
+              )}
+              y={Math.max(hovered.y - 52, 0)}
+              width="120"
+              height="48"
+              pointerEvents="none"
+            >
+              <div className="rounded-md border border-border bg-popover px-2 py-1 text-[11px] text-popover-foreground shadow-md">
+                <div className="font-medium leading-tight">
+                  {formatDay(hovered.point.day)}
+                </div>
+                <div className="leading-tight text-muted-foreground">
+                  {formatNumber(hovered.value)}{" "}
+                  {hovered.value === 1 ? "token" : "tokens"}
+                </div>
+              </div>
+            </foreignObject>
+          )}
+        </svg>
+      </div>
     </div>
   )
+}
+
+function niceCeiling(value: number): number {
+  if (value <= 0) return 1
+  const magnitude = 10 ** Math.floor(Math.log10(value))
+  const normalized = value / magnitude
+  let nice: number
+  if (normalized <= 1) nice = 1
+  else if (normalized <= 2) nice = 2
+  else if (normalized <= 5) nice = 5
+  else nice = 10
+  return nice * magnitude
+}
+
+function buildYTicks(min: number, max: number, count: number): number[] {
+  if (max === min) return [min]
+  const step = (max - min) / count
+  const ticks: number[] = []
+  for (let i = 0; i <= count; i++) {
+    ticks.push(min + step * i)
+  }
+  return ticks
+}
+
+function buildXTickIndexes(length: number, max: number): number[] {
+  if (length <= max) {
+    return Array.from({ length }, (_, i) => i)
+  }
+  const step = (length - 1) / (max - 1)
+  const indexes = new Set<number>()
+  for (let i = 0; i < max; i++) {
+    indexes.add(Math.round(i * step))
+  }
+  return Array.from(indexes).sort((a, b) => a - b)
 }
