@@ -30,8 +30,14 @@ export function MetricCard({ definition, value }: Props) {
             delta.sign === "flat" && "text-muted-foreground",
           )}
         >
-          {delta.sign === "up" ? "▲ " : delta.sign === "down" ? "▼ " : ""}
-          {delta.label} vs prev
+          {delta.sign === "flat" ? (
+            "No change from previous period"
+          ) : (
+            <>
+              {delta.sign === "up" ? "▲ " : "▼ "}
+              {delta.label} from previous period
+            </>
+          )}
         </div>
       )}
       <p className="mt-3 text-xs text-muted-foreground">

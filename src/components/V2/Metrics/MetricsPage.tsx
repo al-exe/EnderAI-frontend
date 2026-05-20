@@ -19,11 +19,49 @@ type Props = {
 }
 
 const PRIMARY_METRICS = ["tokens_saved", "usd_saved", "reuse_rate"]
-const SECONDARY_METRICS = [
-  "tokens_consumed",
-  "usd_consumed",
-  "documents_touched",
-]
+const SECONDARY_METRICS = ["tokens_consumed", "usd_consumed"]
+
+const METRIC_PRESENTATION_OVERRIDES: Record<
+  string,
+  Partial<Pick<MetricDefinitionPublic, "display_name" | "description">>
+> = {
+  tokens_saved: {
+    description:
+      "Estimated tokens not sent to model provided thanks to Taskforce's information rediscovery.",
+  },
+  usd_saved: {
+    display_name: "USD Offset",
+  },
+  reuse_rate: {
+    description:
+      "How often Taskforce found useful existing work instead of starting from scratch.",
+  },
+  tokens_consumed: {
+    description: "Total input and output tokens consumed by Taskforce.",
+  },
+  documents_touched: {
+    description: "Documents Taskforce created, reused, updated, or finished.",
+  },
+}
+
+const USD_NET_SAVED_DEFINITION: MetricDefinitionPublic = {
+  name: "usd_net_saved",
+  display_name: "USD Saved",
+  unit: "usd",
+  description: "USD offset minus USD spent.",
+  presentation: {
+    format: "usd",
+    trend: false,
+    icon: null,
+  },
+}
+
+function toMetricNumber(value: string | number | null | undefined) {
+  if (value == null) return 0
+  if (typeof value === "number") return value
+  const parsed = Number.parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
 
 // Org-scope toggle is intentionally deferred. The backend supports
 // scope=organization on /v2/metrics (admin-gated), but the generated
@@ -49,7 +87,7 @@ export function MetricsPage({ currentUser: _currentUser }: Props) {
   const definitionsByName = useMemo(() => {
     const out: Record<string, MetricDefinitionPublic> = {}
     for (const d of definitionsQuery.data?.data ?? []) {
-      out[d.name] = d
+      out[d.name] = { ...d, ...METRIC_PRESENTATION_OVERRIDES[d.name] }
     }
     return out
   }, [definitionsQuery.data])
@@ -57,6 +95,15 @@ export function MetricsPage({ currentUser: _currentUser }: Props) {
   const metrics = metricsQuery.data?.metrics ?? {}
   const tokensSaved = metrics.tokens_saved
   const tokensConsumed = metrics.tokens_consumed
+  const usdOffset = toMetricNumber(metrics.usd_saved?.total)
+  const usdSpent = toMetricNumber(metrics.usd_consumed?.total)
+  const usdNetSaved = {
+    total: String(usdOffset - usdSpent),
+    delta_vs_prev_window: null,
+    series: [],
+    breakdown_by_source: null,
+    top_models: null,
+  }
   const isEmpty =
     metricsQuery.isSuccess &&
     Object.values(metrics).every((m) => {
@@ -65,13 +112,10 @@ export function MetricsPage({ currentUser: _currentUser }: Props) {
     })
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Metrics</h1>
-          <p className="text-sm text-muted-foreground">
-            Tokens and dollars saved by Taskforce, plus what was consumed.
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <MetricsTimeRange value={window} onChange={setWindow} />
@@ -111,6 +155,7 @@ export function MetricsPage({ currentUser: _currentUser }: Props) {
         <MetricBreakdown
           title="Savings by source"
           rows={tokensSaved?.breakdown_by_source ?? []}
+          info="Shows where Taskforce avoided rework: cache reuse, reading summaries instead of full details, and reconnecting to existing documents."
         />
       </section>
 
@@ -122,6 +167,7 @@ export function MetricsPage({ currentUser: _currentUser }: Props) {
             <MetricCard key={name} definition={def} value={metrics[name]} />
           )
         })}
+        <MetricCard definition={USD_NET_SAVED_DEFINITION} value={usdNetSaved} />
       </section>
 
       <section>
