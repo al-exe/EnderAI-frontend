@@ -1,12 +1,10 @@
 # How we calculate savings
 
-Tokens Saved and USD Saved come from three **attributable** sources. Anything we can't attribute cleanly is not counted — keeping the dollar figure defensible matters more than making it look bigger.
+Tokens Saved and USD Offset come from three **attributable** sources. Anything we can't attribute cleanly is not counted — keeping the dollar figure defensible matters more than making it look bigger.
 
 ## What "actually used" means
 
 We count tokens the API call **billed**, not the byte size of the document. Cache reads count at the cache-read rate. Tokens prepared in a tool result but never returned to the model don't count. Raw Details markdown sitting on the doc but not loaded into the turn doesn't count.
-
-Every metrics event that carries a USD figure is priced against the model-pricing row that was effective at the moment the event occurred. Historical figures stay reproducible across price changes.
 
 ## The three sources
 

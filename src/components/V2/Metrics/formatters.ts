@@ -67,7 +67,7 @@ export function formatDelta(
   if (!Number.isFinite(n)) return null
   const sign = n > 0 ? "up" : n < 0 ? "down" : "flat"
   if (format === "ratio") {
-    return { label: `${deltaAbs.format(n * 100)} pp`, sign }
+    return { label: `${deltaAbs.format(n * 100)} percentage points`, sign }
   }
   return { label: deltaPct.format(n), sign }
 }
