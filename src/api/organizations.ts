@@ -40,6 +40,10 @@ export interface OrganizationInvitationCreate {
   email: string
 }
 
+export interface OrganizationUpdate {
+  name: string
+}
+
 export interface OrganizationMemberUpdate {
   organization_role: OrganizationRole
 }
@@ -48,6 +52,16 @@ export function readMyOrganization(): CancelablePromise<OrganizationMePublic> {
   return request(OpenAPI, {
     method: "GET",
     url: "/api/v1/organizations/me",
+  })
+}
+
+export function updateMyOrganization(
+  body: OrganizationUpdate,
+): CancelablePromise<OrganizationMePublic> {
+  return request(OpenAPI, {
+    method: "PATCH",
+    url: "/api/v1/organizations/me",
+    body,
   })
 }
 
@@ -91,5 +105,17 @@ export function updateOrganizationMember(
       user_id: userId,
     },
     body,
+  })
+}
+
+export function removeOrganizationMember(
+  userId: string,
+): CancelablePromise<void> {
+  return request(OpenAPI, {
+    method: "DELETE",
+    url: "/api/v1/organizations/members/{user_id}",
+    path: {
+      user_id: userId,
+    },
   })
 }

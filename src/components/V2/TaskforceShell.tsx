@@ -8,10 +8,10 @@ import {
 import {
   BarChart3,
   BookOpenText,
+  Bot,
   ChevronDown,
   ChevronUp,
   Component,
-  Cpu,
   GripHorizontal,
   MessageCircle,
   Rocket,
@@ -64,21 +64,12 @@ type TaskforceNavItem = {
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Search, title: "Search", path: "/v2/search" },
   { icon: BookOpenText, title: "Library", path: "/v2/library" },
-  { icon: Cpu, title: "Agents", path: "/v2/agents" },
+  { icon: Bot, title: "Agents", path: "/v2/agents" },
   { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
+  { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
 ]
 
-const upgradeItem: TaskforceNavItem = {
-  icon: Rocket,
-  title: "Upgrade",
-  path: "/v2/pricing",
-}
-
 const TASKFORCE_DISCORD_URL = ""
-
-function hasPaidTier(user: UserPublic): boolean {
-  return ["pro", "max", "admin"].includes(user.subscription_tier ?? "free")
-}
 
 function TaskforceMark() {
   return (
@@ -100,7 +91,6 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
   const currentPath = router.location.pathname
   const items = [
     ...taskforceItems,
-    ...(!hasPaidTier(currentUser) ? [upgradeItem] : []),
     ...(currentUser.is_superuser
       ? [{ icon: Shield, title: "Admin", path: "/v2/admin" }]
       : []),

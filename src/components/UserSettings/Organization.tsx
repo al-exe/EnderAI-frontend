@@ -5,9 +5,10 @@ import {
   MailPlus,
   RefreshCw,
   Shield,
+  Trash2,
   Users,
 } from "lucide-react"
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useEffect, useState } from "react"
 
 import {
   acceptOrganizationInvitation,
@@ -17,6 +18,8 @@ import {
   type OrganizationRole,
   readMyOrganization,
   readMyOrganizationInvitations,
+  removeOrganizationMember,
+  updateMyOrganization,
   updateOrganizationMember,
 } from "@/api/organizations"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -97,6 +100,7 @@ function OrganizationSettings() {
   const { user: currentUser } = useAuth()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [inviteEmail, setInviteEmail] = useState("")
+  const [organizationName, setOrganizationName] = useState("")
 
   const organizationQuery = useQuery({
     queryKey: organizationQueryKey,
@@ -146,15 +150,51 @@ function OrganizationSettings() {
     onError: handleError.bind(showErrorToast),
   })
 
+  const removeMemberMutation = useMutation({
+    mutationFn: removeOrganizationMember,
+    onSuccess: () => {
+      showSuccessToast("Member removed")
+      void queryClient.invalidateQueries({ queryKey: organizationQueryKey })
+    },
+    onError: handleError.bind(showErrorToast),
+  })
+
   const organization = organizationQuery.data
   const incomingInvitations = incomingInvitationsQuery.data?.data ?? []
   const isAdmin = organization?.organization_role === "admin"
+  const trimmedOrganizationName = organizationName.trim()
+  const organizationNameChanged =
+    organization !== undefined && trimmedOrganizationName !== organization.name
+  const canUpdateOrganizationName =
+    isAdmin && trimmedOrganizationName.length > 0 && organizationNameChanged
+
+  const organizationMutation = useMutation({
+    mutationFn: (name: string) => updateMyOrganization({ name }),
+    onSuccess: (updatedOrganization) => {
+      setOrganizationName(updatedOrganization.name)
+      showSuccessToast("Organization name updated")
+      void queryClient.invalidateQueries({ queryKey: organizationQueryKey })
+    },
+    onError: handleError.bind(showErrorToast),
+  })
+
+  useEffect(() => {
+    if (organization) {
+      setOrganizationName(organization.name)
+    }
+  }, [organization])
 
   const submitInvitation = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const email = inviteEmail.trim()
     if (!email) return
     inviteMutation.mutate(email)
+  }
+
+  const submitOrganizationName = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!canUpdateOrganizationName) return
+    organizationMutation.mutate(trimmedOrganizationName)
   }
 
   const refresh = () => {
@@ -241,6 +281,37 @@ function OrganizationSettings() {
 
           {isAdmin && (
             <form
+              className="grid gap-2 rounded-md border p-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+              onSubmit={submitOrganizationName}
+            >
+              <div className="space-y-1">
+                <label
+                  htmlFor="organization-name"
+                  className="text-sm font-medium"
+                >
+                  Organization name
+                </label>
+                <Input
+                  id="organization-name"
+                  value={organizationName}
+                  onChange={(event) => setOrganizationName(event.target.value)}
+                  placeholder="Organization name"
+                  aria-label="Organization name"
+                />
+              </div>
+              <LoadingButton
+                type="submit"
+                className="self-end"
+                loading={organizationMutation.isPending}
+                disabled={!canUpdateOrganizationName}
+              >
+                Save name
+              </LoadingButton>
+            </form>
+          )}
+
+          {isAdmin && (
+            <form
               className="flex flex-col gap-2 sm:flex-row"
               onSubmit={submitInvitation}
             >
@@ -271,10 +342,16 @@ function OrganizationSettings() {
                 ? roleMutation.variables?.userId
                 : undefined
             }
+            removingMemberId={
+              removeMemberMutation.isPending
+                ? removeMemberMutation.variables
+                : undefined
+            }
             onRoleChange={(member, role) => {
               if (member.organization_role === role) return
               roleMutation.mutate({ userId: member.id, role })
             }}
+            onRemove={(member) => removeMemberMutation.mutate(member.id)}
           />
 
           <PendingInvitations invitations={organization.invitations} />
@@ -342,16 +419,20 @@ function MembersTable({
   currentUserId,
   isAdmin,
   pendingMemberId,
+  removingMemberId,
   onRoleChange,
+  onRemove,
 }: {
   members: OrganizationMemberPublic[]
   currentUserId?: string
   isAdmin: boolean
   pendingMemberId?: string
+  removingMemberId?: string
   onRoleChange: (
     member: OrganizationMemberPublic,
     role: OrganizationRole,
   ) => void
+  onRemove: (member: OrganizationMemberPublic) => void
 }) {
   return (
     <section className="space-y-3">
@@ -365,16 +446,24 @@ function MembersTable({
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
+            {isAdmin && (
+              <TableHead className="text-right">
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {members.length === 0 && (
-            <EmptyRow colSpan={3}>No members found.</EmptyRow>
+            <EmptyRow colSpan={isAdmin ? 4 : 3}>No members found.</EmptyRow>
           )}
           {members.map((member) => {
             const isCurrentUser = member.id === currentUserId
             const roleControlDisabled =
-              !isAdmin || isCurrentUser || pendingMemberId === member.id
+              !isAdmin ||
+              isCurrentUser ||
+              pendingMemberId === member.id ||
+              removingMemberId === member.id
 
             return (
               <TableRow key={member.id}>
@@ -405,6 +494,21 @@ function MembersTable({
                     <RoleBadge role={member.organization_role} />
                   )}
                 </TableCell>
+                {isAdmin && (
+                  <TableCell className="text-right">
+                    <LoadingButton
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      loading={removingMemberId === member.id}
+                      disabled={isCurrentUser}
+                      onClick={() => onRemove(member)}
+                    >
+                      <Trash2 className="size-4" />
+                      Remove
+                    </LoadingButton>
+                  </TableCell>
+                )}
               </TableRow>
             )
           })}
