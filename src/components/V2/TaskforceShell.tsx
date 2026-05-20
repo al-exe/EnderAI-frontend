@@ -12,7 +12,6 @@ import {
   ChevronUp,
   Component,
   GripHorizontal,
-  Home,
   MessageCircle,
   Rocket,
   Search,
@@ -30,7 +29,6 @@ import {
 } from "react"
 import { readV2Documents, type V2DocumentPublic } from "@/api/v2Documents"
 import type { UserPublic } from "@/client"
-import { SidebarAppearance } from "@/components/Common/Appearance"
 import { SidebarCollapseToggle } from "@/components/Common/SidebarCollapseToggle"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { DemoModeToggle, V2ModeSwitch } from "@/components/Sidebar/ModeSwitches"
@@ -57,13 +55,12 @@ type TaskforceShellProps = {
 }
 
 type TaskforceNavItem = {
-  icon: typeof Home
+  icon: typeof BookOpenText
   title: string
   path: string
 }
 
 const taskforceItems: TaskforceNavItem[] = [
-  { icon: Home, title: "Home", path: "/v2/home" },
   { icon: BookOpenText, title: "Library", path: "/v2/library" },
   { icon: Search, title: "Search", path: "/v2/search" },
   { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
@@ -84,7 +81,7 @@ function hasActiveSubscription(user: UserPublic): boolean {
 function TaskforceMark() {
   return (
     <RouterLink
-      to="/v2/home"
+      to="/v2/library"
       className="min-w-0 px-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0"
     >
       <span className="text-[1.7rem] font-semibold group-data-[collapsible=icon]:hidden">
@@ -554,7 +551,6 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
           <SidebarUtilityDrawer />
           <V2ModeSwitch active enabled={Boolean(currentUser.v2)} />
           <SidebarCollapseToggle />
-          <SidebarAppearance />
           <User user={currentUser} />
         </SidebarFooter>
       </Sidebar>

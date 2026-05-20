@@ -1,6 +1,5 @@
 import { Box, Boxes, Home, Sparkles, Users } from "lucide-react"
 
-import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import { SidebarCollapseToggle } from "@/components/Common/SidebarCollapseToggle"
 import {
@@ -40,7 +39,6 @@ export function AppSidebar() {
         <DemoModeToggle />
         <V2ModeSwitch enabled={Boolean(currentUser?.v2)} />
         <SidebarCollapseToggle />
-        <SidebarAppearance />
         <User user={currentUser} />
       </SidebarFooter>
     </Sidebar>

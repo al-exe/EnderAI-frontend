@@ -70,13 +70,13 @@ export function V2ModeSwitch({ active = false, enabled }: V2ModeSwitchProps) {
       setOpenMobile(false)
     }
 
-    await navigate({ to: active ? "/home" : "/v2/home" })
+    await navigate({ to: active ? "/home" : "/v2/library" })
   }
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        tooltip={active ? "Return to current app" : "Open Taskforce v2"}
+        tooltip={active ? "Return to current app" : "Open Taskforce"}
         data-testid="v2-mode-switch"
         role="switch"
         aria-checked={active}
@@ -84,7 +84,7 @@ export function V2ModeSwitch({ active = false, enabled }: V2ModeSwitchProps) {
         onClick={handleSwitchMode}
       >
         <Component className="size-[18px] text-muted-foreground transition-colors" />
-        <span>Taskforce v2</span>
+        <span>Taskforce</span>
         <div
           aria-hidden="true"
           data-testid="v2-mode-switch-track"
