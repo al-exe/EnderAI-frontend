@@ -9,7 +9,7 @@ export const Route = createFileRoute("/v2/admin")({
     const user = await UsersService.readUserMe()
     if (!user.is_superuser) {
       throw redirect({
-        to: "/v2/home",
+        to: "/v2/library",
       })
     }
   },

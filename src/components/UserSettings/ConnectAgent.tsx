@@ -49,6 +49,36 @@ function formatTimestamp(value: string | null): string {
   }).format(new Date(value))
 }
 
+// One-liner that drops the Claude Code Stop hook on disk + chmods it.
+// Pulls the canonical script straight from the EnderAI repo so users
+// always get the latest version (the script logs to ~/.claude/enderai-record-usage.log
+// and fails silent — see the script's header comments for full env vars).
+const STOP_HOOK_INSTALL_COMMAND = [
+  "mkdir -p ~/.claude/hooks",
+  "curl -fsSL -o ~/.claude/hooks/enderai-record-usage.sh \\",
+  "  https://raw.githubusercontent.com/al-exe/EnderAI/main/scripts/claude-code-record-usage.sh",
+  "chmod +x ~/.claude/hooks/enderai-record-usage.sh",
+].join("\n")
+
+// JSON snippet the user merges into ~/.claude/settings.json so Claude
+// Code actually fires the hook after every assistant turn.
+const STOP_HOOK_SETTINGS_JSON = `{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/enderai-record-usage.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}`
+
 function buildPersistentShellSnippet(mcpToken: string): string {
   const lines = [
     `printf '%s\\n' '${mcpToken}' > ~/.enderai_mcp_token`,
@@ -594,6 +624,41 @@ const ConnectAgent = () => {
               </AlertDescription>
             </Alert>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Claude Code cost tracking</CardTitle>
+        </CardHeader>
+        <CardContent className={styles.cardContent}>
+          <p className={styles.mutedText}>
+            Optional — Claude Code only. Drop this Stop hook in to auto-record
+            every assistant turn's token usage to the Taskforce Metrics page,
+            so cost charts populate without the agent having to introspect
+            itself. Requires the MCP token above (already created when you
+            generate a credential).
+          </p>
+          <SnippetBlock
+            title="Install the hook"
+            description="Run once in a terminal. Pulls the canonical script from the EnderAI repo."
+            snippet={STOP_HOOK_INSTALL_COMMAND}
+            copiedText={copiedText}
+            onCopy={(value) => {
+              void copy(value)
+            }}
+            testId="connect-agent-stop-hook-install"
+          />
+          <SnippetBlock
+            title="~/.claude/settings.json"
+            description="Merge this `hooks` block into your existing settings.json. Restart Claude Code after editing so it picks up the hook."
+            snippet={STOP_HOOK_SETTINGS_JSON}
+            copiedText={copiedText}
+            onCopy={(value) => {
+              void copy(value)
+            }}
+            testId="connect-agent-stop-hook-settings"
+          />
         </CardContent>
       </Card>
 
