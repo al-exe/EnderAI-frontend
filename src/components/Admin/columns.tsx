@@ -44,8 +44,8 @@ function formatSubscriptionStatus(value: string | null | undefined): string {
 function formatSubscriptionTier(
   value: UserPublic["subscription_tier"] | undefined,
 ): string {
-  if (!value) return "Free"
-  return value.charAt(0).toUpperCase() + value.slice(1)
+  const tier = value ?? "free"
+  return `${tier.charAt(0).toUpperCase() + tier.slice(1)} membership`
 }
 
 function getTierBadgeVariant(
@@ -97,7 +97,7 @@ export const columns: ColumnDef<UserTableData>[] = [
   },
   {
     accessorKey: "subscription_tier",
-    header: "Tier",
+    header: "Membership",
     cell: ({ row }) => {
       const status = row.original.stripe_subscription_status
       const cancelsAtPeriodEnd =
