@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   Component,
+  Cpu,
   GripHorizontal,
   MessageCircle,
   Rocket,
@@ -55,14 +56,15 @@ type TaskforceShellProps = {
 }
 
 type TaskforceNavItem = {
-  icon: typeof BookOpenText
+  icon: typeof Search
   title: string
   path: string
 }
 
 const taskforceItems: TaskforceNavItem[] = [
-  { icon: BookOpenText, title: "Library", path: "/v2/library" },
   { icon: Search, title: "Search", path: "/v2/search" },
+  { icon: BookOpenText, title: "Library", path: "/v2/library" },
+  { icon: Cpu, title: "Agents", path: "/v2/agents" },
   { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
 ]
 
