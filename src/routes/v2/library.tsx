@@ -1414,17 +1414,10 @@ function DocumentCard({
           <dd>
             {sharedCount > 0
               ? `${sharedCount} shared member${sharedCount === 1 ? "" : "s"}`
-              : "Only owner"}
+              : "Private"}
           </dd>
         </div>
       </dl>
-
-      <div className="mt-5 border-t pt-4">
-        <p className="text-xs font-medium uppercase text-muted-foreground">
-          Human summary
-        </p>
-        <p className="mt-2 text-sm leading-6">{document.human_summary}</p>
-      </div>
     </Link>
   )
 }
