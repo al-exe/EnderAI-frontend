@@ -8,8 +8,12 @@ import {
 import {
   BarChart3,
   BookOpenText,
+  ChevronDown,
+  ChevronUp,
   Component,
+  GripHorizontal,
   Home,
+  MessageCircle,
   Rocket,
   Search,
   Shield,
@@ -17,6 +21,7 @@ import {
 import {
   Fragment,
   type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   useEffect,
   useId,
   useMemo,
@@ -69,6 +74,8 @@ const upgradeItem: TaskforceNavItem = {
   title: "Upgrade",
   path: "/v2/pricing",
 }
+
+const TASKFORCE_DISCORD_URL = ""
 
 function hasActiveSubscription(user: UserPublic): boolean {
   return ["active", "trialing"].includes(user.stripe_subscription_status ?? "")
@@ -126,6 +133,116 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
         )
       })}
     </SidebarMenu>
+  )
+}
+
+function DiscordButton() {
+  const content = (
+    <>
+      <MessageCircle className="size-[18px] text-muted-foreground transition-colors" />
+      <span>Discord</span>
+    </>
+  )
+
+  if (TASKFORCE_DISCORD_URL) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton tooltip="Join Discord" asChild>
+          <a
+            href={TASKFORCE_DISCORD_URL}
+            target="_blank"
+            rel="noreferrer"
+            data-testid="taskforce-discord-link"
+          >
+            {content}
+          </a>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        type="button"
+        tooltip="Discord link coming soon"
+        data-testid="taskforce-discord-placeholder"
+        aria-disabled="true"
+        className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
+      >
+        {content}
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
+function SidebarUtilityDrawer() {
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const dragStartYRef = useRef<number | null>(null)
+  const didDragRef = useRef(false)
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    dragStartYRef.current = event.clientY
+    didDragRef.current = false
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (dragStartYRef.current === null) return
+    const deltaY = event.clientY - dragStartYRef.current
+    if (Math.abs(deltaY) < 32) return
+
+    didDragRef.current = true
+    setIsCollapsed(deltaY > 0)
+  }
+
+  const handlePointerUp = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    dragStartYRef.current = null
+    event.currentTarget.releasePointerCapture(event.pointerId)
+  }
+
+  const handleHandleClick = () => {
+    if (didDragRef.current) {
+      didDragRef.current = false
+      return
+    }
+    setIsCollapsed((collapsed) => !collapsed)
+  }
+
+  return (
+    <div
+      data-testid="taskforce-sidebar-utility-drawer"
+      data-collapsed={isCollapsed}
+      className="border-sidebar-border/80 border-t pt-1 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-12"
+    >
+      <button
+        type="button"
+        data-testid="taskforce-sidebar-utility-handle"
+        aria-expanded={!isCollapsed}
+        className="flex h-8 w-full cursor-ns-resize items-center justify-between rounded-md px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+        onClick={handleHandleClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        <GripHorizontal className="size-4" />
+        <span className="group-data-[collapsible=icon]:sr-only">Community</span>
+        <span className="group-data-[collapsible=icon]:hidden">
+          {isCollapsed ? (
+            <ChevronUp className="size-4" />
+          ) : (
+            <ChevronDown className="size-4" />
+          )}
+        </span>
+      </button>
+      {!isCollapsed && (
+        <SidebarMenu className="mt-1">
+          <DiscordButton />
+          <DemoModeToggle />
+        </SidebarMenu>
+      )}
+    </div>
   )
 }
 
@@ -434,7 +551,7 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
           <TaskforceNav currentUser={currentUser} />
         </SidebarContent>
         <SidebarFooter className="gap-1">
-          <DemoModeToggle />
+          <SidebarUtilityDrawer />
           <V2ModeSwitch active enabled={Boolean(currentUser.v2)} />
           <SidebarCollapseToggle />
           <SidebarAppearance />
