@@ -38,6 +38,7 @@ export interface V2DocumentPublic {
   folder_name?: string | null
   visibility: V2DocumentVisibility
   user_access: V2DocumentAccess
+  is_favorite: boolean
   title: string
   description: string
   human_summary: string
@@ -74,6 +75,7 @@ export interface V2DocumentFolderPublic {
   id: string
   owner_id: string
   organization_id?: string | null
+  parent_folder_id?: string | null
   name: string
   visibility: V2DocumentVisibility
   created_at: string | null
@@ -88,11 +90,13 @@ export interface V2DocumentFoldersPublic {
 export interface V2DocumentFolderCreate {
   name: string
   visibility?: V2DocumentVisibility
+  parent_folder_id?: string | null
 }
 
 export interface V2DocumentFolderUpdate {
   name?: string
   visibility?: V2DocumentVisibility
+  parent_folder_id?: string | null
 }
 
 export interface V2DocumentSharesPublic {
@@ -206,6 +210,38 @@ export function replaceV2DocumentShares(
       document_id: documentId,
     },
     body,
+  })
+}
+
+export function favoriteV2Document(
+  documentId: string,
+  options: { demo?: boolean } = {},
+): CancelablePromise<V2DocumentPublic> {
+  return request(OpenAPI, {
+    method: "PUT",
+    url: "/api/v1/v2/documents/{document_id}/favorite",
+    path: {
+      document_id: documentId,
+    },
+    query: {
+      demo: options.demo || undefined,
+    },
+  })
+}
+
+export function unfavoriteV2Document(
+  documentId: string,
+  options: { demo?: boolean } = {},
+): CancelablePromise<V2DocumentPublic> {
+  return request(OpenAPI, {
+    method: "DELETE",
+    url: "/api/v1/v2/documents/{document_id}/favorite",
+    path: {
+      document_id: documentId,
+    },
+    query: {
+      demo: options.demo || undefined,
+    },
   })
 }
 

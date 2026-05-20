@@ -2,11 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
   ArrowLeft,
-  Building2,
   Eye,
   Folder,
   Link as LinkIcon,
-  Lock,
   Pencil,
   Search,
   Share2,
@@ -31,7 +29,6 @@ import {
   type V2DocumentSharePermission,
   type V2DocumentSharePublic,
   type V2DocumentUpdate,
-  type V2DocumentVisibility,
 } from "@/api/v2Documents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
@@ -43,13 +40,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   FolderCreateDialog,
   FolderPickerDropdown,
@@ -92,7 +82,6 @@ type EditableDoc = {
   human_summary: string
   ai_generated_summary: string
   folder_id: string | null
-  visibility: V2DocumentVisibility
   details_file_name: string
   main_body: V2DocumentParagraph[]
   details_markdown_sections: V2DocumentDetailsSection[]
@@ -107,7 +96,6 @@ function toEditable(document: V2DocumentPublic): EditableDoc {
     human_summary: document.human_summary,
     ai_generated_summary: document.ai_generated_summary,
     folder_id: document.folder_id ?? null,
-    visibility: document.visibility,
     details_file_name: document.details_file_name,
     main_body: document.main_body.map((p) => ({
       segments: p.segments.map((s) => ({ ...s })),
@@ -125,7 +113,6 @@ function toUpdatePayload(edit: EditableDoc): V2DocumentUpdate {
     human_summary: edit.human_summary,
     ai_generated_summary: edit.ai_generated_summary,
     folder_id: edit.folder_id,
-    visibility: edit.visibility,
     details_file_name: edit.details_file_name,
     main_body: edit.main_body,
     details_markdown_sections: edit.details_markdown_sections,
@@ -594,9 +581,6 @@ function TaskforceDocumentDetail() {
 
         <DocumentMetadata
           document={document}
-          editing={editing}
-          editState={editState}
-          setEditState={setEditState}
           folders={foldersQuery.data?.data ?? []}
           canManageLibrary={canManageDocument}
           organizationMembers={organizationQuery.data?.members ?? []}
@@ -618,6 +602,7 @@ function TaskforceDocumentDetail() {
           open={createFolderOpen}
           onOpenChange={setCreateFolderOpen}
           demo={isDemoMode}
+          folders={foldersQuery.data?.data ?? []}
           onCreated={(folder) => moveDocumentToFolder(folder.id)}
         />
 
@@ -670,9 +655,6 @@ function TaskforceDocumentDetail() {
 
 function DocumentMetadata({
   document,
-  editing,
-  editState,
-  setEditState,
   folders,
   canManageLibrary,
   organizationMembers,
@@ -690,9 +672,6 @@ function DocumentMetadata({
   onCreateFolder,
 }: {
   document: V2DocumentPublic
-  editing: boolean
-  editState: EditableDoc | null
-  setEditState: (next: EditableDoc) => void
   folders: V2DocumentFolderPublic[]
   canManageLibrary: boolean
   organizationMembers: OrganizationMemberPublic[]
@@ -709,12 +688,10 @@ function DocumentMetadata({
   isMovingFolder: boolean
   onCreateFolder: () => void
 }) {
-  const visibilityLabel =
-    document.visibility === "organization" ? "Organization" : "Private"
   const sharedCount = shares.length
 
   return (
-    <dl className="mt-5 grid gap-3 border-y py-4 text-sm text-muted-foreground md:grid-cols-2 xl:grid-cols-4">
+    <dl className="mt-5 grid gap-3 border-y py-4 text-sm text-muted-foreground md:grid-cols-2 xl:grid-cols-3">
       <div className="min-w-0">
         <dt className="text-xs uppercase tracking-wide">Created</dt>
         <dd className="mt-1 text-foreground">
@@ -749,40 +726,7 @@ function DocumentMetadata({
           )}
         </dd>
       </div>
-      <div className="min-w-0">
-        <dt className="text-xs uppercase tracking-wide">Visibility</dt>
-        <dd className="mt-1">
-          {editing && editState && canManageLibrary ? (
-            <Select
-              value={editState.visibility}
-              onValueChange={(value) =>
-                setEditState({
-                  ...editState,
-                  visibility: value as V2DocumentVisibility,
-                })
-              }
-            >
-              <SelectTrigger className="w-full" size="sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="organization">Organization</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 text-foreground">
-              {document.visibility === "organization" ? (
-                <Building2 className="size-4 text-muted-foreground" />
-              ) : (
-                <Lock className="size-4 text-muted-foreground" />
-              )}
-              {visibilityLabel}
-            </span>
-          )}
-        </dd>
-      </div>
-      <div className="min-w-0 md:col-span-2 xl:col-span-4">
+      <div className="min-w-0 md:col-span-2 xl:col-span-3">
         <dt className="text-xs uppercase tracking-wide">Access</dt>
         <dd className="mt-1">
           {canManageLibrary ? (

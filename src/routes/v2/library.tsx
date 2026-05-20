@@ -16,15 +16,20 @@ import {
   FolderPlus,
   Lock,
   Share2,
+  Star,
   Users,
 } from "lucide-react"
 import { type DragEvent, type ReactNode, useMemo, useState } from "react"
 
 import {
+  favoriteV2Document,
   readV2DocumentFolders,
   readV2Documents,
+  unfavoriteV2Document,
   updateV2Document,
+  updateV2DocumentFolder,
   type V2DocumentFolderPublic,
+  type V2DocumentFoldersPublic,
   type V2DocumentPublic,
   type V2DocumentsPublic,
   type V2DocumentVisibility,
@@ -32,7 +37,10 @@ import {
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FolderCreateDialog } from "@/components/V2/Library/FolderControls"
+import {
+  FolderActionsMenu,
+  FolderCreateDialog,
+} from "@/components/V2/Library/FolderControls"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 
@@ -55,19 +63,72 @@ function formatDateOnly(value: string | null): string {
   }).format(new Date(value))
 }
 
+type FolderTreeNode = {
+  folder: V2DocumentFolderPublic
+  children: FolderTreeNode[]
+}
+
+type DirectoryDropTargetId = "root" | "unfiled" | string
+type OwnershipFilter = "owned" | "shared"
+type FavoriteUpdate = { documentId: string; favorite: boolean }
+
+function buildFolderTree(folders: V2DocumentFolderPublic[]): FolderTreeNode[] {
+  const nodes = new Map<string, FolderTreeNode>()
+  for (const folder of folders) {
+    nodes.set(folder.id, { folder, children: [] })
+  }
+
+  const roots: FolderTreeNode[] = []
+  for (const node of nodes.values()) {
+    const parentId = node.folder.parent_folder_id
+    const parent =
+      parentId && parentId !== node.folder.id ? nodes.get(parentId) : null
+    if (parent) {
+      parent.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+
+  return roots
+}
+
+function isDescendantFolder(
+  folders: V2DocumentFolderPublic[],
+  parentFolderId: string | null,
+  folderId: string,
+) {
+  if (!parentFolderId) return false
+  const byId = new Map(folders.map((folder) => [folder.id, folder]))
+  let current = byId.get(parentFolderId)
+  const seen = new Set<string>()
+  while (current) {
+    if (current.id === folderId) return true
+    if (!current.parent_folder_id || seen.has(current.id)) return false
+    seen.add(current.id)
+    current = byId.get(current.parent_folder_id)
+  }
+  return false
+}
+
 function TaskforceLibrary() {
+  const { currentUser } = Route.useRouteContext()
   const { isDemoMode } = useDemoMode()
   const router = useRouterState()
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [libraryView, setLibraryView] = useState<"files" | "folders">("files")
+  const [ownershipFilter, setOwnershipFilter] =
+    useState<OwnershipFilter>("owned")
   const [selectedFolderId, setSelectedFolderId] = useState("all")
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [openFolderIds, setOpenFolderIds] = useState<Set<string>>(
-    () => new Set(["unfiled"]),
+    () => new Set(["favorites", "unfiled"]),
   )
-  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
+  const [dragOverFolderId, setDragOverFolderId] =
+    useState<DirectoryDropTargetId | null>(null)
   const documentsQueryKey = ["v2-documents", { demo: isDemoMode }] as const
+  const foldersQueryKey = ["v2-document-folders", { demo: isDemoMode }] as const
 
   const documentsQuery = useQuery({
     queryKey: documentsQueryKey,
@@ -75,7 +136,7 @@ function TaskforceLibrary() {
   })
 
   const foldersQuery = useQuery({
-    queryKey: ["v2-document-folders", { demo: isDemoMode }],
+    queryKey: foldersQueryKey,
     queryFn: () => readV2DocumentFolders({ demo: isDemoMode }),
   })
 
@@ -138,8 +199,107 @@ function TaskforceLibrary() {
     },
   })
 
-  const documents = documentsQuery.data?.data ?? []
+  const moveFolderMutation = useMutation({
+    mutationFn: ({
+      folderId,
+      parentFolderId,
+    }: {
+      folderId: string
+      parentFolderId: string | null
+    }) =>
+      updateV2DocumentFolder(folderId, { parent_folder_id: parentFolderId }),
+    onMutate: async ({ folderId, parentFolderId }) => {
+      await queryClient.cancelQueries({ queryKey: foldersQueryKey })
+      const previousFolders =
+        queryClient.getQueryData<V2DocumentFoldersPublic>(foldersQueryKey)
+
+      queryClient.setQueryData<V2DocumentFoldersPublic>(
+        foldersQueryKey,
+        (current) => {
+          if (!current) return current
+          return {
+            ...current,
+            data: current.data.map((folder) =>
+              folder.id === folderId
+                ? { ...folder, parent_folder_id: parentFolderId }
+                : folder,
+            ),
+          }
+        },
+      )
+
+      return { previousFolders }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: foldersQueryKey })
+      showSuccessToast("Folder moved.")
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousFolders) {
+        queryClient.setQueryData(foldersQueryKey, context.previousFolders)
+      }
+      showErrorToast("Could not move folder.")
+    },
+    onSettled: () => {
+      setDragOverFolderId(null)
+    },
+  })
+
+  const favoriteMutation = useMutation({
+    mutationFn: ({ documentId, favorite }: FavoriteUpdate) =>
+      favorite
+        ? favoriteV2Document(documentId, { demo: isDemoMode })
+        : unfavoriteV2Document(documentId, { demo: isDemoMode }),
+    onMutate: async ({ documentId, favorite }) => {
+      await queryClient.cancelQueries({ queryKey: documentsQueryKey })
+      const previousDocuments =
+        queryClient.getQueryData<V2DocumentsPublic>(documentsQueryKey)
+
+      queryClient.setQueryData<V2DocumentsPublic>(
+        documentsQueryKey,
+        (current) => {
+          if (!current) return current
+          return {
+            ...current,
+            data: current.data.map((document) =>
+              document.id === documentId
+                ? { ...document, is_favorite: favorite }
+                : document,
+            ),
+          }
+        },
+      )
+
+      return { previousDocuments }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousDocuments) {
+        queryClient.setQueryData(documentsQueryKey, context.previousDocuments)
+      }
+      showErrorToast("Could not update favorite.")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: documentsQueryKey })
+    },
+  })
+
+  const allDocuments = documentsQuery.data?.data ?? []
+  const documents = useMemo(() => {
+    if (ownershipFilter === "owned") {
+      return allDocuments.filter(
+        (document) => document.owner_id === currentUser.id,
+      )
+    }
+    return allDocuments.filter(
+      (document) => document.owner_id !== currentUser.id,
+    )
+  }, [allDocuments, currentUser.id, ownershipFilter])
   const folders = foldersQuery.data?.data ?? []
+  const folderTree = useMemo(() => buildFolderTree(folders), [folders])
+  const favoriteDocuments = useMemo(
+    () => documents.filter((document) => document.is_favorite),
+    [documents],
+  )
   const folderCounts = useMemo(() => {
     const counts = new Map<string, number>()
     let unfiled = 0
@@ -157,15 +317,17 @@ function TaskforceLibrary() {
   }, [documents])
   const visibleDocuments = useMemo(() => {
     if (selectedFolderId === "all") return documents
+    if (selectedFolderId === "favorites") return favoriteDocuments
     if (selectedFolderId === "unfiled") {
       return documents.filter((document) => !document.folder_id)
     }
     return documents.filter(
       (document) => document.folder_id === selectedFolderId,
     )
-  }, [documents, selectedFolderId])
+  }, [documents, favoriteDocuments, selectedFolderId])
   const documentsByFolder = useMemo(() => {
     const grouped = new Map<string, V2DocumentPublic[]>()
+    grouped.set("favorites", [])
     grouped.set("unfiled", [])
     for (const folder of folders) {
       grouped.set(folder.id, [])
@@ -176,6 +338,9 @@ function TaskforceLibrary() {
           ? document.folder_id
           : "unfiled"
       grouped.get(folderId)?.push(document)
+      if (document.is_favorite) {
+        grouped.get("favorites")?.push(document)
+      }
     }
     return grouped
   }, [documents, folders])
@@ -186,6 +351,11 @@ function TaskforceLibrary() {
     (libraryView === "files" || folders.length === 0)
   const isFolderEmpty =
     !isLoading && documents.length > 0 && visibleDocuments.length === 0
+  const canMutateLibrary =
+    !isDemoMode &&
+    !moveDocumentMutation.isPending &&
+    !moveFolderMutation.isPending &&
+    !favoriteMutation.isPending
 
   if (router.location.pathname.startsWith("/v2/library/")) {
     return <Outlet />
@@ -204,8 +374,13 @@ function TaskforceLibrary() {
   }
 
   const moveDocument = (documentId: string, folderId: string | null) => {
-    if (isDemoMode || moveDocumentMutation.isPending) return
-    const document = documents.find((item) => item.id === documentId)
+    if (
+      isDemoMode ||
+      moveDocumentMutation.isPending ||
+      moveFolderMutation.isPending
+    )
+      return
+    const document = allDocuments.find((item) => item.id === documentId)
     if (!document || (document.folder_id ?? null) === folderId) {
       setDragOverFolderId(null)
       return
@@ -213,9 +388,29 @@ function TaskforceLibrary() {
     moveDocumentMutation.mutate({ documentId, folderId })
   }
 
+  const moveFolder = (folderId: string, parentFolderId: string | null) => {
+    if (
+      isDemoMode ||
+      moveDocumentMutation.isPending ||
+      moveFolderMutation.isPending
+    )
+      return
+    const folder = folders.find((item) => item.id === folderId)
+    if (
+      !folder ||
+      folder.id === parentFolderId ||
+      (folder.parent_folder_id ?? null) === parentFolderId ||
+      isDescendantFolder(folders, parentFolderId, folder.id)
+    ) {
+      setDragOverFolderId(null)
+      return
+    }
+    moveFolderMutation.mutate({ folderId, parentFolderId })
+  }
+
   const handleFolderDragOver = (
     event: DragEvent<HTMLElement>,
-    folderId: string,
+    folderId: DirectoryDropTargetId,
   ) => {
     if (isDemoMode) return
     event.preventDefault()
@@ -228,6 +423,15 @@ function TaskforceLibrary() {
     folderId: string | null,
   ) => {
     event.preventDefault()
+    const folderDropId = event.dataTransfer.getData("application/x-v2-folder")
+    if (folderDropId) {
+      if (folderId) {
+        setOpenFolderIds((current) => new Set(current).add(folderId))
+      }
+      moveFolder(folderDropId, folderId)
+      return
+    }
+
     const documentId = event.dataTransfer.getData("application/x-v2-document")
     if (!documentId) return
     if (folderId) {
@@ -236,11 +440,63 @@ function TaskforceLibrary() {
     moveDocument(documentId, folderId)
   }
 
+  const handleUnfiledDrop = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault()
+    const documentId = event.dataTransfer.getData("application/x-v2-document")
+    if (documentId) {
+      moveDocument(documentId, null)
+    }
+  }
+
+  const handleRootFolderDrop = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault()
+    const folderId = event.dataTransfer.getData("application/x-v2-folder")
+    if (folderId) {
+      moveFolder(folderId, null)
+    }
+  }
+
+  const toggleFavorite = (document: V2DocumentPublic) => {
+    if (isDemoMode || favoriteMutation.isPending) return
+    favoriteMutation.mutate({
+      documentId: document.id,
+      favorite: !document.is_favorite,
+    })
+  }
+
+  const handleFolderDeleted = (folderId: string) => {
+    if (selectedFolderId === folderId) {
+      setSelectedFolderId("all")
+    }
+  }
+
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
-      <div className="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 py-3 backdrop-blur lg:flex-row lg:items-end lg:justify-between">
         <h1 className="text-2xl font-semibold">Library</h1>
         <div className="flex flex-wrap items-center gap-2">
+          <div
+            role="tablist"
+            aria-label="Document ownership"
+            className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+          >
+            <LibraryViewToggle
+              label="Owned by you"
+              active={ownershipFilter === "owned"}
+              onClick={() => {
+                setOwnershipFilter("owned")
+                setSelectedFolderId("all")
+              }}
+            />
+            <LibraryViewToggle
+              label="Shared with you"
+              active={ownershipFilter === "shared"}
+              onClick={() => {
+                setOwnershipFilter("shared")
+                setSelectedFolderId("all")
+              }}
+            />
+          </div>
           <div
             role="tablist"
             aria-label="Library view"
@@ -275,6 +531,7 @@ function TaskforceLibrary() {
         open={createFolderOpen}
         onOpenChange={setCreateFolderOpen}
         demo={isDemoMode}
+        folders={folders}
         onCreated={(folder) => setSelectedFolderId(folder.id)}
       />
 
@@ -293,13 +550,17 @@ function TaskforceLibrary() {
       {!isLoading && documents.length > 0 && libraryView === "files" && (
         <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
           <FolderNav
-            folders={folders}
+            folderTree={folderTree}
             selectedFolderId={selectedFolderId}
             setSelectedFolderId={setSelectedFolderId}
             allCount={documents.length}
+            favoritesCount={favoriteDocuments.length}
             unfiledCount={folderCounts.unfiled}
             folderCounts={folderCounts.counts}
             loading={foldersQuery.isLoading}
+            currentUserId={currentUser.id}
+            demo={isDemoMode}
+            onFolderDeleted={handleFolderDeleted}
           />
           <div className="min-w-0">
             {isFolderEmpty && (
@@ -310,7 +571,12 @@ function TaskforceLibrary() {
             {!isFolderEmpty && (
               <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
                 {visibleDocuments.map((document) => (
-                  <DocumentCard key={document.id} document={document} />
+                  <DocumentCard
+                    key={document.id}
+                    document={document}
+                    canFavorite={!isDemoMode && !favoriteMutation.isPending}
+                    onToggleFavorite={toggleFavorite}
+                  />
                 ))}
               </div>
             )}
@@ -322,12 +588,20 @@ function TaskforceLibrary() {
         (documents.length > 0 || folders.length > 0) &&
         libraryView === "folders" && (
           <FolderDirectory
-            folders={folders}
+            folderTree={folderTree}
             documentsByFolder={documentsByFolder}
             openFolderIds={openFolderIds}
             dragOverFolderId={dragOverFolderId}
-            canMoveDocuments={!isDemoMode && !moveDocumentMutation.isPending}
+            canMoveItems={canMutateLibrary}
+            canFavorite={!isDemoMode && !favoriteMutation.isPending}
+            currentUserId={currentUser.id}
+            demo={isDemoMode}
             onToggleFolder={toggleFolderOpen}
+            onFolderDragStart={(event, folder) => {
+              event.stopPropagation()
+              event.dataTransfer.effectAllowed = "move"
+              event.dataTransfer.setData("application/x-v2-folder", folder.id)
+            }}
             onDocumentDragStart={(event, document) => {
               event.dataTransfer.effectAllowed = "move"
               event.dataTransfer.setData(
@@ -336,9 +610,13 @@ function TaskforceLibrary() {
               )
             }}
             onDocumentDragEnd={() => setDragOverFolderId(null)}
+            onToggleFavorite={toggleFavorite}
             onFolderDragOver={handleFolderDragOver}
             onFolderDrop={handleFolderDrop}
+            onUnfiledDrop={handleUnfiledDrop}
+            onRootFolderDrop={handleRootFolderDrop}
             onFolderDragLeave={() => setDragOverFolderId(null)}
+            onFolderDeleted={handleFolderDeleted}
           />
         )}
     </section>
@@ -350,7 +628,7 @@ function LibraryViewToggle({
   active,
   onClick,
 }: {
-  label: "Files" | "Folders"
+  label: string
   active: boolean
   onClick: () => void
 }) {
@@ -369,21 +647,29 @@ function LibraryViewToggle({
 }
 
 function FolderNav({
-  folders,
+  folderTree,
   selectedFolderId,
   setSelectedFolderId,
   allCount,
+  favoritesCount,
   unfiledCount,
   folderCounts,
   loading,
+  currentUserId,
+  demo,
+  onFolderDeleted,
 }: {
-  folders: V2DocumentFolderPublic[]
+  folderTree: FolderTreeNode[]
   selectedFolderId: string
   setSelectedFolderId: (folderId: string) => void
   allCount: number
+  favoritesCount: number
   unfiledCount: number
   folderCounts: Map<string, number>
   loading: boolean
+  currentUserId: string
+  demo: boolean
+  onFolderDeleted: (folderId: string) => void
 }) {
   return (
     <nav
@@ -398,6 +684,13 @@ function FolderNav({
         onClick={() => setSelectedFolderId("all")}
       />
       <FolderNavButton
+        active={selectedFolderId === "favorites"}
+        label="Favorites"
+        count={favoritesCount}
+        icon={<Star className="size-4" />}
+        onClick={() => setSelectedFolderId("favorites")}
+      />
+      <FolderNavButton
         active={selectedFolderId === "unfiled"}
         label="Unfiled"
         count={unfiledCount}
@@ -410,19 +703,77 @@ function FolderNav({
           Loading folders…
         </div>
       )}
-      {!loading &&
-        folders.map((folder) => (
-          <FolderNavButton
-            key={folder.id}
-            active={selectedFolderId === folder.id}
-            label={folder.name}
-            count={folderCounts.get(folder.id) ?? 0}
-            icon={<Folder className="size-4" />}
-            visibility={folder.visibility}
-            onClick={() => setSelectedFolderId(folder.id)}
-          />
-        ))}
+      {!loading && (
+        <FolderNavTree
+          nodes={folderTree}
+          selectedFolderId={selectedFolderId}
+          setSelectedFolderId={setSelectedFolderId}
+          folderCounts={folderCounts}
+          currentUserId={currentUserId}
+          demo={demo}
+          onFolderDeleted={onFolderDeleted}
+        />
+      )}
     </nav>
+  )
+}
+
+function FolderNavTree({
+  nodes,
+  selectedFolderId,
+  setSelectedFolderId,
+  folderCounts,
+  currentUserId,
+  demo,
+  onFolderDeleted,
+  depth = 0,
+}: {
+  nodes: FolderTreeNode[]
+  selectedFolderId: string
+  setSelectedFolderId: (folderId: string) => void
+  folderCounts: Map<string, number>
+  currentUserId: string
+  demo: boolean
+  onFolderDeleted: (folderId: string) => void
+  depth?: number
+}) {
+  return (
+    <>
+      {nodes.map((node) => (
+        <div key={node.folder.id}>
+          <FolderNavButton
+            active={selectedFolderId === node.folder.id}
+            label={node.folder.name}
+            count={folderCounts.get(node.folder.id) ?? 0}
+            depth={depth}
+            icon={<Folder className="size-4" />}
+            visibility={node.folder.visibility}
+            onClick={() => setSelectedFolderId(node.folder.id)}
+            action={
+              node.folder.owner_id === currentUserId ? (
+                <FolderActionsMenu
+                  folder={node.folder}
+                  demo={demo}
+                  onDeleted={onFolderDeleted}
+                />
+              ) : undefined
+            }
+          />
+          {node.children.length > 0 && (
+            <FolderNavTree
+              nodes={node.children}
+              selectedFolderId={selectedFolderId}
+              setSelectedFolderId={setSelectedFolderId}
+              folderCounts={folderCounts}
+              currentUserId={currentUserId}
+              demo={demo}
+              onFolderDeleted={onFolderDeleted}
+              depth={depth + 1}
+            />
+          )}
+        </div>
+      ))}
+    </>
   )
 }
 
@@ -430,138 +781,308 @@ function FolderNavButton({
   active,
   label,
   count,
+  depth = 0,
   icon,
   visibility,
+  action,
   onClick,
 }: {
   active: boolean
   label: string
   count: number
+  depth?: number
   icon: ReactNode
   visibility?: V2DocumentVisibility
+  action?: ReactNode
   onClick: () => void
 }) {
   return (
-    <button
-      type="button"
+    <div
       className={cn(
-        "flex w-full items-center gap-2 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted",
+        "flex w-full items-center rounded-md transition-colors hover:bg-muted",
         active && "bg-muted text-foreground",
       )}
-      onClick={onClick}
     >
-      <span className="shrink-0 text-muted-foreground">{icon}</span>
-      <span className="min-w-0 flex-1 truncate">{label}</span>
-      {visibility === "organization" && (
-        <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
-      )}
-      <span className="shrink-0 text-xs text-muted-foreground">{count}</span>
-    </button>
+      <button
+        type="button"
+        className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2 text-left"
+        style={{ paddingLeft: `${8 + depth * 16}px` }}
+        onClick={onClick}
+      >
+        <span className="shrink-0 text-muted-foreground">{icon}</span>
+        <span className="min-w-0 flex-1 truncate">{label}</span>
+        {visibility === "organization" && (
+          <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
+        )}
+        <span className="shrink-0 text-xs text-muted-foreground">{count}</span>
+      </button>
+      {action && <div className="pr-1">{action}</div>}
+    </div>
   )
 }
 
 function FolderDirectory({
-  folders,
+  folderTree,
   documentsByFolder,
   openFolderIds,
   dragOverFolderId,
-  canMoveDocuments,
+  canMoveItems,
+  canFavorite,
+  currentUserId,
+  demo,
   onToggleFolder,
+  onFolderDragStart,
   onDocumentDragStart,
   onDocumentDragEnd,
+  onToggleFavorite,
   onFolderDragOver,
   onFolderDrop,
+  onUnfiledDrop,
+  onRootFolderDrop,
   onFolderDragLeave,
+  onFolderDeleted,
 }: {
-  folders: V2DocumentFolderPublic[]
+  folderTree: FolderTreeNode[]
   documentsByFolder: Map<string, V2DocumentPublic[]>
   openFolderIds: Set<string>
-  dragOverFolderId: string | null
-  canMoveDocuments: boolean
+  dragOverFolderId: DirectoryDropTargetId | null
+  canMoveItems: boolean
+  canFavorite: boolean
+  currentUserId: string
+  demo: boolean
   onToggleFolder: (folderId: string) => void
+  onFolderDragStart: (
+    event: DragEvent<HTMLButtonElement>,
+    folder: V2DocumentFolderPublic,
+  ) => void
   onDocumentDragStart: (
     event: DragEvent<HTMLAnchorElement>,
     document: V2DocumentPublic,
   ) => void
   onDocumentDragEnd: () => void
-  onFolderDragOver: (event: DragEvent<HTMLElement>, folderId: string) => void
+  onToggleFavorite: (document: V2DocumentPublic) => void
+  onFolderDragOver: (
+    event: DragEvent<HTMLElement>,
+    folderId: DirectoryDropTargetId,
+  ) => void
   onFolderDrop: (event: DragEvent<HTMLElement>, folderId: string | null) => void
+  onUnfiledDrop: (event: DragEvent<HTMLElement>) => void
+  onRootFolderDrop: (event: DragEvent<HTMLElement>) => void
   onFolderDragLeave: () => void
+  onFolderDeleted: (folderId: string) => void
 }) {
+  const favoriteDocuments = documentsByFolder.get("favorites") ?? []
   const unfiledDocuments = documentsByFolder.get("unfiled") ?? []
 
   return (
     <div className="min-w-0 border bg-card text-card-foreground">
-      <DirectoryFolder
-        id="unfiled"
+      <button
+        type="button"
+        className={cn(
+          "flex h-10 w-full items-center gap-2 border-b px-3 text-left text-sm hover:bg-muted",
+          dragOverFolderId === "root" && "bg-muted/70",
+        )}
+        onDragOver={(event) => onFolderDragOver(event, "root")}
+        onDrop={onRootFolderDrop}
+        onDragLeave={onFolderDragLeave}
+      >
+        <Folder className="size-4 shrink-0 text-muted-foreground" />
+        <span className="min-w-0 flex-1 truncate font-medium">Top level</span>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {folderTree.length}
+        </span>
+      </button>
+      <DirectoryUnfiled
+        label="Favorites"
+        icon={<Star className="size-4 shrink-0 text-muted-foreground" />}
+        documents={favoriteDocuments}
+        open={openFolderIds.has("favorites")}
+        dragOver={false}
+        canMoveItems={false}
+        canFavorite={canFavorite}
+        onToggle={() => onToggleFolder("favorites")}
+        onDocumentDragStart={onDocumentDragStart}
+        onDocumentDragEnd={onDocumentDragEnd}
+        onToggleFavorite={onToggleFavorite}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => event.preventDefault()}
+        onDragLeave={onFolderDragLeave}
+      />
+      <DirectoryUnfiled
         label="Unfiled"
+        icon={<Folder className="size-4 shrink-0 text-muted-foreground" />}
         documents={unfiledDocuments}
         open={openFolderIds.has("unfiled")}
         dragOver={dragOverFolderId === "unfiled"}
-        canMoveDocuments={canMoveDocuments}
+        canMoveItems={canMoveItems}
+        canFavorite={canFavorite}
         onToggle={() => onToggleFolder("unfiled")}
         onDocumentDragStart={onDocumentDragStart}
         onDocumentDragEnd={onDocumentDragEnd}
+        onToggleFavorite={onToggleFavorite}
         onDragOver={(event) => onFolderDragOver(event, "unfiled")}
-        onDrop={(event) => onFolderDrop(event, null)}
+        onDrop={onUnfiledDrop}
         onDragLeave={onFolderDragLeave}
       />
-      {folders.map((folder) => (
-        <DirectoryFolder
-          key={folder.id}
-          id={folder.id}
-          label={folder.name}
-          visibility={folder.visibility}
-          documents={documentsByFolder.get(folder.id) ?? []}
-          open={openFolderIds.has(folder.id)}
-          dragOver={dragOverFolderId === folder.id}
-          canMoveDocuments={canMoveDocuments}
-          onToggle={() => onToggleFolder(folder.id)}
-          onDocumentDragStart={onDocumentDragStart}
-          onDocumentDragEnd={onDocumentDragEnd}
-          onDragOver={(event) => onFolderDragOver(event, folder.id)}
-          onDrop={(event) => onFolderDrop(event, folder.id)}
-          onDragLeave={onFolderDragLeave}
-        />
-      ))}
+      <DirectoryFolderTree
+        nodes={folderTree}
+        documentsByFolder={documentsByFolder}
+        openFolderIds={openFolderIds}
+        dragOverFolderId={dragOverFolderId}
+        canMoveItems={canMoveItems}
+        canFavorite={canFavorite}
+        currentUserId={currentUserId}
+        demo={demo}
+        onToggleFolder={onToggleFolder}
+        onFolderDragStart={onFolderDragStart}
+        onDocumentDragStart={onDocumentDragStart}
+        onDocumentDragEnd={onDocumentDragEnd}
+        onToggleFavorite={onToggleFavorite}
+        onFolderDragOver={onFolderDragOver}
+        onFolderDrop={onFolderDrop}
+        onFolderDragLeave={onFolderDragLeave}
+        onFolderDeleted={onFolderDeleted}
+      />
     </div>
   )
 }
 
-function DirectoryFolder({
+function DirectoryFolderTree({
+  nodes,
+  documentsByFolder,
+  openFolderIds,
+  dragOverFolderId,
+  canMoveItems,
+  canFavorite,
+  currentUserId,
+  demo,
+  onToggleFolder,
+  onFolderDragStart,
+  onDocumentDragStart,
+  onDocumentDragEnd,
+  onToggleFavorite,
+  onFolderDragOver,
+  onFolderDrop,
+  onFolderDragLeave,
+  onFolderDeleted,
+  depth = 0,
+}: {
+  nodes: FolderTreeNode[]
+  documentsByFolder: Map<string, V2DocumentPublic[]>
+  openFolderIds: Set<string>
+  dragOverFolderId: DirectoryDropTargetId | null
+  canMoveItems: boolean
+  canFavorite: boolean
+  currentUserId: string
+  demo: boolean
+  onToggleFolder: (folderId: string) => void
+  onFolderDragStart: (
+    event: DragEvent<HTMLButtonElement>,
+    folder: V2DocumentFolderPublic,
+  ) => void
+  onDocumentDragStart: (
+    event: DragEvent<HTMLAnchorElement>,
+    document: V2DocumentPublic,
+  ) => void
+  onDocumentDragEnd: () => void
+  onToggleFavorite: (document: V2DocumentPublic) => void
+  onFolderDragOver: (
+    event: DragEvent<HTMLElement>,
+    folderId: DirectoryDropTargetId,
+  ) => void
+  onFolderDrop: (event: DragEvent<HTMLElement>, folderId: string | null) => void
+  onFolderDragLeave: () => void
+  onFolderDeleted: (folderId: string) => void
+  depth?: number
+}) {
+  return (
+    <>
+      {nodes.map((node) => (
+        <DirectoryFolder
+          key={node.folder.id}
+          node={node}
+          documents={documentsByFolder.get(node.folder.id) ?? []}
+          open={openFolderIds.has(node.folder.id)}
+          dragOver={dragOverFolderId === node.folder.id}
+          canMoveItems={canMoveItems}
+          canFavorite={canFavorite}
+          currentUserId={currentUserId}
+          demo={demo}
+          depth={depth}
+          onToggle={() => onToggleFolder(node.folder.id)}
+          onFolderDragStart={onFolderDragStart}
+          onDocumentDragStart={onDocumentDragStart}
+          onDocumentDragEnd={onDocumentDragEnd}
+          onToggleFavorite={onToggleFavorite}
+          onDragOver={(event) => onFolderDragOver(event, node.folder.id)}
+          onDrop={(event) => onFolderDrop(event, node.folder.id)}
+          onDragLeave={onFolderDragLeave}
+          onFolderDeleted={onFolderDeleted}
+          renderChildren={() => (
+            <DirectoryFolderTree
+              nodes={node.children}
+              documentsByFolder={documentsByFolder}
+              openFolderIds={openFolderIds}
+              dragOverFolderId={dragOverFolderId}
+              canMoveItems={canMoveItems}
+              canFavorite={canFavorite}
+              currentUserId={currentUserId}
+              demo={demo}
+              onToggleFolder={onToggleFolder}
+              onFolderDragStart={onFolderDragStart}
+              onDocumentDragStart={onDocumentDragStart}
+              onDocumentDragEnd={onDocumentDragEnd}
+              onToggleFavorite={onToggleFavorite}
+              onFolderDragOver={onFolderDragOver}
+              onFolderDrop={onFolderDrop}
+              onFolderDragLeave={onFolderDragLeave}
+              onFolderDeleted={onFolderDeleted}
+              depth={depth + 1}
+            />
+          )}
+        />
+      ))}
+    </>
+  )
+}
+
+function DirectoryUnfiled({
   label,
-  visibility,
+  icon,
   documents,
   open,
   dragOver,
-  canMoveDocuments,
+  canMoveItems,
+  canFavorite,
   onToggle,
   onDocumentDragStart,
   onDocumentDragEnd,
+  onToggleFavorite,
   onDragOver,
   onDrop,
   onDragLeave,
 }: {
-  id: string
   label: string
-  visibility?: V2DocumentVisibility
+  icon: ReactNode
   documents: V2DocumentPublic[]
   open: boolean
   dragOver: boolean
-  canMoveDocuments: boolean
+  canMoveItems: boolean
+  canFavorite: boolean
   onToggle: () => void
   onDocumentDragStart: (
     event: DragEvent<HTMLAnchorElement>,
     document: V2DocumentPublic,
   ) => void
   onDocumentDragEnd: () => void
+  onToggleFavorite: (document: V2DocumentPublic) => void
   onDragOver: (event: DragEvent<HTMLElement>) => void
   onDrop: (event: DragEvent<HTMLElement>) => void
   onDragLeave: () => void
 }) {
   return (
     <fieldset
-      aria-label={`${label} folder`}
+      aria-label={`${label} documents`}
       className={cn("border-b last:border-b-0", dragOver && "bg-muted/70")}
       onDragOver={onDragOver}
       onDrop={onDrop}
@@ -577,15 +1098,8 @@ function DirectoryFolder({
         ) : (
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
         )}
-        {open ? (
-          <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
-        ) : (
-          <Folder className="size-4 shrink-0 text-muted-foreground" />
-        )}
+        {icon}
         <span className="min-w-0 flex-1 truncate font-medium">{label}</span>
-        {visibility === "organization" && (
-          <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
-        )}
         <span className="shrink-0 text-xs text-muted-foreground">
           {documents.length}
         </span>
@@ -601,9 +1115,141 @@ function DirectoryFolder({
             <DirectoryDocumentRow
               key={document.id}
               document={document}
-              draggable={canMoveDocuments}
+              depth={0}
+              draggable={canMoveItems}
+              canFavorite={canFavorite}
               onDragStart={onDocumentDragStart}
               onDragEnd={onDocumentDragEnd}
+              onToggleFavorite={onToggleFavorite}
+            />
+          ))}
+        </div>
+      )}
+    </fieldset>
+  )
+}
+
+function DirectoryFolder({
+  node,
+  documents,
+  open,
+  dragOver,
+  canMoveItems,
+  canFavorite,
+  currentUserId,
+  demo,
+  depth,
+  onToggle,
+  onFolderDragStart,
+  onDocumentDragStart,
+  onDocumentDragEnd,
+  onToggleFavorite,
+  onDragOver,
+  onDrop,
+  onDragLeave,
+  onFolderDeleted,
+  renderChildren,
+}: {
+  node: FolderTreeNode
+  documents: V2DocumentPublic[]
+  open: boolean
+  dragOver: boolean
+  canMoveItems: boolean
+  canFavorite: boolean
+  currentUserId: string
+  demo: boolean
+  depth: number
+  onToggle: () => void
+  onFolderDragStart: (
+    event: DragEvent<HTMLButtonElement>,
+    folder: V2DocumentFolderPublic,
+  ) => void
+  onDocumentDragStart: (
+    event: DragEvent<HTMLAnchorElement>,
+    document: V2DocumentPublic,
+  ) => void
+  onDocumentDragEnd: () => void
+  onToggleFavorite: (document: V2DocumentPublic) => void
+  onDragOver: (event: DragEvent<HTMLElement>) => void
+  onDrop: (event: DragEvent<HTMLElement>) => void
+  onDragLeave: () => void
+  onFolderDeleted: (folderId: string) => void
+  renderChildren: () => ReactNode
+}) {
+  const childCount = node.children.length
+  const itemCount = childCount + documents.length
+
+  return (
+    <fieldset
+      aria-label={`${node.folder.name} folder`}
+      className={cn("border-b last:border-b-0", dragOver && "bg-muted/70")}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragLeave={onDragLeave}
+    >
+      <div className="flex items-center hover:bg-muted">
+        <button
+          type="button"
+          draggable={canMoveItems}
+          className={cn(
+            "flex h-11 min-w-0 flex-1 items-center gap-2 px-3 text-left text-sm",
+            canMoveItems && "cursor-grab active:cursor-grabbing",
+          )}
+          style={{ paddingLeft: `${12 + depth * 24}px` }}
+          onClick={onToggle}
+          onDragStart={(event) => onFolderDragStart(event, node.folder)}
+        >
+          {open ? (
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+          )}
+          {open ? (
+            <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
+          ) : (
+            <Folder className="size-4 shrink-0 text-muted-foreground" />
+          )}
+          <span className="min-w-0 flex-1 truncate font-medium">
+            {node.folder.name}
+          </span>
+          {node.folder.visibility === "organization" && (
+            <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
+          )}
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {itemCount}
+          </span>
+        </button>
+        {node.folder.owner_id === currentUserId && (
+          <div className="pr-2">
+            <FolderActionsMenu
+              folder={node.folder}
+              demo={demo}
+              onDeleted={onFolderDeleted}
+            />
+          </div>
+        )}
+      </div>
+      {open && (
+        <div className="pb-2">
+          {itemCount === 0 && (
+            <div
+              className="px-3 py-2 text-sm text-muted-foreground"
+              style={{ marginLeft: `${40 + depth * 24}px` }}
+            >
+              Empty folder
+            </div>
+          )}
+          {childCount > 0 && renderChildren()}
+          {documents.map((document) => (
+            <DirectoryDocumentRow
+              key={document.id}
+              document={document}
+              depth={depth + 1}
+              draggable={canMoveItems}
+              canFavorite={canFavorite}
+              onDragStart={onDocumentDragStart}
+              onDragEnd={onDocumentDragEnd}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
         </div>
@@ -614,45 +1260,101 @@ function DirectoryFolder({
 
 function DirectoryDocumentRow({
   document,
+  depth,
   draggable,
+  canFavorite,
   onDragStart,
   onDragEnd,
+  onToggleFavorite,
 }: {
   document: V2DocumentPublic
+  depth: number
   draggable: boolean
+  canFavorite: boolean
   onDragStart: (
     event: DragEvent<HTMLAnchorElement>,
     document: V2DocumentPublic,
   ) => void
   onDragEnd: () => void
+  onToggleFavorite: (document: V2DocumentPublic) => void
 }) {
   return (
-    <Link
-      to="/v2/library/$documentId"
-      params={{ documentId: document.id }}
-      draggable={draggable}
-      onDragStart={(event) => onDragStart(event, document)}
-      onDragEnd={onDragEnd}
-      className={cn(
-        "ml-10 grid min-h-10 grid-cols-[minmax(0,1fr)_160px_130px] items-center gap-3 px-3 py-2 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring max-md:grid-cols-[minmax(0,1fr)]",
-        draggable && "cursor-grab active:cursor-grabbing",
-      )}
-    >
-      <span className="flex min-w-0 items-center gap-2">
-        <FileText className="size-4 shrink-0 text-muted-foreground" />
-        <span className="truncate font-medium">{document.title}</span>
-      </span>
-      <span className="truncate text-xs text-muted-foreground max-md:hidden">
-        {document.visibility === "organization" ? "Organization" : "Private"}
-      </span>
-      <span className="truncate text-xs text-muted-foreground max-md:hidden">
-        {formatDateOnly(document.updated_at)}
-      </span>
-    </Link>
+    <div className="flex items-center hover:bg-muted">
+      <Link
+        to="/v2/library/$documentId"
+        params={{ documentId: document.id }}
+        draggable={draggable}
+        onDragStart={(event) => onDragStart(event, document)}
+        onDragEnd={onDragEnd}
+        className={cn(
+          "grid min-h-10 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_160px_130px] items-center gap-3 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring max-md:grid-cols-[minmax(0,1fr)]",
+          draggable && "cursor-grab active:cursor-grabbing",
+        )}
+        style={{ marginLeft: `${40 + depth * 24}px` }}
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <FileText className="size-4 shrink-0 text-muted-foreground" />
+          <span className="truncate font-medium">{document.title}</span>
+        </span>
+        <span className="truncate text-xs text-muted-foreground max-md:hidden">
+          {document.visibility === "organization" ? "Organization" : "Private"}
+        </span>
+        <span className="truncate text-xs text-muted-foreground max-md:hidden">
+          {formatDateOnly(document.updated_at)}
+        </span>
+      </Link>
+      <FavoriteButton
+        document={document}
+        disabled={!canFavorite}
+        onToggle={onToggleFavorite}
+      />
+    </div>
   )
 }
 
-function DocumentCard({ document }: { document: V2DocumentPublic }) {
+function FavoriteButton({
+  document,
+  disabled,
+  onToggle,
+}: {
+  document: V2DocumentPublic
+  disabled: boolean
+  onToggle: (document: V2DocumentPublic) => void
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-sm"
+      disabled={disabled}
+      aria-label={document.is_favorite ? "Remove favorite" : "Add favorite"}
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        onToggle(document)
+      }}
+    >
+      <Star
+        className={cn(
+          "size-4",
+          document.is_favorite
+            ? "fill-yellow-400 text-yellow-500"
+            : "text-muted-foreground",
+        )}
+      />
+    </Button>
+  )
+}
+
+function DocumentCard({
+  document,
+  canFavorite,
+  onToggleFavorite,
+}: {
+  document: V2DocumentPublic
+  canFavorite: boolean
+  onToggleFavorite: (document: V2DocumentPublic) => void
+}) {
   const sharedCount = document.shared_with?.length ?? 0
   return (
     <Link
@@ -663,6 +1365,11 @@ function DocumentCard({ document }: { document: V2DocumentPublic }) {
       <div className="flex items-start">
         <FileText className="mt-1 size-5 shrink-0 text-muted-foreground" />
         <div className="ml-auto flex flex-wrap justify-end gap-1.5">
+          <FavoriteButton
+            document={document}
+            disabled={!canFavorite}
+            onToggle={onToggleFavorite}
+          />
           <Badge variant="outline">
             {document.visibility === "organization" ? (
               <Building2 className="size-3" />
