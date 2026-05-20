@@ -1,9 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Building2, Check, Folder, FolderPlus, Search } from "lucide-react"
+import {
+  Building2,
+  Check,
+  Folder,
+  FolderPlus,
+  MoreHorizontal,
+  Pencil,
+  Search,
+  Trash2,
+} from "lucide-react"
 import { useMemo, useState } from "react"
 
 import {
   createV2DocumentFolder,
+  deleteV2DocumentFolder,
+  updateV2DocumentFolder,
   type V2DocumentFolderPublic,
   type V2DocumentVisibility,
 } from "@/api/v2Documents"
@@ -34,31 +45,73 @@ import {
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 
+function getFolderDepths(
+  folders: V2DocumentFolderPublic[],
+): Map<string, number> {
+  const byId = new Map(folders.map((folder) => [folder.id, folder]))
+  const depths = new Map<string, number>()
+
+  const getDepth = (
+    folder: V2DocumentFolderPublic,
+    seen = new Set<string>(),
+  ): number => {
+    if (depths.has(folder.id)) return depths.get(folder.id) ?? 0
+    if (!folder.parent_folder_id || seen.has(folder.id)) {
+      depths.set(folder.id, 0)
+      return 0
+    }
+    const parent = byId.get(folder.parent_folder_id)
+    if (!parent) {
+      depths.set(folder.id, 0)
+      return 0
+    }
+    const nextSeen = new Set(seen).add(folder.id)
+    const depth = getDepth(parent, nextSeen) + 1
+    depths.set(folder.id, depth)
+    return depth
+  }
+
+  for (const folder of folders) {
+    getDepth(folder)
+  }
+  return depths
+}
+
 export function FolderCreateDialog({
   open,
   onOpenChange,
   demo,
+  folders = [],
+  initialParentFolderId = null,
   onCreated,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   demo: boolean
+  folders?: V2DocumentFolderPublic[]
+  initialParentFolderId?: string | null
   onCreated?: (folder: V2DocumentFolderPublic) => void
 }) {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [name, setName] = useState("")
   const [visibility, setVisibility] = useState<V2DocumentVisibility>("private")
+  const [parentFolderId, setParentFolderId] = useState<string | null>(
+    initialParentFolderId,
+  )
+  const folderDepths = useMemo(() => getFolderDepths(folders), [folders])
 
   const createMutation = useMutation({
     mutationFn: () =>
       createV2DocumentFolder({
         name: name.trim(),
         visibility,
+        parent_folder_id: parentFolderId,
       }),
     onSuccess: (folder) => {
       setName("")
       setVisibility("private")
+      setParentFolderId(initialParentFolderId)
       queryClient.invalidateQueries({
         queryKey: ["v2-document-folders", { demo }],
       })
@@ -77,7 +130,7 @@ export function FolderCreateDialog({
         <DialogHeader>
           <DialogTitle>Create folder</DialogTitle>
           <DialogDescription>
-            Choose where this folder is visible in the library.
+            Choose where this folder lives and who can access it.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -119,6 +172,32 @@ export function FolderCreateDialog({
               </SelectContent>
             </Select>
           </div>
+          {folders.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="folder-parent">
+                Parent folder
+              </label>
+              <Select
+                value={parentFolderId ?? "root"}
+                onValueChange={(value) =>
+                  setParentFolderId(value === "root" ? null : value)
+                }
+              >
+                <SelectTrigger id="folder-parent" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="root">Top level</SelectItem>
+                  {folders.map((folder) => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {"  ".repeat(folderDepths.get(folder.id) ?? 0)}
+                      {folder.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <DialogFooter>
             <Button
               type="button"
@@ -139,6 +218,188 @@ export function FolderCreateDialog({
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+export function FolderActionsMenu({
+  folder,
+  demo,
+  onDeleted,
+  align = "end",
+}: {
+  folder: V2DocumentFolderPublic
+  demo: boolean
+  onDeleted?: (folderId: string) => void
+  align?: "start" | "center" | "end"
+}) {
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [name, setName] = useState(folder.name)
+
+  const invalidateLibraryQueries = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["v2-document-folders", { demo }],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ["v2-documents", { demo }],
+    })
+  }
+
+  const renameMutation = useMutation({
+    mutationFn: () =>
+      updateV2DocumentFolder(folder.id, {
+        name: name.trim(),
+      }),
+    onSuccess: () => {
+      invalidateLibraryQueries()
+      setRenameOpen(false)
+      showSuccessToast("Folder renamed.")
+    },
+    onError: () => {
+      showErrorToast("Could not rename folder.")
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteV2DocumentFolder(folder.id),
+    onSuccess: () => {
+      invalidateLibraryQueries()
+      setDeleteOpen(false)
+      onDeleted?.(folder.id)
+      showSuccessToast("Folder deleted.")
+    },
+    onError: () => {
+      showErrorToast("Could not delete folder.")
+    },
+  })
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            disabled={demo}
+            aria-label={`Open options for ${folder.name}`}
+            onClick={(event) => event.stopPropagation()}
+            onDragStart={(event) => event.preventDefault()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align={align} className="w-44">
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault()
+              setName(folder.name)
+              setRenameOpen(true)
+            }}
+          >
+            <Pencil className="size-4" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onSelect={(event) => {
+              event.preventDefault()
+              setDeleteOpen(true)
+            }}
+          >
+            <Trash2 className="size-4" />
+            Delete folder
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename folder</DialogTitle>
+            <DialogDescription>
+              Update the folder name shown in your library.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (!name.trim() || demo) return
+              renameMutation.mutate()
+            }}
+          >
+            <div className="space-y-2">
+              <label
+                className="text-sm font-medium"
+                htmlFor={`rename-folder-${folder.id}`}
+              >
+                Folder name
+              </label>
+              <Input
+                id={`rename-folder-${folder.id}`}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={renameMutation.isPending}
+                onClick={() => setRenameOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  !name.trim() ||
+                  name.trim() === folder.name ||
+                  demo ||
+                  renameMutation.isPending
+                }
+              >
+                {renameMutation.isPending ? "Renaming" : "Rename"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete folder?</DialogTitle>
+            <DialogDescription>
+              This removes “{folder.name}” from the library. Documents in this
+              folder will not be deleted; they will move to Unfiled.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={deleteMutation.isPending}
+              onClick={() => setDeleteOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={demo || deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate()}
+            >
+              {deleteMutation.isPending ? "Deleting" : "Delete folder"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -163,6 +424,7 @@ export function FolderPickerDropdown({
   const [query, setQuery] = useState("")
 
   const selectedFolder = folders.find((folder) => folder.id === currentFolderId)
+  const folderDepths = useMemo(() => getFolderDepths(folders), [folders])
   const filteredFolders = useMemo(() => {
     const needle = query.trim().toLowerCase()
     if (!needle) return folders
@@ -232,7 +494,14 @@ export function FolderPickerDropdown({
               className="gap-2"
             >
               <Folder className="size-4" />
-              <span className="min-w-0 flex-1 truncate">{folder.name}</span>
+              <span
+                className="min-w-0 flex-1 truncate"
+                style={{
+                  paddingLeft: `${(folderDepths.get(folder.id) ?? 0) * 12}px`,
+                }}
+              >
+                {folder.name}
+              </span>
               {folder.visibility === "organization" && (
                 <Building2 className="size-3.5 text-muted-foreground" />
               )}

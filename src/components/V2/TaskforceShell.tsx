@@ -9,6 +9,7 @@ import {
   BarChart3,
   BookOpenText,
   Component,
+  CreditCard,
   Home,
   Search,
   Shield,
@@ -60,6 +61,7 @@ const taskforceItems: TaskforceNavItem[] = [
   { icon: Home, title: "Home", path: "/v2/home" },
   { icon: BookOpenText, title: "Library", path: "/v2/library" },
   { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
+  { icon: CreditCard, title: "Taskforce Pro", path: "/v2/pricing" },
 ]
 
 function TaskforceMark() {
