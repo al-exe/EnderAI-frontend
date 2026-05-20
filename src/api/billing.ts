@@ -8,6 +8,7 @@ export interface BillingStatusPublic {
   subscription_cancel_at_period_end: boolean
   price_id: string | null
   is_subscription_active: boolean
+  subscription_tier: "free" | "pro" | "max" | "admin"
 }
 
 export interface BillingSessionPublic {

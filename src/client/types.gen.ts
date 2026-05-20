@@ -66,6 +66,7 @@ export type UserPublic = {
     stripe_subscription_current_period_end?: (string | null);
     stripe_subscription_cancel_at_period_end?: boolean;
     stripe_price_id?: (string | null);
+    subscription_tier?: 'free' | 'pro' | 'max' | 'admin';
 };
 
 export type UserRegister = {
