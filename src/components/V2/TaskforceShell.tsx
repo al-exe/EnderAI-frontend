@@ -60,6 +60,7 @@ type TaskforceNavItem = {
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Home, title: "Home", path: "/v2/home" },
   { icon: BookOpenText, title: "Library", path: "/v2/library" },
+  { icon: Search, title: "Search", path: "/v2/search" },
   { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
 ]
 
