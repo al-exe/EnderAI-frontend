@@ -2,15 +2,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
   ArrowLeft,
+  Bold,
   Eye,
   Folder,
+  Heading1,
+  Heading2,
+  Heading3,
+  Italic,
   Link as LinkIcon,
   Pencil,
+  Pilcrow,
   Search,
   Share2,
+  Strikethrough,
   X,
 } from "lucide-react"
-import { useMemo, useRef, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 
 import {
   type OrganizationMemberPublic,
@@ -151,6 +158,319 @@ function getOffsetWithin(
     node = walker.nextNode()
   }
   return -1
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
+function renderInlineMarkdown(text: string, keyPrefix = "inline"): ReactNode[] {
+  const nodes: ReactNode[] = []
+  const pattern = /\*\*([^*]+)\*\*|~~([^~]+)~~|\*([^*]+)\*/g
+  let cursor = 0
+  let index = 0
+
+  for (const match of text.matchAll(pattern)) {
+    const matchIndex = match.index ?? 0
+    if (matchIndex > cursor) {
+      nodes.push(text.slice(cursor, matchIndex))
+    }
+    if (match[1]) {
+      nodes.push(
+        <strong key={`${keyPrefix}-strong-${index++}`}>
+          {renderInlineMarkdown(match[1], `${keyPrefix}-strong-${index}`)}
+        </strong>,
+      )
+    } else if (match[2]) {
+      nodes.push(
+        <s key={`${keyPrefix}-strike-${index++}`}>
+          {renderInlineMarkdown(match[2], `${keyPrefix}-strike-${index}`)}
+        </s>,
+      )
+    } else if (match[3]) {
+      nodes.push(
+        <em key={`${keyPrefix}-em-${index++}`}>
+          {renderInlineMarkdown(match[3], `${keyPrefix}-em-${index}`)}
+        </em>,
+      )
+    }
+    cursor = matchIndex + match[0].length
+  }
+
+  if (cursor < text.length) {
+    nodes.push(text.slice(cursor))
+  }
+  return nodes
+}
+
+function inlineMarkdownToHtml(text: string): string {
+  return escapeHtml(text)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/~~([^~]+)~~/g, "<s>$1</s>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+}
+
+function markdownToHtml(markdown: string): string {
+  const blocks = markdown.trim() ? markdown.split(/\n{2,}/) : [""]
+
+  return blocks
+    .map((block) => {
+      const trimmed = block.trim()
+      const heading = /^(#{1,3})\s+(.+)$/.exec(trimmed)
+      if (heading) {
+        const level = heading[1].length
+        return `<h${level}>${inlineMarkdownToHtml(heading[2])}</h${level}>`
+      }
+      const lines = block.split("\n").map(inlineMarkdownToHtml).join("<br>")
+      return `<p>${lines || "<br>"}</p>`
+    })
+    .join("")
+}
+
+function nodeToMarkdown(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent ?? ""
+  }
+  if (!(node instanceof HTMLElement)) {
+    return Array.from(node.childNodes).map(nodeToMarkdown).join("")
+  }
+
+  const children = Array.from(node.childNodes).map(nodeToMarkdown).join("")
+  const tagName = node.tagName.toLowerCase()
+  if (tagName === "strong" || tagName === "b") return `**${children}**`
+  if (tagName === "em" || tagName === "i") return `*${children}*`
+  if (tagName === "s" || tagName === "strike" || tagName === "del") {
+    return `~~${children}~~`
+  }
+  if (tagName === "br") return "\n"
+  if (tagName === "h1") return `# ${children}\n\n`
+  if (tagName === "h2") return `## ${children}\n\n`
+  if (tagName === "h3") return `### ${children}\n\n`
+  if (tagName === "p" || tagName === "div") return `${children}\n\n`
+  return children
+}
+
+function htmlToMarkdown(html: string): string {
+  const template = window.document.createElement("template")
+  template.innerHTML = html
+  return Array.from(template.content.childNodes)
+    .map(nodeToMarkdown)
+    .join("")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+
+function MarkdownBlocks({
+  markdown,
+  className,
+}: {
+  markdown: string
+  className?: string
+}) {
+  const blocks = markdown.trim() ? markdown.split(/\n{2,}/) : [markdown]
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      {blocks.map((block, index) => {
+        const trimmed = block.trim()
+        const heading = /^(#{1,3})\s+(.+)$/.exec(trimmed)
+        if (heading) {
+          const level = heading[1].length
+          const HeadingTag = `h${level}` as "h1" | "h2" | "h3"
+          return (
+            <HeadingTag
+              key={`${trimmed}-${index}`}
+              className={cn(
+                "font-semibold tracking-tight text-foreground",
+                level === 1 && "text-3xl",
+                level === 2 && "text-2xl",
+                level === 3 && "text-xl",
+              )}
+            >
+              {renderInlineMarkdown(heading[2], `heading-${index}`)}
+            </HeadingTag>
+          )
+        }
+
+        const lines = block.split("\n")
+        return (
+          <p key={`${trimmed}-${index}`} className="whitespace-pre-wrap">
+            {lines.map((line, lineIndex) => (
+              <span key={`${line}-${lineIndex}`}>
+                {lineIndex > 0 && <br />}
+                {renderInlineMarkdown(line, `paragraph-${index}-${lineIndex}`)}
+              </span>
+            ))}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
+type RichCommand =
+  | { icon: typeof Bold; label: string; command: "bold" }
+  | { icon: typeof Italic; label: string; command: "italic" }
+  | { icon: typeof Strikethrough; label: string; command: "strikeThrough" }
+  | {
+      icon: typeof Heading1
+      label: string
+      command: "formatBlock"
+      value: "H1"
+    }
+  | {
+      icon: typeof Heading2
+      label: string
+      command: "formatBlock"
+      value: "H2"
+    }
+  | {
+      icon: typeof Heading3
+      label: string
+      command: "formatBlock"
+      value: "H3"
+    }
+  | { icon: typeof Pilcrow; label: string; command: "formatBlock"; value: "P" }
+
+const richCommands: RichCommand[] = [
+  { icon: Bold, label: "Bold", command: "bold" },
+  { icon: Italic, label: "Italic", command: "italic" },
+  { icon: Strikethrough, label: "Strikethrough", command: "strikeThrough" },
+  { icon: Heading1, label: "Heading 1", command: "formatBlock", value: "H1" },
+  { icon: Heading2, label: "Heading 2", command: "formatBlock", value: "H2" },
+  { icon: Heading3, label: "Heading 3", command: "formatBlock", value: "H3" },
+  { icon: Pilcrow, label: "Paragraph", command: "formatBlock", value: "P" },
+]
+
+function RichTextField({
+  value,
+  onChange,
+  className,
+  "data-testid": testId,
+}: {
+  value: string
+  onChange: (next: string) => void
+  className?: string
+  "data-testid"?: string
+}) {
+  const editorRef = useRef<HTMLDivElement | null>(null)
+  const [focused, setFocused] = useState(false)
+
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor || window.document.activeElement === editor) return
+    editor.innerHTML = markdownToHtml(value)
+  }, [value])
+
+  const syncValue = () => {
+    const editor = editorRef.current
+    if (!editor) return
+    onChange(htmlToMarkdown(editor.innerHTML))
+  }
+
+  const runCommand = (command: RichCommand) => {
+    const editor = editorRef.current
+    if (!editor) return
+    editor.focus()
+    window.document.execCommand(
+      command.command,
+      false,
+      "value" in command ? command.value : undefined,
+    )
+    syncValue()
+  }
+
+  return (
+    <div className="space-y-2">
+      {focused && (
+        <div className="sticky top-[4.25rem] z-10 inline-flex flex-wrap items-center gap-1 rounded-md border bg-background p-1 shadow-sm">
+          {richCommands.map((command) => {
+            const Icon = command.icon
+            return (
+              <Button
+                key={`${command.command}-${command.label}`}
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={command.label}
+                title={command.label}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => runCommand(command)}
+              >
+                <Icon className="size-4" />
+              </Button>
+            )
+          })}
+        </div>
+      )}
+      {/* biome-ignore lint/a11y/useSemanticElements: contenteditable keeps document editing inline instead of form controls */}
+      <div
+        ref={editorRef}
+        role="textbox"
+        aria-multiline="true"
+        tabIndex={0}
+        contentEditable
+        suppressContentEditableWarning
+        data-testid={testId}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          syncValue()
+          setFocused(false)
+        }}
+        onInput={syncValue}
+        className={cn(
+          "min-h-10 rounded-sm px-1 py-0.5 text-foreground outline-none transition-colors focus-visible:bg-muted/40 focus-visible:ring-2 focus-visible:ring-sidebar-ring [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_h3]:font-semibold [&_p]:my-2",
+          className,
+        )}
+      />
+    </div>
+  )
+}
+
+function PlainInlineEditor({
+  value,
+  onChange,
+  className,
+  "data-testid": testId,
+}: {
+  value: string
+  onChange: (next: string) => void
+  className?: string
+  "data-testid"?: string
+}) {
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!ref.current || window.document.activeElement === ref.current) return
+    ref.current.textContent = value
+  }, [value])
+
+  const syncValue = () => {
+    onChange(ref.current?.textContent ?? "")
+  }
+
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: contenteditable keeps title and description editing inline
+    <div
+      ref={ref}
+      role="textbox"
+      tabIndex={0}
+      contentEditable
+      suppressContentEditableWarning
+      data-testid={testId}
+      onInput={syncValue}
+      onBlur={syncValue}
+      className={cn(
+        "rounded-sm px-1 py-0.5 outline-none transition-colors focus-visible:bg-muted/40 focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        className,
+      )}
+    />
+  )
 }
 
 function TaskforceDocumentDetail() {
@@ -478,13 +798,10 @@ function TaskforceDocumentDetail() {
         >
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {editing ? (
-              <input
-                type="text"
+              <PlainInlineEditor
                 value={editState.title}
-                onChange={(event) =>
-                  setEditState({ ...editState, title: event.target.value })
-                }
-                className="w-full border bg-background px-3 py-1 text-3xl font-semibold tracking-tight text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring md:max-w-xl"
+                onChange={(next) => setEditState({ ...editState, title: next })}
+                className="w-full text-3xl font-semibold tracking-tight text-foreground md:max-w-xl"
                 data-testid="edit-title"
               />
             ) : (
@@ -564,13 +881,12 @@ function TaskforceDocumentDetail() {
         </div>
 
         {editing ? (
-          <textarea
+          <PlainInlineEditor
             value={editState.description}
-            onChange={(event) =>
-              setEditState({ ...editState, description: event.target.value })
+            onChange={(next) =>
+              setEditState({ ...editState, description: next })
             }
-            rows={2}
-            className="mt-5 w-full border bg-background px-3 py-2 text-sm leading-6 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            className="mt-5 text-base leading-7 text-muted-foreground"
             data-testid="edit-description"
           />
         ) : (
@@ -1043,17 +1359,19 @@ function SummaryPane({
       <section className="space-y-3">
         <h2 className="text-xl font-semibold tracking-tight">Overview</h2>
         {editing && editState ? (
-          <textarea
+          <RichTextField
             value={editState.human_summary}
-            onChange={(event) =>
-              setEditState({ ...editState, human_summary: event.target.value })
+            onChange={(next) =>
+              setEditState({ ...editState, human_summary: next })
             }
-            rows={3}
-            className="w-full border bg-background px-3 py-2 text-base leading-7 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            className="text-lg leading-8"
             data-testid="edit-human-summary"
           />
         ) : (
-          <p className="text-lg leading-8">{document.human_summary}</p>
+          <MarkdownBlocks
+            markdown={document.human_summary}
+            className="text-lg leading-8"
+          />
         )}
       </section>
 
@@ -1062,16 +1380,15 @@ function SummaryPane({
           <h2 className="text-xl font-semibold tracking-tight">
             AI summary (reference)
           </h2>
-          <textarea
+          <RichTextField
             value={editState.ai_generated_summary}
-            onChange={(event) =>
+            onChange={(next) =>
               setEditState({
                 ...editState,
-                ai_generated_summary: event.target.value,
+                ai_generated_summary: next,
               })
             }
-            rows={3}
-            className="w-full border bg-background px-3 py-2 text-sm leading-6 text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            className="text-sm leading-6 text-muted-foreground"
             data-testid="edit-ai-summary"
           />
         </section>
@@ -1095,51 +1412,72 @@ function SummaryPane({
               anchorMode && "cursor-text select-text",
             )}
           >
-            {document.main_body.map((paragraph, paragraphIndex) => (
-              <p key={paragraphIndex}>
-                {paragraph.segments.map((segment, segmentIndex) => {
-                  const segmentKey = `${paragraphIndex}-${segmentIndex}`
-                  const isAnchored = Boolean(segment.evidence_anchor_id)
-                  const isPicked =
-                    summaryPick?.paragraphIndex === paragraphIndex &&
-                    summaryPick?.segmentIndex === segmentIndex
+            {document.main_body.map((paragraph, paragraphIndex) => {
+              const hasAnchors = paragraph.segments.some(
+                (segment) => segment.evidence_anchor_id,
+              )
+              if (!hasAnchors && paragraph.segments.length === 1) {
+                return (
+                  <MarkdownBlocks
+                    key={paragraphIndex}
+                    markdown={paragraph.segments[0].text}
+                  />
+                )
+              }
 
-                  if (!isAnchored) {
+              return (
+                <p key={paragraphIndex}>
+                  {paragraph.segments.map((segment, segmentIndex) => {
+                    const segmentKey = `${paragraphIndex}-${segmentIndex}`
+                    const isAnchored = Boolean(segment.evidence_anchor_id)
+                    const isPicked =
+                      summaryPick?.paragraphIndex === paragraphIndex &&
+                      summaryPick?.segmentIndex === segmentIndex
+
+                    if (!isAnchored) {
+                      return (
+                        <span
+                          key={segmentKey}
+                          data-segment-key={segmentKey}
+                          data-anchored="false"
+                          className={cn(
+                            isPicked && "bg-purple-100 dark:bg-purple-950/60",
+                          )}
+                        >
+                          {renderInlineMarkdown(
+                            segment.text,
+                            `segment-${segmentKey}`,
+                          )}
+                        </span>
+                      )
+                    }
+
+                    const evidenceAnchorId =
+                      segment.evidence_anchor_id as string
                     return (
-                      <span
+                      <button
                         key={segmentKey}
+                        type="button"
                         data-segment-key={segmentKey}
-                        data-anchored="false"
-                        className={cn(
-                          isPicked && "bg-purple-100 dark:bg-purple-950/60",
-                        )}
+                        data-anchored="true"
+                        aria-label={`Show evidence for: ${segment.text}`}
+                        data-testid={`human-evidence-${evidenceAnchorId}`}
+                        onClick={() => {
+                          if (anchorMode) return
+                          onShowEvidence(evidenceAnchorId)
+                        }}
+                        className="inline rounded-sm bg-purple-100/80 px-1 py-0.5 text-left text-purple-950 transition-colors hover:bg-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/70"
                       >
-                        {segment.text}
-                      </span>
+                        {renderInlineMarkdown(
+                          segment.text,
+                          `segment-${segmentKey}`,
+                        )}
+                      </button>
                     )
-                  }
-
-                  const evidenceAnchorId = segment.evidence_anchor_id as string
-                  return (
-                    <button
-                      key={segmentKey}
-                      type="button"
-                      data-segment-key={segmentKey}
-                      data-anchored="true"
-                      aria-label={`Show evidence for: ${segment.text}`}
-                      data-testid={`human-evidence-${evidenceAnchorId}`}
-                      onClick={() => {
-                        if (anchorMode) return
-                        onShowEvidence(evidenceAnchorId)
-                      }}
-                      className="inline rounded-sm bg-purple-100/80 px-1 py-0.5 text-left text-purple-950 transition-colors hover:bg-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/70"
-                    >
-                      {segment.text}
-                    </button>
-                  )
-                })}
-              </p>
-            ))}
+                  })}
+                </p>
+              )
+            })}
           </div>
         )}
       </section>
@@ -1171,49 +1509,39 @@ function EditableMainBody({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {paragraphs.map((paragraph, paragraphIndex) => (
-        <div
-          key={paragraphIndex}
-          className="rounded-md border bg-card/40 p-3 text-sm leading-6"
-        >
-          <p className="mb-2 text-xs uppercase text-muted-foreground">
-            Paragraph {paragraphIndex + 1}
-          </p>
-          <div className="space-y-2">
-            {paragraph.segments.map((segment, segmentIndex) => {
-              const anchored = Boolean(segment.evidence_anchor_id)
-              return (
-                <div
-                  key={segmentIndex}
-                  className="flex items-start gap-2"
-                  data-testid={`edit-segment-${paragraphIndex}-${segmentIndex}`}
-                >
-                  {anchored && (
-                    <span
-                      className="mt-2 inline-flex items-center gap-1 rounded-sm bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-purple-900 dark:bg-purple-950/60 dark:text-purple-100"
-                      title={segment.evidence_anchor_id ?? undefined}
-                    >
-                      <LinkIcon className="size-3" />
-                      anchored
-                    </span>
-                  )}
-                  <textarea
-                    value={segment.text}
-                    onChange={(event) =>
-                      updateSegmentText(
-                        paragraphIndex,
-                        segmentIndex,
-                        event.target.value,
-                      )
-                    }
-                    rows={Math.max(1, Math.ceil(segment.text.length / 80))}
-                    className="w-full border bg-background px-2 py-1 text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-                  />
-                </div>
-              )
-            })}
-          </div>
+        <div key={paragraphIndex} className="space-y-1 text-base leading-8">
+          {paragraph.segments.map((segment, segmentIndex) => {
+            const anchored = Boolean(segment.evidence_anchor_id)
+            return (
+              <div
+                key={segmentIndex}
+                className={cn(
+                  "rounded-sm",
+                  anchored &&
+                    "border-l-2 border-purple-300 pl-3 dark:border-purple-700",
+                )}
+                data-testid={`edit-segment-${paragraphIndex}-${segmentIndex}`}
+              >
+                {anchored && (
+                  <span
+                    className="mb-1 inline-flex items-center gap-1 rounded-sm bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-purple-900 dark:bg-purple-950/60 dark:text-purple-100"
+                    title={segment.evidence_anchor_id ?? undefined}
+                  >
+                    <LinkIcon className="size-3" />
+                    anchored
+                  </span>
+                )}
+                <RichTextField
+                  value={segment.text}
+                  onChange={(next) =>
+                    updateSegmentText(paragraphIndex, segmentIndex, next)
+                  }
+                />
+              </div>
+            )
+          })}
         </div>
       ))}
     </div>
@@ -1354,14 +1682,14 @@ function DetailsPane({
 
           if (editing && editState) {
             return (
-              <textarea
+              <RichTextField
                 key={`${section.anchor_id}-${sectionIndex}`}
                 value={section.markdown}
-                onChange={(event) => {
+                onChange={(nextMarkdown) => {
                   const next = editState.details_markdown_sections.map(
                     (s, idx) =>
                       idx === sectionIndex
-                        ? { ...s, markdown: event.target.value }
+                        ? { ...s, markdown: nextMarkdown }
                         : s,
                   )
                   setEditState({
@@ -1369,29 +1697,28 @@ function DetailsPane({
                     details_markdown_sections: next,
                   })
                 }}
-                rows={Math.max(4, section.markdown.split("\n").length)}
-                className="mb-3 w-full border bg-background px-3 py-2 font-mono text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                className="mb-5 text-sm leading-7"
                 data-testid={`edit-section-${section.anchor_id}`}
               />
             )
           }
 
           return (
-            <pre
+            <div
               key={`${section.anchor_id}-${sectionIndex}`}
               id={section.anchor_id}
               data-section-key={sectionIndex}
               data-testid={`ai-evidence-${section.anchor_id}`}
               data-active-evidence={isActive ? "true" : "false"}
               className={cn(
-                "scroll-mt-6 whitespace-pre-wrap rounded-sm py-2 font-mono text-sm leading-6 text-foreground transition-colors",
+                "scroll-mt-6 rounded-sm py-2 text-sm leading-7 text-foreground transition-colors",
                 isActive &&
                   "bg-purple-100/80 px-3 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
                 isPicked && "outline outline-2 outline-purple-400",
               )}
             >
-              <code>{section.markdown}</code>
-            </pre>
+              <MarkdownBlocks markdown={section.markdown} />
+            </div>
           )
         })}
       </div>
