@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import type { ComponentType } from "react"
 import { z } from "zod"
 
+import AppearanceSettings from "@/components/UserSettings/Appearance"
 import Billing from "@/components/UserSettings/Billing"
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import ConnectAgent from "@/components/UserSettings/ConnectAgent"
@@ -14,6 +15,7 @@ import useAuth from "@/hooks/useAuth"
 const tabValues = [
   "my-profile",
   "organization",
+  "appearance",
   "connect-agent",
   "billing",
   "password",
@@ -33,6 +35,7 @@ const tabsConfig: Array<{
 }> = [
   { value: "my-profile", title: "My profile", component: UserInformation },
   { value: "organization", title: "Organization", component: Organization },
+  { value: "appearance", title: "Appearance", component: AppearanceSettings },
   { value: "connect-agent", title: "Connect agent", component: ConnectAgent },
   { value: "billing", title: "Billing", component: Billing },
   { value: "password", title: "Password", component: ChangePassword },
