@@ -14,6 +14,7 @@ import {
   Pilcrow,
   Search,
   Share2,
+  Star,
   Strikethrough,
   X,
 } from "lucide-react"
@@ -24,10 +25,12 @@ import {
   readMyOrganization,
 } from "@/api/organizations"
 import {
+  favoriteV2Document,
   readV2Document,
   readV2DocumentFolders,
   readV2DocumentShares,
   replaceV2DocumentShares,
+  unfavoriteV2Document,
   updateV2Document,
   type V2DocumentDetailsSection,
   type V2DocumentFolderPublic,
@@ -540,6 +543,47 @@ function TaskforceDocumentDetail() {
     },
   })
 
+  const favoriteMutation = useMutation({
+    mutationFn: (next: boolean) =>
+      next
+        ? favoriteV2Document(documentId, { demo: isDemoMode })
+        : unfavoriteV2Document(documentId, { demo: isDemoMode }),
+    onMutate: async (next) => {
+      const documentKey = ["v2-document", documentId, { demo: isDemoMode }]
+      await queryClient.cancelQueries({ queryKey: documentKey })
+      const previous = queryClient.getQueryData<V2DocumentPublic>(documentKey)
+      if (previous) {
+        queryClient.setQueryData<V2DocumentPublic>(documentKey, {
+          ...previous,
+          is_favorite: next,
+        })
+      }
+      return { previous }
+    },
+    onError: (_error, _next, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          ["v2-document", documentId, { demo: isDemoMode }],
+          context.previous,
+        )
+      }
+      showErrorToast("Could not update favorite.")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["v2-document", documentId, { demo: isDemoMode }],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["v2-documents", { demo: isDemoMode }],
+      })
+    },
+  })
+
+  const toggleFavorite = () => {
+    if (!document || isDemoMode || favoriteMutation.isPending) return
+    favoriteMutation.mutate(!document.is_favorite)
+  }
+
   const shareMutation = useMutation({
     mutationFn: () =>
       replaceV2DocumentShares(documentId, {
@@ -899,6 +943,7 @@ function TaskforceDocumentDetail() {
           document={document}
           folders={foldersQuery.data?.data ?? []}
           canManageLibrary={canManageDocument}
+          canFavorite={!isDemoMode}
           organizationMembers={organizationQuery.data?.members ?? []}
           shares={sharesQuery.data?.data ?? document.shared_with ?? []}
           ownerId={document.owner_id}
@@ -912,6 +957,8 @@ function TaskforceDocumentDetail() {
           onMoveFolder={moveDocumentToFolder}
           isMovingFolder={updateMutation.isPending}
           onCreateFolder={() => setCreateFolderOpen(true)}
+          onToggleFavorite={toggleFavorite}
+          isTogglingFavorite={favoriteMutation.isPending}
         />
 
         <FolderCreateDialog
@@ -973,6 +1020,7 @@ function DocumentMetadata({
   document,
   folders,
   canManageLibrary,
+  canFavorite,
   organizationMembers,
   shares,
   ownerId,
@@ -986,10 +1034,13 @@ function DocumentMetadata({
   onMoveFolder,
   isMovingFolder,
   onCreateFolder,
+  onToggleFavorite,
+  isTogglingFavorite,
 }: {
   document: V2DocumentPublic
   folders: V2DocumentFolderPublic[]
   canManageLibrary: boolean
+  canFavorite: boolean
   organizationMembers: OrganizationMemberPublic[]
   shares: V2DocumentSharePublic[]
   ownerId: string
@@ -1003,71 +1054,75 @@ function DocumentMetadata({
   onMoveFolder: (folderId: string | null) => void
   isMovingFolder: boolean
   onCreateFolder: () => void
+  onToggleFavorite: () => void
+  isTogglingFavorite: boolean
 }) {
   const sharedCount = shares.length
+  const dateLabel = `Created ${formatDateOnly(document.created_at)} · Updated ${formatDateOnly(document.updated_at)}`
 
   return (
-    <dl className="mt-5 grid gap-3 border-y py-4 text-sm text-muted-foreground md:grid-cols-2 xl:grid-cols-3">
-      <div className="min-w-0">
-        <dt className="text-xs uppercase tracking-wide">Created</dt>
-        <dd className="mt-1 text-foreground">
-          {formatDateOnly(document.created_at)}
-        </dd>
-      </div>
-      <div className="min-w-0">
-        <dt className="text-xs uppercase tracking-wide">Updated</dt>
-        <dd className="mt-1 text-foreground">
-          {formatDateOnly(document.updated_at)}
-        </dd>
-      </div>
-      <div className="min-w-0">
-        <dt className="text-xs uppercase tracking-wide">Folder</dt>
-        <dd className="mt-1">
-          {canManageLibrary ? (
-            <FolderPickerDropdown
-              folders={folders}
-              currentFolderId={document.folder_id ?? null}
-              disabled={isMovingFolder}
-              onSelect={onMoveFolder}
-              onCreateFolder={onCreateFolder}
-              triggerLabel={document.folder_name ?? "Unfiled"}
-            />
-          ) : (
-            <span className="inline-flex min-w-0 items-center gap-1.5 text-foreground">
-              <Folder className="size-4 shrink-0 text-muted-foreground" />
-              <span className="truncate">
-                {document.folder_name ?? "Unfiled"}
-              </span>
-            </span>
+    <div className="mt-5 flex flex-wrap items-center gap-2 border-y py-3 text-sm text-muted-foreground">
+      <span className="whitespace-nowrap text-xs">{dateLabel}</span>
+
+      {canManageLibrary ? (
+        <FolderPickerDropdown
+          folders={folders}
+          currentFolderId={document.folder_id ?? null}
+          disabled={isMovingFolder}
+          onSelect={onMoveFolder}
+          onCreateFolder={onCreateFolder}
+          triggerLabel={document.folder_name ?? "Unfiled"}
+        />
+      ) : (
+        <span className="inline-flex min-w-0 items-center gap-1.5 text-foreground">
+          <Folder className="size-4 shrink-0 text-muted-foreground" />
+          <span className="truncate">{document.folder_name ?? "Unfiled"}</span>
+        </span>
+      )}
+
+      {canManageLibrary ? (
+        <DocumentAccessDropdown
+          open={accessOpen}
+          onOpenChange={onAccessOpenChange}
+          members={organizationMembers}
+          ownerId={ownerId}
+          shares={shares}
+          shareDraft={shareDraft}
+          setShareDraft={setShareDraft}
+          onSave={onSaveAccess}
+          isSaving={isSavingAccess}
+          isLoading={isLoadingAccess}
+        />
+      ) : (
+        <span className="inline-flex items-center gap-1.5 text-foreground">
+          <Share2 className="size-4 text-muted-foreground" />
+          {sharedCount > 0
+            ? `${sharedCount} member${sharedCount === 1 ? "" : "s"}`
+            : "Private"}
+        </span>
+      )}
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={!canFavorite || isTogglingFavorite}
+        aria-label={document.is_favorite ? "Remove favorite" : "Add favorite"}
+        aria-pressed={document.is_favorite}
+        onClick={onToggleFavorite}
+        data-testid="document-favorite"
+      >
+        <Star
+          className={cn(
+            "size-4",
+            document.is_favorite
+              ? "fill-yellow-400 text-yellow-500"
+              : "text-muted-foreground",
           )}
-        </dd>
-      </div>
-      <div className="min-w-0 md:col-span-2 xl:col-span-3">
-        <dt className="text-xs uppercase tracking-wide">Access</dt>
-        <dd className="mt-1">
-          {canManageLibrary ? (
-            <DocumentAccessDropdown
-              open={accessOpen}
-              onOpenChange={onAccessOpenChange}
-              members={organizationMembers}
-              ownerId={ownerId}
-              shares={shares}
-              shareDraft={shareDraft}
-              setShareDraft={setShareDraft}
-              onSave={onSaveAccess}
-              isSaving={isSavingAccess}
-              isLoading={isLoadingAccess}
-            />
-          ) : (
-            <span className="text-foreground">
-              {sharedCount > 0
-                ? `${sharedCount} member${sharedCount === 1 ? "" : "s"}`
-                : "Only owner"}
-            </span>
-          )}
-        </dd>
-      </div>
-    </dl>
+        />
+        {document.is_favorite ? "Favorited" : "Favorite"}
+      </Button>
+    </div>
   )
 }
 
@@ -1126,7 +1181,7 @@ function DocumentAccessDropdown({
           <Share2 className="size-4" />
           {persistedCount > 0
             ? `${persistedCount} member${persistedCount === 1 ? "" : "s"}`
-            : "Only owner"}
+            : "Private"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[360px] p-2">
