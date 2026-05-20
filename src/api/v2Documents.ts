@@ -71,6 +71,19 @@ export interface V2DocumentUpdate {
   details_markdown_sections?: V2DocumentDetailsSection[]
 }
 
+export interface V2DocumentCreate {
+  title: string
+  description?: string
+  human_summary?: string
+  ai_generated_summary?: string
+  collaborators?: string[]
+  folder_id?: string | null
+  visibility?: V2DocumentVisibility
+  main_body?: V2DocumentParagraph[]
+  details_file_name?: string
+  details_markdown_sections?: V2DocumentDetailsSection[]
+}
+
 export interface V2DocumentFolderPublic {
   id: string
   owner_id: string
@@ -260,5 +273,35 @@ export function updateV2Document(
       demo: options.demo || undefined,
     },
     body,
+  })
+}
+
+export function createV2Document(
+  body: V2DocumentCreate,
+  options: { demo?: boolean } = {},
+): CancelablePromise<V2DocumentPublic> {
+  return request(OpenAPI, {
+    method: "POST",
+    url: "/api/v1/v2/documents/",
+    query: {
+      demo: options.demo || undefined,
+    },
+    body,
+  })
+}
+
+export function deleteV2Document(
+  documentId: string,
+  options: { demo?: boolean } = {},
+): CancelablePromise<void> {
+  return request(OpenAPI, {
+    method: "DELETE",
+    url: "/api/v1/v2/documents/{document_id}",
+    path: {
+      document_id: documentId,
+    },
+    query: {
+      demo: options.demo || undefined,
+    },
   })
 }
