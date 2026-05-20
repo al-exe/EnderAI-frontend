@@ -9,8 +9,8 @@ import {
   BarChart3,
   BookOpenText,
   Component,
-  CreditCard,
   Home,
+  Rocket,
   Search,
   Shield,
 } from "lucide-react"
@@ -61,8 +61,17 @@ const taskforceItems: TaskforceNavItem[] = [
   { icon: Home, title: "Home", path: "/v2/home" },
   { icon: BookOpenText, title: "Library", path: "/v2/library" },
   { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
-  { icon: CreditCard, title: "Taskforce Pro", path: "/v2/pricing" },
 ]
+
+const upgradeItem: TaskforceNavItem = {
+  icon: Rocket,
+  title: "Upgrade",
+  path: "/v2/pricing",
+}
+
+function hasActiveSubscription(user: UserPublic): boolean {
+  return ["active", "trialing"].includes(user.stripe_subscription_status ?? "")
+}
 
 function TaskforceMark() {
   return (
@@ -82,9 +91,13 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
   const { isMobile, setOpenMobile } = useSidebar()
   const router = useRouterState()
   const currentPath = router.location.pathname
-  const items = currentUser.is_superuser
-    ? [...taskforceItems, { icon: Shield, title: "Admin", path: "/v2/admin" }]
-    : taskforceItems
+  const items = [
+    ...taskforceItems,
+    ...(!hasActiveSubscription(currentUser) ? [upgradeItem] : []),
+    ...(currentUser.is_superuser
+      ? [{ icon: Shield, title: "Admin", path: "/v2/admin" }]
+      : []),
+  ]
 
   const handleMenuClick = () => {
     if (isMobile) {
