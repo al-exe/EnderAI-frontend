@@ -875,23 +875,16 @@ function FolderDirectory({
   const unfiledDocuments = documentsByFolder.get("unfiled") ?? []
 
   return (
-    <div className="min-w-0 border bg-card text-card-foreground">
-      <button
-        type="button"
-        className={cn(
-          "flex h-10 w-full items-center gap-2 border-b px-3 text-left text-sm hover:bg-muted",
-          dragOverFolderId === "root" && "bg-muted/70",
-        )}
-        onDragOver={(event) => onFolderDragOver(event, "root")}
-        onDrop={onRootFolderDrop}
-        onDragLeave={onFolderDragLeave}
-      >
-        <Folder className="size-4 shrink-0 text-muted-foreground" />
-        <span className="min-w-0 flex-1 truncate font-medium">Top level</span>
-        <span className="shrink-0 text-xs text-muted-foreground">
-          {folderTree.length}
-        </span>
-      </button>
+    <section
+      aria-label="Library contents"
+      className={cn(
+        "min-w-0 border bg-card text-card-foreground",
+        dragOverFolderId === "root" && "bg-muted/40",
+      )}
+      onDragOver={(event) => onFolderDragOver(event, "root")}
+      onDrop={onRootFolderDrop}
+      onDragLeave={onFolderDragLeave}
+    >
       <DirectoryUnfiled
         label="Favorites"
         icon={<Star className="size-4 shrink-0 text-muted-foreground" />}
@@ -943,7 +936,7 @@ function FolderDirectory({
         onFolderDragLeave={onFolderDragLeave}
         onFolderDeleted={onFolderDeleted}
       />
-    </div>
+    </section>
   )
 }
 
@@ -1234,7 +1227,7 @@ function DirectoryFolder({
           {itemCount === 0 && (
             <div
               className="px-3 py-2 text-sm text-muted-foreground"
-              style={{ marginLeft: `${40 + depth * 24}px` }}
+              style={{ marginLeft: `${24 + depth * 24}px` }}
             >
               Empty folder
             </div>
@@ -1290,7 +1283,7 @@ function DirectoryDocumentRow({
           "grid min-h-10 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_160px_130px] items-center gap-3 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring max-md:grid-cols-[minmax(0,1fr)]",
           draggable && "cursor-grab active:cursor-grabbing",
         )}
-        style={{ marginLeft: `${40 + depth * 24}px` }}
+        style={{ marginLeft: `${24 + depth * 24}px` }}
       >
         <span className="flex min-w-0 items-center gap-2">
           <FileText className="size-4 shrink-0 text-muted-foreground" />
