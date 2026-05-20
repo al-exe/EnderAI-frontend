@@ -223,11 +223,13 @@ export function FolderCreateDialog({
 
 export function FolderActionsMenu({
   folder,
+  folders = [],
   demo,
   onDeleted,
   align = "end",
 }: {
   folder: V2DocumentFolderPublic
+  folders?: V2DocumentFolderPublic[]
   demo: boolean
   onDeleted?: (folderId: string) => void
   align?: "start" | "center" | "end"
@@ -236,6 +238,7 @@ export function FolderActionsMenu({
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [renameOpen, setRenameOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [subfolderOpen, setSubfolderOpen] = useState(false)
   const [name, setName] = useState(folder.name)
 
   const invalidateLibraryQueries = () => {
@@ -285,14 +288,26 @@ export function FolderActionsMenu({
             size="icon-sm"
             disabled={demo}
             aria-label={`Open options for ${folder.name}`}
+            className="cursor-pointer"
             onClick={(event) => event.stopPropagation()}
             onDragStart={(event) => event.preventDefault()}
           >
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={align} className="w-44">
+        <DropdownMenuContent align={align} className="w-48">
           <DropdownMenuItem
+            className="cursor-pointer"
+            onSelect={(event) => {
+              event.preventDefault()
+              setSubfolderOpen(true)
+            }}
+          >
+            <FolderPlus className="size-4" />
+            Create sub-folder
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
             onSelect={(event) => {
               event.preventDefault()
               setName(folder.name)
@@ -302,8 +317,10 @@ export function FolderActionsMenu({
             <Pencil className="size-4" />
             Rename
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
+            className="cursor-pointer"
             onSelect={(event) => {
               event.preventDefault()
               setDeleteOpen(true)
@@ -314,6 +331,14 @@ export function FolderActionsMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <FolderCreateDialog
+        open={subfolderOpen}
+        onOpenChange={setSubfolderOpen}
+        demo={demo}
+        folders={folders}
+        initialParentFolderId={folder.id}
+      />
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent className="sm:max-w-md">
@@ -453,7 +478,7 @@ export function FolderPickerDropdown({
           variant="outline"
           size="sm"
           disabled={disabled}
-          className="max-w-full justify-start"
+          className="max-w-full cursor-pointer justify-start"
         >
           <Folder className="size-4" />
           <span className="truncate">
@@ -478,7 +503,7 @@ export function FolderPickerDropdown({
               event.preventDefault()
               selectFolder(null)
             }}
-            className="gap-2"
+            className="cursor-pointer gap-2"
           >
             <Folder className="size-4" />
             <span className="min-w-0 flex-1 truncate">Unfiled</span>
@@ -491,7 +516,7 @@ export function FolderPickerDropdown({
                 event.preventDefault()
                 selectFolder(folder.id)
               }}
-              className="gap-2"
+              className="cursor-pointer gap-2"
             >
               <Folder className="size-4" />
               <span
@@ -519,7 +544,7 @@ export function FolderPickerDropdown({
           type="button"
           variant="ghost"
           size="sm"
-          className={cn("w-full justify-start")}
+          className={cn("w-full cursor-pointer justify-start")}
           onClick={() => {
             setOpen(false)
             setQuery("")
