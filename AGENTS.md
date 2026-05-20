@@ -51,6 +51,7 @@ For V2-enabled users:
 4. maintain both document views: a concise Summary view shown by default and a comprehensive Details view available on demand
 5. back every Summary claim with evidence anchors that navigate to the relevant Details section or another source document
 6. finish/finalize the document when the work is complete or stops
+7. on each begin/update/finish call, report per-turn token usage (model_id, input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens) from the most recent assistant turn so the Taskforce Metrics page can price it and attribute savings; when answering from Summary alone without expanding Details, also report `view_consulted: "summary"` to unlock the summary-only savings calculation
 
 For approved V1 fallback:
 1. call `enderai_begin_case`

@@ -95,6 +95,7 @@ function buildAgentInstructionSnippet({
       "- Use `enderai_update_document` as material progress develops (commands, files, links, decisions, changes, open questions, progress notes). Pass `details_sections` with stable `anchor_id`s to upsert specific Details sections, and `summary_points` for new Summary claims.",
       "- Back every Summary claim with `evidence_anchor_id` segments that point at a Details section. Do not edit `human_summary` unless the user explicitly asks.",
       "- Use `enderai_finish_document` when the work completes or pauses; it writes an Outcome section (status, outcome, validation, follow-ups) and clears the active document pointer.",
+      "- On each `enderai_begin_document` / `enderai_update_document` / `enderai_finish_document` call, pass `usage` with the model_id and per-turn token counts (input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens) from your most recent assistant turn so the Taskforce Metrics page can price it and attribute savings. When you answered from the document's Summary view without expanding Details, also set `view_consulted` to `\"summary\"` so the summary-only savings calculation fires.",
       "- Prefer Taskforce V2 document tools over the legacy V1 `enderai_begin_case` workflow and over raw `enderai_request` when both are available.",
       "- If Taskforce V2 document tools are unavailable, do not fabricate tool calls; tell the user they are unavailable and fall back only to tools the user explicitly approves.",
     ].join("\n")
