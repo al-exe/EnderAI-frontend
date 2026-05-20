@@ -3,6 +3,7 @@ import {
   createFileRoute,
   Link,
   Outlet,
+  useNavigate,
   useRouterState,
 } from "@tanstack/react-router"
 import {
@@ -15,13 +16,28 @@ import {
   FolderOpen,
   FolderPlus,
   Lock,
+  MoreHorizontal,
+  Plus,
   Share2,
   Star,
+  Trash2,
   Users,
 } from "lucide-react"
-import { type DragEvent, type ReactNode, useMemo, useState } from "react"
+import {
+  createContext,
+  type DragEvent,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import {
+  createV2Document,
+  deleteV2Document,
   favoriteV2Document,
   readV2DocumentFolders,
   readV2Documents,
@@ -38,8 +54,25 @@ import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
   FolderActionsMenu,
   FolderCreateDialog,
+  FolderPickerDropdown,
 } from "@/components/V2/Library/FolderControls"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -111,10 +144,29 @@ function isDescendantFolder(
   return false
 }
 
+const FILES_PAGE_SIZE = 24
+
+type DocumentDeleteHandlers = {
+  canDelete: boolean
+  onDelete: (document: V2DocumentPublic) => void
+}
+
+const DocumentDeleteContext = createContext<DocumentDeleteHandlers | null>(null)
+
+function useDocumentDelete(): DocumentDeleteHandlers {
+  return (
+    useContext(DocumentDeleteContext) ?? {
+      canDelete: false,
+      onDelete: () => {},
+    }
+  )
+}
+
 function TaskforceLibrary() {
   const { currentUser } = Route.useRouteContext()
   const { isDemoMode } = useDemoMode()
   const router = useRouterState()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [libraryView, setLibraryView] = useState<"files" | "folders">("files")
@@ -122,6 +174,9 @@ function TaskforceLibrary() {
     useState<OwnershipFilter>("owned")
   const [selectedFolderId, setSelectedFolderId] = useState("all")
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
+  const [createDocumentOpen, setCreateDocumentOpen] = useState(false)
+  const [deleteDocumentTarget, setDeleteDocumentTarget] =
+    useState<V2DocumentPublic | null>(null)
   const [openFolderIds, setOpenFolderIds] = useState<Set<string>>(
     () => new Set(["favorites", "unfiled"]),
   )
@@ -279,6 +334,71 @@ function TaskforceLibrary() {
       showErrorToast("Could not update favorite.")
     },
     onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: documentsQueryKey })
+    },
+  })
+
+  const createDocumentMutation = useMutation({
+    mutationFn: ({
+      title,
+      folderId,
+    }: {
+      title: string
+      folderId: string | null
+    }) =>
+      createV2Document(
+        {
+          title,
+          folder_id: folderId,
+        },
+        { demo: isDemoMode },
+      ),
+    onSuccess: (document) => {
+      queryClient.invalidateQueries({ queryKey: documentsQueryKey })
+      queryClient.invalidateQueries({ queryKey: foldersQueryKey })
+      setCreateDocumentOpen(false)
+      showSuccessToast("Document created.")
+      navigate({
+        to: "/v2/library/$documentId",
+        params: { documentId: document.id },
+      })
+    },
+    onError: () => {
+      showErrorToast("Could not create document.")
+    },
+  })
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: (documentId: string) =>
+      deleteV2Document(documentId, { demo: isDemoMode }),
+    onMutate: async (documentId) => {
+      await queryClient.cancelQueries({ queryKey: documentsQueryKey })
+      const previousDocuments =
+        queryClient.getQueryData<V2DocumentsPublic>(documentsQueryKey)
+      queryClient.setQueryData<V2DocumentsPublic>(
+        documentsQueryKey,
+        (current) => {
+          if (!current) return current
+          return {
+            ...current,
+            data: current.data.filter((document) => document.id !== documentId),
+            count: Math.max(0, current.count - 1),
+          }
+        },
+      )
+      return { previousDocuments }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousDocuments) {
+        queryClient.setQueryData(documentsQueryKey, context.previousDocuments)
+      }
+      showErrorToast("Could not delete document.")
+    },
+    onSuccess: () => {
+      showSuccessToast("Document deleted.")
+    },
+    onSettled: () => {
+      setDeleteDocumentTarget(null)
       queryClient.invalidateQueries({ queryKey: documentsQueryKey })
     },
   })
@@ -464,6 +584,11 @@ function TaskforceLibrary() {
     })
   }
 
+  const requestDeleteDocument = (document: V2DocumentPublic) => {
+    if (isDemoMode || deleteDocumentMutation.isPending) return
+    setDeleteDocumentTarget(document)
+  }
+
   const handleFolderDeleted = (folderId: string) => {
     if (selectedFolderId === folderId) {
       setSelectedFolderId("all")
@@ -471,155 +596,190 @@ function TaskforceLibrary() {
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
-      <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 py-3 backdrop-blur lg:flex-row lg:items-end lg:justify-between">
-        <h1 className="text-2xl font-semibold">Library</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <div
-            role="tablist"
-            aria-label="Document ownership"
-            className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-          >
-            <LibraryViewToggle
-              label="Owned by you"
-              active={ownershipFilter === "owned"}
-              onClick={() => {
-                setOwnershipFilter("owned")
-                setSelectedFolderId("all")
-              }}
-            />
-            <LibraryViewToggle
-              label="Shared with you"
-              active={ownershipFilter === "shared"}
-              onClick={() => {
-                setOwnershipFilter("shared")
-                setSelectedFolderId("all")
-              }}
-            />
-          </div>
-          <div
-            role="tablist"
-            aria-label="Library view"
-            className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-          >
-            <LibraryViewToggle
-              label="Files"
-              active={libraryView === "files"}
-              onClick={() => setLibraryView("files")}
-            />
-            <LibraryViewToggle
-              label="Folders"
-              active={libraryView === "folders"}
-              onClick={() => setLibraryView("folders")}
-            />
-          </div>
-          {!isDemoMode && (
-            <Button
-              type="button"
-              size="sm"
-              className="w-fit"
-              onClick={() => setCreateFolderOpen(true)}
+    <DocumentDeleteContext.Provider
+      value={{
+        canDelete:
+          !isDemoMode &&
+          !deleteDocumentMutation.isPending &&
+          !moveDocumentMutation.isPending,
+        onDelete: requestDeleteDocument,
+      }}
+    >
+      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
+        <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 py-3 backdrop-blur lg:flex-row lg:items-end lg:justify-between">
+          <h1 className="text-2xl font-semibold">Library</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <div
+              role="tablist"
+              aria-label="Document ownership"
+              className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
             >
-              <FolderPlus className="size-4" />
-              Create folder
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <FolderCreateDialog
-        open={createFolderOpen}
-        onOpenChange={setCreateFolderOpen}
-        demo={isDemoMode}
-        folders={folders}
-        onCreated={(folder) => setSelectedFolderId(folder.id)}
-      />
-
-      {isLoading && (
-        <div className="border bg-card p-6 text-sm text-muted-foreground">
-          Loading documents…
-        </div>
-      )}
-
-      {isEmpty && (
-        <div className="border bg-card p-6 text-sm text-muted-foreground">
-          No documents yet.
-        </div>
-      )}
-
-      {!isLoading && documents.length > 0 && libraryView === "files" && (
-        <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
-          <FolderNav
-            folderTree={folderTree}
-            selectedFolderId={selectedFolderId}
-            setSelectedFolderId={setSelectedFolderId}
-            allCount={documents.length}
-            favoritesCount={favoriteDocuments.length}
-            unfiledCount={folderCounts.unfiled}
-            folderCounts={folderCounts.counts}
-            loading={foldersQuery.isLoading}
-            currentUserId={currentUser.id}
-            demo={isDemoMode}
-            onFolderDeleted={handleFolderDeleted}
-          />
-          <div className="min-w-0">
-            {isFolderEmpty && (
-              <div className="border bg-card p-6 text-sm text-muted-foreground">
-                No documents in this folder.
-              </div>
-            )}
-            {!isFolderEmpty && (
-              <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-                {visibleDocuments.map((document) => (
-                  <DocumentCard
-                    key={document.id}
-                    document={document}
-                    canFavorite={!isDemoMode && !favoriteMutation.isPending}
-                    onToggleFavorite={toggleFavorite}
-                  />
-                ))}
-              </div>
+              <LibraryViewToggle
+                label="Owned by you"
+                active={ownershipFilter === "owned"}
+                onClick={() => {
+                  setOwnershipFilter("owned")
+                  setSelectedFolderId("all")
+                }}
+              />
+              <LibraryViewToggle
+                label="Shared with you"
+                active={ownershipFilter === "shared"}
+                onClick={() => {
+                  setOwnershipFilter("shared")
+                  setSelectedFolderId("all")
+                }}
+              />
+            </div>
+            <div
+              role="tablist"
+              aria-label="Library view"
+              className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+            >
+              <LibraryViewToggle
+                label="Files"
+                active={libraryView === "files"}
+                onClick={() => setLibraryView("files")}
+              />
+              <LibraryViewToggle
+                label="Folders"
+                active={libraryView === "folders"}
+                onClick={() => setLibraryView("folders")}
+              />
+            </div>
+            {!isDemoMode && (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => setCreateDocumentOpen(true)}
+                >
+                  <Plus className="size-4" />
+                  New document
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="w-fit"
+                  onClick={() => setCreateFolderOpen(true)}
+                >
+                  <FolderPlus className="size-4" />
+                  Create folder
+                </Button>
+              </>
             )}
           </div>
         </div>
-      )}
 
-      {!isLoading &&
-        (documents.length > 0 || folders.length > 0) &&
-        libraryView === "folders" && (
-          <FolderDirectory
-            folderTree={folderTree}
-            documentsByFolder={documentsByFolder}
-            openFolderIds={openFolderIds}
-            dragOverFolderId={dragOverFolderId}
-            canMoveItems={canMutateLibrary}
-            canFavorite={!isDemoMode && !favoriteMutation.isPending}
-            currentUserId={currentUser.id}
-            demo={isDemoMode}
-            onToggleFolder={toggleFolderOpen}
-            onFolderDragStart={(event, folder) => {
-              event.stopPropagation()
-              event.dataTransfer.effectAllowed = "move"
-              event.dataTransfer.setData("application/x-v2-folder", folder.id)
-            }}
-            onDocumentDragStart={(event, document) => {
-              event.dataTransfer.effectAllowed = "move"
-              event.dataTransfer.setData(
-                "application/x-v2-document",
-                document.id,
-              )
-            }}
-            onDocumentDragEnd={() => setDragOverFolderId(null)}
-            onToggleFavorite={toggleFavorite}
-            onFolderDragOver={handleFolderDragOver}
-            onFolderDrop={handleFolderDrop}
-            onUnfiledDrop={handleUnfiledDrop}
-            onRootFolderDrop={handleRootFolderDrop}
-            onFolderDragLeave={() => setDragOverFolderId(null)}
-            onFolderDeleted={handleFolderDeleted}
-          />
+        <FolderCreateDialog
+          open={createFolderOpen}
+          onOpenChange={setCreateFolderOpen}
+          demo={isDemoMode}
+          folders={folders}
+          onCreated={(folder) => setSelectedFolderId(folder.id)}
+        />
+
+        <CreateDocumentDialog
+          open={createDocumentOpen}
+          onOpenChange={setCreateDocumentOpen}
+          folders={folders}
+          defaultFolderId={
+            selectedFolderId !== "all" &&
+            selectedFolderId !== "favorites" &&
+            selectedFolderId !== "unfiled"
+              ? selectedFolderId
+              : null
+          }
+          isCreating={createDocumentMutation.isPending}
+          onSubmit={(values) => createDocumentMutation.mutate(values)}
+        />
+
+        <DeleteDocumentDialog
+          document={deleteDocumentTarget}
+          isDeleting={deleteDocumentMutation.isPending}
+          onCancel={() => setDeleteDocumentTarget(null)}
+          onConfirm={(document) => deleteDocumentMutation.mutate(document.id)}
+        />
+
+        {isLoading && <LibraryLoadingSkeleton view={libraryView} />}
+
+        {isEmpty && (
+          <div className="border bg-card p-6 text-sm text-muted-foreground">
+            No documents yet.
+          </div>
         )}
-    </section>
+
+        {!isLoading && documents.length > 0 && libraryView === "files" && (
+          <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
+            <FolderNav
+              folderTree={folderTree}
+              selectedFolderId={selectedFolderId}
+              setSelectedFolderId={setSelectedFolderId}
+              allCount={documents.length}
+              favoritesCount={favoriteDocuments.length}
+              unfiledCount={folderCounts.unfiled}
+              folderCounts={folderCounts.counts}
+              loading={foldersQuery.isLoading}
+              currentUserId={currentUser.id}
+              demo={isDemoMode}
+              onFolderDeleted={handleFolderDeleted}
+            />
+            <div className="min-w-0">
+              {isFolderEmpty && (
+                <div className="border bg-card p-6 text-sm text-muted-foreground">
+                  No documents in this folder.
+                </div>
+              )}
+              {!isFolderEmpty && (
+                <InfiniteDocumentGrid
+                  documents={visibleDocuments}
+                  canFavorite={!isDemoMode && !favoriteMutation.isPending}
+                  onToggleFavorite={toggleFavorite}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {!isLoading &&
+          (documents.length > 0 || folders.length > 0) &&
+          libraryView === "folders" && (
+            <FolderDirectory
+              folderTree={folderTree}
+              documentsByFolder={documentsByFolder}
+              openFolderIds={openFolderIds}
+              dragOverFolderId={dragOverFolderId}
+              canMoveItems={canMutateLibrary}
+              canFavorite={!isDemoMode && !favoriteMutation.isPending}
+              currentUserId={currentUser.id}
+              demo={isDemoMode}
+              onToggleFolder={toggleFolderOpen}
+              onFolderDragStart={(event, folder) => {
+                event.stopPropagation()
+                event.dataTransfer.effectAllowed = "move"
+                event.dataTransfer.setData("application/x-v2-folder", folder.id)
+              }}
+              onDocumentDragStart={(event, document) => {
+                event.dataTransfer.effectAllowed = "move"
+                event.dataTransfer.setData(
+                  "application/x-v2-document",
+                  document.id,
+                )
+              }}
+              onDocumentDragEnd={() => setDragOverFolderId(null)}
+              onToggleFavorite={toggleFavorite}
+              onFolderDragOver={handleFolderDragOver}
+              onFolderDrop={handleFolderDrop}
+              onUnfiledDrop={handleUnfiledDrop}
+              onRootFolderDrop={handleRootFolderDrop}
+              onFolderDragLeave={() => setDragOverFolderId(null)}
+              onFolderDeleted={handleFolderDeleted}
+            />
+          )}
+      </section>
+    </DocumentDeleteContext.Provider>
   )
 }
 
@@ -1271,6 +1431,7 @@ function DirectoryDocumentRow({
   onDragEnd: () => void
   onToggleFavorite: (document: V2DocumentPublic) => void
 }) {
+  const { canDelete, onDelete } = useDocumentDelete()
   return (
     <div className="flex items-center hover:bg-muted">
       <Link
@@ -1301,6 +1462,9 @@ function DirectoryDocumentRow({
         disabled={!canFavorite}
         onToggle={onToggleFavorite}
       />
+      {canDelete && (
+        <DocumentActionsMenu document={document} onDelete={onDelete} />
+      )}
     </div>
   )
 }
@@ -1348,6 +1512,7 @@ function DocumentCard({
   canFavorite: boolean
   onToggleFavorite: (document: V2DocumentPublic) => void
 }) {
+  const { canDelete, onDelete } = useDocumentDelete()
   const sharedCount = document.shared_with?.length ?? 0
   return (
     <Link
@@ -1363,6 +1528,9 @@ function DocumentCard({
             disabled={!canFavorite}
             onToggle={onToggleFavorite}
           />
+          {canDelete && (
+            <DocumentActionsMenu document={document} onDelete={onDelete} />
+          )}
           <Badge variant="outline">
             {document.visibility === "organization" ? (
               <Building2 className="size-3" />
@@ -1412,5 +1580,292 @@ function DocumentCard({
         </div>
       </dl>
     </Link>
+  )
+}
+
+function DocumentActionsMenu({
+  document,
+  onDelete,
+}: {
+  document: V2DocumentPublic
+  onDelete: (document: V2DocumentPublic) => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`Open options for ${document.title}`}
+          className="cursor-pointer"
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+          onDragStart={(event) => event.preventDefault()}
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem
+          variant="destructive"
+          className="cursor-pointer"
+          onSelect={(event) => {
+            event.preventDefault()
+            onDelete(document)
+          }}
+        >
+          <Trash2 className="size-4" />
+          Delete document
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function CreateDocumentDialog({
+  open,
+  onOpenChange,
+  folders,
+  defaultFolderId,
+  isCreating,
+  onSubmit,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  folders: V2DocumentFolderPublic[]
+  defaultFolderId: string | null
+  isCreating: boolean
+  onSubmit: (values: { title: string; folderId: string | null }) => void
+}) {
+  const [title, setTitle] = useState("")
+  const [folderId, setFolderId] = useState<string | null>(defaultFolderId)
+
+  useEffect(() => {
+    if (open) {
+      setTitle("")
+      setFolderId(defaultFolderId)
+    }
+  }, [open, defaultFolderId])
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
+    const trimmed = title.trim()
+    if (!trimmed || isCreating) return
+    onSubmit({ title: trimmed, folderId })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>New document</DialogTitle>
+          <DialogDescription>
+            Start a blank document in your library. Open it to write the
+            content.
+          </DialogDescription>
+        </DialogHeader>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="new-document-title">
+              Title
+            </label>
+            <Input
+              id="new-document-title"
+              autoFocus
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Untitled document"
+            />
+          </div>
+          <div className="space-y-2">
+            <span className="text-sm font-medium">Folder</span>
+            <FolderPickerDropdown
+              folders={folders}
+              currentFolderId={folderId}
+              onSelect={setFolderId}
+              onCreateFolder={() => {}}
+              triggerLabel={
+                folderId
+                  ? (folders.find((folder) => folder.id === folderId)?.name ??
+                    "Unfiled")
+                  : "Unfiled"
+              }
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={isCreating}
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!title.trim() || isCreating}>
+              <Plus className="size-4" />
+              {isCreating ? "Creating" : "Create"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function DeleteDocumentDialog({
+  document,
+  isDeleting,
+  onCancel,
+  onConfirm,
+}: {
+  document: V2DocumentPublic | null
+  isDeleting: boolean
+  onCancel: () => void
+  onConfirm: (document: V2DocumentPublic) => void
+}) {
+  return (
+    <Dialog
+      open={document !== null}
+      onOpenChange={(next) => {
+        if (!next) onCancel()
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Delete document?</DialogTitle>
+          <DialogDescription>
+            This permanently removes “{document?.title}” from your library.
+            Anyone it was shared with will lose access.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={isDeleting}
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={!document || isDeleting}
+            onClick={() => document && onConfirm(document)}
+          >
+            {isDeleting ? "Deleting" : "Delete document"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function LibraryLoadingSkeleton({ view }: { view: "files" | "folders" }) {
+  if (view === "folders") {
+    return (
+      <div className="space-y-px border bg-card p-2">
+        {Array.from({ length: 6 }).map((_, idx) => (
+          <Skeleton key={idx} className="h-10 w-full rounded-sm" />
+        ))}
+      </div>
+    )
+  }
+  return (
+    <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="space-y-2 border bg-card p-3">
+        {Array.from({ length: 5 }).map((_, idx) => (
+          <Skeleton key={idx} className="h-8 w-full rounded-sm" />
+        ))}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, idx) => (
+          <div
+            key={idx}
+            className="flex min-h-[320px] flex-col gap-4 border bg-card p-5"
+          >
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="mt-auto h-3 w-1/2" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function InfiniteDocumentGrid({
+  documents,
+  canFavorite,
+  onToggleFavorite,
+}: {
+  documents: V2DocumentPublic[]
+  canFavorite: boolean
+  onToggleFavorite: (document: V2DocumentPublic) => void
+}) {
+  const [renderedCount, setRenderedCount] = useState(FILES_PAGE_SIZE)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    setRenderedCount((current) =>
+      Math.min(
+        Math.max(current, FILES_PAGE_SIZE),
+        documents.length || FILES_PAGE_SIZE,
+      ),
+    )
+  }, [documents.length])
+
+  const loadMore = useCallback(() => {
+    setRenderedCount((current) =>
+      Math.min(current + FILES_PAGE_SIZE, documents.length),
+    )
+  }, [documents.length])
+
+  useEffect(() => {
+    const node = sentinelRef.current
+    if (!node) return
+    if (renderedCount >= documents.length) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            loadMore()
+          }
+        }
+      },
+      { rootMargin: "200px" },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [loadMore, renderedCount, documents.length])
+
+  const visible = documents.slice(0, renderedCount)
+  const remaining = documents.length - visible.length
+
+  return (
+    <div>
+      <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+        {visible.map((document) => (
+          <DocumentCard
+            key={document.id}
+            document={document}
+            canFavorite={canFavorite}
+            onToggleFavorite={onToggleFavorite}
+          />
+        ))}
+      </div>
+      {remaining > 0 && (
+        <div
+          ref={sentinelRef}
+          className="mt-6 flex items-center justify-center py-4 text-xs text-muted-foreground"
+        >
+          Loading {Math.min(FILES_PAGE_SIZE, remaining)} more…
+        </div>
+      )}
+    </div>
   )
 }
