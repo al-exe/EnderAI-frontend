@@ -14,8 +14,8 @@ export function SearchUpsell() {
       </CardHeader>
       <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
         <p>
-          Ask anything about the work you've captured in Taskforce and get
-          cited answers grounded in your own documents. Available on Pro
+          Ask anything about the work you've captured in Taskforce and get cited
+          answers grounded in your own documents. Available on Pro
           (bring-your-own-key) and Max (we cover the LLM cost).
         </p>
         <div>

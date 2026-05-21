@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
 
+import { mockV2Documents } from "./fixtures/v2-documents"
+
 const currentUser = {
   id: "user-1",
   email: "alex@example.com",
@@ -7,6 +9,8 @@ const currentUser = {
   is_superuser: true,
   full_name: "Alex Lee",
   created_at: "2026-03-24T00:00:00Z",
+  v2: false,
+  subscription_tier: "free",
 }
 
 test.use({
@@ -16,115 +20,60 @@ test.use({
   },
 })
 
-async function mockAuthenticatedHome(page: Page) {
+async function mockAuthenticatedTaskforce(page: Page) {
   await page.addInitScript(() => {
     window.localStorage.setItem("access_token", "test-token")
   })
 
-  await page.route("**/api/v1/users/me", async (route) => {
-    await route.fulfill({ json: currentUser })
+  await page.route("**/api/v1/users/**", async (route) => {
+    const url = new URL(route.request().url())
+
+    if (url.pathname === "/api/v1/users/me") {
+      await route.fulfill({ json: currentUser })
+      return
+    }
+
+    if (url.pathname === "/api/v1/users/") {
+      await route.fulfill({ json: { data: [currentUser], count: 1 } })
+      return
+    }
+
+    await route.fulfill({ status: 404, json: { detail: "Not found" } })
   })
 
-  await page.route("**/api/v1/agent-credentials/", async (route) => {
-    await route.fulfill({ json: { data: [], count: 0 } })
-  })
+  await mockV2Documents(page)
 }
 
-test("Home page explains EnderAI and the domain memory model", async ({
-  page,
-}) => {
-  await mockAuthenticatedHome(page)
-  await page.goto("/home")
-
-  await expect(
-    page.getByText(
-      "EnderAI turns messy team history into context agents can actually use.",
-    ),
-  ).toBeVisible()
-  await expect(page.getByText("Welcome back, Alex")).toBeVisible()
-  await expect(
-    page.getByText(
-      "Work leaves useful traces in tickets, pull requests, docs, Slack threads, incidents, support notes, commands, and one-off decisions.",
-    ),
-  ).toBeVisible()
-  await expect(
-    page.getByText("The missing part is the local story"),
-  ).toBeVisible()
-  await expect(
-    page.getByText("Keep the useful parts of past work"),
-  ).toBeVisible()
-  await expect(
-    page.getByText(
-      "EnderAI is organized around two user-facing objects. A third system object, the ContextPack, powers agent hydration behind the scenes.",
-    ),
-  ).toHaveCount(0)
-  await expect(page.getByText("Home docs")).toHaveCount(0)
-  await expect(
-    page.getByText(
-      "Add this guidance to your agent instructions so meaningful work is captured consistently.",
-    ),
-  ).toHaveCount(0)
-  await expect(page.getByText("Topics").first()).toBeVisible()
-  await expect(page.getByText("Cases").first()).toBeVisible()
-  await expect(page.getByText("Context Packs", { exact: true })).toBeVisible()
-  await expect(page.getByText("ContextPacks")).toHaveCount(0)
-  await expect(
-    page.getByText(
-      "Context Packs are the briefings EnderAI assembles before work starts.",
-    ),
-  ).toBeVisible()
-  await expect(
-    page.getByText(
-      "Give agents enough background to stop guessing from scratch.",
-    ),
-  ).toBeVisible()
-  await expect(page.getByText("Search and demo mode")).toHaveCount(0)
-  await expect(page.getByText("Browse Topics")).toBeVisible()
-  await expect(page.getByText("Review Cases")).toBeVisible()
-  await expect(
-    page.getByText("Example: sensitive data correction"),
-  ).toBeVisible()
-  await expect(
-    page.getByText("Correct an incorrectly imported sensitive customer field"),
-  ).toBeVisible()
-  await expect(page.getByText("Connect agent")).toBeVisible()
-  await expect(page.getByText("enderai_begin_case").first()).toBeVisible()
-})
-
-test("Landing page is public and points inaccessible actions to auth", async ({
+test("Landing page presents Taskforce V2 as the public product", async ({
   page,
 }) => {
   await page.goto("/")
 
+  await expect(page.getByTestId("taskforce-landing")).toBeVisible()
   await expect(
-    page.getByText(
-      "EnderAI turns messy team history into context agents can actually use.",
-    ),
+    page.getByRole("heading", { name: "Taskforce", exact: true }),
   ).toBeVisible()
-  await expect(page.getByText("Try the demo").first()).toBeVisible()
-  await expect(page.getByText("See how it works")).toBeVisible()
+  await expect(page.getByText("AI work memory for builders")).toBeVisible()
+  await expect(page.getByText("Library").first()).toBeVisible()
+  await expect(page.getByText("Agents").first()).toBeVisible()
+  await expect(page.getByText("Metrics").first()).toBeVisible()
   await expect(
     page.getByRole("link", { name: "Log in", exact: true }),
   ).toBeVisible()
   await expect(
     page.getByRole("link", { name: "Sign up", exact: true }),
   ).toBeVisible()
-  await expect(page.getByText("Welcome back, Alex")).toHaveCount(0)
-  await expect(page.getByText("Log in to browse Topics")).toBeVisible()
-  await expect(page.getByText("Log in to review Cases")).toBeVisible()
+  await expect(page.getByText("Browse Topics")).toHaveCount(0)
+  await expect(page.getByText("Review Cases")).toHaveCount(0)
 })
 
-test("Connect agent CTA opens the settings tab directly", async ({ page }) => {
-  await mockAuthenticatedHome(page)
-  await page.goto("/home")
+test("Signed-in root route opens Taskforce Library", async ({ page }) => {
+  await mockAuthenticatedTaskforce(page)
 
-  await page.getByTestId("home-connect-agent-link").click()
+  await page.goto("/")
 
-  await expect(page).toHaveURL(/\/settings\?tab=connect-agent$/)
-  await expect(
-    page.getByRole("tab", { name: "Connect agent" }),
-  ).toHaveAttribute("aria-selected", "true")
-  await expect(
-    page.getByText("Token and config snippets for local MCP testing."),
-  ).toBeVisible()
+  await expect(page).toHaveURL(/\/v2\/library$/)
+  await expect(page.getByRole("heading", { name: "Library" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Topics" })).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "Cases" })).toHaveCount(0)
 })

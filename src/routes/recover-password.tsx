@@ -40,7 +40,7 @@ export const Route = createFileRoute("/recover-password")({
   beforeLoad: async () => {
     if (isLoggedIn()) {
       throw redirect({
-        to: "/home",
+        to: "/v2/library",
       })
     }
   },

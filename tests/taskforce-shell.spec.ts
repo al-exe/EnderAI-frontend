@@ -42,39 +42,35 @@ async function mockTaskforceAuth(page: Page) {
   })
 }
 
-test("Taskforce v2 sidebar includes collapse and appearance controls", async ({
+test("Taskforce v2 sidebar includes collapse and document search controls", async ({
   page,
 }) => {
   await mockTaskforceAuth(page)
   await mockV2Documents(page)
 
-  await page.goto("/v2/home")
+  await page.goto("/v2/library")
 
   const collapseToggle = page.getByTestId("sidebar-collapse-toggle")
-  const appearanceButton = page.getByTestId("theme-button")
   const documentLookup = page.getByTestId("v2-document-lookup-input")
 
   await expect(collapseToggle).toBeVisible()
-  await expect(appearanceButton).toBeVisible()
   await expect(documentLookup).toBeVisible()
   await expect(documentLookup).toHaveAttribute(
     "placeholder",
     "Search documents",
   )
   await expect(page.getByText("Experimental workspace")).toHaveCount(0)
+  await expect(page.getByTestId("v2-mode-switch")).toHaveCount(0)
 
   await collapseToggle.click()
   await expect(collapseToggle).toBeVisible()
-
-  await appearanceButton.click()
-  await expect(page.getByTestId("dark-mode")).toBeVisible()
 })
 
 test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {
   await mockTaskforceAuth(page)
   await mockV2Documents(page)
 
-  await page.goto("/v2/home")
+  await page.goto("/v2/library")
   await page.getByRole("link", { name: "Admin" }).click()
 
   await expect(page).toHaveURL(/\/v2\/admin$/)
@@ -91,7 +87,7 @@ test("Community Upgrade link opens membership tiers with current and selected in
   await mockTaskforceAuth(page)
   await mockV2Documents(page)
 
-  await page.goto("/v2/home")
+  await page.goto("/v2/library")
   await page.getByRole("link", { name: "Upgrade" }).click()
 
   await expect(page).toHaveURL(/\/v2\/pricing$/)
@@ -130,14 +126,14 @@ test("Community Upgrade link opens membership tiers with current and selected in
   await expect.poll(() => checkoutBody).toEqual({ tier: "max" })
 })
 
-test("Taskforce v2 wordmark links to v2 home", async ({ page }) => {
+test("Taskforce v2 wordmark links to Taskforce Library", async ({ page }) => {
   await mockTaskforceAuth(page)
   await mockV2Documents(page)
 
   await page.goto("/v2/library")
   await page.getByRole("link", { name: "Taskforce" }).click()
 
-  await expect(page).toHaveURL(/\/v2\/home$/)
+  await expect(page).toHaveURL(/\/v2\/library$/)
 })
 
 test("Taskforce v2 document search filters demo documents and opens results", async ({
@@ -146,7 +142,7 @@ test("Taskforce v2 document search filters demo documents and opens results", as
   await mockTaskforceAuth(page)
   await mockV2Documents(page)
 
-  await page.goto("/v2/home")
+  await page.goto("/v2/library")
 
   const search = page.getByTestId("v2-document-lookup-input")
   await expect(search).toBeVisible()
@@ -162,13 +158,14 @@ test("Taskforce v2 document search filters demo documents and opens results", as
   await search.fill("")
   await page.getByTestId("demo-mode-toggle").click()
   await search.fill("bridge")
+  const lookupResults = page.getByTestId("v2-document-lookup-results")
   await expect(
-    page
+    lookupResults
       .getByText("Latest Stale Network Bridge Issue", { exact: true })
       .first(),
   ).toBeVisible()
   await expect(
-    page.getByText("Hosted MCP Credential Setup Refresh"),
+    lookupResults.getByText("Hosted MCP Credential Setup Refresh"),
   ).toHaveCount(0)
 
   // Unrelated query produces an empty-state message.
@@ -258,8 +255,9 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-state",
     "inactive",
   )
-  await expect(page.getByText("Overview")).toBeVisible()
-  await expect(page.getByText("Report")).toBeVisible()
+  await expect(
+    page.getByText("XYZ Corp users hit stale bridge routing"),
+  ).toBeVisible()
   await expect(page.getByText("Evidence-backed claims")).toHaveCount(0)
   await expect(page.getByText("Affected Users And Symptoms")).not.toBeVisible()
 
@@ -300,13 +298,14 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-state",
     "active",
   )
-  await expect(page.getByText("Overview")).toBeVisible()
+  await expect(
+    page.getByText("XYZ Corp users hit stale bridge routing"),
+  ).toBeVisible()
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).toBeVisible()
   await expect(page.getByText("Created May 10, 2026")).toBeVisible()
   await expect(page.getByText("Updated May 12, 2026")).toBeVisible()
-  await expect(page.getByText("Alex Lee, Nia Patel")).toBeVisible()
 
   await page.getByRole("tab", { name: "Summary" }).click()
   await page.getByTestId("human-evidence-affected-users").click()
@@ -324,7 +323,9 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-state",
     "active",
   )
-  await expect(page.getByText("Overview")).toBeVisible()
+  await expect(
+    page.getByText("XYZ Corp users hit stale bridge routing"),
+  ).toBeVisible()
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).toBeVisible()
@@ -351,7 +352,9 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-state",
     "inactive",
   )
-  await expect(page.getByText("Overview")).toBeVisible()
+  await expect(
+    page.getByText("XYZ Corp users hit stale bridge routing"),
+  ).toBeVisible()
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).not.toBeVisible()
@@ -403,7 +406,7 @@ test("Taskforce v2 document save uses document scope instead of sidebar demo mod
     await route.fulfill({ json: { data: [], count: 0 } })
   })
 
-  await page.goto("/v2/home")
+  await page.goto("/v2/library")
   await page.getByTestId("demo-mode-toggle").click()
   await page.goto(`/v2/library/${liveDocument.id}`)
 

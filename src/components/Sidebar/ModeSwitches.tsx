@@ -1,12 +1,7 @@
-import { useNavigate } from "@tanstack/react-router"
-import { Component, FlaskConical } from "lucide-react"
+import { FlaskConical } from "lucide-react"
 
 import { useDemoMode } from "@/components/demo-mode-provider"
-import {
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
+import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
 export function DemoModeToggle() {
@@ -46,58 +41,6 @@ export function DemoModeToggle() {
             className={cn(
               "h-[15px] w-[15px] rounded-full bg-sidebar-foreground/50 shadow-sm transition-transform",
               isDemoMode && "translate-x-[21px] bg-white text-violet-700",
-            )}
-          />
-        </div>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-}
-
-type V2ModeSwitchProps = {
-  active?: boolean
-  enabled: boolean
-}
-
-export function V2ModeSwitch({ active = false, enabled }: V2ModeSwitchProps) {
-  const navigate = useNavigate()
-  const { isMobile, setOpenMobile } = useSidebar()
-
-  if (!enabled) return null
-
-  const handleSwitchMode = async () => {
-    if (isMobile) {
-      setOpenMobile(false)
-    }
-
-    await navigate({ to: active ? "/home" : "/v2/library" })
-  }
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        tooltip={active ? "Return to current app" : "Open Taskforce"}
-        data-testid="v2-mode-switch"
-        role="switch"
-        aria-checked={active}
-        isActive={active}
-        onClick={handleSwitchMode}
-      >
-        <Component className="size-[18px] text-muted-foreground transition-colors" />
-        <span>Taskforce</span>
-        <div
-          aria-hidden="true"
-          data-testid="v2-mode-switch-track"
-          className={cn(
-            "ml-auto hidden h-6 w-11 items-center rounded-full border border-sidebar-border/70 bg-sidebar-accent/60 px-[3px] transition-colors group-data-[collapsible=icon]:hidden md:flex",
-            active && "border-sidebar-ring/30 bg-sidebar-primary/20",
-          )}
-        >
-          <div
-            data-testid="v2-mode-switch-thumb"
-            className={cn(
-              "h-[15px] w-[15px] rounded-full bg-sidebar-foreground/50 shadow-sm transition-transform",
-              active && "translate-x-[21px] bg-sidebar-primary",
             )}
           />
         </div>

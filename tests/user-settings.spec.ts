@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { firstSuperuser, firstSuperuserPassword } from "./config.ts"
+import { mockV2Documents } from "./fixtures/v2-documents"
 import { createUser } from "./utils/privateApi.ts"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser, logOutUser } from "./utils/user"
@@ -13,8 +14,12 @@ const tabs = [
   "Danger zone",
 ]
 
+test.beforeEach(async ({ page }) => {
+  await mockV2Documents(page)
+})
+
 test("My profile tab is active by default", async ({ page }) => {
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
   await expect(page.getByRole("tab", { name: "My profile" })).toHaveAttribute(
     "aria-selected",
     "true",
@@ -22,7 +27,7 @@ test("My profile tab is active by default", async ({ page }) => {
 })
 
 test("All tabs are visible", async ({ page }) => {
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
   for (const tab of tabs) {
     await expect(page.getByRole("tab", { name: tab })).toBeVisible()
   }
@@ -202,7 +207,7 @@ test.describe("Organization", () => {
       },
     )
 
-    await page.goto("/settings?tab=organization")
+    await page.goto("/v2/settings?tab=organization")
 
     await expect(
       page
@@ -282,7 +287,7 @@ test.describe("Billing", () => {
       })
     })
 
-    await page.goto("/settings?tab=billing")
+    await page.goto("/v2/settings?tab=billing")
 
     await expect(
       page.locator('[data-slot="card-title"]').filter({ hasText: "Billing" }),
@@ -309,7 +314,7 @@ test.describe("Edit user profile", () => {
 
   test.beforeEach(async ({ page }) => {
     await logInUser(page, email, password)
-    await page.goto("/settings")
+    await page.goto("/v2/settings")
     await page.getByRole("tab", { name: "My profile" }).click()
   })
 
@@ -347,7 +352,7 @@ test.describe("Edit user email", () => {
 
     await createUser({ email, password })
     await logInUser(page, email, password)
-    await page.goto("/settings")
+    await page.goto("/v2/settings")
     await page.getByRole("tab", { name: "My profile" }).click()
 
     await page.getByRole("button", { name: "Edit" }).click()
@@ -370,7 +375,7 @@ test.describe("Cancel edit actions", () => {
     const user = await createUser({ email, password })
 
     await logInUser(page, email, password)
-    await page.goto("/settings")
+    await page.goto("/v2/settings")
     await page.getByRole("tab", { name: "My profile" }).click()
     await page.getByRole("button", { name: "Edit" }).click()
     await page.getByLabel("Full name").fill("Test User")
@@ -387,7 +392,7 @@ test.describe("Cancel edit actions", () => {
     await createUser({ email, password })
 
     await logInUser(page, email, password)
-    await page.goto("/settings")
+    await page.goto("/v2/settings")
     await page.getByRole("tab", { name: "My profile" }).click()
     await page.getByRole("button", { name: "Edit" }).click()
     await page.getByLabel("Email").fill(randomEmail())
@@ -410,7 +415,7 @@ test.describe("Change password", () => {
     await createUser({ email, password })
     await logInUser(page, email, password)
 
-    await page.goto("/settings")
+    await page.goto("/v2/settings")
     await page.getByRole("tab", { name: "Password" }).click()
     await page.getByTestId("current-password-input").fill(password)
     await page.getByTestId("new-password-input").fill(newPassword)
@@ -437,7 +442,7 @@ test.describe("Change password validation", () => {
 
   test.beforeEach(async ({ page }) => {
     await logInUser(page, email, password)
-    await page.goto("/settings")
+    await page.goto("/v2/settings")
     await page.getByRole("tab", { name: "Password" }).click()
   })
 
@@ -478,12 +483,12 @@ test.describe("Change password validation", () => {
 })
 
 test("Appearance button is visible in sidebar", async ({ page }) => {
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
   await expect(page.getByTestId("theme-button")).toBeVisible()
 })
 
 test("User can switch between theme modes", async ({ page }) => {
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
 
   await page.getByTestId("theme-button").click()
   await page.getByTestId("dark-mode").click()
@@ -497,7 +502,7 @@ test("User can switch between theme modes", async ({ page }) => {
 })
 
 test("Selected mode is preserved across sessions", async ({ page }) => {
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
 
   await page.getByTestId("theme-button").click()
   if (
@@ -647,7 +652,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     },
   )
 
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
   await page.getByRole("tab", { name: "Connect agent" }).click()
   await expect(
     page
@@ -911,7 +916,7 @@ test("Connect agent shows V2 document instructions for V2-enabled users", async 
     })
   })
 
-  await page.goto("/settings?tab=connect-agent")
+  await page.goto("/v2/settings?tab=connect-agent")
   await page.getByLabel("Credential label").fill("V2 laptop")
   await page.getByTestId("create-agent-credential").click()
 

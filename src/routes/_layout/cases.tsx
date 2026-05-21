@@ -1,26 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { z } from "zod"
-
-import { CasesPage } from "@/components/Cases/CasesPage"
-
-const searchSchema = z.object({
-  caseId: z.string().optional(),
-})
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_layout/cases")({
-  component: Cases,
-  validateSearch: searchSchema,
+  beforeLoad: () => {
+    throw redirect({ to: "/v2/library" })
+  },
   head: () => ({
     meta: [
       {
-        title: "Cases",
+        title: "Taskforce | Library",
       },
     ],
   }),
 })
-
-function Cases() {
-  const { caseId } = Route.useSearch()
-
-  return <CasesPage initialSelectedCaseId={caseId ?? null} />
-}

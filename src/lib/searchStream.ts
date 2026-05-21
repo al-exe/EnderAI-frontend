@@ -126,19 +126,20 @@ export async function* streamSearch(
 
     // SSE messages are separated by blank lines. Split greedily on
     // "\n\n" so we yield each complete message as it arrives.
-    let nl: number
-    while ((nl = buffer.indexOf("\n\n")) !== -1) {
+    let nl = buffer.indexOf("\n\n")
+    while (nl !== -1) {
       const rawMessage = buffer.slice(0, nl)
       buffer = buffer.slice(nl + 2)
       const event = parseSseMessage(rawMessage)
       if (event) yield event
+      nl = buffer.indexOf("\n\n")
     }
   }
 }
 
 function parseSseMessage(raw: string): SearchEvent | null {
   let eventName = ""
-  let dataLines: string[] = []
+  const dataLines: string[] = []
   for (const line of raw.split("\n")) {
     if (line.startsWith("event:")) {
       eventName = line.slice("event:".length).trim()

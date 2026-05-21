@@ -15,10 +15,6 @@ export const Route = createFileRoute("/v2")({
 
     try {
       const currentUser = await UsersService.readUserMe()
-      if (!currentUser.v2) {
-        throw new Error("Taskforce v2 is not enabled for this account.")
-      }
-
       return { currentUser }
     } catch (error) {
       if (error instanceof ApiError && [401, 403].includes(error.status)) {

@@ -7,6 +7,13 @@ const hostedMcpId = "0fd8a545-a3b7-4a9f-bb65-1ecf76bd8b6d"
 const documents = [
   {
     id: bridgeId,
+    owner_id: "user-1",
+    organization_id: null,
+    folder_id: null,
+    folder_name: null,
+    visibility: "private",
+    user_access: "owner",
+    is_favorite: false,
     title: "Latest Stale Network Bridge Issue",
     description:
       "Customer-impact investigation with a verified operator fix and command evidence.",
@@ -15,6 +22,7 @@ const documents = [
     ai_generated_summary:
       "XYZ Corp traffic hit stale bridge routes after a bridge-controller deploy.",
     collaborators: ["Alex Lee", "Nia Patel"],
+    shared_with: [],
     main_body: [
       {
         segments: [
@@ -41,6 +49,13 @@ const documents = [
   },
   {
     id: evidenceId,
+    owner_id: "user-1",
+    organization_id: null,
+    folder_id: null,
+    folder_name: null,
+    visibility: "private",
+    user_access: "owner",
+    is_favorite: false,
     title: "V2 Document Evidence Contract",
     description:
       "Design note for Summary claims backed by source anchors in Details.",
@@ -49,6 +64,7 @@ const documents = [
     ai_generated_summary:
       "The V2 document model should keep executive summaries short.",
     collaborators: ["Alex Lee", "Jordan Kim"],
+    shared_with: [],
     main_body: [{ segments: [{ text: "Summary view tells a short story." }] }],
     details_file_name: "v2-document-evidence-contract.details.md",
     details_markdown_sections: [
@@ -64,6 +80,13 @@ const documents = [
   },
   {
     id: hostedMcpId,
+    owner_id: "user-1",
+    organization_id: null,
+    folder_id: null,
+    folder_name: null,
+    visibility: "private",
+    user_access: "owner",
+    is_favorite: false,
     title: "Hosted MCP Credential Setup Refresh",
     description:
       "Setup guidance for connecting an AI client with file-backed token persistence.",
@@ -72,6 +95,7 @@ const documents = [
     ai_generated_summary:
       "The hosted MCP setup now emphasizes file-backed token persistence.",
     collaborators: ["Alex Lee"],
+    shared_with: [],
     main_body: [
       { segments: [{ text: "The credential setup flow was refreshed." }] },
     ],
@@ -95,6 +119,11 @@ export async function mockV2Documents(page: Page) {
     const pathname = url.pathname
     const method = route.request().method()
     const isDemoRequest = url.searchParams.get("demo") === "true"
+
+    if (pathname === "/api/v1/v2/documents/folders/" && method === "GET") {
+      await route.fulfill({ json: { data: [], count: 0 } })
+      return
+    }
 
     if (pathname === "/api/v1/v2/documents/" && method === "GET") {
       if (!isDemoRequest) {

@@ -22,16 +22,12 @@ export async function logInUser(page: Page, email: string, password: string) {
   await page.getByTestId("email-input").fill(email)
   await page.getByTestId("password-input").fill(password)
   await page.getByRole("button", { name: "Log In" }).click()
-  await page.waitForURL("/home")
-  await expect(
-    page.getByText(
-      "EnderAI turns messy team history into context agents can actually use.",
-    ),
-  ).toBeVisible()
+  await page.waitForURL("/v2/library")
+  await expect(page.getByRole("heading", { name: "Library" })).toBeVisible()
 }
 
 export async function logOutUser(page: Page) {
   await page.getByTestId("user-menu").click()
-  await page.getByRole("menuitem", { name: "Log out" }).click()
+  await page.getByRole("menuitem", { name: "Log Out" }).click()
   await page.goto("/login")
 }
