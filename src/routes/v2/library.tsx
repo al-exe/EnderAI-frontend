@@ -833,7 +833,7 @@ function FolderNav({
   return (
     <nav
       aria-label="Library folders"
-      className="min-w-0 border bg-card p-2 text-sm xl:sticky xl:top-0 xl:self-start"
+      className="min-w-0 border bg-card p-2 text-sm xl:sticky xl:top-16 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto"
     >
       <FolderNavButton
         active={selectedFolderId === "all"}
