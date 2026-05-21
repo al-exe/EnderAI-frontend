@@ -218,6 +218,15 @@ test.describe("Organization", () => {
     await expect(page.getByText("Partner Organization")).toBeVisible()
     await expect(page.getByText("member@example.com")).toBeVisible()
     await expect(page.getByText("pending@example.com")).toBeVisible()
+    await expect(
+      page
+        .locator('[data-slot="card-content"]')
+        .filter({ hasText: "Partner Organization" })
+        .filter({ hasText: "Pending" }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole("row", { name: /pending@example\.com.*Pending/ }),
+    ).toBeVisible()
 
     await page.getByLabel("Organization name").fill("Renamed Organization")
     await page.getByRole("button", { name: "Save name" }).click()
