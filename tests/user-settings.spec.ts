@@ -277,6 +277,7 @@ test.describe("Billing", () => {
           subscription_cancel_at_period_end: false,
           price_id: "price_test",
           is_subscription_active: true,
+          subscription_tier: "pro",
         }),
       })
     })
@@ -288,9 +289,7 @@ test.describe("Billing", () => {
     ).toBeVisible()
     await expect(page.getByText("Active")).toBeVisible()
     await expect(page.getByText("Renews automatically")).toBeVisible()
-    await expect(
-      page.getByRole("button", { name: "Subscribed" }),
-    ).toBeDisabled()
+    await expect(page.getByRole("button", { name: "Pro tier" })).toBeDisabled()
     await expect(
       page.getByRole("button", { name: "Manage billing" }),
     ).toBeEnabled()

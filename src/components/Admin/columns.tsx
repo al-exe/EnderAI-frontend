@@ -51,7 +51,6 @@ function formatSubscriptionTier(
 function getTierBadgeVariant(
   value: UserPublic["subscription_tier"] | undefined,
 ): "default" | "success" | "secondary" | "outline" {
-  if (value === "admin") return "default"
   if (value === "pro" || value === "max") return "success"
   if (value === "free" || !value) return "secondary"
   return "outline"
