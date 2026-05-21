@@ -486,7 +486,15 @@ function TaskforceLibrary() {
     !moveFolderMutation.isPending &&
     !favoriteMutation.isPending
 
-  if (router.location.pathname.startsWith("/v2/library/")) {
+  // Only hand off to a child route when the URL actually has a document
+  // segment after /v2/library/. A bare /v2/library/ (trailing slash, no id)
+  // still belongs to this component — otherwise the empty Outlet would render
+  // as a blank screen after a hard refresh.
+  const pathname = router.location.pathname
+  if (
+    pathname.startsWith("/v2/library/") &&
+    pathname.replace(/\/+$/, "") !== "/v2/library"
+  ) {
     return <Outlet />
   }
 
