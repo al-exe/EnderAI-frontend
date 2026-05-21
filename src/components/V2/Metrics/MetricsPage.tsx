@@ -8,6 +8,7 @@ import {
 } from "@/api/v2Metrics"
 import type { UserPublic } from "@/client"
 import { useDemoMode } from "@/components/demo-mode-provider"
+import { usePersistentState } from "@/hooks/usePersistentState"
 import { MethodologyLink } from "./MethodologyLink"
 import { MetricBreakdown } from "./MetricBreakdown"
 import { MetricCard } from "./MetricCard"
@@ -71,6 +72,11 @@ function toMetricNumber(value: string | number | null | undefined) {
 export function MetricsPage({ currentUser: _currentUser }: Props) {
   const { isDemoMode } = useDemoMode()
   const [window, setWindow] = useState<MetricsWindow>("7d")
+  // TF-177 / Phase 3 feature flag. When enabled, surface the
+  // Avoided Rediscovery card driven by document.consulted events.
+  // Toggle by setting `localStorage["taskforce.flags.savings_v2"] = "true"`
+  // until a real settings UI lands.
+  const [savingsV2Flag] = usePersistentState<boolean>("flags.savings_v2", false)
 
   const definitionsQuery = useQuery({
     queryKey: ["v2-metrics-definitions"],
@@ -144,6 +150,22 @@ export function MetricsPage({ currentUser: _currentUser }: Props) {
           )
         })}
       </section>
+
+      {savingsV2Flag && (
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {[
+            "avoided_rediscovery",
+            "avoided_rediscovery_usd",
+            "documents_consulted",
+          ].map((name) => {
+            const def = definitionsByName[name]
+            if (!def) return null
+            return (
+              <MetricCard key={name} definition={def} value={metrics[name]} />
+            )
+          })}
+        </section>
+      )}
 
       <MethodologyLink />
 
