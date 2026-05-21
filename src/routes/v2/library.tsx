@@ -604,7 +604,7 @@ function TaskforceLibrary() {
         onDelete: requestDeleteDocument,
       }}
     >
-      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
+      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
         <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 py-3 backdrop-blur lg:flex-row lg:items-end lg:justify-between">
           <h1 className="text-2xl font-semibold">Library</h1>
           <div className="flex flex-wrap items-center gap-2">
@@ -711,7 +711,7 @@ function TaskforceLibrary() {
         )}
 
         {!isLoading && documents.length > 0 && libraryView === "files" && (
-          <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
+          <div className="grid min-h-0 flex-1 gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
             <FolderNav
               folderTree={folderTree}
               selectedFolderId={selectedFolderId}
@@ -725,7 +725,7 @@ function TaskforceLibrary() {
               demo={isDemoMode}
               onFolderDeleted={handleFolderDeleted}
             />
-            <div className="min-w-0">
+            <div className="min-h-0 min-w-0 overflow-y-auto pr-1">
               {isFolderEmpty && (
                 <div className="border bg-card p-6 text-sm text-muted-foreground">
                   No documents in this folder.
@@ -745,37 +745,42 @@ function TaskforceLibrary() {
         {!isLoading &&
           (documents.length > 0 || folders.length > 0) &&
           libraryView === "folders" && (
-            <FolderDirectory
-              folderTree={folderTree}
-              documentsByFolder={documentsByFolder}
-              openFolderIds={openFolderIds}
-              dragOverFolderId={dragOverFolderId}
-              canMoveItems={canMutateLibrary}
-              canFavorite={!isDemoMode && !favoriteMutation.isPending}
-              currentUserId={currentUser.id}
-              demo={isDemoMode}
-              onToggleFolder={toggleFolderOpen}
-              onFolderDragStart={(event, folder) => {
-                event.stopPropagation()
-                event.dataTransfer.effectAllowed = "move"
-                event.dataTransfer.setData("application/x-v2-folder", folder.id)
-              }}
-              onDocumentDragStart={(event, document) => {
-                event.dataTransfer.effectAllowed = "move"
-                event.dataTransfer.setData(
-                  "application/x-v2-document",
-                  document.id,
-                )
-              }}
-              onDocumentDragEnd={() => setDragOverFolderId(null)}
-              onToggleFavorite={toggleFavorite}
-              onFolderDragOver={handleFolderDragOver}
-              onFolderDrop={handleFolderDrop}
-              onUnfiledDrop={handleUnfiledDrop}
-              onRootFolderDrop={handleRootFolderDrop}
-              onFolderDragLeave={() => setDragOverFolderId(null)}
-              onFolderDeleted={handleFolderDeleted}
-            />
+            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+              <FolderDirectory
+                folderTree={folderTree}
+                documentsByFolder={documentsByFolder}
+                openFolderIds={openFolderIds}
+                dragOverFolderId={dragOverFolderId}
+                canMoveItems={canMutateLibrary}
+                canFavorite={!isDemoMode && !favoriteMutation.isPending}
+                currentUserId={currentUser.id}
+                demo={isDemoMode}
+                onToggleFolder={toggleFolderOpen}
+                onFolderDragStart={(event, folder) => {
+                  event.stopPropagation()
+                  event.dataTransfer.effectAllowed = "move"
+                  event.dataTransfer.setData(
+                    "application/x-v2-folder",
+                    folder.id,
+                  )
+                }}
+                onDocumentDragStart={(event, document) => {
+                  event.dataTransfer.effectAllowed = "move"
+                  event.dataTransfer.setData(
+                    "application/x-v2-document",
+                    document.id,
+                  )
+                }}
+                onDocumentDragEnd={() => setDragOverFolderId(null)}
+                onToggleFavorite={toggleFavorite}
+                onFolderDragOver={handleFolderDragOver}
+                onFolderDrop={handleFolderDrop}
+                onUnfiledDrop={handleUnfiledDrop}
+                onRootFolderDrop={handleRootFolderDrop}
+                onFolderDragLeave={() => setDragOverFolderId(null)}
+                onFolderDeleted={handleFolderDeleted}
+              />
+            </div>
           )}
       </section>
     </DocumentDeleteContext.Provider>
@@ -833,7 +838,7 @@ function FolderNav({
   return (
     <nav
       aria-label="Library folders"
-      className="min-w-0 border bg-card p-2 text-sm xl:sticky xl:top-16 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto"
+      className="min-w-0 self-start border bg-card p-2 text-sm xl:h-full xl:overflow-y-auto"
     >
       <FolderNavButton
         active={selectedFolderId === "all"}
