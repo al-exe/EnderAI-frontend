@@ -15,7 +15,6 @@ import {
   Folder,
   FolderOpen,
   FolderPlus,
-  Lock,
   MoreHorizontal,
   Plus,
   Share2,
@@ -1531,14 +1530,12 @@ function DocumentCard({
           {canDelete && (
             <DocumentActionsMenu document={document} onDelete={onDelete} />
           )}
-          <Badge variant="outline">
-            {document.visibility === "organization" ? (
+          {document.visibility === "organization" && (
+            <Badge variant="outline">
               <Building2 className="size-3" />
-            ) : (
-              <Lock className="size-3" />
-            )}
-            {document.visibility === "organization" ? "Org" : "Private"}
-          </Badge>
+              Org
+            </Badge>
+          )}
           {sharedCount > 0 && (
             <Badge variant="secondary">
               <Share2 className="size-3" />
@@ -1608,14 +1605,16 @@ function DocumentActionsMenu({
           <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
+      <DropdownMenuContent
+        align="end"
+        className="w-44"
+        onClick={(event) => event.stopPropagation()}
+      >
         <DropdownMenuItem
           variant="destructive"
           className="cursor-pointer"
-          onSelect={(event) => {
-            event.preventDefault()
-            onDelete(document)
-          }}
+          onClick={(event) => event.stopPropagation()}
+          onSelect={() => onDelete(document)}
         >
           <Trash2 className="size-4" />
           Delete document
