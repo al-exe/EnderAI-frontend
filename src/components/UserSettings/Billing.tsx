@@ -54,7 +54,7 @@ const Billing = () => {
   })
 
   const checkoutMutation = useMutation({
-    mutationFn: createCheckoutSession,
+    mutationFn: () => createCheckoutSession("pro"),
     onSuccess: (result) => {
       window.location.assign(result.url)
     },
@@ -71,7 +71,7 @@ const Billing = () => {
 
   const billingStatus = billingStatusQuery.data
   const tier = billingStatus?.subscription_tier ?? "free"
-  const isPaidTier = tier === "pro" || tier === "max" || tier === "admin"
+  const isPaidTier = tier === "pro" || tier === "max"
   const hasCustomer = billingStatus?.has_customer ?? false
 
   return (

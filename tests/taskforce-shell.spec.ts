@@ -107,13 +107,27 @@ test("Community Upgrade link opens membership tiers with current and selected in
     "Selected",
   )
   await expect(page.getByTestId("membership-plan-pro")).toContainText("$4.99")
-  await expect(page.getByTestId("membership-plan-max")).toContainText("TBD")
+  await expect(page.getByTestId("membership-plan-max")).toContainText("Monthly")
 
   await page.getByTestId("membership-plan-pro").click()
   await expect(page.getByTestId("membership-plan-pro")).toContainText(
     "Selected",
   )
   await expect(page.getByText("Selected: Pro")).toBeVisible()
+
+  let checkoutBody: unknown
+  await page.route("**/api/v1/billing/checkout-session", async (route) => {
+    checkoutBody = route.request().postDataJSON()
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ url: "https://checkout.stripe.test/max" }),
+    })
+  })
+
+  await page.getByTestId("membership-plan-max").click()
+  await page.getByRole("button", { name: "Select this tier" }).click()
+  await expect.poll(() => checkoutBody).toEqual({ tier: "max" })
 })
 
 test("Taskforce v2 wordmark links to v2 home", async ({ page }) => {

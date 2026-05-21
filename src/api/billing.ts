@@ -8,12 +8,14 @@ export interface BillingStatusPublic {
   subscription_cancel_at_period_end: boolean
   price_id: string | null
   is_subscription_active: boolean
-  subscription_tier: "free" | "pro" | "max" | "admin"
+  subscription_tier: "free" | "pro" | "max"
 }
 
 export interface BillingSessionPublic {
   url: string
 }
+
+export type CheckoutTier = "pro" | "max"
 
 export function readBillingStatus(): CancelablePromise<BillingStatusPublic> {
   return request(OpenAPI, {
@@ -22,10 +24,14 @@ export function readBillingStatus(): CancelablePromise<BillingStatusPublic> {
   })
 }
 
-export function createCheckoutSession(): CancelablePromise<BillingSessionPublic> {
+export function createCheckoutSession(
+  tier: CheckoutTier,
+): CancelablePromise<BillingSessionPublic> {
   return request(OpenAPI, {
     method: "POST",
     url: "/api/v1/billing/checkout-session",
+    body: { tier },
+    mediaType: "application/json",
   })
 }
 

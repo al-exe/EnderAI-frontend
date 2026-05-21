@@ -70,8 +70,8 @@ const membershipPlans: MembershipPlan[] = [
   {
     tier: "max",
     name: "Max",
-    eyebrow: "Coming soon",
-    price: "TBD",
+    eyebrow: "Managed usage",
+    price: "Monthly",
     priceDetail: "",
     description:
       "A higher ceiling for heavier usage, managed model costs, and larger context operations.",
@@ -80,8 +80,7 @@ const membershipPlans: MembershipPlan[] = [
       "Placeholder benefit for expanded workspace limits",
       "Placeholder benefit for priority Taskforce capabilities",
     ],
-    cta: "Coming soon",
-    disabled: true,
+    cta: "Select this tier",
   },
 ]
 
@@ -205,18 +204,21 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
                 </CardContent>
 
                 <CardFooter className="flex flex-col items-stretch gap-2">
-                  {plan.tier === "pro" && !isCurrent ? (
+                  {(plan.tier === "pro" || plan.tier === "max") &&
+                  !isCurrent ? (
                     <LoadingButton
                       type="button"
                       loading={checkoutMutation.isPending}
                       disabled={!isSelected}
                       onClick={(event) => {
                         event.stopPropagation()
-                        checkoutMutation.mutate()
+                        checkoutMutation.mutate(
+                          plan.tier === "max" ? "max" : "pro",
+                        )
                       }}
                     >
                       <ExternalLink className="size-4" />
-                      {isSelected ? plan.cta : "Select Pro"}
+                      {isSelected ? plan.cta : `Select ${plan.name}`}
                     </LoadingButton>
                   ) : (
                     <Button
