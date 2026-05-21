@@ -2,11 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   Building2,
   Check,
+  CircleCheck,
+  Clock,
   MailPlus,
   RefreshCw,
   Shield,
   Trash2,
   Users,
+  XCircle,
 } from "lucide-react"
 import { type FormEvent, useEffect, useState } from "react"
 
@@ -75,6 +78,37 @@ function RoleBadge({ role }: { role: OrganizationRole }) {
     <Badge variant={role === "admin" ? "default" : "secondary"}>
       {role === "admin" && <Shield className="size-3" />}
       {roleLabel(role)}
+    </Badge>
+  )
+}
+
+function InvitationStatusBadge({
+  invitation,
+}: {
+  invitation: OrganizationInvitationPublic
+}) {
+  if (invitation.revoked_at !== null) {
+    return (
+      <Badge variant="destructive">
+        <XCircle className="size-3" />
+        Revoked
+      </Badge>
+    )
+  }
+
+  if (invitation.accepted_at !== null) {
+    return (
+      <Badge variant="success">
+        <CircleCheck className="size-3" />
+        Accepted
+      </Badge>
+    )
+  }
+
+  return (
+    <Badge variant="outline">
+      <Clock className="size-3" />
+      Pending
     </Badge>
   )
 }
@@ -391,8 +425,11 @@ function IncomingInvitations({
             className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
-              <div className="truncate font-medium">
-                {invitation.organization_name ?? "Organization invitation"}
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="truncate font-medium">
+                  {invitation.organization_name ?? "Organization invitation"}
+                </span>
+                <InvitationStatusBadge invitation={invitation} />
               </div>
               <div className="text-sm text-muted-foreground">
                 Sent {formatDate(invitation.created_at)}
@@ -533,17 +570,21 @@ function PendingInvitations({
         <TableHeader>
           <TableRow>
             <TableHead>Email</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Sent</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {invitations.length === 0 && (
-            <EmptyRow colSpan={2}>No pending invitations.</EmptyRow>
+            <EmptyRow colSpan={3}>No pending invitations.</EmptyRow>
           )}
           {invitations.map((invitation) => (
             <TableRow key={invitation.id}>
               <TableCell className="max-w-[20rem] truncate">
                 {invitation.invited_email}
+              </TableCell>
+              <TableCell>
+                <InvitationStatusBadge invitation={invitation} />
               </TableCell>
               <TableCell>{formatDate(invitation.created_at)}</TableCell>
             </TableRow>
