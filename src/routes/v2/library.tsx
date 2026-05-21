@@ -74,6 +74,10 @@ import {
   FolderPickerDropdown,
 } from "@/components/V2/Library/FolderControls"
 import useCustomToast from "@/hooks/useCustomToast"
+import {
+  enumDeserializer,
+  usePersistentState,
+} from "@/hooks/usePersistentState"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/v2/library")({
@@ -168,9 +172,15 @@ function TaskforceLibrary() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
-  const [libraryView, setLibraryView] = useState<"files" | "folders">("files")
+  const [libraryView, setLibraryView] = usePersistentState<"files" | "folders">(
+    "library.view",
+    "files",
+    { deserialize: enumDeserializer(["files", "folders"]) },
+  )
   const [ownershipFilter, setOwnershipFilter] =
-    useState<OwnershipFilter>("owned")
+    usePersistentState<OwnershipFilter>("library.ownership", "owned", {
+      deserialize: enumDeserializer(["owned", "shared"]),
+    })
   const [selectedFolderId, setSelectedFolderId] = useState("all")
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [createDocumentOpen, setCreateDocumentOpen] = useState(false)
