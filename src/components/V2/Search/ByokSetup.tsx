@@ -2,10 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { KeyRound } from "lucide-react"
 import { useState } from "react"
 
-import {
-  createByokCredential,
-  type ByokProvider,
-} from "@/api/v2Search"
+import { type ByokProvider, createByokCredential } from "@/api/v2Search"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -52,9 +49,9 @@ export function ByokSetup({ onSaved }: { onSaved: () => void }) {
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="sm:w-40">
-            <label className="mb-1 block text-xs uppercase text-muted-foreground">
+            <div className="mb-1 text-xs uppercase text-muted-foreground">
               Provider
-            </label>
+            </div>
             <Select
               value={provider}
               onValueChange={(v) => setProvider(v as ByokProvider)}
@@ -69,10 +66,14 @@ export function ByokSetup({ onSaved }: { onSaved: () => void }) {
             </Select>
           </div>
           <div className="flex-1">
-            <label className="mb-1 block text-xs uppercase text-muted-foreground">
+            <label
+              htmlFor="taskforce-byok-api-key"
+              className="mb-1 block text-xs uppercase text-muted-foreground"
+            >
               API key
             </label>
             <Input
+              id="taskforce-byok-api-key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               type="password"

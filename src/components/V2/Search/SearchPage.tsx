@@ -9,14 +9,14 @@ import type { UserPublic } from "@/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
-  streamSearch,
   type SearchCitationEvent,
   type SearchEvent,
+  streamSearch,
 } from "@/lib/searchStream"
 
 import { ByokSetup } from "./ByokSetup"
 import { ChatComposer } from "./ChatComposer"
-import { MessageList, type Message } from "./MessageList"
+import { type Message, MessageList } from "./MessageList"
 import { SearchUpsell } from "./SearchUpsell"
 
 interface SearchPageProps {

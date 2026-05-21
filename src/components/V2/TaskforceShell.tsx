@@ -32,7 +32,7 @@ import { readV2Documents, type V2DocumentPublic } from "@/api/v2Documents"
 import type { UserPublic } from "@/client"
 import { SidebarCollapseToggle } from "@/components/Common/SidebarCollapseToggle"
 import { useDemoMode } from "@/components/demo-mode-provider"
-import { DemoModeToggle, V2ModeSwitch } from "@/components/Sidebar/ModeSwitches"
+import { DemoModeToggle } from "@/components/Sidebar/ModeSwitches"
 import { User } from "@/components/Sidebar/User"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -541,7 +541,6 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
         </SidebarContent>
         <SidebarFooter className="gap-1">
           <SidebarUtilityDrawer />
-          <V2ModeSwitch active enabled={Boolean(currentUser.v2)} />
           <SidebarCollapseToggle />
           <User user={currentUser} />
         </SidebarFooter>
@@ -596,10 +595,10 @@ export function TaskforceNoAccess() {
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">No access</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Taskforce v2 is not enabled for this account.
+          Taskforce is not available for this account.
         </p>
         <Button asChild className="mt-6">
-          <RouterLink to="/home">Return to current app</RouterLink>
+          <RouterLink to="/v2/pricing">View membership</RouterLink>
         </Button>
       </section>
     </main>

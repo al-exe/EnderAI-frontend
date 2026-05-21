@@ -17,6 +17,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V2IndexRouteImport } from './routes/v2/index'
+import { Route as V2SettingsRouteImport } from './routes/v2/settings'
 import { Route as V2SearchRouteImport } from './routes/v2/search'
 import { Route as V2PricingRouteImport } from './routes/v2/pricing'
 import { Route as V2MetricsRouteImport } from './routes/v2/metrics'
@@ -70,6 +71,11 @@ const IndexRoute = IndexRouteImport.update({
 const V2IndexRoute = V2IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => V2Route,
+} as any)
+const V2SettingsRoute = V2SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => V2Route,
 } as any)
 const V2SearchRoute = V2SearchRouteImport.update({
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/v2/metrics': typeof V2MetricsRouteWithChildren
   '/v2/pricing': typeof V2PricingRoute
   '/v2/search': typeof V2SearchRoute
+  '/v2/settings': typeof V2SettingsRoute
   '/v2/': typeof V2IndexRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/v2/metrics': typeof V2MetricsRouteWithChildren
   '/v2/pricing': typeof V2PricingRoute
   '/v2/search': typeof V2SearchRoute
+  '/v2/settings': typeof V2SettingsRoute
   '/v2': typeof V2IndexRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/v2/metrics': typeof V2MetricsRouteWithChildren
   '/v2/pricing': typeof V2PricingRoute
   '/v2/search': typeof V2SearchRoute
+  '/v2/settings': typeof V2SettingsRoute
   '/v2/': typeof V2IndexRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/v2/metrics'
     | '/v2/pricing'
     | '/v2/search'
+    | '/v2/settings'
     | '/v2/'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/v2/metrics'
     | '/v2/pricing'
     | '/v2/search'
+    | '/v2/settings'
     | '/v2'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/v2/metrics'
     | '/v2/pricing'
     | '/v2/search'
+    | '/v2/settings'
     | '/v2/'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
@@ -362,6 +374,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/v2/'
       preLoaderRoute: typeof V2IndexRouteImport
+      parentRoute: typeof V2Route
+    }
+    '/v2/settings': {
+      id: '/v2/settings'
+      path: '/settings'
+      fullPath: '/v2/settings'
+      preLoaderRoute: typeof V2SettingsRouteImport
       parentRoute: typeof V2Route
     }
     '/v2/search': {
@@ -525,6 +544,7 @@ interface V2RouteChildren {
   V2MetricsRoute: typeof V2MetricsRouteWithChildren
   V2PricingRoute: typeof V2PricingRoute
   V2SearchRoute: typeof V2SearchRoute
+  V2SettingsRoute: typeof V2SettingsRoute
   V2IndexRoute: typeof V2IndexRoute
 }
 
@@ -536,6 +556,7 @@ const V2RouteChildren: V2RouteChildren = {
   V2MetricsRoute: V2MetricsRouteWithChildren,
   V2PricingRoute: V2PricingRoute,
   V2SearchRoute: V2SearchRoute,
+  V2SettingsRoute: V2SettingsRoute,
   V2IndexRoute: V2IndexRoute,
 }
 

@@ -16,7 +16,9 @@ export function CitationChip({
       title={`${citation.title} · score ${citation.score.toFixed(2)}`}
     >
       <span className="text-muted-foreground">[{index}]</span>
-      <span className="truncate">{citation.title || citation.source_item_id}</span>
+      <span className="truncate">
+        {citation.title || citation.source_item_id}
+      </span>
       <span className="text-muted-foreground">#{citation.chunk_anchor_id}</span>
     </RouterLink>
   )

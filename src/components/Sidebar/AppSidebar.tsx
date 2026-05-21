@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
 import { type Item, Main } from "./Main"
-import { DemoModeToggle, V2ModeSwitch } from "./ModeSwitches"
+import { DemoModeToggle } from "./ModeSwitches"
 import { User } from "./User"
 
 const baseItems: Item[] = [
@@ -37,7 +37,6 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="gap-1">
         <DemoModeToggle />
-        <V2ModeSwitch enabled={Boolean(currentUser?.v2)} />
         <SidebarCollapseToggle />
         <User user={currentUser} />
       </SidebarFooter>

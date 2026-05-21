@@ -1,50 +1,20 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import type { ComponentType } from "react"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 import { z } from "zod"
 
-import AppearanceSettings from "@/components/UserSettings/Appearance"
-import Billing from "@/components/UserSettings/Billing"
-import ChangePassword from "@/components/UserSettings/ChangePassword"
-import ConnectAgent from "@/components/UserSettings/ConnectAgent"
-import DeleteAccount from "@/components/UserSettings/DeleteAccount"
-import Organization from "@/components/UserSettings/Organization"
-import UserInformation from "@/components/UserSettings/UserInformation"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import useAuth from "@/hooks/useAuth"
-
-const tabValues = [
-  "my-profile",
-  "organization",
-  "appearance",
-  "connect-agent",
-  "billing",
-  "password",
-  "danger-zone",
-] as const
-
-type SettingsTab = (typeof tabValues)[number]
+import { settingsTabValues } from "@/components/UserSettings/UserSettingsPage"
 
 const searchSchema = z.object({
-  tab: z.enum(tabValues).optional(),
+  tab: z.enum(settingsTabValues).optional(),
 })
 
-const tabsConfig: Array<{
-  value: SettingsTab
-  title: string
-  component: ComponentType
-}> = [
-  { value: "my-profile", title: "My profile", component: UserInformation },
-  { value: "organization", title: "Organization", component: Organization },
-  { value: "appearance", title: "Appearance", component: AppearanceSettings },
-  { value: "connect-agent", title: "Connect agent", component: ConnectAgent },
-  { value: "billing", title: "Billing", component: Billing },
-  { value: "password", title: "Password", component: ChangePassword },
-  { value: "danger-zone", title: "Danger zone", component: DeleteAccount },
-]
-
 export const Route = createFileRoute("/_layout/settings")({
-  component: UserSettings,
   validateSearch: searchSchema,
+  beforeLoad: ({ search }) => {
+    throw redirect({
+      to: "/v2/settings",
+      search: { tab: search.tab },
+    })
+  },
   head: () => ({
     meta: [
       {
@@ -53,52 +23,3 @@ export const Route = createFileRoute("/_layout/settings")({
     ],
   }),
 })
-
-function UserSettings() {
-  const { user: currentUser } = useAuth()
-  const navigate = useNavigate()
-  const { tab } = Route.useSearch()
-  const activeTab = tab ?? "my-profile"
-  const finalTabs = tabsConfig
-
-  if (!currentUser) {
-    return null
-  }
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
-      <div className="shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-      </div>
-
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => {
-          void navigate({
-            to: "/settings",
-            search: { tab: value as SettingsTab },
-            replace: true,
-          })
-        }}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <TabsList className="max-w-full shrink-0 justify-start overflow-x-auto">
-          {finalTabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
-              {tab.title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {finalTabs.map((tab) => (
-          <TabsContent
-            key={tab.value}
-            value={tab.value}
-            className="min-h-0 flex-1 overflow-y-auto pr-1"
-          >
-            <tab.component />
-          </TabsContent>
-        ))}
-      </Tabs>
-    </div>
-  )
-}

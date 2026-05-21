@@ -57,7 +57,7 @@ const useAuth = () => {
       localStorage.setItem("access_token", response.access_token)
     },
     onSuccess: () => {
-      navigate({ to: "/home" })
+      navigate({ to: "/v2/library" })
     },
     onError: (error) => {
       showErrorToast(getAuthErrorMessage(error))
@@ -81,7 +81,7 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
-      navigate({ to: "/home" })
+      navigate({ to: "/v2/library" })
     },
     onError: async (error) => {
       const currentUser = firebaseAuth.currentUser
@@ -107,7 +107,7 @@ const useAuth = () => {
       localStorage.setItem("access_token", response.access_token)
     },
     onSuccess: () => {
-      navigate({ to: "/home" })
+      navigate({ to: "/v2/library" })
     },
     onError: (error) => {
       showErrorToast(getAuthErrorMessage(error))

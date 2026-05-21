@@ -1,21 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router"
-
-import { HomePage } from "@/components/Home/HomePage"
-import useAuth from "@/hooks/useAuth"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_layout/home")({
-  component: Home,
+  beforeLoad: () => {
+    throw redirect({ to: "/v2/library" })
+  },
   head: () => ({
     meta: [
       {
-        title: "Home",
+        title: "Taskforce | Library",
       },
     ],
   }),
 })
-
-function Home() {
-  const { user: currentUser } = useAuth()
-
-  return <HomePage mode="app" signedIn user={currentUser} />
-}

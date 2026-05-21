@@ -1,26 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { z } from "zod"
-
-import { SkillsPage } from "@/components/Skills/SkillsPage"
-
-const searchSchema = z.object({
-  skillId: z.string().optional(),
-})
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_layout/skills")({
-  component: Skills,
-  validateSearch: searchSchema,
+  beforeLoad: () => {
+    throw redirect({ to: "/v2/library" })
+  },
   head: () => ({
     meta: [
       {
-        title: "Skills",
+        title: "Taskforce | Library",
       },
     ],
   }),
 })
-
-function Skills() {
-  const { skillId } = Route.useSearch()
-
-  return <SkillsPage initialSelectedSkillId={skillId ?? null} />
-}

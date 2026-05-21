@@ -29,13 +29,20 @@ export function MessageList({
   isStreaming: boolean
 }) {
   const endRef = useRef<HTMLDivElement | null>(null)
+  const lastMessageText = messages[messages.length - 1]?.text ?? ""
+
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, isStreaming])
+    if (messages.length > 0 || isStreaming || lastMessageText) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [messages.length, isStreaming, lastMessageText])
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+      <div
+        aria-busy={isStreaming}
+        className="flex flex-1 items-center justify-center text-sm text-muted-foreground"
+      >
         Ask a question to get started — try{" "}
         <em className="mx-1">"what did we decide about the metrics page?"</em>
         or <em className="mx-1">"who looked at the auth flow last week?"</em>
@@ -44,7 +51,10 @@ export function MessageList({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto pb-4">
+    <div
+      aria-busy={isStreaming}
+      className="flex flex-1 flex-col gap-6 overflow-y-auto pb-4"
+    >
       {messages.map((message) => (
         <MessageRow key={message.id} message={message} />
       ))}
@@ -58,7 +68,11 @@ function MessageRow({ message }: { message: Message }) {
   return (
     <div className="flex gap-3">
       <div className="mt-0.5 text-muted-foreground">
-        {isUser ? <User2 className="size-5" /> : <Sparkles className="size-5" />}
+        {isUser ? (
+          <User2 className="size-5" />
+        ) : (
+          <Sparkles className="size-5" />
+        )}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div
@@ -72,7 +86,11 @@ function MessageRow({ message }: { message: Message }) {
         {message.citations.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {message.citations.map((c, i) => (
-              <CitationChip key={`${c.source_item_id}-${c.chunk_anchor_id}-${i}`} citation={c} index={i + 1} />
+              <CitationChip
+                key={`${c.source_item_id}-${c.chunk_anchor_id}-${i}`}
+                citation={c}
+                index={i + 1}
+              />
             ))}
           </div>
         )}

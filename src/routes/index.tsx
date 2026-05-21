@@ -1,19 +1,24 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
-import { HomePage } from "@/components/Home/HomePage"
+import { TaskforceLandingPage } from "@/components/V2/TaskforceLandingPage"
 import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/")({
   component: Landing,
+  beforeLoad: () => {
+    if (isLoggedIn()) {
+      throw redirect({ to: "/v2/library" })
+    }
+  },
   head: () => ({
     meta: [
       {
-        title: "EnderAI | Product memory for AI-assisted work",
+        title: "Taskforce | AI work memory",
       },
     ],
   }),
 })
 
 function Landing() {
-  return <HomePage mode="public" signedIn={isLoggedIn()} />
+  return <TaskforceLandingPage />
 }

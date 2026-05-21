@@ -70,14 +70,14 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                 {isPublic ? (
                   <>
                     <Button asChild size="lg" className={styles.primaryCta}>
-                      <RouterLink to={signedIn ? "/home" : "/signup"}>
+                      <RouterLink to={signedIn ? "/v2/library" : "/signup"}>
                         <Sparkles className={styles.icon} />
                         Try the demo
                       </RouterLink>
                     </Button>
                     <Button asChild variant="outline" size="lg">
                       {signedIn ? (
-                        <RouterLink to="/home">
+                        <RouterLink to="/v2/library">
                           <LogIn className={styles.icon} />
                           Open Home
                         </RouterLink>
@@ -99,7 +99,7 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     </Button>
                     <Button asChild size="lg">
                       <RouterLink
-                        to="/settings"
+                        to="/v2/settings"
                         search={{ tab: "connect-agent" }}
                         data-testid="home-connect-agent-link"
                       >
@@ -119,7 +119,9 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
           <div className={styles.sectionHeader}>
             <div>
               <p className={styles.sectionEyebrow}>Why it matters</p>
-              <h2 className={styles.sectionTitle}>The missing part of the story</h2>
+              <h2 className={styles.sectionTitle}>
+                The missing part of the story
+              </h2>
             </div>
           </div>
 

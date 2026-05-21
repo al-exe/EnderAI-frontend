@@ -43,30 +43,28 @@ test("Log in with valid email and password ", async ({ page }) => {
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await page.waitForURL("/home")
+  await page.waitForURL("/v2/library")
 
-  await expect(
-    page.getByText(
-      "EnderAI turns messy team history into context agents can actually use.",
-    ),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Library" })).toBeVisible()
 })
 
-test("Sidebar only raises Topics and Cases", async ({ page }) => {
+test("Sidebar raises the Taskforce V2 workspace", async ({ page }) => {
   await page.goto("/login")
 
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await page.waitForURL("/home")
+  await page.waitForURL("/v2/library")
 
-  await expect(page.getByRole("link", { name: "Topics" })).toBeVisible()
-  await expect(page.getByRole("link", { name: "Cases" })).toBeVisible()
-  await expect(page.getByRole("link", { name: "Items" })).toHaveCount(0)
-  await expect(page.getByRole("link", { name: "Artifacts" })).toHaveCount(0)
-  await expect(page.getByRole("link", { name: "Notes" })).toHaveCount(0)
-  await expect(page.getByRole("link", { name: "Threads" })).toHaveCount(0)
-  await expect(page.getByRole("link", { name: "Executions" })).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "Search" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Library" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Agents" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Metrics" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Upgrade" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Topics" })).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "Cases" })).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "Skills" })).toHaveCount(0)
+  await expect(page.getByTestId("v2-mode-switch")).toHaveCount(0)
 })
 
 test("Log in with invalid email", async ({ page }) => {
@@ -94,16 +92,12 @@ test("Successful log out", async ({ page }) => {
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await page.waitForURL("/home")
+  await page.waitForURL("/v2/library")
 
-  await expect(
-    page.getByText(
-      "EnderAI turns messy team history into context agents can actually use.",
-    ),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Library" })).toBeVisible()
 
   await page.getByTestId("user-menu").click()
-  await page.getByRole("menuitem", { name: "Log out" }).click()
+  await page.getByRole("menuitem", { name: "Log Out" }).click()
   await page.waitForURL("/login")
 })
 
@@ -113,28 +107,24 @@ test("Logged-out user cannot access protected routes", async ({ page }) => {
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await page.waitForURL("/home")
+  await page.waitForURL("/v2/library")
 
-  await expect(
-    page.getByText(
-      "EnderAI turns messy team history into context agents can actually use.",
-    ),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Library" })).toBeVisible()
 
   await page.getByTestId("user-menu").click()
-  await page.getByRole("menuitem", { name: "Log out" }).click()
+  await page.getByRole("menuitem", { name: "Log Out" }).click()
   await page.waitForURL("/login")
 
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
   await page.waitForURL("/login")
 })
 
 test("Redirects to /login when token is wrong", async ({ page }) => {
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
   await page.evaluate(() => {
     localStorage.setItem("access_token", "invalid_token")
   })
-  await page.goto("/settings")
+  await page.goto("/v2/settings")
   await page.waitForURL("/login")
   await expect(page).toHaveURL("/login")
 })
