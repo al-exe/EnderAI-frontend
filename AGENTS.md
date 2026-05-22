@@ -3,7 +3,7 @@
 Last updated: 2026-05-17
 
 ## Integration Pause
-- Do not use EnderAI MCP tools unless Alex explicitly asks to use EnderAI MCP again.
+- Do not use Taskforce MCP tools unless Alex explicitly asks to use Taskforce MCP again.
 - Do not use Jira or Atlassian tools unless Alex explicitly asks to use Jira again.
 - Ignore the MCP-first workflow and Jira delivery workflow below while this pause is active.
 - For code changes, work locally and use git/GitHub only when requested by the user or by normal repo workflow.
@@ -13,14 +13,14 @@ This template is intended for agents and IDEs that use Taskforce through MCP.
 It assumes:
 - Taskforce remote documents are the primary persistence layer for V2-enabled users
 - the hosted MCP endpoint is the main integration surface
-- the V1 EnderAI workflow is `Topic / Case / ContextPack`
+- the V1 Taskforce workflow is `Topic / Case / ContextPack`
 - V2-enabled users should use the Taskforce document MCP workflow when available
 
 ## Hard Constraint: MCP-Only Demo Mode
-When the user explicitly wants to prove EnderAI memory value across tools or machines, operate in MCP-only demo mode:
-- use EnderAI remote memory via MCP plus user-provided context
+When the user explicitly wants to prove Taskforce memory value across tools or machines, operate in MCP-only demo mode:
+- use Taskforce remote memory via MCP plus user-provided context
 - do not consult local repo guidance unless the user explicitly allows it
-- if required context is missing, ask the user to permit local inspection or store the missing guidance in EnderAI first
+- if required context is missing, ask the user to permit local inspection or store the missing guidance in Taskforce first
 
 ## Required MCP Tools
 Prefer these Taskforce V2 document tools for V2-enabled users when they are available:
@@ -55,7 +55,7 @@ For V2-enabled users:
 
 For approved V1 fallback:
 1. call `enderai_begin_case`
-2. let EnderAI auto-hydrate relevant prior context before work begins
+2. let Taskforce auto-hydrate relevant prior context before work begins
 3. do the work
 4. call `enderai_update_case` as material findings, commands, hypotheses, or changes develop
 5. call `enderai_finish_case` when the work is complete or stops
@@ -85,6 +85,6 @@ After connecting a client:
 
 ## Common Failure Modes
 - a stale MCP session after a redeploy may require the client to reconnect
-- if the client sees EnderAI tools but does not use them, reinforce the workflow reminder in local instructions
+- if the client sees Taskforce tools but does not use them, reinforce the workflow reminder in local instructions
 - if Taskforce V2 document tools are unavailable, do not fabricate tool calls; report the missing V2 document toolset and fall back only to tools the user approves
-- if a write-like raw request is rejected, start with `enderai_begin_case` so EnderAI can auto-hydrate context first
+- if a write-like raw request is rejected, start with `enderai_begin_case` so Taskforce can auto-hydrate context first

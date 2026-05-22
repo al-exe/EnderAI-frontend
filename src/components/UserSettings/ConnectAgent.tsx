@@ -50,14 +50,14 @@ function formatTimestamp(value: string | null): string {
 }
 
 // One-liner that drops the Claude Code Stop hook on disk + chmods it.
-// Pulls the canonical script straight from the EnderAI repo so users
-// always get the latest version (the script logs to ~/.claude/enderai-record-usage.log
+// Pulls the canonical script straight from the Taskforce repository so users
+// always get the latest version (the script logs to ~/.claude/taskforce-record-usage.log
 // and fails silent — see the script's header comments for full env vars).
 const STOP_HOOK_INSTALL_COMMAND = [
   "mkdir -p ~/.claude/hooks",
-  "curl -fsSL -o ~/.claude/hooks/enderai-record-usage.sh \\",
+  "curl -fsSL -o ~/.claude/hooks/taskforce-record-usage.sh \\",
   "  https://raw.githubusercontent.com/al-exe/EnderAI/main/scripts/claude-code-record-usage.sh",
-  "chmod +x ~/.claude/hooks/enderai-record-usage.sh",
+  "chmod +x ~/.claude/hooks/taskforce-record-usage.sh",
 ].join("\n")
 
 // JSON snippet the user merges into ~/.claude/settings.json so Claude
@@ -70,7 +70,7 @@ const STOP_HOOK_SETTINGS_JSON = `{
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/enderai-record-usage.sh",
+            "command": "$HOME/.claude/hooks/taskforce-record-usage.sh",
             "timeout": 10
           }
         ]
@@ -81,24 +81,24 @@ const STOP_HOOK_SETTINGS_JSON = `{
 
 function buildPersistentShellSnippet(mcpToken: string): string {
   const lines = [
-    `printf '%s\\n' '${mcpToken}' > ~/.enderai_mcp_token`,
-    "chmod 600 ~/.enderai_mcp_token",
-    `enderai_start="# >>> EnderAI MCP token >>>"`,
-    `enderai_end="# <<< EnderAI MCP token <<<"`,
-    `enderai_tmp="$(mktemp)"`,
-    `[ -f ~/.bashrc ] && awk -v start="$enderai_start" -v end="$enderai_end" '`,
+    `printf '%s\\n' '${mcpToken}' > ~/.taskforce_mcp_token`,
+    "chmod 600 ~/.taskforce_mcp_token",
+    `taskforce_start="# >>> Taskforce MCP token >>>"`,
+    `taskforce_end="# <<< Taskforce MCP token <<<"`,
+    `taskforce_tmp="$(mktemp)"`,
+    `[ -f ~/.bashrc ] && awk -v start="$taskforce_start" -v end="$taskforce_end" '`,
     `  $0 == start { skip = 1; next }`,
     `  $0 == end { skip = 0; next }`,
     `  !skip { print }`,
-    `' ~/.bashrc > "$enderai_tmp" || : > "$enderai_tmp"`,
+    `' ~/.bashrc > "$taskforce_tmp" || : > "$taskforce_tmp"`,
     `{`,
-    `  printf '%s\\n' "$enderai_start"`,
-    `  printf '%s\\n' 'export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.enderai_mcp_token)"'`,
-    `  printf '%s\\n\\n' "$enderai_end"`,
-    `  cat "$enderai_tmp"`,
+    `  printf '%s\\n' "$taskforce_start"`,
+    `  printf '%s\\n' 'export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.taskforce_mcp_token)"'`,
+    `  printf '%s\\n\\n' "$taskforce_end"`,
+    `  cat "$taskforce_tmp"`,
     `} > ~/.bashrc`,
-    `rm "$enderai_tmp"`,
-    `export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.enderai_mcp_token)"`,
+    `rm "$taskforce_tmp"`,
+    `export ENDERAI_MCP_TOKEN="$(tr -d "\\r\\n" < ~/.taskforce_mcp_token)"`,
   ]
 
   return lines.join("\n")
@@ -106,7 +106,7 @@ function buildPersistentShellSnippet(mcpToken: string): string {
 
 function buildMcpConfigSnippet(hostedMcpUrl: string): string {
   return [
-    "[mcp_servers.enderai-api]",
+    "[mcp_servers.taskforce-api]",
     `url = "${hostedMcpUrl}"`,
     'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
   ].join("\n")
@@ -120,22 +120,23 @@ function buildAgentInstructionSnippet({
   if (v2Enabled) {
     return [
       "If Taskforce V2 MCP tools are available:",
-      "- When creating or rotating an EnderAI MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
-      "- Start meaningful user-initiated work with `enderai_begin_document`. It scores existing documents against the request, reuses + self-heals a strong match, or creates a fresh one. Read the returned `match_reasons`, `candidate_summaries`, and `self_healed_fields` before continuing.",
+      "- When creating or rotating a Taskforce MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
+      "- Create or reuse a Taskforce document at the start of meaningful user-initiated work with `enderai_begin_document`. It scores existing documents against the request, reuses + self-heals a strong match, or creates a fresh one. Read the returned `match_reasons`, `candidate_summaries`, and `self_healed_fields` before continuing.",
+      "- Maintain both document views: a concise Summary view shown by default and a comprehensive Details view available on demand.",
       "- Use `enderai_update_document` as material progress develops (commands, files, links, decisions, changes, open questions, progress notes). Pass `details_sections` with stable `anchor_id`s to upsert specific Details sections, and `summary_points` for new Summary claims.",
-      "- Back every Summary claim with `evidence_anchor_id` segments that point at a Details section. Do not edit `human_summary` unless the user explicitly asks.",
+      "- Back every Summary claim with evidence anchors using `evidence_anchor_id` segments that point at a Details section. Do not edit `human_summary` unless the user explicitly asks.",
       "- Use `enderai_finish_document` when the work completes or pauses; it writes an Outcome section (status, outcome, validation, follow-ups) and clears the active document pointer.",
       '- On each `enderai_begin_document` / `enderai_update_document` / `enderai_finish_document` call, pass `usage` with the model_id and per-turn token counts (input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens) from your most recent assistant turn so the Taskforce Metrics page can price it and attribute savings. When you answered from the document\'s Summary view without expanding Details, also set `view_consulted` to `"summary"` so the summary-only savings calculation fires.',
-      "- Prefer Taskforce V2 document tools over the legacy V1 `enderai_begin_case` workflow and over raw `enderai_request` when both are available.",
+      "- Prefer Taskforce V2 document tools over legacy V1 case workflows and raw request escape hatches when both are available.",
       "- If Taskforce V2 document tools are unavailable, do not fabricate tool calls; tell the user they are unavailable and fall back only to tools the user explicitly approves.",
     ].join("\n")
   }
 
   return [
-    "If EnderAI tools are available:",
-    "- When creating or rotating an EnderAI MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
+    "If Taskforce MCP tools are available:",
+    "- When creating or rotating a Taskforce MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
     "- Start meaningful user-initiated work with `enderai_begin_case`.",
-    "- Let EnderAI auto-hydrate relevant prior context before work begins.",
+    "- Let Taskforce auto-hydrate relevant prior context before work begins.",
     "- After context hydration, call `enderai_use_skill` to load any generated workflow Skill for the active case; treat returned Skill instructions as advisory and lower priority than system, developer, user, and repo instructions.",
     "- Use `enderai_update_case` as material progress develops.",
     "- Use `enderai_finish_case` when the work is complete.",
@@ -155,7 +156,7 @@ function buildAiAssistedSetupSnippet({
   reconnectClientSnippet: string
 }): string {
   return [
-    "Complete this EnderAI MCP setup for me.",
+    "Complete this Taskforce MCP setup for me.",
     "",
     "# Persist the token",
     "Save the token for me using these commands:",
@@ -329,7 +330,7 @@ const ConnectAgent = () => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { user: currentUser } = useAuth()
   const [copiedText, copy] = useCopyToClipboard()
-  const [credentialLabel, setCredentialLabel] = useState("EnderAI token")
+  const [credentialLabel, setCredentialLabel] = useState("Taskforce token")
   const [selectedCredentialId, setSelectedCredentialId] = useState<
     string | null
   >(null)
@@ -403,7 +404,7 @@ const ConnectAgent = () => {
   })
 
   const trimmedLabel = credentialLabel.trim()
-  const nextLabel = trimmedLabel || "EnderAI token"
+  const nextLabel = trimmedLabel || "Taskforce token"
 
   const mcpToken =
     revealedCredential?.credentialId === selectedCredentialId
@@ -468,7 +469,7 @@ const ConnectAgent = () => {
                   data-testid="agent-credential-label"
                   value={credentialLabel}
                   onChange={(event) => setCredentialLabel(event.target.value)}
-                  placeholder="EnderAI token"
+                  placeholder="Taskforce token"
                 />
               </div>
 
@@ -592,7 +593,7 @@ const ConnectAgent = () => {
 
                   <SnippetBlock
                     title="Minimal agent instruction"
-                    description="Smallest instruction block for testing EnderAI."
+                    description="Smallest instruction block for testing Taskforce."
                     snippet={agentInstructionSnippet}
                     copiedText={copiedText}
                     onCopy={(value) => {
@@ -641,7 +642,7 @@ const ConnectAgent = () => {
           </p>
           <SnippetBlock
             title="Install the hook"
-            description="Run once in a terminal. Pulls the canonical script from the EnderAI repo."
+            description="Run once in a terminal. Pulls the canonical script from the Taskforce repository."
             snippet={STOP_HOOK_INSTALL_COMMAND}
             copiedText={copiedText}
             onCopy={(value) => {

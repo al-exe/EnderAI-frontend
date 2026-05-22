@@ -29,11 +29,19 @@ const DemoModeProviderContext =
 
 export function DemoModeProvider({
   children,
-  storageKey = "enderai-demo-mode",
+  storageKey = "taskforce-demo-mode",
 }: DemoModeProviderProps) {
   const [isDemoMode, setIsDemoMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false
-    return window.localStorage.getItem(storageKey) === "true"
+    const storedValue = window.localStorage.getItem(storageKey)
+    if (storedValue !== null) return storedValue === "true"
+
+    const legacyValue = window.localStorage.getItem("enderai-demo-mode")
+    if (legacyValue === null) return false
+
+    window.localStorage.setItem(storageKey, legacyValue)
+    window.localStorage.removeItem("enderai-demo-mode")
+    return legacyValue === "true"
   })
 
   const setDemoMode = useCallback(
