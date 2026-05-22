@@ -83,7 +83,7 @@ const Billing = () => {
             Billing
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Start or manage your EnderAI subscription through Stripe.
+            Start or manage your Taskforce subscription through Stripe.
           </p>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -142,7 +142,7 @@ const Billing = () => {
           <Alert>
             <AlertTitle>Stripe-hosted checkout and billing</AlertTitle>
             <AlertDescription>
-              Payment details are handled by Stripe. EnderAI only stores the
+              Payment details are handled by Stripe. Taskforce only stores the
               customer ID and subscription state needed for access decisions.
             </AlertDescription>
           </Alert>

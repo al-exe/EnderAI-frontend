@@ -24,7 +24,7 @@ export function Logo({
             className,
           )}
         >
-          EnderAI
+          Taskforce
         </span>
         <span
           className={cn(
@@ -32,7 +32,7 @@ export function Logo({
             className,
           )}
         >
-          E
+          T
         </span>
       </>
     ) : (
@@ -43,7 +43,7 @@ export function Logo({
           className,
         )}
       >
-        {variant === "full" ? "EnderAI" : "E"}
+        {variant === "full" ? "Taskforce" : "T"}
       </span>
     )
 

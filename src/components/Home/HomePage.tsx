@@ -55,13 +55,13 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                     : `Welcome back, ${displayName}`}
                 </p>
                 <h1 className={styles.heroTitle}>
-                  EnderAI turns the collective knowledge of your company into
+                  Taskforce turns the collective knowledge of your company into
                   reusable workflows for humans and AI.
                 </h1>
                 <p className={styles.heroDescription}>
                   Knowledge that matters is scattered across support tickets,
                   hard to find documenation, email threads, and the minds of
-                  your best employees. EnderAI captures those raw contexts,
+                  your best employees. Taskforce captures those raw contexts,
                   stores them intelligently, and turns the useful parts into
                   briefings and skills for the next person or agent.
                 </p>
@@ -184,10 +184,10 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                 <div className={styles.exampleBlock}>
                   <div className={styles.exampleLabel}>
                     <Terminal className={styles.exampleLabelIcon} />
-                    EnderAI Call
+                    Taskforce call
                   </div>
                   <pre className={styles.exampleCode}>
-                    <code>{mockEnderAiCall}</code>
+                    <code>{mockTaskforceCall}</code>
                   </pre>
                 </div>
               </div>
@@ -196,7 +196,7 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                 <div className={styles.exampleBlock}>
                   <div className={styles.exampleLabel}>
                     <Database className={styles.exampleLabelIcon} />
-                    EnderAI returns
+                    Taskforce returns
                   </div>
                   <dl className={styles.contextRows}>
                     {mockContextPack.map((item) => (
@@ -236,7 +236,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   return (
     <header className={styles.publicNav}>
       <RouterLink to="/" className={styles.brandLink}>
-        EnderAI
+        Taskforce
       </RouterLink>
       <nav className={styles.publicNavActions} aria-label="Public navigation">
         <Button asChild variant="ghost">
@@ -455,7 +455,7 @@ const modelCards: ModelCardProps[] = [
     icon: Shield,
     label: "System-powered",
     title: "Context Packs",
-    description: "Briefings EnderAI assembles before work starts.",
+    description: "Briefings Taskforce assembles before work starts.",
     details: [
       "Pull in relevant prior Topics, Cases, policies, systems, and decisions.",
       "Include matched signals, pinned takeaways, open questions, and avoid-lists.",
@@ -464,21 +464,13 @@ const modelCards: ModelCardProps[] = [
   },
 ]
 
-const mockEnderAiCall = `enderai_begin_case({
+const mockTaskforceCall = `taskforce.beginDocument({
   request_summary:
     "Correct an incorrectly imported sensitive customer field",
-  signals: {
-    product_area: "Customer data",
-    entities: [
-      "Customer profile",
-      "Sensitive profile field"
-    ],
-    requirements: [
-      "Confirm source of truth",
-      "Validate downstream replicas",
-      "Preserve audit trail"
-    ]
-  }
+  contexts: ["Customer data"],
+  symbols: ["Customer profile", "Sensitive profile field"],
+  acceptance_criteria:
+    "Confirm source of truth, validate downstream replicas, and preserve audit trail"
 })`
 
 const mockContextPack = [
