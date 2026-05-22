@@ -20,7 +20,10 @@ test.use({
   },
 })
 
-async function mockTaskforceAuth(page: Page) {
+async function mockTaskforceAuth(
+  page: Page,
+  { incomingInvitationCount = 0 }: { incomingInvitationCount?: number } = {},
+) {
   await page.addInitScript(() => {
     window.localStorage.setItem("access_token", "test-token")
   })
@@ -39,6 +42,24 @@ async function mockTaskforceAuth(page: Page) {
     }
 
     await route.fulfill({ status: 404, json: { detail: "Not found" } })
+  })
+
+  await page.route("**/api/v1/organizations/invitations", async (route) => {
+    const data = Array.from(
+      { length: incomingInvitationCount },
+      (_, index) => ({
+        id: `invite-${index + 1}`,
+        organization_id: `org-${index + 1}`,
+        organization_name: `Partner Organization ${index + 1}`,
+        invited_email: currentUser.email,
+        invited_by_user_id: `partner-admin-${index + 1}`,
+        created_at: "2026-03-17T20:00:00Z",
+        accepted_at: null,
+        revoked_at: null,
+      }),
+    )
+
+    await route.fulfill({ json: { data, count: data.length } })
   })
 }
 
@@ -64,6 +85,26 @@ test("Taskforce v2 sidebar includes collapse and document search controls", asyn
 
   await collapseToggle.click()
   await expect(collapseToggle).toBeVisible()
+})
+
+test("Taskforce v2 sidebar shows pending organization invite badge on the account button", async ({
+  page,
+}) => {
+  await mockTaskforceAuth(page, { incomingInvitationCount: 2 })
+  await mockV2Documents(page)
+
+  await page.goto("/v2/library")
+
+  const inviteBadge = page.getByTestId("organization-invite-badge")
+  await expect(inviteBadge).toBeVisible()
+  await expect(inviteBadge).toHaveText("2")
+  await expect(inviteBadge).toHaveAttribute(
+    "title",
+    "2 pending organization invitations",
+  )
+
+  await page.getByTestId("sidebar-collapse-toggle").click()
+  await expect(inviteBadge).toBeVisible()
 })
 
 test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {
