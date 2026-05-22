@@ -209,6 +209,15 @@ test.describe("Organization", () => {
 
     await page.goto("/v2/settings?tab=organization")
 
+    const organizationTabInviteBadge = page.getByTestId(
+      "organization-tab-invite-badge",
+    )
+    await expect(organizationTabInviteBadge).toBeVisible()
+    await expect(organizationTabInviteBadge).toHaveText("1")
+    await expect(organizationTabInviteBadge).toHaveAttribute(
+      "title",
+      "1 pending organization invitation",
+    )
     await expect(
       page
         .locator('[data-slot="card-title"]')
