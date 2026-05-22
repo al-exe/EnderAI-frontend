@@ -103,8 +103,18 @@ test("Taskforce v2 sidebar shows pending organization invite badge on the accoun
     "2 pending organization invitations",
   )
 
+  await page.getByTestId("user-menu").click()
+  const settingsInviteBadge = page.getByTestId("user-settings-invite-badge")
+  await expect(settingsInviteBadge).toBeVisible()
+  await expect(settingsInviteBadge).toHaveText("2")
+  await expect(settingsInviteBadge).toHaveAttribute(
+    "title",
+    "2 pending organization invitations",
+  )
+
+  await page.keyboard.press("Escape")
   await page.getByTestId("sidebar-collapse-toggle").click()
-  await expect(inviteBadge).toBeVisible()
+  await expect(inviteBadge.first()).toBeVisible()
 })
 
 test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {

@@ -3,6 +3,7 @@ import { Link as RouterLink } from "@tanstack/react-router"
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react"
 
 import { readMyOrganizationInvitations } from "@/api/organizations"
+import { PendingInvitationBadge } from "@/components/Common/PendingInvitationBadge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -32,9 +33,6 @@ function UserInfo({
   email,
   pendingInvitationCount = 0,
 }: UserInfoProps) {
-  const visibleInvitationCount =
-    pendingInvitationCount > 9 ? "9+" : pendingInvitationCount.toString()
-
   return (
     <div className="flex items-center gap-2.5 w-full min-w-0 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:gap-0">
       <div className="relative shrink-0">
@@ -43,15 +41,10 @@ function UserInfo({
             {getInitials(fullName || "User")}
           </AvatarFallback>
         </Avatar>
-        {pendingInvitationCount > 0 && (
-          <span
-            className="-right-1 -top-1 absolute flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-sidebar"
-            data-testid="organization-invite-badge"
-            title={`${pendingInvitationCount} pending organization invitation${pendingInvitationCount === 1 ? "" : "s"}`}
-          >
-            {visibleInvitationCount}
-          </span>
-        )}
+        <PendingInvitationBadge
+          count={pendingInvitationCount}
+          className="-right-1 -top-1 absolute h-4 min-w-4 ring-2 ring-sidebar"
+        />
       </div>
       <div className="flex flex-col items-start min-w-0 group-data-[collapsible=icon]:hidden">
         <p className="text-sm font-medium truncate w-full">{fullName}</p>
@@ -120,7 +113,12 @@ export function User({ user }: { user: any }) {
             <RouterLink to="/v2/settings" onClick={handleMenuClick}>
               <DropdownMenuItem>
                 <Settings />
-                User Settings
+                <span>User Settings</span>
+                <PendingInvitationBadge
+                  count={pendingInvitationCount}
+                  className="ml-auto"
+                  testId="user-settings-invite-badge"
+                />
               </DropdownMenuItem>
             </RouterLink>
             <DropdownMenuItem onClick={handleLogout}>

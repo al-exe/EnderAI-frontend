@@ -1,5 +1,8 @@
+import { useQuery } from "@tanstack/react-query"
 import type { ComponentType } from "react"
 
+import { readMyOrganizationInvitations } from "@/api/organizations"
+import { PendingInvitationBadge } from "@/components/Common/PendingInvitationBadge"
 import AppearanceSettings from "@/components/UserSettings/Appearance"
 import Billing from "@/components/UserSettings/Billing"
 import ChangePassword from "@/components/UserSettings/ChangePassword"
@@ -46,10 +49,19 @@ export function UserSettingsPage({
   onTabChange,
 }: UserSettingsPageProps) {
   const { user: currentUser } = useAuth()
+  const invitationsQuery = useQuery({
+    queryKey: ["my-organization-invitations"],
+    queryFn: readMyOrganizationInvitations,
+    enabled: Boolean(currentUser),
+    staleTime: 30_000,
+  })
 
   if (!currentUser) {
     return null
   }
+
+  const pendingInvitationCount =
+    invitationsQuery.data?.count ?? invitationsQuery.data?.data.length ?? 0
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
@@ -65,7 +77,13 @@ export function UserSettingsPage({
         <TabsList className="max-w-full shrink-0 justify-start overflow-x-auto">
           {tabsConfig.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
-              {tab.title}
+              <span>{tab.title}</span>
+              {tab.value === "organization" && (
+                <PendingInvitationBadge
+                  count={pendingInvitationCount}
+                  testId="organization-tab-invite-badge"
+                />
+              )}
             </TabsTrigger>
           ))}
         </TabsList>
