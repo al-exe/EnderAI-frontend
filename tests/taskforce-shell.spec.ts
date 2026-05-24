@@ -103,6 +103,39 @@ test("Taskforce v2 sidebar includes drag collapse and Extras controls", async ({
   await expect(page.getByText("Experimental workspace")).toHaveCount(0)
   await expect(page.getByTestId("v2-mode-switch")).toHaveCount(0)
 
+  await extrasHandle.click()
+  await expect(extrasDrawer).toHaveAttribute("data-collapsed", "true")
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        local: window.localStorage.getItem(
+          "taskforce.sidebar.extras.collapsed",
+        ),
+        session: window.sessionStorage.getItem(
+          "taskforce.sidebar.extras.collapsed",
+        ),
+      })),
+    )
+    .toEqual({ local: "true", session: "true" })
+
+  await page.reload()
+  await expect(extrasDrawer).toHaveAttribute("data-collapsed", "true")
+
+  await extrasHandle.click()
+  await expect(extrasDrawer).toHaveAttribute("data-collapsed", "false")
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        local: window.localStorage.getItem(
+          "taskforce.sidebar.extras.collapsed",
+        ),
+        session: window.sessionStorage.getItem(
+          "taskforce.sidebar.extras.collapsed",
+        ),
+      })),
+    )
+    .toEqual({ local: "false", session: "false" })
+
   await dragSidebarRail(page, -80)
   await expect(sidebar).toHaveAttribute("data-state", "collapsed")
   await page.waitForTimeout(250)

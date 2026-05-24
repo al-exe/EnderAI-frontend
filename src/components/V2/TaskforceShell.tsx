@@ -69,6 +69,38 @@ const taskforceItems: TaskforceNavItem[] = [
 ]
 
 const TASKFORCE_DISCORD_URL = ""
+const EXTRAS_DRAWER_COLLAPSED_STORAGE_KEY =
+  "taskforce.sidebar.extras.collapsed"
+
+function readStoredExtrasDrawerCollapsed() {
+  if (typeof window === "undefined") return null
+
+  for (const store of [window.sessionStorage, window.localStorage]) {
+    try {
+      const value = store.getItem(EXTRAS_DRAWER_COLLAPSED_STORAGE_KEY)
+      if (value === null) continue
+      const parsed = JSON.parse(value)
+      if (typeof parsed === "boolean") return parsed
+    } catch {
+      // Ignore malformed or inaccessible storage and keep checking fallbacks.
+    }
+  }
+
+  return null
+}
+
+function writeExtrasDrawerCollapsed(isCollapsed: boolean) {
+  if (typeof window === "undefined") return
+  const value = JSON.stringify(isCollapsed)
+
+  for (const store of [window.localStorage, window.sessionStorage]) {
+    try {
+      store.setItem(EXTRAS_DRAWER_COLLAPSED_STORAGE_KEY, value)
+    } catch {
+      // Storage can be disabled in private/sandboxed contexts; keep UI usable.
+    }
+  }
+}
 
 function TaskforceMark() {
   return (
@@ -165,9 +197,15 @@ function DiscordButton() {
 }
 
 function SidebarUtilityDrawer() {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(
+    () => readStoredExtrasDrawerCollapsed() ?? false,
+  )
   const dragStartYRef = useRef<number | null>(null)
   const didDragRef = useRef(false)
+
+  useEffect(() => {
+    writeExtrasDrawerCollapsed(isCollapsed)
+  }, [isCollapsed])
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
     dragStartYRef.current = event.clientY
