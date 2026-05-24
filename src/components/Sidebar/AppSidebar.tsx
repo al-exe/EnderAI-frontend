@@ -1,7 +1,6 @@
 import { Box, Boxes, Home, Sparkles, Users } from "lucide-react"
 
 import { Logo } from "@/components/Common/Logo"
-import { SidebarCollapseToggle } from "@/components/Common/SidebarCollapseToggle"
 import {
   Sidebar,
   SidebarContent,
@@ -37,7 +36,6 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="gap-1">
         <DemoModeToggle />
-        <SidebarCollapseToggle />
         <User user={currentUser} />
       </SidebarFooter>
     </Sidebar>

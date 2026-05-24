@@ -63,7 +63,21 @@ async function mockTaskforceAuth(
   })
 }
 
-test("Taskforce v2 sidebar includes collapse and document search controls", async ({
+async function dragSidebarRail(page: Page, deltaX: number) {
+  const rail = page.getByTestId("sidebar-drag-rail").first()
+  const box = await rail.boundingBox()
+
+  expect(box).not.toBeNull()
+
+  const startX = box!.x + box!.width / 2
+  const startY = box!.y + box!.height / 2
+  await page.mouse.move(startX, startY)
+  await page.mouse.down()
+  await page.mouse.move(startX + deltaX, startY, { steps: 4 })
+  await page.mouse.up()
+}
+
+test("Taskforce v2 sidebar includes drag collapse and Extras controls", async ({
   page,
 }) => {
   await mockTaskforceAuth(page)
@@ -71,10 +85,16 @@ test("Taskforce v2 sidebar includes collapse and document search controls", asyn
 
   await page.goto("/v2/library")
 
-  const collapseToggle = page.getByTestId("sidebar-collapse-toggle")
+  const sidebar = page.locator('[data-slot="sidebar"]').first()
+  const sidebarRail = page.getByTestId("sidebar-drag-rail").first()
+  const extrasDrawer = page.getByTestId("taskforce-sidebar-utility-drawer")
+  const extrasHandle = page.getByTestId("taskforce-sidebar-utility-handle")
   const documentLookup = page.getByTestId("v2-document-lookup-input")
 
-  await expect(collapseToggle).toBeVisible()
+  await expect(page.getByTestId("sidebar-collapse-toggle")).toHaveCount(0)
+  await expect(sidebarRail).toBeVisible()
+  await expect(extrasHandle).toContainText("Extras")
+  await expect(extrasDrawer).toContainText("Demo mode")
   await expect(documentLookup).toBeVisible()
   await expect(documentLookup).toHaveAttribute(
     "placeholder",
@@ -83,8 +103,12 @@ test("Taskforce v2 sidebar includes collapse and document search controls", asyn
   await expect(page.getByText("Experimental workspace")).toHaveCount(0)
   await expect(page.getByTestId("v2-mode-switch")).toHaveCount(0)
 
-  await collapseToggle.click()
-  await expect(collapseToggle).toBeVisible()
+  await dragSidebarRail(page, -80)
+  await expect(sidebar).toHaveAttribute("data-state", "collapsed")
+  await page.waitForTimeout(250)
+
+  await dragSidebarRail(page, 80)
+  await expect(sidebar).toHaveAttribute("data-state", "expanded")
 })
 
 test("Taskforce v2 sidebar shows pending organization invite badge on the account button", async ({
@@ -113,7 +137,7 @@ test("Taskforce v2 sidebar shows pending organization invite badge on the accoun
   )
 
   await page.keyboard.press("Escape")
-  await page.getByTestId("sidebar-collapse-toggle").click()
+  await dragSidebarRail(page, -80)
   await expect(inviteBadge.first()).toBeVisible()
 })
 
@@ -132,7 +156,7 @@ test("Taskforce v2 Admin link stays inside the v2 shell", async ({ page }) => {
   await expect(page.getByText("Taskforce").first()).toBeVisible()
 })
 
-test("Community Upgrade link opens membership tiers with current and selected indicators", async ({
+test("Upgrade link opens membership tiers with current and selected indicators", async ({
   page,
 }) => {
   await mockTaskforceAuth(page)
