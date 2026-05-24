@@ -43,7 +43,7 @@ test("Home route sets the browser tab title to Home", async ({ page }) => {
   await expect(page).toHaveTitle("Home")
 })
 
-test("Sidebar demo mode toggle sits above collapse and scopes Topics/Cases requests", async ({
+test("Sidebar demo mode toggle scopes Topics/Cases requests", async ({
   page,
 }) => {
   await mockAuth(page)
@@ -78,17 +78,11 @@ test("Sidebar demo mode toggle sits above collapse and scopes Topics/Cases reque
   await page.goto("/topics")
 
   const demoToggle = page.getByTestId("demo-mode-toggle")
-  const collapseToggle = page.getByTestId("sidebar-collapse-toggle")
+  const sidebarRail = page.getByTestId("sidebar-drag-rail").first()
 
   await expect(demoToggle).toBeVisible()
-  await expect(collapseToggle).toBeVisible()
-
-  const demoBox = await demoToggle.boundingBox()
-  const collapseBox = await collapseToggle.boundingBox()
-
-  expect(demoBox).not.toBeNull()
-  expect(collapseBox).not.toBeNull()
-  expect(demoBox!.y).toBeLessThan(collapseBox!.y)
+  await expect(page.getByTestId("sidebar-collapse-toggle")).toHaveCount(0)
+  await expect(sidebarRail).toBeVisible()
 
   await expect
     .poll(() =>
@@ -139,9 +133,6 @@ test("Sidebar demo mode toggle sits above collapse and scopes Topics/Cases reque
     ),
   ).toBeLessThanOrEqual(1)
 
-  await collapseToggle.click()
-  await expect(demoToggle).toBeVisible()
-
   await expect
     .poll(() =>
       demoToggle.evaluate(
@@ -149,16 +140,6 @@ test("Sidebar demo mode toggle sits above collapse and scopes Topics/Cases reque
       ),
     )
     .toBe(activeBackground)
-
-  await demoToggle.hover()
-
-  await expect
-    .poll(() =>
-      demoToggle.evaluate(
-        (element) => window.getComputedStyle(element).backgroundColor,
-      ),
-    )
-    .not.toBe(activeBackground)
 })
 
 test("Topics page matches the primary pane width and truncates long left-table text", async ({

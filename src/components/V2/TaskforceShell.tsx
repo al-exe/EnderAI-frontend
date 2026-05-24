@@ -30,7 +30,6 @@ import {
 } from "react"
 import { readV2Documents, type V2DocumentPublic } from "@/api/v2Documents"
 import type { UserPublic } from "@/client"
-import { SidebarCollapseToggle } from "@/components/Common/SidebarCollapseToggle"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { DemoModeToggle, V2ModeSwitch } from "@/components/Sidebar/ModeSwitches"
 import { User } from "@/components/Sidebar/User"
@@ -216,7 +215,7 @@ function SidebarUtilityDrawer() {
         onPointerCancel={handlePointerUp}
       >
         <GripHorizontal className="size-4" />
-        <span className="group-data-[collapsible=icon]:sr-only">Community</span>
+        <span className="group-data-[collapsible=icon]:sr-only">Extras</span>
         <span className="group-data-[collapsible=icon]:hidden">
           {isCollapsed ? (
             <ChevronUp className="size-4" />
@@ -542,7 +541,6 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
         <SidebarFooter className="gap-1">
           <SidebarUtilityDrawer />
           <V2ModeSwitch active enabled={Boolean(currentUser.v2)} />
-          <SidebarCollapseToggle />
           <User user={currentUser} />
         </SidebarFooter>
       </Sidebar>

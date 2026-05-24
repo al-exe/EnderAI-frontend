@@ -258,6 +258,7 @@ function Sidebar({
         >
           {children}
         </div>
+        <SidebarRail />
       </div>
     </div>
   )
@@ -278,7 +279,9 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="sm"
-      className={cn("h-10 gap-2 px-4 text-sm", className)}
+      aria-label={sidebarCopy}
+      title={sidebarCopy}
+      className={cn("h-10 w-10 px-0", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -286,32 +289,85 @@ function SidebarTrigger({
       {...props}
     >
       <PanelLeftIcon className="size-4" />
-      <span>{sidebarCopy}</span>
+      <span className="sr-only">{sidebarCopy}</span>
     </Button>
   )
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-  const { toggleSidebar } = useSidebar()
+  const { open, setOpen } = useSidebar()
+  const dragStartXRef = React.useRef<number | null>(null)
+  const dragSideRef = React.useRef<"left" | "right">("left")
+  const didDragRef = React.useRef(false)
+  const didCommitDragRef = React.useRef(false)
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+    dragStartXRef.current = event.clientX
+    didDragRef.current = false
+    didCommitDragRef.current = false
+    dragSideRef.current =
+      event.currentTarget
+        .closest("[data-side]")
+        ?.getAttribute("data-side") === "right"
+        ? "right"
+        : "left"
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (dragStartXRef.current === null) return
+
+    const deltaX = event.clientX - dragStartXRef.current
+    if (Math.abs(deltaX) < 32) return
+
+    didDragRef.current = true
+    if (!didCommitDragRef.current) {
+      didCommitDragRef.current = true
+      setOpen(dragSideRef.current === "right" ? deltaX < 0 : deltaX > 0)
+    }
+  }
+
+  const handlePointerEnd = (event: React.PointerEvent<HTMLButtonElement>) => {
+    dragStartXRef.current = null
+    didCommitDragRef.current = false
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+  }
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (didDragRef.current) {
+      didDragRef.current = false
+      return
+    }
+
+    props.onClick?.(event)
+    setOpen(!open)
+  }
 
   return (
     <button
       data-sidebar="rail"
       data-slot="sidebar-rail"
+      data-testid="sidebar-drag-rail"
       aria-label="Toggle Sidebar"
       tabIndex={-1}
-      onClick={toggleSidebar}
-      title="Toggle Sidebar"
+      title={open ? "Drag left to collapse sidebar" : "Drag right to expand sidebar"}
+      {...props}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerEnd}
+      onPointerCancel={handlePointerEnd}
       className={cn(
         "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex",
-        "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
+        "in-data-[side=left]:cursor-ew-resize in-data-[side=right]:cursor-ew-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
         "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
         "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
         className,
       )}
-      {...props}
     />
   )
 }
