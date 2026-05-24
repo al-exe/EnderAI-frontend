@@ -18,7 +18,14 @@ import {
   Strikethrough,
   X,
 } from "lucide-react"
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import {
   type OrganizationMemberPublic,
@@ -493,6 +500,7 @@ function TaskforceDocumentDetail() {
   const [accessOpen, setAccessOpen] = useState(false)
   const [shareDraft, setShareDraft] = useState<ShareDraft>({})
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
+  const handledHashScrollRef = useRef<string | null>(null)
 
   const documentQuery = useQuery({
     queryKey: ["v2-document", documentId, { demo: isDemoMode }],
@@ -614,7 +622,7 @@ function TaskforceDocumentDetail() {
   const summaryVisible = viewMode === "summary" || isSplit
   const detailsVisible = viewMode === "details" || isSplit
 
-  const showEvidence = (anchorId: string) => {
+  const showEvidence = useCallback((anchorId: string) => {
     setActiveEvidenceAnchorId(anchorId)
     setViewMode("split")
     window.setTimeout(() => {
@@ -622,7 +630,32 @@ function TaskforceDocumentDetail() {
         .getElementById(anchorId)
         ?.scrollIntoView({ block: "start", behavior: "smooth" })
     }, 0)
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!document) return
+
+    const rawHash = window.location.hash.slice(1)
+    if (!rawHash) return
+
+    let anchorId = rawHash
+    try {
+      anchorId = decodeURIComponent(rawHash)
+    } catch {
+      anchorId = rawHash
+    }
+
+    const scrollKey = `${document.id}:${anchorId}`
+    if (handledHashScrollRef.current === scrollKey) return
+
+    const hasMatchingSection = document.details_markdown_sections.some(
+      (section) => section.anchor_id === anchorId,
+    )
+    if (!hasMatchingSection) return
+
+    handledHashScrollRef.current = scrollKey
+    showEvidence(anchorId)
+  }, [document, showEvidence])
 
   const closeSplit = () => {
     setViewMode("summary")
