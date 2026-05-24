@@ -16,6 +16,7 @@ import {
   FolderOpen,
   FolderPlus,
   MoreHorizontal,
+  Pencil,
   Plus,
   Share2,
   Star,
@@ -76,6 +77,7 @@ import {
 import useCustomToast from "@/hooks/useCustomToast"
 import {
   enumDeserializer,
+  persistedKey,
   usePersistentState,
 } from "@/hooks/usePersistentState"
 import { cn } from "@/lib/utils"
@@ -186,8 +188,39 @@ function TaskforceLibrary() {
   const [createDocumentOpen, setCreateDocumentOpen] = useState(false)
   const [deleteDocumentTarget, setDeleteDocumentTarget] =
     useState<V2DocumentPublic | null>(null)
-  const [openFolderIds, setOpenFolderIds] = useState<Set<string>>(
-    () => new Set(["favorites", "unfiled"]),
+  // openFolderIds is the source of truth for which folders are expanded in the
+  // Folder Directory view. We persist the array form because Sets don't survive
+  // JSON.stringify; the Set view is derived for downstream callers that use
+  // `.has()` / `.add()`.
+  const [persistedOpenFolders, setPersistedOpenFolders] = usePersistentState<
+    string[]
+  >(
+    persistedKey(
+      "library.openFolders",
+      currentUser.id,
+      isDemoMode ? "demo" : "live",
+    ),
+    () => ["favorites", "unfiled"],
+    {
+      deserialize: (raw) =>
+        Array.isArray(raw)
+          ? raw.filter((v): v is string => typeof v === "string")
+          : undefined,
+    },
+  )
+  const openFolderIds = useMemo(
+    () => new Set(persistedOpenFolders),
+    [persistedOpenFolders],
+  )
+  const setOpenFolderIds = useCallback(
+    (next: Set<string> | ((current: Set<string>) => Set<string>)) => {
+      setPersistedOpenFolders((prev) => {
+        const prevSet = new Set(prev)
+        const nextSet = typeof next === "function" ? next(prevSet) : next
+        return Array.from(nextSet)
+      })
+    },
+    [setPersistedOpenFolders],
   )
   const [dragOverFolderId, setDragOverFolderId] =
     useState<DirectoryDropTargetId | null>(null)
@@ -1610,40 +1643,140 @@ function DocumentActionsMenu({
   document: V2DocumentPublic
   onDelete: (document: V2DocumentPublic) => void
 }) {
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [renameValue, setRenameValue] = useState(document.title)
+
+  const canRename =
+    !document.is_demo &&
+    (document.user_access === "owner" || document.user_access === "editor")
+
+  const renameMutation = useMutation({
+    mutationFn: (title: string) =>
+      updateV2Document(document.id, { title }, { demo: document.is_demo }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["v2-documents", { demo: document.is_demo }],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["v2-document-folders", { demo: document.is_demo }],
+      })
+      setRenameOpen(false)
+      showSuccessToast("Document renamed.")
+    },
+    onError: () => {
+      showErrorToast("Could not rename document.")
+    },
+  })
+
+  const submitRename = (event: React.FormEvent) => {
+    event.preventDefault()
+    const trimmed = renameValue.trim()
+    if (!trimmed || trimmed === document.title || !canRename) return
+    renameMutation.mutate(trimmed)
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Open options for ${document.title}`}
-          className="cursor-pointer"
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
-          onDragStart={(event) => event.preventDefault()}
-        >
-          <MoreHorizontal className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-44"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <DropdownMenuItem
-          variant="destructive"
-          className="cursor-pointer"
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`Open options for ${document.title}`}
+            className="cursor-pointer"
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+            }}
+            onDragStart={(event) => event.preventDefault()}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="w-44"
           onClick={(event) => event.stopPropagation()}
-          onSelect={() => onDelete(document)}
         >
-          <Trash2 className="size-4" />
-          Delete document
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {canRename && (
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={(event) => event.stopPropagation()}
+              onSelect={() => {
+                setRenameValue(document.title)
+                setRenameOpen(true)
+              }}
+            >
+              <Pencil className="size-4" />
+              Rename document
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem
+            variant="destructive"
+            className="cursor-pointer"
+            onClick={(event) => event.stopPropagation()}
+            onSelect={() => onDelete(document)}
+          >
+            <Trash2 className="size-4" />
+            Delete document
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent
+          className="sm:max-w-md"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle>Rename document</DialogTitle>
+            <DialogDescription>
+              Update the document title shown in your library.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={submitRename}>
+            <div className="space-y-2">
+              <label
+                className="text-sm font-medium"
+                htmlFor={`rename-document-${document.id}`}
+              >
+                Document title
+              </label>
+              <Input
+                id={`rename-document-${document.id}`}
+                value={renameValue}
+                onChange={(event) => setRenameValue(event.target.value)}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={renameMutation.isPending}
+                onClick={() => setRenameOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  !renameValue.trim() ||
+                  renameValue.trim() === document.title ||
+                  !canRename ||
+                  renameMutation.isPending
+                }
+              >
+                {renameMutation.isPending ? "Renaming…" : "Rename"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
