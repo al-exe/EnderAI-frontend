@@ -8,7 +8,6 @@ import {
 import {
   BarChart3,
   BookOpenText,
-  Bot,
   ChevronDown,
   ChevronUp,
   Component,
@@ -17,6 +16,7 @@ import {
   Rocket,
   Search,
   Shield,
+  Sparkles,
 } from "lucide-react"
 import {
   Fragment,
@@ -63,14 +63,13 @@ type TaskforceNavItem = {
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Search, title: "Search", path: "/v2/search" },
   { icon: BookOpenText, title: "Library", path: "/v2/library" },
-  { icon: Bot, title: "Agents", path: "/v2/agents" },
+  { icon: Sparkles, title: "Agents", path: "/v2/agents" },
   { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
 ]
 
 const TASKFORCE_DISCORD_URL = ""
-const EXTRAS_DRAWER_COLLAPSED_STORAGE_KEY =
-  "taskforce.sidebar.extras.collapsed"
+const EXTRAS_DRAWER_COLLAPSED_STORAGE_KEY = "taskforce.sidebar.extras.collapsed"
 
 function readStoredExtrasDrawerCollapsed() {
   if (typeof window === "undefined") return null
@@ -139,7 +138,8 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
         const isActive =
           currentPath === item.path ||
           (item.path === "/v2/library" &&
-            currentPath.startsWith("/v2/library/"))
+            currentPath.startsWith("/v2/library/")) ||
+          (item.path === "/v2/agents" && currentPath.startsWith("/v2/agents/"))
 
         return (
           <SidebarMenuItem key={item.title}>
