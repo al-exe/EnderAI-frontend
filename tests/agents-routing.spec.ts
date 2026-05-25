@@ -147,14 +147,19 @@ test("agents grid links to specialist detail and session metrics", async ({
 
   await page.goto("/v2/agents")
 
-  await expect(page.getByText("Reusable AI specialists")).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: /Reusable .*specialists/i }),
+  ).toBeVisible()
   await expect(page.getByTestId("agents-grid")).toBeVisible()
-  await expect(page.getByText("Jensen")).toBeVisible()
-  await expect(page.getByText("Mira")).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Jensen", level: 3 }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Mira", level: 3 }),
+  ).toBeVisible()
 
   await page
-    .getByRole("link", { name: /view specialist/i })
-    .first()
+    .getByRole("link", { name: /open specialist jensen/i })
     .click()
   await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
   await expect(page.getByRole("heading", { name: "Jensen" })).toBeVisible()
@@ -187,6 +192,8 @@ test("agents grid shows empty state before specialists are seeded", async ({
     page.getByRole("heading", { name: "No specialists yet" }),
   ).toBeVisible()
   await expect(
-    page.getByText("Taskforce will create them as you accumulate context"),
+    page.getByText(
+      "Agents will appear here after Taskforce packages reusable specialist knowledge",
+    ),
   ).toBeVisible()
 })
