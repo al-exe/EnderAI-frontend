@@ -648,7 +648,7 @@ function TaskforceLibrary() {
         onDelete: requestDeleteDocument,
       }}
     >
-      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden p-6">
         <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 py-3 backdrop-blur">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>

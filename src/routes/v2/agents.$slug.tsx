@@ -30,7 +30,7 @@ import {
   formatCompactNumber,
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
-import { V2_CONTENT_SHELL, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
+import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/agents/$slug")({
   component: AgentDetailPage,
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/v2/agents/$slug")({
   }),
 })
 
-const AGENTS_DETAIL_SHELL = `${V2_CONTENT_SHELL} gap-6 py-6`
+const AGENTS_DETAIL_SHELL = V2_PAGE_CONTENT
 
 function initials(name: string) {
   return name
@@ -340,7 +340,7 @@ function AgentDetailPage() {
         className={`${V2_PAGE_FRAME} bg-white font-sans dark:bg-zinc-950`}
       >
         <div
-          className={`${V2_CONTENT_SHELL} flex min-h-[50vh] flex-col items-center justify-center py-12 text-center`}
+          className={`${V2_PAGE_CONTENT} min-h-[50vh] items-center justify-center text-center`}
         >
           <h1 className={AGENT_PAGE_TITLE_CLASS}>Specialist not found</h1>
           <p className="mt-3 max-w-lg text-sm leading-6 text-zinc-500 dark:text-zinc-400">
