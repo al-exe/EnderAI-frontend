@@ -227,7 +227,7 @@ test("experimental mode shows expressive session-scoped metrics", async ({
           session_id: sessionId,
           doc_count: 2,
           net_saved_tokens: 4218,
-          usd_saved: "0.42",
+          usd_saved: "0.00423",
           pricing_model_id: "claude-opus-4-7",
           occurred_at_first: "2026-05-23T19:00:00Z",
           occurred_at_last: "2026-05-23T19:04:00Z",
@@ -244,7 +244,10 @@ test("experimental mode shows expressive session-scoped metrics", async ({
   await expect(
     page.getByRole("heading", { name: /this session saved 4\.2k tokens/i }),
   ).toBeVisible()
-  await expect(page.getByText("Bridge incident investigation")).toBeVisible()
+  await expect(page.getByText("$0.00423 estimated savings")).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "Bridge incident investigation" }),
+  ).toHaveAttribute("href", /\/v2\/library\/doc-1$/)
   await expect(
     page.getByRole("heading", { name: "Documents consulted" }),
   ).toBeVisible()
