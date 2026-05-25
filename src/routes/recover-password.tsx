@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { isLoggedIn } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { getDefaultFrontendPath } from "@/lib/experimentalMode"
 import { firebaseAuth } from "@/lib/firebase"
 import {
   getAuthErrorMessage,
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/recover-password")({
   beforeLoad: async () => {
     if (isLoggedIn()) {
       throw redirect({
-        to: "/v2/library",
+        to: getDefaultFrontendPath() as never,
       })
     }
   },

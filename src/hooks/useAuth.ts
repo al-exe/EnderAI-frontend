@@ -16,6 +16,7 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
+import { getDefaultFrontendPath } from "@/lib/experimentalMode"
 import { firebaseAuth } from "@/lib/firebase"
 import { getAuthErrorMessage } from "@/lib/firebase-errors"
 import useCustomToast from "./useCustomToast"
@@ -57,7 +58,7 @@ const useAuth = () => {
       localStorage.setItem("access_token", response.access_token)
     },
     onSuccess: () => {
-      navigate({ to: "/v2/library" })
+      navigate({ to: getDefaultFrontendPath() as never })
     },
     onError: (error) => {
       showErrorToast(getAuthErrorMessage(error))
@@ -81,7 +82,7 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
-      navigate({ to: "/v2/library" })
+      navigate({ to: getDefaultFrontendPath() as never })
     },
     onError: async (error) => {
       const currentUser = firebaseAuth.currentUser
@@ -107,7 +108,7 @@ const useAuth = () => {
       localStorage.setItem("access_token", response.access_token)
     },
     onSuccess: () => {
-      navigate({ to: "/v2/library" })
+      navigate({ to: getDefaultFrontendPath() as never })
     },
     onError: (error) => {
       showErrorToast(getAuthErrorMessage(error))

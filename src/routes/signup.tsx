@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { getDefaultFrontendPath } from "@/lib/experimentalMode"
 
 const formSchema = z
   .object({
@@ -45,7 +46,7 @@ export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
     if (isLoggedIn()) {
       throw redirect({
-        to: "/v2/library",
+        to: getDefaultFrontendPath() as never,
       })
     }
   },
