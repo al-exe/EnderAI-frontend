@@ -111,7 +111,7 @@ function TaskforceMark() {
       className="flex min-w-0 items-center gap-3 px-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0"
     >
       <img
-        src="/assets/brand/icon-192.png"
+        src="/assets/brand/tf-logo.svg"
         alt=""
         className="size-8 shrink-0 group-data-[collapsible=icon]:size-7"
       />
