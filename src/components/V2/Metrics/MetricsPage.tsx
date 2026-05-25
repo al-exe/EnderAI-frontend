@@ -179,7 +179,6 @@ function formatSessionDate(value: string): string {
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC",
     timeZoneName: "short",
   }).format(parsed)
 }
@@ -187,6 +186,19 @@ function formatSessionDate(value: string): string {
 function formatScore(score: number): string {
   if (!Number.isFinite(score)) return "0%"
   return `${Math.round(score * 100)}%`
+}
+
+function formatPreciseSessionUsd(value: string | number | null | undefined) {
+  const numeric = toMetricNumber(value)
+  if (numeric !== 0 && Math.abs(numeric) < 0.01) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 5,
+    }).format(numeric)
+  }
+  return formatMetricValue(value, "usd")
 }
 
 // Org-scope toggle is intentionally deferred. The backend supports
@@ -308,119 +320,122 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
   return (
     <section className={V2_PAGE_FRAME}>
       <div className={V2_PAGE_CONTENT}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Metrics</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold">Metrics</h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <MetricsTimeRange value={window} onChange={setWindow} />
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <MetricsTimeRange value={window} onChange={setWindow} />
-        </div>
-      </div>
 
-      {scopedSessionId && (
-        <div
-          data-testid="metrics-session-filter-banner"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-100"
-        >
-          <span>
-            Showing savings for session{" "}
-            <code className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-xs dark:bg-white/10">
-              {sessionShortId}
-            </code>
-          </span>
-          <Link
-            to="/v2/metrics"
-            search={{}}
-            className="font-medium underline-offset-4 hover:underline"
+        {scopedSessionId && (
+          <div
+            data-testid="metrics-session-filter-banner"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-100"
           >
-            view all metrics →
-          </Link>
-        </div>
-      )}
-
-      {metricsQuery.isError && (
-        <div className="rounded border border-destructive bg-destructive/10 p-3 text-sm">
-          Failed to load metrics. Try again in a moment.
-        </div>
-      )}
-
-      {isEmpty && (
-        <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-          No metrics yet. Connect your MCP and start using Taskforce — events
-          show up here within a minute of the agent's first call.
-        </div>
-      )}
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {(scopedSessionId ? SESSION_PRIMARY_METRICS : PRIMARY_METRICS).map(
-          (name) => {
-            const def = scopedSessionId
-              ? SESSION_METRIC_DEFINITIONS[name]
-              : definitionsByName[name]
-            const value = scopedSessionId
-              ? sessionMetricValues[name]
-              : metrics[name]
-            if (!def) return null
-            return <MetricCard key={name} definition={def} value={value} />
-          },
+            <span>
+              Showing savings for session{" "}
+              <code className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-xs dark:bg-white/10">
+                {sessionShortId}
+              </code>
+            </span>
+            <Link
+              to="/v2/metrics"
+              search={{}}
+              className="font-medium underline-offset-4 hover:underline"
+            >
+              view all metrics →
+            </Link>
+          </div>
         )}
-      </section>
 
-      {scopedSessionId && (
-        <SessionLogTable
-          entries={sessionLogEntries}
-          isError={sessionLogQuery.isError}
-          isLoading={sessionLogQuery.isLoading}
-        />
-      )}
+        {metricsQuery.isError && (
+          <div className="rounded border border-destructive bg-destructive/10 p-3 text-sm">
+            Failed to load metrics. Try again in a moment.
+          </div>
+        )}
 
-      {savingsV2Flag && !scopedSessionId && (
+        {isEmpty && (
+          <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
+            No metrics yet. Connect your MCP and start using Taskforce — events
+            show up here within a minute of the agent's first call.
+          </div>
+        )}
+
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {[
-            "avoided_rediscovery",
-            "avoided_rediscovery_usd",
-            "documents_consulted",
-          ].map((name) => {
+          {(scopedSessionId ? SESSION_PRIMARY_METRICS : PRIMARY_METRICS).map(
+            (name) => {
+              const def = scopedSessionId
+                ? SESSION_METRIC_DEFINITIONS[name]
+                : definitionsByName[name]
+              const value = scopedSessionId
+                ? sessionMetricValues[name]
+                : metrics[name]
+              if (!def) return null
+              return <MetricCard key={name} definition={def} value={value} />
+            },
+          )}
+        </section>
+
+        {scopedSessionId && (
+          <SessionLogTable
+            entries={sessionLogEntries}
+            isError={sessionLogQuery.isError}
+            isLoading={sessionLogQuery.isLoading}
+          />
+        )}
+
+        {savingsV2Flag && !scopedSessionId && (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {[
+              "avoided_rediscovery",
+              "avoided_rediscovery_usd",
+              "documents_consulted",
+            ].map((name) => {
+              const def = definitionsByName[name]
+              if (!def) return null
+              return (
+                <MetricCard key={name} definition={def} value={metrics[name]} />
+              )
+            })}
+          </section>
+        )}
+
+        <MethodologyLink />
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <MetricTrendChart
+            title="Tokens saved per day"
+            series={tokensSaved?.series ?? []}
+          />
+          <MetricBreakdown
+            title="Savings by source"
+            rows={tokensSaved?.breakdown_by_source ?? []}
+            info="Shows where Taskforce avoided rework: cache reuse, reading summaries instead of full details, and reconnecting to existing documents."
+          />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {SECONDARY_METRICS.map((name) => {
             const def = definitionsByName[name]
             if (!def) return null
             return (
               <MetricCard key={name} definition={def} value={metrics[name]} />
             )
           })}
+          <MetricCard
+            definition={USD_NET_SAVED_DEFINITION}
+            value={usdNetSaved}
+          />
         </section>
-      )}
 
-      <MethodologyLink />
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <MetricTrendChart
-          title="Tokens saved per day"
-          series={tokensSaved?.series ?? []}
-        />
-        <MetricBreakdown
-          title="Savings by source"
-          rows={tokensSaved?.breakdown_by_source ?? []}
-          info="Shows where Taskforce avoided rework: cache reuse, reading summaries instead of full details, and reconnecting to existing documents."
-        />
-      </section>
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {SECONDARY_METRICS.map((name) => {
-          const def = definitionsByName[name]
-          if (!def) return null
-          return (
-            <MetricCard key={name} definition={def} value={metrics[name]} />
-          )
-        })}
-        <MetricCard definition={USD_NET_SAVED_DEFINITION} value={usdNetSaved} />
-      </section>
-
-      <section>
-        <MetricBreakdown
-          title="Top models by tokens used"
-          rows={tokensConsumed?.top_models ?? []}
-        />
-      </section>
+        <section>
+          <MetricBreakdown
+            title="Top models by tokens used"
+            rows={tokensConsumed?.top_models ?? []}
+          />
+        </section>
       </div>
     </section>
   )
@@ -524,7 +539,7 @@ function ExperimentalMetricsPage({
         </div>
       )}
 
-      <section className="grid border border-foreground bg-foreground text-background lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
+      <section className="grid border border-border bg-background text-foreground lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
         <div className="px-5 py-6 md:px-7">
           <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
             Tokens saved · {windowCopy.label}
@@ -540,14 +555,14 @@ function ExperimentalMetricsPage({
             {formatMetricValue(usdNetSaved.total, "usd")} net saved
           </div>
         </div>
-        <div className="flex flex-col gap-4 border-t border-background/20 p-5 lg:border-t-0 lg:border-l">
+        <div className="flex flex-col gap-4 border-t border-border p-5 lg:border-t-0 lg:border-l">
           <div>
             <div className="font-mono text-xs uppercase tracking-[0.16em] opacity-70">
               Daily trend
             </div>
             <ExperimentalSparkline series={tokensSaved?.series ?? []} />
           </div>
-          <div className="grid border border-background/20 sm:grid-cols-2">
+          <div className="grid border border-border sm:grid-cols-2">
             <ExperimentalRatioCell
               label="Reuse rate"
               value={formatMetricValue(reuseRate, "ratio")}
@@ -555,7 +570,7 @@ function ExperimentalMetricsPage({
             <ExperimentalRatioCell
               label="Saved / used"
               value={`${formatRatioValue(savingsRatio)}x`}
-              className="border-t border-background/20 sm:border-t-0 sm:border-l"
+              className="border-t border-border sm:border-t-0 sm:border-l"
             />
           </div>
         </div>
@@ -700,7 +715,7 @@ function ExperimentalSessionMetrics({
         </Link>
       </header>
 
-      <section className="grid border border-foreground bg-foreground text-background lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
+      <section className="grid border border-border bg-background text-foreground lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
         <div className="px-5 py-6 md:px-7">
           <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
             Session tokens saved
@@ -709,12 +724,12 @@ function ExperimentalSessionMetrics({
             {formatMetricValue(tokensSaved?.total, "compact-int")}
           </div>
           <div className="mt-4 text-sm opacity-70">
-            {formatMetricValue(usdSaved?.total, "usd")} estimated savings ·{" "}
+            {formatPreciseSessionUsd(usdSaved?.total)} estimated savings ·{" "}
             {formatMetricValue(documentsConsulted?.total, "count")} documents
             consulted
           </div>
         </div>
-        <div className="grid border-t border-background/20 sm:grid-cols-2 lg:border-t-0 lg:border-l">
+        <div className="grid border-t border-border sm:grid-cols-2 lg:border-t-0 lg:border-l">
           <ExperimentalRatioCell
             label="Documents"
             value={formatMetricValue(documentsConsulted?.total, "count")}
@@ -722,17 +737,17 @@ function ExperimentalSessionMetrics({
           <ExperimentalRatioCell
             label="Pricing model"
             value={sessionSavings?.pricing_model_id ?? SESSION_PRICING_MODEL_ID}
-            className="border-t border-background/20 sm:border-t-0 sm:border-l lg:border-l-0 xl:border-l"
+            className="border-t border-border sm:border-t-0 sm:border-l lg:border-l-0 xl:border-l"
           />
           <ExperimentalRatioCell
             label="First event"
             value={firstSeen ? formatSessionDate(firstSeen) : "No event"}
-            className="border-t border-background/20"
+            className="border-t border-border"
           />
           <ExperimentalRatioCell
             label="Last event"
             value={lastSeen ? formatSessionDate(lastSeen) : "No event"}
-            className="border-t border-background/20 sm:border-l"
+            className="border-t border-border sm:border-l"
           />
         </div>
       </section>
@@ -740,9 +755,8 @@ function ExperimentalSessionMetrics({
       <section className="grid border border-border md:grid-cols-[10rem_minmax(0,1fr)]">
         <div className="border-b border-border bg-muted/40 p-4 md:border-r md:border-b-0">
           <div className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
-            Session
+            Session insights
           </div>
-          <div className="mt-2 text-sm font-semibold">What this means</div>
         </div>
         <p className="max-w-4xl p-4 text-sm leading-6 text-foreground">
           Session{" "}
@@ -753,7 +767,7 @@ function ExperimentalSessionMetrics({
           <b>{formatMetricValue(documentsConsulted?.total, "count")}</b>{" "}
           documents and avoided{" "}
           <b>{formatMetricValue(tokensSaved?.total, "compact-int")} tokens</b>,
-          worth about <b>{formatMetricValue(usdSaved?.total, "usd")}</b> under{" "}
+          worth about <b>{formatPreciseSessionUsd(usdSaved?.total)}</b> under{" "}
           {sessionSavings?.pricing_model_id ?? SESSION_PRICING_MODEL_ID}{" "}
           pricing.
         </p>
@@ -765,6 +779,9 @@ function ExperimentalSessionMetrics({
             key={name}
             definition={SESSION_METRIC_DEFINITIONS[name]}
             value={sessionMetricValues[name]}
+            valueFormatter={
+              name === "usd_saved" ? formatPreciseSessionUsd : undefined
+            }
           />
         ))}
       </section>
@@ -783,11 +800,15 @@ function ExperimentalSessionMetrics({
 function ExperimentalMetricTile({
   definition,
   value,
+  valueFormatter,
 }: {
   definition: MetricDefinitionPublic
   value: MetricValuePublic | undefined
+  valueFormatter?: (value: string | number | null | undefined) => string
 }) {
-  const total = formatMetricValue(value?.total, definition.presentation.format)
+  const total = valueFormatter
+    ? valueFormatter(value?.total)
+    : formatMetricValue(value?.total, definition.presentation.format)
   const delta =
     definition.presentation.trend && value?.delta_vs_prev_window != null
       ? formatDelta(value.delta_vs_prev_window, definition.presentation.format)
@@ -1051,9 +1072,13 @@ function ExperimentalSessionLog({
               className="grid gap-2 px-1 py-3 md:grid-cols-[minmax(0,1.4fr)_4rem_5rem_7rem] md:items-center md:gap-4"
             >
               <div className="min-w-0">
-                <div className="truncate text-sm font-medium">
+                <Link
+                  to="/v2/library/$documentId"
+                  params={{ documentId: entry.document_id }}
+                  className="block truncate text-sm font-medium underline-offset-4 hover:text-primary hover:underline"
+                >
                   {entry.title}
-                </div>
+                </Link>
                 <div className="mt-1 text-xs text-muted-foreground">
                   {formatSessionDate(entry.occurred_at)}
                 </div>
