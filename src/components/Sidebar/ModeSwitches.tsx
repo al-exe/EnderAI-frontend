@@ -1,13 +1,8 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router"
 import { FlaskConical, type LucideIcon, Rocket } from "lucide-react"
 
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { useExperimentalMode } from "@/components/experimental-mode-provider"
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
-import {
-  getCurrentFrontendPath,
-  getExperimentalFrontendPath,
-} from "@/lib/experimentalMode"
 import { cn } from "@/lib/utils"
 
 type ModeToggleProps = {
@@ -68,19 +63,7 @@ function ModeToggle({
 }
 
 export function ExperimentalModeToggle() {
-  const navigate = useNavigate()
-  const router = useRouterState()
-  const { isExperimentalMode, setExperimentalMode } = useExperimentalMode()
-
-  const handleClick = () => {
-    const nextEnabled = !isExperimentalMode
-    const nextPath = nextEnabled
-      ? getExperimentalFrontendPath(router.location.pathname)
-      : getCurrentFrontendPath(router.location.pathname)
-
-    setExperimentalMode(nextEnabled)
-    void navigate({ to: nextPath as never })
-  }
+  const { isExperimentalMode, toggleExperimentalMode } = useExperimentalMode()
 
   return (
     <ModeToggle
@@ -93,7 +76,7 @@ export function ExperimentalModeToggle() {
           ? "Disable experimental mode"
           : "Enable experimental mode"
       }
-      onClick={handleClick}
+      onClick={toggleExperimentalMode}
     />
   )
 }

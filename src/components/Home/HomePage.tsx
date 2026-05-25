@@ -16,7 +16,6 @@ import {
 } from "lucide-react"
 
 import type { UserPublic } from "@/client"
-import { useExperimentalMode } from "@/components/experimental-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,7 +36,6 @@ type HomePageProps = {
 
 export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
   const isPublic = mode === "public"
-  const { isExperimentalMode } = useExperimentalMode()
   const canUseApp = !isPublic || signedIn
   const firstName = user?.full_name?.trim().split(/\s+/)[0]
   const displayName = firstName || user?.email || "there"
@@ -72,24 +70,14 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                 {isPublic ? (
                   <>
                     <Button asChild size="lg" className={styles.primaryCta}>
-                      <RouterLink
-                        to={
-                          signedIn && isExperimentalMode
-                            ? "/v2/library"
-                            : signedIn
-                              ? "/home"
-                              : "/signup"
-                        }
-                      >
+                      <RouterLink to={signedIn ? "/v2/library" : "/signup"}>
                         <Sparkles className={styles.icon} />
                         Try the demo
                       </RouterLink>
                     </Button>
                     <Button asChild variant="outline" size="lg">
                       {signedIn ? (
-                        <RouterLink
-                          to={isExperimentalMode ? "/v2/library" : "/home"}
-                        >
+                        <RouterLink to="/v2/library">
                           <LogIn className={styles.icon} />
                           Open Home
                         </RouterLink>
@@ -110,23 +98,13 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
                       </RouterLink>
                     </Button>
                     <Button asChild size="lg">
-                      {isExperimentalMode ? (
-                        <RouterLink
-                          to="/v2/settings"
-                          search={{ tab: "connect-agent" }}
-                          data-testid="home-connect-agent-link"
-                        >
-                          Connect agent
-                        </RouterLink>
-                      ) : (
-                        <RouterLink
-                          to="/settings"
-                          search={{ tab: "connect-agent" }}
-                          data-testid="home-connect-agent-link"
-                        >
-                          Connect agent
-                        </RouterLink>
-                      )}
+                      <RouterLink
+                        to="/v2/settings"
+                        search={{ tab: "connect-agent" }}
+                        data-testid="home-connect-agent-link"
+                      >
+                        Connect agent
+                      </RouterLink>
                     </Button>
                   </>
                 )}
