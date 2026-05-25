@@ -19,8 +19,11 @@ import {
 import {
   AGENT_DESCRIPTION_CLASS,
   AGENT_NAME_CLASS,
+  AGENT_PAGE_TITLE_CLASS,
   AGENT_ROLE_CLASS,
   AGENT_ROUTE_CHIP_CLASS,
+  AGENT_STAT_LABEL_CLASS,
+  AGENT_STAT_VALUE_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
 import { V2_CONTENT_SHELL, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 
@@ -117,7 +120,7 @@ function TeamStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
   return (
     <section className="grid border border-zinc-950 bg-zinc-950 text-white md:grid-cols-[1.6fr_1fr_1fr_1fr] dark:border-white/15 dark:bg-black">
       <div className="border-b border-white/15 p-4 md:border-r md:border-b-0">
-        <div className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-white/55">
+        <div className="text-xs uppercase tracking-wide text-white/55">
           Team tokens saved
         </div>
         <div className="mt-2 text-2xl font-semibold leading-none tracking-[-0.02em] tabular-nums">
@@ -134,7 +137,7 @@ function TeamStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
         />
       </div>
       <div className="border-b border-white/15 p-4 md:border-r md:border-b-0">
-        <div className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-white/55">
+        <div className="text-xs uppercase tracking-wide text-white/55">
           Active
         </div>
         <div className="mt-2 text-2xl font-semibold leading-none tabular-nums">
@@ -157,24 +160,24 @@ function TeamStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
         </div>
       </div>
       <div className="border-b border-white/15 p-4 md:border-r md:border-b-0">
-        <div className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-white/55">
+        <div className="text-xs uppercase tracking-wide text-white/55">
           Reuse rate
         </div>
         <div className="mt-2 text-2xl font-semibold leading-none tabular-nums">
           {reuseRate}%
         </div>
-        <div className="mt-1 font-mono text-[0.68rem] text-emerald-300">
+        <div className="mt-1 text-xs text-emerald-300">
           {invocationCount.toLocaleString()} routed runs
         </div>
       </div>
       <div className="p-4">
-        <div className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-white/55">
+        <div className="text-xs uppercase tracking-wide text-white/55">
           Linked docs
         </div>
         <div className="mt-2 text-2xl font-semibold leading-none tabular-nums">
           {linkedDocsCount}
         </div>
-        <div className="mt-1 font-mono text-[0.68rem] text-amber-200">
+        <div className="mt-1 text-xs text-amber-200">
           specialist memory
         </div>
       </div>
@@ -217,7 +220,7 @@ function AgentCard({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5 font-mono text-[0.66rem] text-zinc-500 dark:text-zinc-400">
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
         <span className="text-zinc-400 dark:text-zinc-600">route_when:</span>
         {tags.map((tag) => (
           <span key={tag} className={AGENT_ROUTE_CHIP_CLASS}>
@@ -242,13 +245,11 @@ function AgentCard({
 
       <div className="mt-4 grid grid-cols-[1.35fr_0.8fr_0.8fr] border-t border-black/10 pt-3 dark:border-white/12">
         <div className="border-r border-black/10 pr-3 dark:border-white/12">
-          <div className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
-            Tokens saved
-          </div>
-          <div className="mt-1 font-mono text-[0.95rem] font-semibold tabular-nums text-zinc-950 dark:text-white">
+          <div className={AGENT_STAT_LABEL_CLASS}>Tokens saved</div>
+          <div className={cn("mt-1", AGENT_STAT_VALUE_CLASS)}>
             {formatCompactNumber(agent.tokens_saved)}
             {agent.invocations_count > 0 && (
-              <span className="ml-1 text-[0.6rem] text-emerald-600 dark:text-emerald-400">
+              <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">
                 live
               </span>
             )}
@@ -261,24 +262,20 @@ function AgentCard({
           />
         </div>
         <div className="border-r border-black/10 px-3 dark:border-white/12">
-          <div className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
-            Runs
-          </div>
-          <div className="mt-1 font-mono text-[0.95rem] font-semibold tabular-nums text-zinc-950 dark:text-white">
+          <div className={AGENT_STAT_LABEL_CLASS}>Runs</div>
+          <div className={cn("mt-1", AGENT_STAT_VALUE_CLASS)}>
             {agent.invocations_count}
           </div>
         </div>
         <div className="pl-3">
-          <div className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
-            Docs
-          </div>
-          <div className="mt-1 font-mono text-[0.95rem] font-semibold tabular-nums text-zinc-950 dark:text-white">
+          <div className={AGENT_STAT_LABEL_CLASS}>Docs</div>
+          <div className={cn("mt-1", AGENT_STAT_VALUE_CLASS)}>
             {agent.linked_docs_count}
           </div>
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 font-mono text-[0.62rem] uppercase tracking-[0.08em] text-zinc-400 dark:text-zinc-500">
+      <div className="mt-4 flex items-center justify-between gap-3 text-xs uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
         <span>{formatRelativeTime(agent.last_invoked_at)}</span>
         <span
           aria-hidden="true"
@@ -298,7 +295,7 @@ function EmptyAgents({ isDemoMode }: { isDemoMode: boolean }) {
       <div className="mx-auto grid size-12 place-items-center border border-zinc-200 bg-zinc-50 text-[#8447ff] dark:border-white/15 dark:bg-white/5">
         <Bot className="size-6" />
       </div>
-      <h2 className="mt-5 text-xl font-semibold tracking-tight">
+      <h2 className={cn("mt-5", AGENT_PAGE_TITLE_CLASS)}>
         No specialists yet
       </h2>
       <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-zinc-500 dark:text-zinc-400">
@@ -334,31 +331,19 @@ function TaskforceAgents() {
       className={`${V2_PAGE_FRAME} gap-6 bg-white font-sans text-zinc-950 dark:bg-zinc-950 dark:text-white`}
     >
       <div className={`${V2_CONTENT_SHELL} gap-6 py-6`}>
-        <header className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="font-mono text-[0.65rem] uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">
-              Agents
-            </div>
-            <h1 className="mt-2 max-w-3xl text-4xl font-semibold leading-[0.95] tracking-[-0.045em] md:text-5xl">
-              Reusable{" "}
-              <em className="not-italic text-[#8447ff]">specialists</em>,
-              packaged from your work.
-            </h1>
+            <h1 className={AGENT_PAGE_TITLE_CLASS}>Agents</h1>
+            <p className="mt-1 max-w-3xl text-sm text-zinc-500 dark:text-zinc-400">
+              Reusable specialists packaged from your work.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em]">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-8 border-zinc-950 px-3 font-mono text-[0.68rem] uppercase tracking-[0.08em] dark:border-white/30"
-            >
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm">
               Sort: impact
             </Button>
-            <Button
-              type="button"
-              disabled
-              className="h-8 bg-zinc-950 px-3 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-white disabled:opacity-60 dark:bg-white dark:text-zinc-950"
-            >
-              + New specialist
+            <Button type="button" size="sm" disabled>
+              New specialist
             </Button>
           </div>
         </header>
@@ -382,7 +367,7 @@ function TaskforceAgents() {
         </div>
 
         {agentsQuery.isFetching && !agentsQuery.isLoading && (
-          <div className="mt-4 inline-flex items-center gap-2 font-mono text-xs text-zinc-400 dark:text-zinc-500">
+          <div className="mt-4 inline-flex items-center gap-2 text-sm text-zinc-400 dark:text-zinc-500">
             <Loader2 className="size-3 animate-spin" />
             Refreshing specialists
           </div>
