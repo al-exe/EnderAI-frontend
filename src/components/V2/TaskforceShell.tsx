@@ -8,15 +8,14 @@ import {
 import {
   BarChart3,
   BookOpenText,
+  Bot,
   ChevronDown,
   ChevronUp,
-  Component,
   GripHorizontal,
   MessageCircle,
   Rocket,
   Search,
   Shield,
-  Sparkles,
 } from "lucide-react"
 import {
   Fragment,
@@ -63,7 +62,7 @@ type TaskforceNavItem = {
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Search, title: "Search", path: "/v2/search" },
   { icon: BookOpenText, title: "Library", path: "/v2/library" },
-  { icon: Sparkles, title: "Agents", path: "/v2/agents" },
+  { icon: Bot, title: "Agents", path: "/v2/agents" },
   { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
 ]
@@ -105,12 +104,22 @@ function TaskforceMark() {
   return (
     <RouterLink
       to="/v2/library"
-      className="min-w-0 px-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0"
+      className="flex min-w-0 items-center gap-3 px-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0"
     >
-      <span className="text-[1.7rem] font-semibold group-data-[collapsible=icon]:hidden">
+      <picture className="grid size-8 shrink-0 place-items-center overflow-hidden border border-sidebar-border bg-sidebar-accent group-data-[collapsible=icon]:size-7">
+        <source
+          srcSet="/assets/brand/tf-icon-filled-dark.svg"
+          media="(prefers-color-scheme: dark)"
+        />
+        <img
+          src="/assets/brand/tf-icon-filled.svg"
+          alt=""
+          className="size-full"
+        />
+      </picture>
+      <span className="text-[1.55rem] font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
         Taskforce
       </span>
-      <Component className="hidden size-5 group-data-[collapsible=icon]:block" />
     </RouterLink>
   )
 }
