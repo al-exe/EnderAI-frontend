@@ -510,7 +510,12 @@ function TaskforceDocumentDetail() {
   const document = documentQuery.data
   const isOwner = Boolean(document && user?.id === document.owner_id)
   const canEditDocument = Boolean(document && document.user_access !== "viewer")
-  const canManageDocument = isOwner && !isDemoMode
+  const canManageDocument = isOwner
+  // Sharing demo docs to a real org would leak demo content into another
+  // user's live view, so keep the access/share affordance hidden when
+  // demo mode is on. Rename / move / dates / favorite / delete are safe
+  // because they only mutate the current user's own demo-scoped rows.
+  const canShareDocument = canManageDocument && !isDemoMode
 
   const foldersQuery = useQuery({
     queryKey: ["v2-document-folders", { demo: isDemoMode }],
@@ -588,7 +593,7 @@ function TaskforceDocumentDetail() {
   })
 
   const toggleFavorite = () => {
-    if (!document || isDemoMode || favoriteMutation.isPending) return
+    if (!document || favoriteMutation.isPending) return
     favoriteMutation.mutate(!document.is_favorite)
   }
 
@@ -976,7 +981,8 @@ function TaskforceDocumentDetail() {
           document={document}
           folders={foldersQuery.data?.data ?? []}
           canManageLibrary={canManageDocument}
-          canFavorite={!isDemoMode}
+          canShare={canShareDocument}
+          canFavorite={true}
           organizationMembers={organizationQuery.data?.members ?? []}
           shares={sharesQuery.data?.data ?? document.shared_with ?? []}
           ownerId={document.owner_id}
@@ -1055,6 +1061,7 @@ function DocumentMetadata({
   document,
   folders,
   canManageLibrary,
+  canShare,
   canFavorite,
   organizationMembers,
   shares,
@@ -1077,6 +1084,7 @@ function DocumentMetadata({
   document: V2DocumentPublic
   folders: V2DocumentFolderPublic[]
   canManageLibrary: boolean
+  canShare: boolean
   canFavorite: boolean
   organizationMembers: OrganizationMemberPublic[]
   shares: V2DocumentSharePublic[]
@@ -1131,7 +1139,7 @@ function DocumentMetadata({
         </span>
       )}
 
-      {canManageLibrary ? (
+      {canShare ? (
         <DocumentAccessDropdown
           open={accessOpen}
           onOpenChange={onAccessOpenChange}

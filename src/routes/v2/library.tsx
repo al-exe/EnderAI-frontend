@@ -304,7 +304,11 @@ function TaskforceLibrary() {
       folderId: string
       parentFolderId: string | null
     }) =>
-      updateV2DocumentFolder(folderId, { parent_folder_id: parentFolderId }),
+      updateV2DocumentFolder(
+        folderId,
+        { parent_folder_id: parentFolderId },
+        { demo: isDemoMode },
+      ),
     onMutate: async ({ folderId, parentFolderId }) => {
       await queryClient.cancelQueries({ queryKey: foldersQueryKey })
       const previousFolders =
@@ -514,7 +518,6 @@ function TaskforceLibrary() {
   const isFolderEmpty =
     !isLoading && documents.length > 0 && visibleDocuments.length === 0
   const canMutateLibrary =
-    !isDemoMode &&
     !moveDocumentMutation.isPending &&
     !moveFolderMutation.isPending &&
     !favoriteMutation.isPending
@@ -544,12 +547,7 @@ function TaskforceLibrary() {
   }
 
   const moveDocument = (documentId: string, folderId: string | null) => {
-    if (
-      isDemoMode ||
-      moveDocumentMutation.isPending ||
-      moveFolderMutation.isPending
-    )
-      return
+    if (moveDocumentMutation.isPending || moveFolderMutation.isPending) return
     const document = allDocuments.find((item) => item.id === documentId)
     if (!document || (document.folder_id ?? null) === folderId) {
       setDragOverFolderId(null)
@@ -559,12 +557,7 @@ function TaskforceLibrary() {
   }
 
   const moveFolder = (folderId: string, parentFolderId: string | null) => {
-    if (
-      isDemoMode ||
-      moveDocumentMutation.isPending ||
-      moveFolderMutation.isPending
-    )
-      return
+    if (moveDocumentMutation.isPending || moveFolderMutation.isPending) return
     const folder = folders.find((item) => item.id === folderId)
     if (
       !folder ||
@@ -582,7 +575,6 @@ function TaskforceLibrary() {
     event: DragEvent<HTMLElement>,
     folderId: DirectoryDropTargetId,
   ) => {
-    if (isDemoMode) return
     event.preventDefault()
     event.dataTransfer.dropEffect = "move"
     setDragOverFolderId(folderId)
@@ -627,7 +619,7 @@ function TaskforceLibrary() {
   }
 
   const toggleFavorite = (document: V2DocumentPublic) => {
-    if (isDemoMode || favoriteMutation.isPending) return
+    if (favoriteMutation.isPending) return
     favoriteMutation.mutate({
       documentId: document.id,
       favorite: !document.is_favorite,
@@ -635,7 +627,7 @@ function TaskforceLibrary() {
   }
 
   const requestDeleteDocument = (document: V2DocumentPublic) => {
-    if (isDemoMode || deleteDocumentMutation.isPending) return
+    if (deleteDocumentMutation.isPending) return
     setDeleteDocumentTarget(document)
   }
 
@@ -649,9 +641,7 @@ function TaskforceLibrary() {
     <DocumentDeleteContext.Provider
       value={{
         canDelete:
-          !isDemoMode &&
-          !deleteDocumentMutation.isPending &&
-          !moveDocumentMutation.isPending,
+          !deleteDocumentMutation.isPending && !moveDocumentMutation.isPending,
         onDelete: requestDeleteDocument,
       }}
     >
@@ -697,29 +687,25 @@ function TaskforceLibrary() {
                 onClick={() => setLibraryView("folders")}
               />
             </div>
-            {!isDemoMode && (
-              <>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="w-fit"
-                  onClick={() => setCreateDocumentOpen(true)}
-                >
-                  <Plus className="size-4" />
-                  New document
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="w-fit"
-                  onClick={() => setCreateFolderOpen(true)}
-                >
-                  <FolderPlus className="size-4" />
-                  Create folder
-                </Button>
-              </>
-            )}
+            <Button
+              type="button"
+              size="sm"
+              className="w-fit"
+              onClick={() => setCreateDocumentOpen(true)}
+            >
+              <Plus className="size-4" />
+              New document
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="w-fit"
+              onClick={() => setCreateFolderOpen(true)}
+            >
+              <FolderPlus className="size-4" />
+              Create folder
+            </Button>
           </div>
         </div>
 
@@ -785,7 +771,7 @@ function TaskforceLibrary() {
               {!isFolderEmpty && (
                 <InfiniteDocumentGrid
                   documents={visibleDocuments}
-                  canFavorite={!isDemoMode && !favoriteMutation.isPending}
+                  canFavorite={!favoriteMutation.isPending}
                   onToggleFavorite={toggleFavorite}
                 />
               )}
@@ -803,7 +789,7 @@ function TaskforceLibrary() {
                 openFolderIds={openFolderIds}
                 dragOverFolderId={dragOverFolderId}
                 canMoveItems={canMutateLibrary}
-                canFavorite={!isDemoMode && !favoriteMutation.isPending}
+                canFavorite={!favoriteMutation.isPending}
                 currentUserId={currentUser.id}
                 demo={isDemoMode}
                 onToggleFolder={toggleFolderOpen}
@@ -1649,8 +1635,7 @@ function DocumentActionsMenu({
   const [renameValue, setRenameValue] = useState(document.title)
 
   const canRename =
-    !document.is_demo &&
-    (document.user_access === "owner" || document.user_access === "editor")
+    document.user_access === "owner" || document.user_access === "editor"
 
   const renameMutation = useMutation({
     mutationFn: (title: string) =>
