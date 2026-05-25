@@ -181,8 +181,14 @@ function AgentCard({
   const sparkline = SPARKLINES[(index + 1) % SPARKLINES.length]
 
   return (
-    <article className="group relative border border-black/10 bg-white p-4 pl-5 shadow-[0_18px_50px_-42px_rgba(0,0,0,0.9)] transition-transform duration-200 hover:-translate-y-0.5 dark:border-white/12 dark:bg-zinc-950">
-      <div className="absolute inset-y-0 left-0 w-[3px] bg-[#8447ff]" />
+    <article className="group relative border border-black/10 bg-white p-4 pl-5 shadow-[0_18px_50px_-42px_rgba(0,0,0,0.9)] transition-transform duration-200 focus-within:-translate-y-0.5 focus-within:border-[#8447ff]/40 hover:-translate-y-0.5 hover:border-[#8447ff]/40 dark:border-white/12 dark:bg-zinc-950">
+      <Link
+        to="/v2/agents/$slug"
+        params={{ slug: agent.slug }}
+        aria-label={`Open specialist ${agent.name}`}
+        className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8447ff]/60"
+      />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-[#8447ff]" />
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="truncate text-[1rem] font-semibold tracking-[-0.01em] text-zinc-950 dark:text-white">
@@ -263,14 +269,13 @@ function AgentCard({
 
       <div className="mt-4 flex items-center justify-between gap-3 font-mono text-[0.62rem] uppercase tracking-[0.08em] text-zinc-400 dark:text-zinc-500">
         <span>{formatRelativeTime(agent.last_invoked_at)}</span>
-        <Link
-          to="/v2/agents/$slug"
-          params={{ slug: agent.slug }}
+        <span
+          aria-hidden="true"
           className="inline-flex items-center gap-1 text-zinc-950 transition-colors group-hover:text-[#8447ff] dark:text-white"
         >
           Open
           <ArrowRight className="size-3" />
-        </Link>
+        </span>
       </div>
     </article>
   )
@@ -342,7 +347,7 @@ function TaskforceAgents() {
           {agentsQuery.isLoading ? (
             <AgentsLoading />
           ) : agents.length > 0 ? (
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div data-testid="agents-grid" className="grid gap-3 lg:grid-cols-2">
               {agents.map((agent, index) => (
                 <AgentCard key={agent.id} agent={agent} index={index} />
               ))}
