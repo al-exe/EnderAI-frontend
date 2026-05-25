@@ -167,6 +167,8 @@ function buildFallbackSessionSavings(
     pricing_model_id: SESSION_PRICING_MODEL_ID,
     occurred_at_first: occurredAtValues[0] ?? null,
     occurred_at_last: occurredAtValues[occurredAtValues.length - 1] ?? null,
+    specialist_slug: null,
+    specialist_name: null,
   }
 }
 
@@ -539,7 +541,7 @@ function ExperimentalMetricsPage({
         </div>
       )}
 
-      <section className="grid border border-border bg-background text-foreground lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
+      <section className="border border-border bg-background text-foreground">
         <div className="px-5 py-6 md:px-7">
           <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
             Tokens saved · {windowCopy.label}
@@ -555,22 +557,16 @@ function ExperimentalMetricsPage({
             {formatMetricValue(usdNetSaved.total, "usd")} net saved
           </div>
         </div>
-        <div className="flex flex-col gap-4 border-t border-border p-5 lg:border-t-0 lg:border-l">
-          <MetricTrendChart
-            title="Daily tokens saved"
-            series={tokensSaved?.series ?? []}
+        <div className="grid border-t border-border sm:grid-cols-2">
+          <ExperimentalRatioCell
+            label="Reuse rate"
+            value={formatMetricValue(reuseRate, "ratio")}
           />
-          <div className="grid border border-border sm:grid-cols-2">
-            <ExperimentalRatioCell
-              label="Reuse rate"
-              value={formatMetricValue(reuseRate, "ratio")}
-            />
-            <ExperimentalRatioCell
-              label="Saved / used"
-              value={`${formatRatioValue(savingsRatio)}x`}
-              className="border-t border-border sm:border-t-0 sm:border-l"
-            />
-          </div>
+          <ExperimentalRatioCell
+            label="Saved / used"
+            value={`${formatRatioValue(savingsRatio)}x`}
+            className="border-t border-border sm:border-t-0 sm:border-l"
+          />
         </div>
       </section>
 
@@ -701,6 +697,20 @@ function ExperimentalSessionMetrics({
             </span>
             .
           </h1>
+          {sessionSavings?.specialist_slug ? (
+            <Link
+              to="/v2/agents/$slug"
+              params={{ slug: sessionSavings.specialist_slug }}
+              className="mt-3 inline-flex items-center gap-1.5 border border-border px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-foreground hover:bg-muted"
+            >
+              Routed to{" "}
+              <span className="font-semibold normal-case tracking-normal">
+                {sessionSavings.specialist_name ??
+                  sessionSavings.specialist_slug}
+              </span>
+              <span aria-hidden>→</span>
+            </Link>
+          ) : null}
         </div>
         <Link
           to="/v2/metrics"

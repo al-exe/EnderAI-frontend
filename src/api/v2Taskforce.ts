@@ -9,6 +9,8 @@ export interface TaskforceSessionSavingsResponse {
   pricing_model_id: string
   occurred_at_first: string | null
   occurred_at_last: string | null
+  specialist_slug: string | null
+  specialist_name: string | null
 }
 
 export interface TaskforceSessionLogEntry {
