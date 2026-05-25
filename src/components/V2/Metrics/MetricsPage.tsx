@@ -560,7 +560,12 @@ function ExperimentalMetricsPage({
             <div className="font-mono text-xs uppercase tracking-[0.16em] opacity-70">
               Daily trend
             </div>
-            <ExperimentalSparkline series={tokensSaved?.series ?? []} />
+            <div className="mt-2">
+              <MetricTrendChart
+                title="Tokens saved per day"
+                series={tokensSaved?.series ?? []}
+              />
+            </div>
           </div>
           <div className="grid border border-border sm:grid-cols-2">
             <ExperimentalRatioCell
@@ -599,11 +604,18 @@ function ExperimentalMetricsPage({
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
-        <ExperimentalTrendPanel
-          title="Reuse trend"
-          kicker="Tokens saved · daily"
-          series={tokensSaved?.series ?? []}
-        />
+        <section className="border border-border bg-background p-4">
+          <div className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
+            Tokens saved · daily
+          </div>
+          <h2 className="mt-1 text-sm font-semibold">Reuse trend</h2>
+          <div className="mt-4">
+            <MetricTrendChart
+              title="Reuse trend"
+              series={tokensSaved?.series ?? []}
+            />
+          </div>
+        </section>
         <ExperimentalBreakdownPanel
           title="Where savings came from"
           kicker="Savings by source"
@@ -857,125 +869,6 @@ function ExperimentalRatioCell({
   )
 }
 
-function ExperimentalSparkline({
-  series,
-}: {
-  series: MetricValuePublic["series"]
-}) {
-  const points = buildPolyline(series, 100, 38, 0)
-  return (
-    <div className="mt-2 h-12">
-      {points ? (
-        <svg
-          viewBox="0 0 100 38"
-          preserveAspectRatio="none"
-          className="block h-full w-full"
-          aria-hidden="true"
-        >
-          <polyline
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            points={points}
-          />
-        </svg>
-      ) : (
-        <div className="grid h-full place-items-center border border-background/20 text-xs opacity-70">
-          No trend data
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ExperimentalTrendPanel({
-  kicker,
-  series,
-  title,
-}: {
-  kicker: string
-  series: MetricValuePublic["series"]
-  title: string
-}) {
-  const points = buildPolyline(series, 360, 132, 12)
-  const areaPoints = points ? `${points} 360,132 0,132` : ""
-
-  return (
-    <section className="border border-border bg-background p-4">
-      <div className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
-        {kicker}
-      </div>
-      <h2 className="mt-1 text-sm font-semibold">{title}</h2>
-      <div className="mt-4 h-44">
-        {points ? (
-          <svg
-            role="img"
-            aria-label={title}
-            viewBox="0 0 360 150"
-            preserveAspectRatio="none"
-            className="block h-full w-full text-primary"
-          >
-            <title>{title}</title>
-            <polygon points={areaPoints} fill="currentColor" opacity="0.12" />
-            <polyline
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              vectorEffect="non-scaling-stroke"
-              points={points}
-            />
-            <ExperimentalXAxisLabels series={series} />
-          </svg>
-        ) : (
-          <div className="grid h-full place-items-center border border-dashed border-border text-sm text-muted-foreground">
-            No data in this window.
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function ExperimentalXAxisLabels({
-  series,
-}: {
-  series: MetricValuePublic["series"]
-}) {
-  if (series.length === 0) return null
-  const indexes =
-    series.length === 1
-      ? [0]
-      : [0, Math.floor(series.length / 2), series.length - 1]
-  const uniqueIndexes = Array.from(new Set(indexes))
-  return (
-    <>
-      {uniqueIndexes.map((index) => {
-        const x =
-          series.length === 1 ? 180 : (index / (series.length - 1)) * 360
-        return (
-          <text
-            key={`${series[index].day}-${index}`}
-            x={x}
-            y={146}
-            textAnchor={
-              index === 0
-                ? "start"
-                : index === series.length - 1
-                  ? "end"
-                  : "middle"
-            }
-            fontSize="10"
-            fill="currentColor"
-            opacity="0.65"
-          >
-            {formatShortDay(series[index].day)}
-          </text>
-        )
-      })}
-    </>
-  )
-}
-
 function ExperimentalBreakdownPanel({
   kicker,
   rows,
@@ -1100,33 +993,6 @@ function ExperimentalSessionLog({
   )
 }
 
-function buildPolyline(
-  series: MetricValuePublic["series"],
-  width: number,
-  height: number,
-  padding: number,
-) {
-  if (series.length === 0) return ""
-  const values = series.map((point) => toMetricNumber(point.value))
-  const min = Math.min(...values, 0)
-  const max = Math.max(...values, 1)
-  const span = Math.max(max - min, 1)
-  const innerWidth = width - padding * 2
-  const innerHeight = height - padding * 2
-
-  return series
-    .map((point, index) => {
-      const value = toMetricNumber(point.value)
-      const x =
-        series.length === 1
-          ? width / 2
-          : padding + (index / (series.length - 1)) * innerWidth
-      const y = padding + innerHeight - ((value - min) / span) * innerHeight
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(" ")
-}
-
 function formatHeroDelta(
   value: MetricValuePublic | undefined,
   format: MetricDefinitionPublic["presentation"]["format"],
@@ -1144,14 +1010,6 @@ function formatRatioValue(value: number) {
   })
 }
 
-function formatShortDay(day: string) {
-  const parsed = new Date(day)
-  if (Number.isNaN(parsed.getTime())) return day
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    timeZone: "UTC",
-  }).format(parsed)
-}
 
 function SessionLogTable({
   entries,
