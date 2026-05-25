@@ -14,7 +14,6 @@ import {
   FileText,
   Folder,
   FolderOpen,
-  FolderPlus,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -517,6 +516,10 @@ function TaskforceLibrary() {
     (libraryView === "files" || folders.length === 0)
   const isFolderEmpty =
     !isLoading && documents.length > 0 && visibleDocuments.length === 0
+  const totalDocumentCount = documentsQuery.data?.count ?? allDocuments.length
+  const teamSharedDocumentCount = allDocuments.filter(
+    (document) => document.visibility === "organization",
+  ).length
   const canMutateLibrary =
     !moveDocumentMutation.isPending &&
     !moveFolderMutation.isPending &&
@@ -646,8 +649,35 @@ function TaskforceLibrary() {
       }}
     >
       <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
-        <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 py-3 backdrop-blur lg:flex-row lg:items-end lg:justify-between">
-          <h1 className="text-2xl font-semibold">Library</h1>
+        <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 py-3 backdrop-blur">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground">
+                Library · {totalDocumentCount} documents ·{" "}
+                {teamSharedDocumentCount} shared with team
+              </div>
+              <h1 className="mt-1 text-2xl font-semibold">Library</h1>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="w-fit"
+                onClick={() => setCreateFolderOpen(true)}
+              >
+                + Folder
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="w-fit"
+                onClick={() => setCreateDocumentOpen(true)}
+              >
+                + New document
+              </Button>
+            </div>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <div
               role="tablist"
@@ -687,25 +717,6 @@ function TaskforceLibrary() {
                 onClick={() => setLibraryView("folders")}
               />
             </div>
-            <Button
-              type="button"
-              size="sm"
-              className="w-fit"
-              onClick={() => setCreateDocumentOpen(true)}
-            >
-              <Plus className="size-4" />
-              New document
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="w-fit"
-              onClick={() => setCreateFolderOpen(true)}
-            >
-              <FolderPlus className="size-4" />
-              Create folder
-            </Button>
           </div>
         </div>
 
