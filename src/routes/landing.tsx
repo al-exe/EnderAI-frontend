@@ -44,10 +44,6 @@ function LandingMinimal() {
           className="inline-flex items-center gap-2 text-sm font-semibold"
         >
           <picture className="grid size-6 place-items-center overflow-hidden">
-            <source
-              srcSet="/assets/brand/tf-icon-filled-dark.svg"
-              media="(prefers-color-scheme: dark)"
-            />
             <img src="/assets/brand/tf-icon-filled.svg" alt="" />
           </picture>
           Taskforce
