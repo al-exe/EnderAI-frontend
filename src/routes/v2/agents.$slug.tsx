@@ -22,7 +22,8 @@ export const Route = createFileRoute("/v2/agents/$slug")({
   }),
 })
 
-const PAGE_SHELL = "w-full"
+// Between full-bleed and the original max-w-5xl + px-5/md:px-8 layout.
+const PAGE_SHELL = "mx-auto w-full max-w-6xl px-4 md:px-6"
 
 function initials(name: string) {
   return name
