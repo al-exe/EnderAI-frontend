@@ -22,7 +22,7 @@ export const Route = createFileRoute("/v2/agents/$slug")({
   }),
 })
 
-const PAGE_X = "px-2.5 md:px-4"
+const PAGE_SHELL = "w-full"
 
 function initials(name: string) {
   return name
@@ -219,7 +219,7 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
 
 function AgentDetailSkeleton() {
   return (
-    <div className={`mx-auto w-full max-w-5xl ${PAGE_X} py-7`} aria-busy="true">
+    <div className={`${PAGE_SHELL} py-7`} aria-busy="true">
       <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
         <div className="space-y-3">
           <Skeleton className="h-4 w-40 rounded-none" />
@@ -434,7 +434,7 @@ function AgentDetailPage() {
 
   return (
     <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-sans text-zinc-950 md:-m-8 dark:bg-zinc-950 dark:text-white">
-      <div className={`mx-auto w-full max-w-5xl ${PAGE_X} py-7`}>
+      <div className={`${PAGE_SHELL} py-7`}>
         <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
           <div>
             <div className="font-mono text-[0.8125rem] uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
