@@ -6,32 +6,17 @@ import {
   TaskforceShell,
 } from "@/components/V2/TaskforceShell"
 import { isLoggedIn } from "@/hooks/useAuth"
-import {
-  getCurrentFrontendPath,
-  readExperimentalModePreference,
-} from "@/lib/experimentalMode"
 
 export const Route = createFileRoute("/v2")({
   // Keep session user in route context without re-fetching on every child navigation.
   staleTime: Number.POSITIVE_INFINITY,
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async () => {
     if (!isLoggedIn()) {
       throw redirect({ to: "/login" })
     }
 
     try {
       const currentUser = await UsersService.readUserMe()
-      const canUseExperimental =
-        currentUser.is_superuser && readExperimentalModePreference()
-
-      if (!canUseExperimental) {
-        throw redirect({
-          to: getCurrentFrontendPath(location.pathname) as never,
-          search: location.search as never,
-          replace: true,
-        })
-      }
-
       return { currentUser }
     } catch (error) {
       if (error instanceof ApiError && [401, 403].includes(error.status)) {

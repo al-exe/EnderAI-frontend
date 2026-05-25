@@ -30,6 +30,7 @@ import {
 import { readV2Documents, type V2DocumentPublic } from "@/api/v2Documents"
 import type { UserPublic } from "@/client"
 import { useDemoMode } from "@/components/demo-mode-provider"
+import { useExperimentalMode } from "@/components/experimental-mode-provider"
 import {
   DemoModeToggle,
   ExperimentalModeToggle,
@@ -581,9 +582,23 @@ function DocumentSearch() {
   )
 }
 
+function InternalModeAccessGate({ currentUser }: TaskforceShellProps) {
+  const { setDemoMode } = useDemoMode()
+  const { setExperimentalMode } = useExperimentalMode()
+
+  useEffect(() => {
+    if (currentUser.is_superuser) return
+    setDemoMode(false)
+    setExperimentalMode(false)
+  }, [currentUser.is_superuser, setDemoMode, setExperimentalMode])
+
+  return null
+}
+
 export function TaskforceShell({ currentUser }: TaskforceShellProps) {
   return (
     <SidebarProvider className="h-svh overflow-hidden">
+      <InternalModeAccessGate currentUser={currentUser} />
       <Sidebar collapsible="icon">
         <SidebarHeader className="px-4 py-6 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
           <TaskforceMark />
