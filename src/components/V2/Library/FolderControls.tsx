@@ -103,11 +103,14 @@ export function FolderCreateDialog({
 
   const createMutation = useMutation({
     mutationFn: () =>
-      createV2DocumentFolder({
-        name: name.trim(),
-        visibility,
-        parent_folder_id: parentFolderId,
-      }),
+      createV2DocumentFolder(
+        {
+          name: name.trim(),
+          visibility,
+          parent_folder_id: parentFolderId,
+        },
+        { demo },
+      ),
     onSuccess: (folder) => {
       setName("")
       setVisibility("private")
@@ -137,7 +140,7 @@ export function FolderCreateDialog({
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault()
-            if (!name.trim() || demo) return
+            if (!name.trim()) return
             createMutation.mutate()
           }}
         >
@@ -168,7 +171,9 @@ export function FolderCreateDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="organization">Organization</SelectItem>
+                {!demo && (
+                  <SelectItem value="organization">Organization</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -209,7 +214,7 @@ export function FolderCreateDialog({
             </Button>
             <Button
               type="submit"
-              disabled={!name.trim() || demo || createMutation.isPending}
+              disabled={!name.trim() || createMutation.isPending}
             >
               <FolderPlus className="size-4" />
               {createMutation.isPending ? "Creating" : "Create"}
@@ -252,9 +257,13 @@ export function FolderActionsMenu({
 
   const renameMutation = useMutation({
     mutationFn: () =>
-      updateV2DocumentFolder(folder.id, {
-        name: name.trim(),
-      }),
+      updateV2DocumentFolder(
+        folder.id,
+        {
+          name: name.trim(),
+        },
+        { demo },
+      ),
     onSuccess: () => {
       invalidateLibraryQueries()
       setRenameOpen(false)
@@ -266,7 +275,7 @@ export function FolderActionsMenu({
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteV2DocumentFolder(folder.id),
+    mutationFn: () => deleteV2DocumentFolder(folder.id, { demo }),
     onSuccess: () => {
       invalidateLibraryQueries()
       setDeleteOpen(false)
@@ -286,7 +295,6 @@ export function FolderActionsMenu({
             type="button"
             variant="ghost"
             size="icon-sm"
-            disabled={demo}
             aria-label={`Open options for ${folder.name}`}
             className="cursor-pointer"
             onClick={(event) => event.stopPropagation()}
@@ -352,7 +360,7 @@ export function FolderActionsMenu({
             className="space-y-4"
             onSubmit={(event) => {
               event.preventDefault()
-              if (!name.trim() || demo) return
+              if (!name.trim()) return
               renameMutation.mutate()
             }}
           >
@@ -384,7 +392,6 @@ export function FolderActionsMenu({
                 disabled={
                   !name.trim() ||
                   name.trim() === folder.name ||
-                  demo ||
                   renameMutation.isPending
                 }
               >
@@ -416,7 +423,7 @@ export function FolderActionsMenu({
             <Button
               type="button"
               variant="destructive"
-              disabled={demo || deleteMutation.isPending}
+              disabled={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate()}
             >
               {deleteMutation.isPending ? "Deleting" : "Delete folder"}

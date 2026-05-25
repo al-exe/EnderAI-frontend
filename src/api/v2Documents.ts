@@ -152,10 +152,14 @@ export function readV2DocumentFolders(
 
 export function createV2DocumentFolder(
   body: V2DocumentFolderCreate,
+  options: { demo?: boolean } = {},
 ): CancelablePromise<V2DocumentFolderPublic> {
   return request(OpenAPI, {
     method: "POST",
     url: "/api/v1/v2/documents/folders/",
+    query: {
+      demo: options.demo || undefined,
+    },
     body,
   })
 }
@@ -163,6 +167,7 @@ export function createV2DocumentFolder(
 export function updateV2DocumentFolder(
   folderId: string,
   body: V2DocumentFolderUpdate,
+  options: { demo?: boolean } = {},
 ): CancelablePromise<V2DocumentFolderPublic> {
   return request(OpenAPI, {
     method: "PATCH",
@@ -170,18 +175,25 @@ export function updateV2DocumentFolder(
     path: {
       folder_id: folderId,
     },
+    query: {
+      demo: options.demo || undefined,
+    },
     body,
   })
 }
 
 export function deleteV2DocumentFolder(
   folderId: string,
+  options: { demo?: boolean } = {},
 ): CancelablePromise<void> {
   return request(OpenAPI, {
     method: "DELETE",
     url: "/api/v1/v2/documents/folders/{folder_id}",
     path: {
       folder_id: folderId,
+    },
+    query: {
+      demo: options.demo || undefined,
     },
   })
 }
