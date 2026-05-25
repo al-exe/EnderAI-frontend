@@ -263,7 +263,7 @@ function AgentsIndex() {
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <div className={AGENT_EYEBROW_CLASS}>
-              {activeCount} active across team
+              Agents · {activeCount} active across team
             </div>
             <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Agents</h1>
             <p className="mt-1 max-w-[50ch] text-sm leading-5 text-muted-foreground">
