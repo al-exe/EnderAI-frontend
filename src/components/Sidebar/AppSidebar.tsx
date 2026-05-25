@@ -1,5 +1,6 @@
 import { Box, Boxes, Home, Sparkles, Users } from "lucide-react"
 
+import type { UserPublic } from "@/client"
 import { Logo } from "@/components/Common/Logo"
 import {
   Sidebar,
@@ -7,9 +8,8 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar"
-import useAuth from "@/hooks/useAuth"
 import { type Item, Main } from "./Main"
-import { DemoModeToggle } from "./ModeSwitches"
+import { DemoModeToggle, ExperimentalModeToggle } from "./ModeSwitches"
 import { User } from "./User"
 
 const baseItems: Item[] = [
@@ -19,9 +19,11 @@ const baseItems: Item[] = [
   { icon: Sparkles, title: "Skills", path: "/skills" },
 ]
 
-export function AppSidebar() {
-  const { user: currentUser } = useAuth()
+type AppSidebarProps = {
+  currentUser: UserPublic | null
+}
 
+export function AppSidebar({ currentUser }: AppSidebarProps) {
   const items = currentUser?.is_superuser
     ? [...baseItems, { icon: Users, title: "Admin", path: "/admin" }]
     : baseItems
@@ -35,7 +37,12 @@ export function AppSidebar() {
         <Main items={items} />
       </SidebarContent>
       <SidebarFooter className="gap-1">
-        <DemoModeToggle />
+        {currentUser?.is_superuser && (
+          <>
+            <ExperimentalModeToggle />
+            <DemoModeToggle />
+          </>
+        )}
         <User user={currentUser} />
       </SidebarFooter>
     </Sidebar>

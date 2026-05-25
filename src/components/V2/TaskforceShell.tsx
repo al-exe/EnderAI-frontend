@@ -30,7 +30,10 @@ import {
 import { readV2Documents, type V2DocumentPublic } from "@/api/v2Documents"
 import type { UserPublic } from "@/client"
 import { useDemoMode } from "@/components/demo-mode-provider"
-import { DemoModeToggle } from "@/components/Sidebar/ModeSwitches"
+import {
+  DemoModeToggle,
+  ExperimentalModeToggle,
+} from "@/components/Sidebar/ModeSwitches"
 import { User } from "@/components/Sidebar/User"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -199,7 +202,11 @@ function DiscordButton() {
   )
 }
 
-function SidebarUtilityDrawer() {
+function SidebarUtilityDrawer({
+  showInternalModes,
+}: {
+  showInternalModes: boolean
+}) {
   const [isCollapsed, setIsCollapsed] = useState(
     () => readStoredExtrasDrawerCollapsed() ?? false,
   )
@@ -268,7 +275,12 @@ function SidebarUtilityDrawer() {
       {!isCollapsed && (
         <SidebarMenu className="mt-1">
           <DiscordButton />
-          <DemoModeToggle />
+          {showInternalModes && (
+            <>
+              <ExperimentalModeToggle />
+              <DemoModeToggle />
+            </>
+          )}
         </SidebarMenu>
       )}
     </div>
@@ -580,7 +592,9 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
           <TaskforceNav currentUser={currentUser} />
         </SidebarContent>
         <SidebarFooter className="gap-1">
-          <SidebarUtilityDrawer />
+          <SidebarUtilityDrawer
+            showInternalModes={Boolean(currentUser.is_superuser)}
+          />
           <User user={currentUser} />
         </SidebarFooter>
       </Sidebar>

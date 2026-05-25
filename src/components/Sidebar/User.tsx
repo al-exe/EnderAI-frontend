@@ -4,6 +4,7 @@ import { ChevronsUpDown, LogOut, Settings } from "lucide-react"
 
 import { readMyOrganizationInvitations } from "@/api/organizations"
 import { PendingInvitationBadge } from "@/components/Common/PendingInvitationBadge"
+import { useExperimentalMode } from "@/components/experimental-mode-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -56,6 +57,7 @@ function UserInfo({
 
 export function User({ user }: { user: any }) {
   const { logout } = useAuth()
+  const { isExperimentalMode } = useExperimentalMode()
   const { isMobile, setOpenMobile } = useSidebar()
   const invitationsQuery = useQuery({
     queryKey: ["my-organization-invitations"],
@@ -110,7 +112,10 @@ export function User({ user }: { user: any }) {
               />
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <RouterLink to="/v2/settings" onClick={handleMenuClick}>
+            <RouterLink
+              to={isExperimentalMode ? "/v2/settings" : "/settings"}
+              onClick={handleMenuClick}
+            >
               <DropdownMenuItem>
                 <Settings />
                 <span>User Settings</span>

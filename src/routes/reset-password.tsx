@@ -23,6 +23,7 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import { isLoggedIn } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { getDefaultFrontendPath } from "@/lib/experimentalMode"
 import { handleError } from "@/utils"
 
 const searchSchema = z.object({
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/reset-password")({
   validateSearch: searchSchema,
   beforeLoad: async ({ search }) => {
     if (isLoggedIn()) {
-      throw redirect({ to: "/v2/library" })
+      throw redirect({ to: getDefaultFrontendPath() as never })
     }
     if (!search.token) {
       throw redirect({ to: "/login" })

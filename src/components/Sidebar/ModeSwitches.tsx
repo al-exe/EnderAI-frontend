@@ -1,48 +1,114 @@
-import { FlaskConical } from "lucide-react"
+import { useNavigate, useRouterState } from "@tanstack/react-router"
+import { FlaskConical, type LucideIcon, Rocket } from "lucide-react"
 
 import { useDemoMode } from "@/components/demo-mode-provider"
+import { useExperimentalMode } from "@/components/experimental-mode-provider"
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
+import {
+  getCurrentFrontendPath,
+  getExperimentalFrontendPath,
+} from "@/lib/experimentalMode"
 import { cn } from "@/lib/utils"
 
-export function DemoModeToggle() {
-  const { isDemoMode, toggleDemoMode } = useDemoMode()
+type ModeToggleProps = {
+  icon: LucideIcon
+  isActive: boolean
+  label: string
+  testId: string
+  tooltip: string
+  onClick: () => void
+}
 
+function ModeToggle({
+  icon: Icon,
+  isActive,
+  label,
+  testId,
+  tooltip,
+  onClick,
+}: ModeToggleProps) {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        tooltip={isDemoMode ? "Disable demo mode" : "Enable demo mode"}
-        data-testid="demo-mode-toggle"
+        tooltip={tooltip}
+        data-testid={testId}
         role="switch"
-        aria-checked={isDemoMode}
-        isActive={isDemoMode}
+        aria-checked={isActive}
+        isActive={isActive}
         className="data-[active=true]:bg-sidebar-accent/80 data-[active=true]:text-sidebar-accent-foreground"
-        onClick={toggleDemoMode}
+        onClick={onClick}
       >
-        <FlaskConical
+        <Icon
           className={cn(
             "size-[18px] text-muted-foreground transition-colors",
-            isDemoMode && "text-sidebar-primary",
+            isActive && "text-sidebar-primary",
           )}
         />
-        <span>Demo mode</span>
+        <span>{label}</span>
         <div
           aria-hidden="true"
-          data-testid="demo-mode-toggle-track"
+          data-testid={`${testId}-track`}
           className={cn(
             "ml-auto hidden h-7 w-12 items-center rounded-full border border-sidebar-border/70 bg-muted/70 p-1 shadow-inner transition-colors group-data-[collapsible=icon]:hidden md:flex",
-            isDemoMode && "border-sidebar-primary/40 bg-sidebar-primary",
+            isActive && "border-sidebar-primary/40 bg-sidebar-primary",
           )}
         >
           <div
-            data-testid="demo-mode-toggle-thumb"
+            data-testid={`${testId}-thumb`}
             className={cn(
               "size-5 rounded-full bg-background shadow-sm ring-1 ring-black/5 transition-transform",
-              isDemoMode &&
+              isActive &&
                 "translate-x-5 bg-sidebar-primary-foreground ring-white/20",
             )}
           />
         </div>
       </SidebarMenuButton>
     </SidebarMenuItem>
+  )
+}
+
+export function ExperimentalModeToggle() {
+  const navigate = useNavigate()
+  const router = useRouterState()
+  const { isExperimentalMode, setExperimentalMode } = useExperimentalMode()
+
+  const handleClick = () => {
+    const nextEnabled = !isExperimentalMode
+    const nextPath = nextEnabled
+      ? getExperimentalFrontendPath(router.location.pathname)
+      : getCurrentFrontendPath(router.location.pathname)
+
+    setExperimentalMode(nextEnabled)
+    void navigate({ to: nextPath as never })
+  }
+
+  return (
+    <ModeToggle
+      icon={Rocket}
+      isActive={isExperimentalMode}
+      label="Experimental mode"
+      testId="experimental-mode-toggle"
+      tooltip={
+        isExperimentalMode
+          ? "Disable experimental mode"
+          : "Enable experimental mode"
+      }
+      onClick={handleClick}
+    />
+  )
+}
+
+export function DemoModeToggle() {
+  const { isDemoMode, toggleDemoMode } = useDemoMode()
+
+  return (
+    <ModeToggle
+      icon={FlaskConical}
+      isActive={isDemoMode}
+      label="Demo mode"
+      testId="demo-mode-toggle"
+      tooltip={isDemoMode ? "Disable demo mode" : "Enable demo mode"}
+      onClick={toggleDemoMode}
+    />
   )
 }
