@@ -11,7 +11,11 @@ export const AGENT_ROLE_CLASS = "text-sm leading-4 text-muted-foreground"
 /** Detail page specialist name (same scale as other v2 tab titles). */
 export const AGENT_DETAIL_NAME_CLASS = AGENT_PAGE_TITLE_CLASS
 
-export const AGENT_EYEBROW_CLASS = "text-xs uppercase tracking-wide text-muted-foreground"
+/** Page eyebrow — matches Library tab meta line. */
+export const AGENT_EYEBROW_CLASS =
+  "font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground"
+
+export const AGENT_BREADCRUMB_CLASS = "text-sm text-muted-foreground"
 
 export const AGENT_ROUTE_LABEL_CLASS = "text-sm text-muted-foreground"
 

@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { V2_PAGE_CONTENT } from "@/components/V2/v2PageShell"
+import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 import { usePersistentState } from "@/hooks/usePersistentState"
 import { formatDelta, formatMetricValue } from "./formatters"
 import { MethodologyLink } from "./MethodologyLink"
@@ -306,7 +306,8 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
   }
 
   return (
-    <div className={V2_PAGE_CONTENT}>
+    <section className={V2_PAGE_FRAME}>
+      <div className={V2_PAGE_CONTENT}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Metrics</h1>
@@ -420,7 +421,8 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
           rows={tokensConsumed?.top_models ?? []}
         />
       </section>
-    </div>
+      </div>
+    </section>
   )
 }
 

@@ -17,7 +17,7 @@ import {
 import {
   AGENT_DESCRIPTION_CLASS,
   AGENT_DETAIL_NAME_CLASS,
-  AGENT_EYEBROW_CLASS,
+  AGENT_BREADCRUMB_CLASS,
   AGENT_PAGE_TITLE_CLASS,
   AGENT_ROLE_CLASS,
   AGENT_ROUTE_CHIP_CLASS,
@@ -361,7 +361,7 @@ function AgentDetailPage() {
       <div className={AGENTS_DETAIL_SHELL}>
         <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
           <div>
-            <div className={AGENT_EYEBROW_CLASS}>
+            <div className={AGENT_BREADCRUMB_CLASS}>
               <Link
                 to="/v2/agents"
                 className="hover:text-zinc-950 dark:hover:text-white"

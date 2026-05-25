@@ -80,6 +80,10 @@ import {
   usePersistentState,
 } from "@/hooks/usePersistentState"
 import { cn } from "@/lib/utils"
+import {
+  V2_PAGE_CONTENT_FIXED,
+  V2_PAGE_FRAME,
+} from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/library")({
   component: TaskforceLibrary,
@@ -648,8 +652,9 @@ function TaskforceLibrary() {
         onDelete: requestDeleteDocument,
       }}
     >
-      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden p-6">
-        <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 py-3 backdrop-blur">
+      <section className={cn(V2_PAGE_FRAME, "overflow-hidden")}>
+        <div className={V2_PAGE_CONTENT_FIXED}>
+        <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 backdrop-blur">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground">
@@ -830,6 +835,7 @@ function TaskforceLibrary() {
               />
             </div>
           )}
+        </div>
       </section>
     </DocumentDeleteContext.Provider>
   )
