@@ -25,7 +25,7 @@ import {
   AGENT_STAT_LABEL_CLASS,
   AGENT_TABLE_HEADER_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
-import { V2_CONTENT_SHELL, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
+import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/agents")({
   component: TaskforceAgents,
@@ -259,7 +259,7 @@ function AgentsIndex() {
     <section
       className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
     >
-      <div className={`${V2_CONTENT_SHELL} gap-4 py-5`}>
+      <div className={V2_PAGE_CONTENT}>
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <div className={AGENT_EYEBROW_CLASS}>

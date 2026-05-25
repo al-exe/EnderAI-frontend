@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { usePersistentState } from "@/hooks/usePersistentState"
+import { V2_PAGE_CONTENT } from "@/components/V2/v2PageShell"
 import { MethodologyLink } from "./MethodologyLink"
 import { MetricBreakdown } from "./MetricBreakdown"
 import { MetricCard } from "./MetricCard"
@@ -268,7 +269,7 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
     })
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6">
+    <div className={V2_PAGE_CONTENT}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Metrics</h1>
