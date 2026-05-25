@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowUpRight, Copy, Loader2 } from "lucide-react"
 import { type AgentSpecialistDetail, getAgent } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
+import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
 import {
   formatCompactNumber,
   formatRelativeTime,
@@ -218,134 +218,6 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
   )
 }
 
-function AgentDetailSkeleton() {
-  return (
-    <div className={`${PAGE_SHELL} py-7`} aria-busy="true">
-      <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-40 rounded-none" />
-          <div className="flex items-center gap-3">
-            <Skeleton className="size-9 shrink-0 rounded-none" />
-            <Skeleton className="h-9 w-48 max-w-full rounded-none" />
-          </div>
-          <Skeleton className="h-5 w-72 max-w-full rounded-none" />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-8 w-24 rounded-none" />
-          <Skeleton className="h-8 w-20 rounded-none" />
-        </div>
-      </header>
-
-      <section className="my-4 grid border border-black/10 bg-white sm:grid-cols-2 lg:grid-cols-4 dark:border-white/12 dark:bg-zinc-950">
-        {Array.from({ length: 4 }, (_, index) => (
-          <div
-            key={index}
-            className="space-y-2 border-b border-black/10 p-4 last:border-b-0 sm:odd:border-r lg:border-r lg:border-b-0 lg:last:border-r-0 dark:border-white/12"
-          >
-            <Skeleton className="h-3 w-20 rounded-none" />
-            <Skeleton className="h-7 w-24 rounded-none" />
-            <Skeleton className="h-3 w-32 rounded-none" />
-          </div>
-        ))}
-      </section>
-
-      <section className="pt-2">
-        <div className="flex items-baseline justify-between gap-3 border-b border-black/10 pb-2 dark:border-white/12">
-          <Skeleton className="h-4 w-32 rounded-none" />
-          <Skeleton className="h-3 w-52 max-w-[50%] rounded-none" />
-        </div>
-        <div className="space-y-4 py-3">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24 rounded-none" />
-            <div className="flex flex-wrap gap-1.5">
-              {Array.from({ length: 5 }, (_, index) => (
-                <Skeleton key={index} className="h-7 w-20 rounded-none" />
-              ))}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-36 rounded-none" />
-            <div className="flex flex-wrap gap-1.5">
-              {Array.from({ length: 3 }, (_, index) => (
-                <Skeleton key={index} className="h-7 w-24 rounded-none" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="pt-5">
-        <div className="flex items-baseline justify-between gap-3 border-b border-black/10 pb-2 dark:border-white/12">
-          <Skeleton className="h-4 w-44 rounded-none" />
-          <Skeleton className="h-3 w-16 rounded-none" />
-        </div>
-        <div className="mt-3 border border-black/10 dark:border-white/12">
-          <Skeleton className="h-9 w-full rounded-none" />
-          <div className="space-y-2 px-3 py-3">
-            <Skeleton className="h-4 w-full rounded-none" />
-            <Skeleton className="h-4 w-[92%] max-w-full rounded-none" />
-            <Skeleton className="h-4 w-[78%] max-w-full rounded-none" />
-          </div>
-          <Skeleton className="h-8 w-full rounded-none" />
-        </div>
-      </section>
-
-      <section className="pt-5">
-        <div className="flex items-baseline justify-between gap-3 border-b border-black/10 pb-2 dark:border-white/12">
-          <Skeleton className="h-4 w-36 rounded-none" />
-          <Skeleton className="h-3 w-28 rounded-none" />
-        </div>
-        <div className="mt-2 border border-black/10 dark:border-white/12">
-          <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.5fr] gap-3 border-b border-black/10 px-3 py-2 dark:border-white/12">
-            {Array.from({ length: 4 }, (_, index) => (
-              <Skeleton key={index} className="h-3 rounded-none" />
-            ))}
-          </div>
-          {Array.from({ length: 3 }, (_, row) => (
-            <div
-              key={row}
-              className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.5fr] gap-3 border-b border-black/5 px-3 py-3 last:border-b-0 dark:border-white/10"
-            >
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full rounded-none" />
-                <Skeleton className="h-3 w-4/5 rounded-none" />
-              </div>
-              <Skeleton className="h-4 w-16 rounded-none" />
-              <Skeleton className="ml-auto h-4 w-20 rounded-none" />
-              <Skeleton className="ml-auto h-4 w-10 rounded-none" />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="pt-5">
-        <div className="flex items-baseline justify-between gap-3 border-b border-black/10 pb-2 dark:border-white/12">
-          <Skeleton className="h-4 w-40 rounded-none" />
-          <Skeleton className="h-3 w-24 rounded-none" />
-        </div>
-        <div className="mt-2 border border-black/10 dark:border-white/12">
-          <div className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.5fr] gap-3 border-b border-black/10 px-3 py-2 dark:border-white/12">
-            {Array.from({ length: 4 }, (_, index) => (
-              <Skeleton key={index} className="h-3 rounded-none" />
-            ))}
-          </div>
-          {Array.from({ length: 4 }, (_, row) => (
-            <div
-              key={row}
-              className="grid grid-cols-[1.5fr_0.8fr_0.5fr_0.5fr] gap-3 border-b border-black/5 px-3 py-3 last:border-b-0 dark:border-white/10"
-            >
-              <Skeleton className="h-4 w-full rounded-none" />
-              <Skeleton className="h-4 w-24 rounded-none" />
-              <Skeleton className="ml-auto h-4 w-14 rounded-none" />
-              <Skeleton className="ml-auto h-4 w-16 rounded-none" />
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  )
-}
-
 function RecentInvocations({ agent }: { agent: AgentSpecialistDetail }) {
   return (
     <section className="pt-5">
@@ -408,11 +280,14 @@ function AgentDetailPage() {
     queryFn: () => getAgent(slug, { demo: isDemoMode }),
   })
   const agent = agentQuery.data
+  const showSkeleton =
+    agentQuery.isPending ||
+    (agentQuery.isFetching && (!agent || agent.slug !== slug))
 
-  if (agentQuery.isLoading) {
+  if (showSkeleton) {
     return (
       <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-sans md:-m-8 dark:bg-zinc-950">
-        <AgentDetailSkeleton />
+        <AgentDetailSkeleton shellClassName={PAGE_SHELL} />
       </main>
     )
   }
