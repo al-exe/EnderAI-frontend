@@ -556,17 +556,10 @@ function ExperimentalMetricsPage({
           </div>
         </div>
         <div className="flex flex-col gap-4 border-t border-border p-5 lg:border-t-0 lg:border-l">
-          <div>
-            <div className="font-mono text-xs uppercase tracking-[0.16em] opacity-70">
-              Daily trend
-            </div>
-            <div className="mt-2">
-              <MetricTrendChart
-                title="Tokens saved per day"
-                series={tokensSaved?.series ?? []}
-              />
-            </div>
-          </div>
+          <MetricTrendChart
+            title="Daily tokens saved"
+            series={tokensSaved?.series ?? []}
+          />
           <div className="grid border border-border sm:grid-cols-2">
             <ExperimentalRatioCell
               label="Reuse rate"
@@ -604,18 +597,10 @@ function ExperimentalMetricsPage({
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
-        <section className="border border-border bg-background p-4">
-          <div className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            Tokens saved · daily
-          </div>
-          <h2 className="mt-1 text-sm font-semibold">Reuse trend</h2>
-          <div className="mt-4">
-            <MetricTrendChart
-              title="Reuse trend"
-              series={tokensSaved?.series ?? []}
-            />
-          </div>
-        </section>
+        <MetricTrendChart
+          title="Tokens saved · daily"
+          series={tokensSaved?.series ?? []}
+        />
         <ExperimentalBreakdownPanel
           title="Where savings came from"
           kicker="Savings by source"
@@ -625,7 +610,6 @@ function ExperimentalMetricsPage({
 
       <section className="grid gap-4 md:grid-cols-3">
         {[
-          ["tokens_consumed", metrics.tokens_consumed],
           ["usd_consumed", metrics.usd_consumed],
           ["documents_touched", documentsTouched],
         ].map(([name, value]) => {
