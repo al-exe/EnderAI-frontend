@@ -303,25 +303,7 @@ function TaskforceAgents() {
   const agents = agentsQuery.data?.items ?? []
 
   return (
-    <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-['Geist',sans-serif] text-zinc-950 md:-m-8 dark:bg-zinc-950 dark:text-white">
-      <div className="border-b border-black/10 px-5 py-3 dark:border-white/10 md:px-8">
-        <div className="flex items-center justify-between gap-4">
-          <div className="inline-flex items-center gap-2 text-sm font-semibold">
-            <picture className="grid size-5 place-items-center overflow-hidden">
-              <source
-                srcSet="/assets/brand/tf-icon-filled-dark.svg"
-                media="(prefers-color-scheme: dark)"
-              />
-              <img src="/assets/brand/tf-icon-filled.svg" alt="" />
-            </picture>
-            Taskforce
-          </div>
-          <div className="hidden h-7 w-64 items-center border border-black/10 px-3 font-mono text-xs text-zinc-400 md:flex dark:border-white/12 dark:text-zinc-500">
-            / Search documents
-          </div>
-        </div>
-      </div>
-
+    <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-sans text-zinc-950 md:-m-8 dark:bg-zinc-950 dark:text-white">
       <div className="mx-auto w-full max-w-7xl px-5 py-7 md:px-8">
         <header className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div>

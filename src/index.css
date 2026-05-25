@@ -115,6 +115,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* biome-ignore lint/complexity/noImportantStyles: design mockups require globally sharp corners over component utilities. */
     border-radius: 0 !important;
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -125,15 +126,28 @@
     height: 0;
     display: none;
   }
+  html,
+  body,
+  #root {
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sans);
   }
   input,
   textarea,
   select,
   button {
     font-family: inherit;
+  }
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
   }
   button,
   [role="button"] {
