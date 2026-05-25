@@ -280,7 +280,7 @@ function AgentDetailPage() {
 
   if (agentQuery.isLoading) {
     return (
-      <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white p-6 font-['Geist',sans-serif] md:-m-8 md:p-8 dark:bg-zinc-950">
+      <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white p-6 font-sans md:-m-8 md:p-8 dark:bg-zinc-950">
         <div className="mx-auto w-full max-w-5xl">
           <Skeleton className="h-24 border bg-background" />
           <Skeleton className="mt-4 h-28 border bg-background" />
@@ -307,7 +307,7 @@ function AgentDetailPage() {
   }
 
   return (
-    <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-['Geist',sans-serif] text-zinc-950 md:-m-8 dark:bg-zinc-950 dark:text-white">
+    <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-sans text-zinc-950 md:-m-8 dark:bg-zinc-950 dark:text-white">
       <div className="mx-auto w-full max-w-5xl px-5 py-7 md:px-8">
         <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
           <div>
