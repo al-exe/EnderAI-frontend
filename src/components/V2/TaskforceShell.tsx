@@ -106,13 +106,11 @@ function TaskforceMark() {
       to="/v2/library"
       className="flex min-w-0 items-center gap-3 px-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0"
     >
-      <picture className="grid size-8 shrink-0 place-items-center overflow-hidden group-data-[collapsible=icon]:size-7">
-        <img
-          src="/assets/brand/tf-icon-filled.svg"
-          alt=""
-          className="size-full"
-        />
-      </picture>
+      <img
+        src="/assets/brand/icon-192.png"
+        alt=""
+        className="size-8 shrink-0 group-data-[collapsible=icon]:size-7"
+      />
       <span className="text-[1.55rem] font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
         Taskforce
       </span>

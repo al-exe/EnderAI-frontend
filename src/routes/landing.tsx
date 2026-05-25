@@ -43,9 +43,11 @@ function LandingMinimal() {
           to="/landing"
           className="inline-flex items-center gap-2 text-sm font-semibold"
         >
-          <picture className="grid size-6 place-items-center overflow-hidden">
-            <img src="/assets/brand/tf-icon-filled.svg" alt="" />
-          </picture>
+          <img
+            src="/assets/brand/icon-192.png"
+            alt=""
+            className="size-6"
+          />
           Taskforce
         </Link>
         <div className="hidden items-center gap-5 font-mono text-xs tracking-[0.04em] text-zinc-500 md:flex dark:text-zinc-400">
