@@ -178,7 +178,7 @@ test("agent detail navigation does not flash no-access or not-found", async ({
     page.getByRole("heading", { name: "Specialist not found", exact: true }),
   ).toHaveCount(0)
   await expect(
-    page.getByRole("heading", { name: "Jensen", level: 2 }),
+    page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
 })
 
