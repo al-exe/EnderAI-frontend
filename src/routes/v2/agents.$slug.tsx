@@ -9,11 +9,11 @@ import {
 } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
+import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
 import {
   agentSummaryToDetailPlaceholder,
   findAgentSummaryInList,
 } from "@/components/V2/Agents/agentDetailPlaceholder"
-import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
 import {
   AGENT_DESCRIPTION_CLASS,
   AGENT_EYEBROW_CLASS,
@@ -219,6 +219,7 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
                 <td className="py-3 pl-3 text-right align-top">
                   <a
                     href={document.href}
+                    aria-label={`Open ${document.title}`}
                     className="inline-flex items-center justify-end gap-1 font-mono text-[0.62rem] uppercase tracking-[0.08em] text-[#8447ff]"
                   >
                     Open
@@ -314,16 +315,18 @@ function AgentDetailPage() {
     },
   })
   const agent = agentQuery.data
+  const isAgentError = agentQuery.isError
+  const isAgentFetched = agentQuery.isFetched
+  const isAgentFetching = agentQuery.isFetching
+  const isAgentPending = agentQuery.isPending
+  const isAgentPlaceholderData = agentQuery.isPlaceholderData
   const hasMatchingAgent = agent?.slug === slug
   const showNotFound =
-    agentQuery.isError ||
-    (agentQuery.isFetched && !agentQuery.isFetching && !hasMatchingAgent)
+    isAgentError || (isAgentFetched && !isAgentFetching && !hasMatchingAgent)
   const showFullSkeleton =
-    !showNotFound && !agent && (agentQuery.isPending || agentQuery.isFetching)
+    !showNotFound && !agent && (isAgentPending || isAgentFetching)
   const isHydratingDetail =
-    hasMatchingAgent &&
-    agentQuery.isFetching &&
-    agentQuery.isPlaceholderData
+    hasMatchingAgent && isAgentFetching && isAgentPlaceholderData
 
   if (showFullSkeleton) {
     return (
@@ -414,7 +417,10 @@ function AgentDetailPage() {
         </header>
 
         {isHydratingDetail ? (
-          <AgentDetailSkeleton shellClassName={AGENTS_DETAIL_SHELL} hideHeader />
+          <AgentDetailSkeleton
+            shellClassName={AGENTS_DETAIL_SHELL}
+            hideHeader
+          />
         ) : (
           <>
             <StatLine agent={agent} />

@@ -11,10 +11,14 @@ import {
   readTaskforceSession,
 } from "@/lib/taskforceSession"
 
+function V2BlankFallback() {
+  return <main className="min-h-svh bg-background" aria-busy="true" />
+}
+
 function V2Pending() {
   const currentUser = peekTaskforceSession()
   if (!currentUser) {
-    return <main className="min-h-svh bg-background" aria-busy="true" />
+    return <V2BlankFallback />
   }
 
   return <TaskforceShell currentUser={currentUser} />
@@ -30,7 +34,7 @@ function V2RouteError({ error }: { error: unknown }) {
     return <TaskforceShell currentUser={currentUser} />
   }
 
-  return <TaskforceNoAccess />
+  return <V2BlankFallback />
 }
 
 export const Route = createFileRoute("/v2")({
@@ -44,7 +48,7 @@ export const Route = createFileRoute("/v2")({
       const currentUser = await readTaskforceSession()
       return { currentUser }
     } catch (error) {
-      if (error instanceof ApiError && [401, 403].includes(error.status)) {
+      if (error instanceof ApiError && error.status === 401) {
         localStorage.removeItem("access_token")
         throw redirect({ to: "/login" })
       }

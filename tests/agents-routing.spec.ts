@@ -148,7 +148,9 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
   await page.goto("/v2/agents/jensen")
 
   await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
-  await expect(page.getByRole("heading", { name: "Jensen", level: 2 })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Jensen", level: 2 }),
+  ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
   await expect(
     page.getByRole("heading", { name: /Reusable .*specialists/i }),
@@ -175,7 +177,35 @@ test("agent detail navigation does not flash no-access or not-found", async ({
   await expect(
     page.getByRole("heading", { name: "Specialist not found", exact: true }),
   ).toHaveCount(0)
-  await expect(page.getByRole("heading", { name: "Jensen", level: 2 })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Jensen", level: 2 }),
+  ).toBeVisible()
+})
+
+test("v2 route transient session errors do not render membership no-access", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("access_token", "test-token")
+  })
+
+  await page.route("**/api/v1/users/me", async (route) => {
+    await route.fulfill({
+      status: 500,
+      json: { detail: "transient session read failure" },
+    })
+  })
+
+  const userResponse = page.waitForResponse("**/api/v1/users/me")
+  await page.goto("/v2/agents")
+  await userResponse
+
+  await expect(
+    page.getByRole("heading", { name: "No access", exact: true }),
+  ).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "View membership" })).toHaveCount(
+    0,
+  )
 })
 
 test("agents grid links to specialist detail and session metrics", async ({
@@ -196,11 +226,11 @@ test("agents grid links to specialist detail and session metrics", async ({
     page.getByRole("heading", { name: "Mira", level: 3 }),
   ).toBeVisible()
 
-  await page
-    .getByRole("link", { name: /open specialist jensen/i })
-    .click()
+  await page.getByRole("link", { name: /open specialist jensen/i }).click()
   await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
-  await expect(page.getByRole("heading", { name: "Jensen", level: 2 })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Jensen", level: 2 }),
+  ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
 
   const linkedKnowledge = page.getByRole("link", {
