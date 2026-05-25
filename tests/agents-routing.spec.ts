@@ -155,6 +155,29 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
   ).not.toBeVisible()
 })
 
+test("agent detail navigation does not flash no-access or not-found", async ({
+  page,
+}) => {
+  await mockAgentsShell(page)
+
+  await page.route("**/api/v1/v2/agents/jensen", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    await route.fulfill({ json: jensenDetail })
+  })
+
+  await page.goto("/v2/agents")
+  await page.getByRole("link", { name: /open specialist jensen/i }).click()
+
+  await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
+  await expect(
+    page.getByRole("heading", { name: "No access", exact: true }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole("heading", { name: "Specialist not found", exact: true }),
+  ).toHaveCount(0)
+  await expect(page.getByRole("heading", { name: "Jensen" })).toBeVisible()
+})
+
 test("agents grid links to specialist detail and session metrics", async ({
   page,
 }) => {

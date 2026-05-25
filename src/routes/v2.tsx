@@ -12,6 +12,8 @@ import {
 } from "@/lib/experimentalMode"
 
 export const Route = createFileRoute("/v2")({
+  // Keep session user in route context without re-fetching on every child navigation.
+  staleTime: Number.POSITIVE_INFINITY,
   beforeLoad: async ({ location }) => {
     if (!isLoggedIn()) {
       throw redirect({ to: "/login" })

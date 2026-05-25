@@ -78,17 +78,17 @@ function StatLine({ agent }: { agent: AgentSpecialistDetail }) {
           key={row.key}
           className="border-b border-black/10 p-4 last:border-b-0 sm:odd:border-r lg:border-r lg:border-b-0 lg:last:border-r-0 dark:border-white/12"
         >
-          <div className="font-mono text-[0.775rem] uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-500">
+          <div className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
             {row.key}
           </div>
           <div
-            className={`mt-1 text-[1.5625rem] font-semibold leading-tight tracking-[-0.015em] tabular-nums ${
+            className={`mt-1 text-2xl font-semibold leading-none tracking-[-0.02em] tabular-nums ${
               row.primary ? "text-[#8447ff]" : "text-zinc-950 dark:text-white"
             }`}
           >
             {row.value}
           </div>
-          <div className="mt-1 truncate font-mono text-[0.775rem] text-zinc-500 dark:text-zinc-400">
+          <div className="mt-1 truncate font-mono text-[0.68rem] text-zinc-500 dark:text-zinc-400">
             {row.sub}
           </div>
         </div>
@@ -100,11 +100,11 @@ function StatLine({ agent }: { agent: AgentSpecialistDetail }) {
 function SectionHeader({ title, meta }: { title: string; meta?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-black/10 pb-2 dark:border-white/12">
-      <h2 className="font-mono text-[0.825rem] font-semibold uppercase tracking-[0.18em] text-zinc-950 dark:text-white">
+      <h2 className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-zinc-950 dark:text-white">
         {title}
       </h2>
       {meta && (
-        <span className="font-mono text-[0.775rem] tracking-[0.06em] text-zinc-400 dark:text-zinc-500">
+        <span className="font-mono text-[0.68rem] tracking-[0.06em] text-zinc-400 dark:text-zinc-500">
           {meta}
         </span>
       )}
@@ -124,7 +124,7 @@ function Chips({
       {values.map((value) => (
         <span
           key={value}
-          className={`border px-2 py-1 font-mono text-[0.85rem] ${
+          className={`border px-1.5 py-0.5 font-mono text-[0.66rem] ${
             variant === "negative"
               ? "border-zinc-200 text-zinc-500 line-through dark:border-white/10 dark:text-zinc-500"
               : "border-[#8447ff]/30 text-[#8447ff]"
@@ -145,16 +145,16 @@ function Instructions({ instructions }: { instructions: string[] }) {
         meta={`${instructions.length} rules`}
       />
       <div className="mt-3 border border-black/10 bg-zinc-50 dark:border-white/12 dark:bg-white/5">
-        <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 font-mono text-[0.775rem] uppercase tracking-[0.14em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
+        <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
           <span>system prompt</span>
           <span className="text-[#8447ff]">live</span>
         </div>
-        <pre className="max-h-36 overflow-hidden whitespace-pre-wrap px-3 py-3 font-mono text-[0.9rem] leading-7 text-zinc-800 dark:text-zinc-200">
+        <pre className="max-h-36 overflow-hidden whitespace-pre-wrap px-3 py-3 text-sm leading-5 text-zinc-600 dark:text-zinc-300">
           {instructions
             .map((instruction, index) => `${index + 1}. ${instruction}`)
             .join("\n")}
         </pre>
-        <div className="flex items-center justify-between border-t border-black/10 px-3 py-2 font-mono text-[0.8125rem] uppercase tracking-[0.08em] text-[#8447ff] dark:border-white/12">
+        <div className="flex items-center justify-between border-t border-black/10 px-3 py-2 font-mono text-[0.62rem] uppercase tracking-[0.08em] text-[#8447ff] dark:border-white/12">
           <span>Expand</span>
           <Copy className="size-4" />
         </div>
@@ -171,9 +171,9 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
         meta={`${agent.linked_knowledge.length} documents`}
       />
       <div className="mt-2 overflow-x-auto">
-        <table className="w-full min-w-[42rem] border-collapse text-[1.09375rem]">
+        <table className="w-full min-w-[42rem] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-black/10 font-mono text-[0.775rem] uppercase tracking-[0.12em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
+            <tr className="border-b border-black/10 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
               <th className="py-2 pr-3 text-left font-medium">Document</th>
               <th className="px-3 text-left font-medium">Anchor</th>
               <th className="px-3 text-right font-medium">Reason</th>
@@ -187,23 +187,23 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
                 className="border-b border-black/5 dark:border-white/10"
               >
                 <td className="py-3 pr-3 align-top">
-                  <div className="font-medium text-zinc-950 dark:text-white">
+                  <div className="text-[1rem] font-semibold tracking-[-0.01em] text-zinc-950 dark:text-white">
                     {document.title}
                   </div>
-                  <div className="mt-1 line-clamp-1 text-[0.9375rem] text-zinc-500 dark:text-zinc-400">
+                  <div className="mt-1 line-clamp-1 text-xs text-zinc-500 dark:text-zinc-400">
                     {document.description}
                   </div>
                 </td>
-                <td className="px-3 py-3 align-top font-mono text-[0.9375rem] text-zinc-500 dark:text-zinc-400">
+                <td className="px-3 py-3 align-top font-mono text-[0.95rem] text-zinc-500 dark:text-zinc-400">
                   {document.anchor_id ?? "summary"}
                 </td>
-                <td className="px-3 py-3 text-right align-top text-[0.9375rem] text-zinc-500 dark:text-zinc-400">
+                <td className="px-3 py-3 text-right align-top text-xs text-zinc-500 dark:text-zinc-400">
                   {document.reason ?? "Pinned knowledge"}
                 </td>
                 <td className="py-3 pl-3 text-right align-top">
                   <a
                     href={document.href}
-                    className="inline-flex items-center justify-end gap-1 font-mono text-[0.9375rem] uppercase tracking-[0.08em] text-[#8447ff]"
+                    className="inline-flex items-center justify-end gap-1 font-mono text-[0.62rem] uppercase tracking-[0.08em] text-[#8447ff]"
                   >
                     Open
                     <ArrowUpRight className="size-4" />
@@ -226,9 +226,9 @@ function RecentInvocations({ agent }: { agent: AgentSpecialistDetail }) {
         meta={`last ${agent.recent_invocations.length} runs`}
       />
       <div className="mt-2 overflow-x-auto">
-        <table className="w-full min-w-[38rem] border-collapse text-[1.09375rem]">
+        <table className="w-full min-w-[38rem] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-black/10 font-mono text-[0.775rem] uppercase tracking-[0.12em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
+            <tr className="border-b border-black/10 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
               <th className="py-2 pr-3 text-left font-medium">Query</th>
               <th className="px-3 text-left font-medium">Repo</th>
               <th className="px-3 text-right font-medium">Saved</th>
@@ -241,7 +241,7 @@ function RecentInvocations({ agent }: { agent: AgentSpecialistDetail }) {
                 key={invocation.id}
                 className="border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
               >
-                <td className="py-3 pr-3 align-top font-mono text-[0.9375rem] text-zinc-800 dark:text-zinc-200">
+                <td className="py-3 pr-3 align-top font-mono text-[0.95rem] text-zinc-800 dark:text-zinc-200">
                   {invocation.session_id ? (
                     <Link
                       to="/v2/metrics"
@@ -254,13 +254,13 @@ function RecentInvocations({ agent }: { agent: AgentSpecialistDetail }) {
                     `"${invocation.prompt}"`
                   )}
                 </td>
-                <td className="px-3 py-3 align-top font-mono text-[0.9375rem] text-zinc-500 dark:text-zinc-400">
+                <td className="px-3 py-3 align-top font-mono text-[0.95rem] text-zinc-500 dark:text-zinc-400">
                   {invocation.repo ?? "Taskforce"}
                 </td>
-                <td className="px-3 py-3 text-right align-top font-mono text-[0.9375rem] font-semibold text-[#8447ff]">
+                <td className="px-3 py-3 text-right align-top font-mono text-[0.95rem] font-semibold text-[#8447ff]">
                   +{formatCompactNumber(invocation.tokens_saved)}
                 </td>
-                <td className="py-3 pl-3 text-right align-top font-mono text-[0.9375rem] text-zinc-400 dark:text-zinc-500">
+                <td className="py-3 pl-3 text-right align-top font-mono text-[0.62rem] text-zinc-400 dark:text-zinc-500">
                   {formatRelativeTime(invocation.created_at)}
                 </td>
               </tr>
@@ -280,9 +280,9 @@ function AgentDetailPage() {
     queryFn: () => getAgent(slug, { demo: isDemoMode }),
   })
   const agent = agentQuery.data
-  const showSkeleton =
-    agentQuery.isPending ||
-    (agentQuery.isFetching && (!agent || agent.slug !== slug))
+  const hasMatchingAgent = agent?.slug === slug
+  const isResolved = agentQuery.isFetched && !agentQuery.isFetching
+  const showSkeleton = !isResolved || !hasMatchingAgent
 
   if (showSkeleton) {
     return (
@@ -302,8 +302,10 @@ function AgentDetailPage() {
         <div
           className={`${V2_CONTENT_SHELL} flex min-h-[50vh] flex-col items-center justify-center py-12 text-center`}
         >
-          <h1 className="text-[2.34375rem] font-semibold">Specialist not found</h1>
-          <p className="mt-3 max-w-lg text-[1.09375rem] text-zinc-500 dark:text-zinc-400">
+          <h1 className="text-xl font-semibold tracking-tight">
+            Specialist not found
+          </h1>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-zinc-500 dark:text-zinc-400">
             This specialist is unavailable or you do not have access.
           </p>
           <Button asChild className="mt-6">
@@ -321,7 +323,7 @@ function AgentDetailPage() {
       <div className={AGENTS_DETAIL_SHELL}>
         <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
           <div>
-            <div className="font-mono text-[0.8125rem] uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+            <div className="font-mono text-[0.65rem] uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">
               <Link
                 to="/v2/agents"
                 className="hover:text-zinc-950 dark:hover:text-white"
@@ -333,13 +335,13 @@ function AgentDetailPage() {
                 {agent.slug}
               </span>
             </div>
-            <h1 className="mt-2 inline-flex items-center gap-3 text-[2.34375rem] font-semibold leading-tight tracking-[-0.025em]">
-              <span className="grid size-9 place-items-center bg-[#8447ff] font-mono text-base font-bold text-white">
+            <h1 className="mt-2 inline-flex items-center gap-3 text-[1rem] font-semibold tracking-[-0.01em] text-zinc-950 dark:text-white">
+              <span className="grid size-9 place-items-center bg-[#8447ff] font-mono text-[0.68rem] font-bold text-white">
                 {initials(agent.name)}
               </span>
               {agent.name}
             </h1>
-            <p className="mt-2 text-[1.09375rem] text-zinc-500 dark:text-zinc-400">
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               <b className="font-medium text-zinc-950 dark:text-white">
                 {agent.role}
               </b>{" "}
@@ -347,14 +349,14 @@ function AgentDetailPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex h-9 items-center gap-2 border border-black/10 px-3 font-mono text-[0.8125rem] uppercase tracking-[0.1em] text-emerald-600 dark:border-white/12 dark:text-emerald-400">
+            <span className="inline-flex h-8 items-center gap-2 border border-black/10 px-3 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-emerald-600 dark:border-white/12 dark:text-emerald-400">
               <span className="size-2 bg-emerald-500" />
               Active
             </span>
             <Button
               asChild
               variant="outline"
-              className="h-9 px-3 font-mono text-[0.8125rem] uppercase tracking-[0.08em]"
+              className="h-8 px-3 font-mono text-[0.68rem] uppercase tracking-[0.08em]"
             >
               <Link to="/v2/agents">
                 <ArrowLeft className="size-4" />
@@ -373,7 +375,7 @@ function AgentDetailPage() {
           />
           <div className="space-y-3 py-3">
             <div className="space-y-2">
-              <div className="font-mono text-[0.85rem] text-zinc-400 dark:text-zinc-500">
+              <div className="font-mono text-[0.66rem] text-zinc-500 dark:text-zinc-400">
                 <b className="font-medium text-zinc-950 dark:text-white">
                   route_when:
                 </b>
@@ -382,7 +384,7 @@ function AgentDetailPage() {
             </div>
             {agent.negative_triggers.length > 0 && (
               <div className="space-y-2">
-                <div className="font-mono text-[0.85rem] text-zinc-400 dark:text-zinc-500">
+                <div className="font-mono text-[0.66rem] text-zinc-500 dark:text-zinc-400">
                   <b className="font-medium text-zinc-950 dark:text-white">
                     do_not_route_when:
                   </b>
@@ -398,7 +400,7 @@ function AgentDetailPage() {
         <RecentInvocations agent={agent} />
 
         {agentQuery.isFetching && (
-          <div className="mt-5 inline-flex items-center gap-2 font-mono text-[0.9375rem] text-zinc-400 dark:text-zinc-500">
+          <div className="mt-5 inline-flex items-center gap-2 font-mono text-xs text-zinc-400 dark:text-zinc-500">
             <Loader2 className="size-4 animate-spin" />
             Refreshing specialist
           </div>
