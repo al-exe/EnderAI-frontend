@@ -10,6 +10,7 @@ import {
   formatCompactNumber,
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
+import { V2_CONTENT_SHELL, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/agents/$slug")({
   component: AgentDetailPage,
@@ -22,8 +23,7 @@ export const Route = createFileRoute("/v2/agents/$slug")({
   }),
 })
 
-// Between full-bleed and the original max-w-5xl + px-5/md:px-8 layout.
-const PAGE_SHELL = "mx-auto w-full max-w-6xl px-4 md:px-6"
+const AGENTS_DETAIL_SHELL = `${V2_CONTENT_SHELL} gap-6 py-6`
 
 function initials(name: string) {
   return name
@@ -286,31 +286,39 @@ function AgentDetailPage() {
 
   if (showSkeleton) {
     return (
-      <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-sans md:-m-8 dark:bg-zinc-950">
-        <AgentDetailSkeleton shellClassName={PAGE_SHELL} />
-      </main>
+      <section
+        className={`${V2_PAGE_FRAME} bg-white font-sans dark:bg-zinc-950`}
+      >
+        <AgentDetailSkeleton shellClassName={AGENTS_DETAIL_SHELL} />
+      </section>
     )
   }
 
   if (!agent) {
     return (
-      <main className="-m-6 flex min-h-0 flex-1 items-center justify-center bg-white p-6 text-center md:-m-8 dark:bg-zinc-950">
-        <section className="max-w-lg">
+      <section
+        className={`${V2_PAGE_FRAME} bg-white font-sans dark:bg-zinc-950`}
+      >
+        <div
+          className={`${V2_CONTENT_SHELL} flex min-h-[50vh] flex-col items-center justify-center py-12 text-center`}
+        >
           <h1 className="text-[2.34375rem] font-semibold">Specialist not found</h1>
-          <p className="mt-3 text-[1.09375rem] text-zinc-500 dark:text-zinc-400">
+          <p className="mt-3 max-w-lg text-[1.09375rem] text-zinc-500 dark:text-zinc-400">
             This specialist is unavailable or you do not have access.
           </p>
           <Button asChild className="mt-6">
             <Link to="/v2/agents">Back to agents</Link>
           </Button>
-        </section>
-      </main>
+        </div>
+      </section>
     )
   }
 
   return (
-    <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-sans text-zinc-950 md:-m-8 dark:bg-zinc-950 dark:text-white">
-      <div className={`${PAGE_SHELL} py-7`}>
+    <section
+      className={`${V2_PAGE_FRAME} bg-white font-sans text-zinc-950 dark:bg-zinc-950 dark:text-white`}
+    >
+      <div className={AGENTS_DETAIL_SHELL}>
         <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
           <div>
             <div className="font-mono text-[0.8125rem] uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
@@ -396,6 +404,6 @@ function AgentDetailPage() {
           </div>
         )}
       </div>
-    </main>
+    </section>
   )
 }

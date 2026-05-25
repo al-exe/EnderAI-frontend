@@ -15,6 +15,7 @@ import {
   formatCompactNumber,
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
+import { V2_CONTENT_SHELL, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/agents")({
   component: TaskforceAgents,
@@ -324,8 +325,10 @@ function TaskforceAgents() {
   const agents = agentsQuery.data?.items ?? []
 
   return (
-    <main className="-m-6 min-h-0 flex-1 overflow-y-auto bg-white font-sans text-zinc-950 md:-m-8 dark:bg-zinc-950 dark:text-white">
-      <div className="mx-auto w-full max-w-7xl px-5 py-7 md:px-8">
+    <section
+      className={`${V2_PAGE_FRAME} gap-6 bg-white font-sans text-zinc-950 dark:bg-zinc-950 dark:text-white`}
+    >
+      <div className={`${V2_CONTENT_SHELL} gap-6 py-6`}>
         <header className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div>
             <div className="font-mono text-[0.65rem] uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">
@@ -380,6 +383,6 @@ function TaskforceAgents() {
           </div>
         )}
       </div>
-    </main>
+    </section>
   )
 }
