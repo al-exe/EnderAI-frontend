@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useRouterState,
+} from "@tanstack/react-router"
 import { ArrowRight, Bot, Loader2 } from "lucide-react"
 
 import { type AgentSpecialistSummary, listAgents } from "@/api/v2Agents"
@@ -300,6 +305,17 @@ function EmptyAgents({ isDemoMode }: { isDemoMode: boolean }) {
 }
 
 function TaskforceAgents() {
+  const router = useRouterState()
+  const pathname = router.location.pathname
+
+  // Child route /v2/agents/$slug renders via Outlet (same pattern as library).
+  if (
+    pathname.startsWith("/v2/agents/") &&
+    pathname.replace(/\/+$/, "") !== "/v2/agents"
+  ) {
+    return <Outlet />
+  }
+
   const { isDemoMode } = useDemoMode()
   const agentsQuery = useQuery({
     queryKey: ["v2-agents", isDemoMode],

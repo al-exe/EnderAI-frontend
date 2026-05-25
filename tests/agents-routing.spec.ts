@@ -140,6 +140,21 @@ async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
   await mockV2Documents(page)
 }
 
+test("direct specialist URL renders detail instead of the agents grid", async ({
+  page,
+}) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/agents/jensen")
+
+  await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
+  await expect(page.getByRole("heading", { name: "Jensen" })).toBeVisible()
+  await expect(page.getByText("Operating instructions")).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: /Reusable .*specialists/i }),
+  ).not.toBeVisible()
+})
+
 test("agents grid links to specialist detail and session metrics", async ({
   page,
 }) => {
