@@ -1,11 +1,27 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { ArrowLeft, ArrowUpRight, Copy, Loader2 } from "lucide-react"
 
-import { type AgentSpecialistDetail, getAgent } from "@/api/v2Agents"
+import {
+  type AgentSpecialistDetail,
+  type AgentsListResponse,
+  getAgent,
+} from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
+import {
+  agentSummaryToDetailPlaceholder,
+  findAgentSummaryInList,
+} from "@/components/V2/Agents/agentDetailPlaceholder"
 import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
+import {
+  AGENT_DESCRIPTION_CLASS,
+  AGENT_EYEBROW_CLASS,
+  AGENT_NAME_CLASS,
+  AGENT_ROLE_CLASS,
+  AGENT_ROUTE_CHIP_CLASS,
+  AGENT_ROUTE_LABEL_CLASS,
+} from "@/components/V2/Agents/agentsTypography"
 import {
   formatCompactNumber,
   formatRelativeTime,
@@ -124,10 +140,10 @@ function Chips({
       {values.map((value) => (
         <span
           key={value}
-          className={`border px-1.5 py-0.5 font-mono text-[0.66rem] ${
+          className={`${
             variant === "negative"
-              ? "border-zinc-200 text-zinc-500 line-through dark:border-white/10 dark:text-zinc-500"
-              : "border-[#8447ff]/30 text-[#8447ff]"
+              ? "border border-zinc-200 px-1.5 py-0.5 font-mono text-[0.66rem] text-zinc-500 line-through dark:border-white/10 dark:text-zinc-500"
+              : `${AGENT_ROUTE_CHIP_CLASS} border-[#8447ff]/30 text-[#8447ff]`
           }`}
         >
           {value}
@@ -275,16 +291,41 @@ function RecentInvocations({ agent }: { agent: AgentSpecialistDetail }) {
 function AgentDetailPage() {
   const { slug } = Route.useParams()
   const { isDemoMode } = useDemoMode()
+  const queryClient = useQueryClient()
   const agentQuery = useQuery({
     queryKey: ["v2-agent", slug, isDemoMode],
     queryFn: () => getAgent(slug, { demo: isDemoMode }),
+    placeholderData: () => {
+      const cached = queryClient.getQueryData<AgentSpecialistDetail>([
+        "v2-agent",
+        slug,
+        isDemoMode,
+      ])
+      if (cached?.slug === slug) {
+        return cached
+      }
+
+      const list = queryClient.getQueryData<AgentsListResponse>([
+        "v2-agents",
+        isDemoMode,
+      ])
+      const summary = findAgentSummaryInList(list, slug)
+      return summary ? agentSummaryToDetailPlaceholder(summary) : undefined
+    },
   })
   const agent = agentQuery.data
   const hasMatchingAgent = agent?.slug === slug
-  const isResolved = agentQuery.isFetched && !agentQuery.isFetching
-  const showSkeleton = !isResolved || !hasMatchingAgent
+  const showNotFound =
+    agentQuery.isError ||
+    (agentQuery.isFetched && !agentQuery.isFetching && !hasMatchingAgent)
+  const showFullSkeleton =
+    !showNotFound && !agent && (agentQuery.isPending || agentQuery.isFetching)
+  const isHydratingDetail =
+    hasMatchingAgent &&
+    agentQuery.isFetching &&
+    agentQuery.isPlaceholderData
 
-  if (showSkeleton) {
+  if (showFullSkeleton) {
     return (
       <section
         className={`${V2_PAGE_FRAME} bg-white font-sans dark:bg-zinc-950`}
@@ -294,7 +335,7 @@ function AgentDetailPage() {
     )
   }
 
-  if (!agent) {
+  if (showNotFound || !agent) {
     return (
       <section
         className={`${V2_PAGE_FRAME} bg-white font-sans dark:bg-zinc-950`}
@@ -323,7 +364,7 @@ function AgentDetailPage() {
       <div className={AGENTS_DETAIL_SHELL}>
         <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
           <div>
-            <div className="font-mono text-[0.65rem] uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">
+            <div className={AGENT_EYEBROW_CLASS}>
               <Link
                 to="/v2/agents"
                 className="hover:text-zinc-950 dark:hover:text-white"
@@ -335,18 +376,24 @@ function AgentDetailPage() {
                 {agent.slug}
               </span>
             </div>
-            <h1 className="mt-2 inline-flex items-center gap-3 text-[1rem] font-semibold tracking-[-0.01em] text-zinc-950 dark:text-white">
-              <span className="grid size-9 place-items-center bg-[#8447ff] font-mono text-[0.68rem] font-bold text-white">
+            <div className="mt-2 flex items-start gap-3">
+              <span className="grid size-5 shrink-0 place-items-center border border-white bg-[#8447ff] font-mono text-[0.58rem] font-semibold text-white outline outline-1 outline-black/10 dark:border-zinc-950 dark:outline-white/15">
                 {initials(agent.name)}
               </span>
-              {agent.name}
-            </h1>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              <b className="font-medium text-zinc-950 dark:text-white">
-                {agent.role}
-              </b>{" "}
-              · specialist playbook
-            </p>
+              <div className="min-w-0">
+                <h2 className={AGENT_NAME_CLASS}>{agent.name}</h2>
+                <p className={AGENT_ROLE_CLASS}>
+                  <span className="font-medium text-zinc-950 dark:text-white">
+                    {agent.role}
+                  </span>
+                </p>
+              </div>
+            </div>
+            {agent.description ? (
+              <p className={`mt-4 ${AGENT_DESCRIPTION_CLASS}`}>
+                {agent.description}
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex h-8 items-center gap-2 border border-black/10 px-3 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-emerald-600 dark:border-white/12 dark:text-emerald-400">
@@ -366,40 +413,49 @@ function AgentDetailPage() {
           </div>
         </header>
 
-        <StatLine agent={agent} />
+        {isHydratingDetail ? (
+          <AgentDetailSkeleton shellClassName={AGENTS_DETAIL_SHELL} hideHeader />
+        ) : (
+          <>
+            <StatLine agent={agent} />
 
-        <section className="pt-2">
-          <SectionHeader
-            title="Routing rules"
-            meta="Fires when triggers match and negative triggers miss"
-          />
-          <div className="space-y-3 py-3">
-            <div className="space-y-2">
-              <div className="font-mono text-[0.66rem] text-zinc-500 dark:text-zinc-400">
-                <b className="font-medium text-zinc-950 dark:text-white">
-                  route_when:
-                </b>
-              </div>
-              <Chips values={agent.routing_triggers} />
-            </div>
-            {agent.negative_triggers.length > 0 && (
-              <div className="space-y-2">
-                <div className="font-mono text-[0.66rem] text-zinc-500 dark:text-zinc-400">
-                  <b className="font-medium text-zinc-950 dark:text-white">
-                    do_not_route_when:
-                  </b>
+            <section className="pt-2">
+              <SectionHeader
+                title="Routing rules"
+                meta="Fires when triggers match and negative triggers miss"
+              />
+              <div className="space-y-3 py-3">
+                <div className="space-y-2">
+                  <div className={AGENT_ROUTE_LABEL_CLASS}>
+                    <span className="text-zinc-400 dark:text-zinc-600">
+                      route_when:
+                    </span>
+                  </div>
+                  <Chips values={agent.routing_triggers} />
                 </div>
-                <Chips values={agent.negative_triggers} variant="negative" />
+                {agent.negative_triggers.length > 0 && (
+                  <div className="space-y-2">
+                    <div className={AGENT_ROUTE_LABEL_CLASS}>
+                      <span className="text-zinc-400 dark:text-zinc-600">
+                        do_not_route_when:
+                      </span>
+                    </div>
+                    <Chips
+                      values={agent.negative_triggers}
+                      variant="negative"
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </section>
+            </section>
 
-        <Instructions instructions={agent.instructions} />
-        <LinkedKnowledge agent={agent} />
-        <RecentInvocations agent={agent} />
+            <Instructions instructions={agent.instructions} />
+            <LinkedKnowledge agent={agent} />
+            <RecentInvocations agent={agent} />
+          </>
+        )}
 
-        {agentQuery.isFetching && (
+        {agentQuery.isFetching && !isHydratingDetail && (
           <div className="mt-5 inline-flex items-center gap-2 font-mono text-xs text-zinc-400 dark:text-zinc-500">
             <Loader2 className="size-4 animate-spin" />
             Refreshing specialist

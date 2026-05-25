@@ -1,14 +1,39 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
-import { ApiError, UsersService } from "@/client"
+import { ApiError } from "@/client"
 import {
   TaskforceNoAccess,
   TaskforceShell,
 } from "@/components/V2/TaskforceShell"
 import { isLoggedIn } from "@/hooks/useAuth"
+import {
+  peekTaskforceSession,
+  readTaskforceSession,
+} from "@/lib/taskforceSession"
+
+function V2Pending() {
+  const currentUser = peekTaskforceSession()
+  if (!currentUser) {
+    return <main className="min-h-svh bg-background" aria-busy="true" />
+  }
+
+  return <TaskforceShell currentUser={currentUser} />
+}
+
+function V2RouteError({ error }: { error: unknown }) {
+  if (error instanceof ApiError && error.status === 403) {
+    return <TaskforceNoAccess />
+  }
+
+  const currentUser = peekTaskforceSession()
+  if (currentUser) {
+    return <TaskforceShell currentUser={currentUser} />
+  }
+
+  return <TaskforceNoAccess />
+}
 
 export const Route = createFileRoute("/v2")({
-  // Keep session user in route context without re-fetching on every child navigation.
   staleTime: Number.POSITIVE_INFINITY,
   beforeLoad: async () => {
     if (!isLoggedIn()) {
@@ -16,7 +41,7 @@ export const Route = createFileRoute("/v2")({
     }
 
     try {
-      const currentUser = await UsersService.readUserMe()
+      const currentUser = await readTaskforceSession()
       return { currentUser }
     } catch (error) {
       if (error instanceof ApiError && [401, 403].includes(error.status)) {
@@ -28,7 +53,8 @@ export const Route = createFileRoute("/v2")({
     }
   },
   component: V2Layout,
-  errorComponent: TaskforceNoAccess,
+  pendingComponent: V2Pending,
+  errorComponent: V2RouteError,
   head: () => ({
     meta: [
       {

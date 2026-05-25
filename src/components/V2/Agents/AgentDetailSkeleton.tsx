@@ -28,29 +28,38 @@ function SectionHeaderSkeleton({
 
 type AgentDetailSkeletonProps = {
   shellClassName: string
+  hideHeader?: boolean
 }
 
-export function AgentDetailSkeleton({ shellClassName }: AgentDetailSkeletonProps) {
+export function AgentDetailSkeleton({
+  shellClassName,
+  hideHeader = false,
+}: AgentDetailSkeletonProps) {
   return (
     <div
       className={cn(shellClassName, "py-6")}
       aria-busy="true"
       aria-label="Loading specialist"
     >
-      <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
-        <div className="space-y-3">
-          <Bone className="h-[0.65rem] w-44" />
-          <div className="flex items-center gap-3">
-            <Bone className="size-9 shrink-0" />
-            <Bone className="h-4 w-56 max-w-[70%]" />
+      {!hideHeader && (
+        <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
+          <div className="space-y-3">
+            <Bone className="h-[0.65rem] w-44" />
+            <div className="flex items-center gap-3">
+              <Bone className="size-5 shrink-0" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Bone className="h-4 w-56 max-w-full" />
+                <Bone className="h-3 w-40 max-w-full" />
+              </div>
+            </div>
+            <Bone className="h-3.5 w-full max-w-xl" />
           </div>
-          <Bone className="h-3 w-80 max-w-full" />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Bone className="h-8 w-28" />
-          <Bone className="h-8 w-24" />
-        </div>
-      </header>
+          <div className="flex flex-wrap items-center gap-2">
+            <Bone className="h-8 w-28" />
+            <Bone className="h-8 w-24" />
+          </div>
+        </header>
+      )}
 
       <section className="my-4 grid border border-black/10 bg-white sm:grid-cols-2 lg:grid-cols-4 dark:border-white/12 dark:bg-zinc-950">
         {Array.from({ length: 4 }, (_, index) => (

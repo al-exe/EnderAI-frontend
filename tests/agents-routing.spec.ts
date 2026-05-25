@@ -148,7 +148,7 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
   await page.goto("/v2/agents/jensen")
 
   await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
-  await expect(page.getByRole("heading", { name: "Jensen" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Jensen", level: 2 })).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
   await expect(
     page.getByRole("heading", { name: /Reusable .*specialists/i }),
@@ -175,7 +175,7 @@ test("agent detail navigation does not flash no-access or not-found", async ({
   await expect(
     page.getByRole("heading", { name: "Specialist not found", exact: true }),
   ).toHaveCount(0)
-  await expect(page.getByRole("heading", { name: "Jensen" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Jensen", level: 2 })).toBeVisible()
 })
 
 test("agents grid links to specialist detail and session metrics", async ({
@@ -200,7 +200,7 @@ test("agents grid links to specialist detail and session metrics", async ({
     .getByRole("link", { name: /open specialist jensen/i })
     .click()
   await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
-  await expect(page.getByRole("heading", { name: "Jensen" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Jensen", level: 2 })).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
 
   const linkedKnowledge = page.getByRole("link", {

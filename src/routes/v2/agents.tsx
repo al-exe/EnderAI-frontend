@@ -10,11 +10,18 @@ import { ArrowRight, Bot, Loader2 } from "lucide-react"
 import { type AgentSpecialistSummary, listAgents } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   formatCompactNumber,
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
+import {
+  AGENT_DESCRIPTION_CLASS,
+  AGENT_NAME_CLASS,
+  AGENT_ROLE_CLASS,
+  AGENT_ROUTE_CHIP_CLASS,
+} from "@/components/V2/Agents/agentsTypography"
 import { V2_CONTENT_SHELL, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/agents")({
@@ -197,12 +204,8 @@ function AgentCard({
       <div className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-[#8447ff]" />
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h3 className="truncate text-[1rem] font-semibold tracking-[-0.01em] text-zinc-950 dark:text-white">
-            {agent.name}
-          </h3>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            {agent.role}
-          </p>
+          <h3 className={cn("truncate", AGENT_NAME_CLASS)}>{agent.name}</h3>
+          <p className={AGENT_ROLE_CLASS}>{agent.role}</p>
         </div>
         <div className="flex shrink-0 -space-x-1">
           <div className="grid size-5 place-items-center border border-white bg-zinc-100 text-[0.58rem] font-semibold text-zinc-950 outline outline-1 outline-black/10 dark:border-zinc-950 dark:bg-zinc-900 dark:text-white dark:outline-white/15">
@@ -217,21 +220,23 @@ function AgentCard({
       <div className="mt-3 flex flex-wrap items-center gap-1.5 font-mono text-[0.66rem] text-zinc-500 dark:text-zinc-400">
         <span className="text-zinc-400 dark:text-zinc-600">route_when:</span>
         {tags.map((tag) => (
-          <span
-            key={tag}
-            className="border border-black/10 px-1.5 py-0.5 text-zinc-900 dark:border-white/12 dark:text-zinc-100"
-          >
+          <span key={tag} className={AGENT_ROUTE_CHIP_CLASS}>
             {tag.toLowerCase()}
           </span>
         ))}
         {hiddenTagCount > 0 && (
-          <span className="border border-black/10 px-1.5 py-0.5 text-zinc-900 dark:border-white/12 dark:text-zinc-100">
+          <span className={AGENT_ROUTE_CHIP_CLASS}>
             +{hiddenTagCount}
           </span>
         )}
       </div>
 
-      <p className="mt-4 line-clamp-2 min-h-10 text-sm leading-5 text-zinc-600 dark:text-zinc-300">
+      <p
+        className={cn(
+          "mt-4 line-clamp-2 min-h-10",
+          AGENT_DESCRIPTION_CLASS,
+        )}
+      >
         {agent.short_description}
       </p>
 

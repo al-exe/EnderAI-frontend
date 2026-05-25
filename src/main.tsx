@@ -8,6 +8,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
 import { ApiError, OpenAPI } from "./client"
+import { invalidateTaskforceSession } from "./lib/taskforceSession"
 import { DemoModeProvider } from "./components/demo-mode-provider"
 import { ExperimentalModeProvider } from "./components/experimental-mode-provider"
 import { ThemeProvider } from "./components/theme-provider"
@@ -31,6 +32,7 @@ const appPath = (path: string) =>
 const handleApiError = (error: Error) => {
   if (error instanceof ApiError && [401, 403].includes(error.status)) {
     localStorage.removeItem("access_token")
+    invalidateTaskforceSession()
     window.location.href = appPath("/login")
   }
 }

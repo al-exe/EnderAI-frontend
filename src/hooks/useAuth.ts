@@ -19,6 +19,7 @@ import {
 import { getDefaultFrontendPath } from "@/lib/experimentalMode"
 import { firebaseAuth } from "@/lib/firebase"
 import { getAuthErrorMessage } from "@/lib/firebase-errors"
+import { invalidateTaskforceSession } from "@/lib/taskforceSession"
 import useCustomToast from "./useCustomToast"
 
 const isLoggedIn = () => {
@@ -82,6 +83,7 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
+      invalidateTaskforceSession()
       navigate({ to: getDefaultFrontendPath() as never })
     },
     onError: async (error) => {
@@ -108,6 +110,7 @@ const useAuth = () => {
       localStorage.setItem("access_token", response.access_token)
     },
     onSuccess: () => {
+      invalidateTaskforceSession()
       navigate({ to: getDefaultFrontendPath() as never })
     },
     onError: (error) => {
@@ -121,6 +124,7 @@ const useAuth = () => {
   const logout = () => {
     void signOut(firebaseAuth)
     localStorage.removeItem("access_token")
+    invalidateTaskforceSession()
     navigate({ to: "/login" })
   }
 
