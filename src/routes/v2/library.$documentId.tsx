@@ -296,10 +296,11 @@ function MarkdownBlocks({
             <HeadingTag
               key={`${trimmed}-${index}`}
               className={cn(
-                "font-semibold tracking-tight text-foreground",
-                level === 1 && "text-3xl",
-                level === 2 && "text-2xl",
-                level === 3 && "text-xl",
+                "text-foreground",
+                level === 1 && "text-xl font-semibold",
+                level === 2 &&
+                  "border-t border-border pt-5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground",
+                level === 3 && "text-base font-semibold",
               )}
             >
               {renderInlineMarkdown(heading[2], `heading-${index}`)}
@@ -798,6 +799,40 @@ function TaskforceDocumentDetail() {
 
   const editing = isEditing && editState !== null
   const anchorReady = anchorMode && summaryPick && detailsPick
+  const documentViewToggle = (
+    <div
+      role="tablist"
+      aria-label="Document view"
+      className="flex border border-border bg-background"
+    >
+      <ViewToggle
+        label="Summary"
+        active={viewMode === "summary"}
+        onClick={() => {
+          setViewMode("summary")
+          setActiveEvidenceAnchorId(undefined)
+          setAnchorMode(false)
+        }}
+      />
+      <ViewToggle
+        label="Details"
+        active={viewMode === "details"}
+        onClick={() => {
+          setViewMode("details")
+          setActiveEvidenceAnchorId(undefined)
+          setAnchorMode(false)
+        }}
+      />
+      <ViewToggle
+        label="Split"
+        active={isSplit}
+        onClick={() => {
+          setViewMode("split")
+          setActiveEvidenceAnchorId(undefined)
+        }}
+      />
+    </div>
+  )
 
   return (
     <section
@@ -809,30 +844,32 @@ function TaskforceDocumentDetail() {
     >
       <article
         className={cn(
-          "mx-auto flex w-full max-w-none flex-col p-6",
+          "flex w-full max-w-none flex-col p-6",
           isSplit ? "md:min-h-0 md:flex-1 md:overflow-hidden" : "pb-16",
         )}
       >
         <div
           data-testid="v2-document-sticky-header"
           className={cn(
-            "sticky top-0 z-20 -mx-6 border-b bg-background/95 px-6 pt-3 pb-3 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+            "sticky top-0 z-20 -mx-6 border-b bg-background/95 px-6 pt-2 pb-4 backdrop-blur supports-[backdrop-filter]:bg-background/80",
             isSplit && "md:shrink-0",
           )}
         >
-          <div className="-ml-3 mb-3 flex items-center justify-between">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              data-testid="v2-document-back-link"
-              className="w-fit"
-            >
-              <Link to="/v2/library">
-                <ArrowLeft className="size-4" />
-                Library
+          <div className="flex items-center justify-between gap-3 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-muted-foreground">
+            <div className="flex min-w-0 items-center gap-2">
+              <Link
+                to="/v2/library"
+                data-testid="v2-document-back-link"
+                className="inline-flex items-center gap-1 hover:text-foreground"
+              >
+                <ArrowLeft className="size-3" />
+                <span>Library</span>
               </Link>
-            </Button>
+              <span className="text-border">/</span>
+              <span className="truncate">
+                {document.folder_name ?? "Unfiled"}
+              </span>
+            </div>
 
             <div className="flex items-center gap-2">
               {!canEditDocument && (
@@ -848,6 +885,7 @@ function TaskforceDocumentDetail() {
                   size="sm"
                   onClick={enterEdit}
                   data-testid="document-edit"
+                  className="h-7 px-2.5 font-mono text-[0.65rem]"
                 >
                   <Pencil className="size-4" />
                   Edit
@@ -878,54 +916,21 @@ function TaskforceDocumentDetail() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             {editing ? (
               <PlainInlineEditor
                 value={editState.title}
                 onChange={(next) => setEditState({ ...editState, title: next })}
-                className="w-full text-3xl font-semibold tracking-tight text-foreground md:max-w-xl"
+                className="w-full text-[1.65rem] font-semibold leading-tight text-foreground md:max-w-3xl"
                 data-testid="edit-title"
               />
             ) : (
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+              <h1 className="max-w-[30ch] text-[1.65rem] font-semibold leading-tight text-foreground text-balance">
                 {document.title}
               </h1>
             )}
 
             <div className="flex flex-wrap items-center gap-2">
-              <div
-                role="tablist"
-                aria-label="Document view"
-                className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-              >
-                <ViewToggle
-                  label="Summary"
-                  active={viewMode === "summary"}
-                  onClick={() => {
-                    setViewMode("summary")
-                    setActiveEvidenceAnchorId(undefined)
-                    setAnchorMode(false)
-                  }}
-                />
-                <ViewToggle
-                  label="Details"
-                  active={viewMode === "details"}
-                  onClick={() => {
-                    setViewMode("details")
-                    setActiveEvidenceAnchorId(undefined)
-                    setAnchorMode(false)
-                  }}
-                />
-                <ViewToggle
-                  label="Split"
-                  active={isSplit}
-                  onClick={() => {
-                    setViewMode("split")
-                    setActiveEvidenceAnchorId(undefined)
-                  }}
-                />
-              </div>
-
               {isSplit && !editing && canEditDocument && (
                 <Button
                   type="button"
@@ -960,47 +965,50 @@ function TaskforceDocumentDetail() {
               )}
             </div>
           </div>
-        </div>
 
-        {editing ? (
-          <PlainInlineEditor
-            value={editState.ai_generated_summary}
-            onChange={(next) =>
-              setEditState({ ...editState, ai_generated_summary: next })
+          {editing ? (
+            <PlainInlineEditor
+              value={editState.ai_generated_summary}
+              onChange={(next) =>
+                setEditState({ ...editState, ai_generated_summary: next })
+              }
+              className="mt-2 max-w-[64ch] text-sm leading-6 text-muted-foreground"
+              data-testid="edit-description"
+            />
+          ) : (
+            <p className="mt-2 max-w-[64ch] text-sm leading-6 text-muted-foreground text-pretty">
+              {document.ai_generated_summary || document.description}
+            </p>
+          )}
+
+          <DocumentMetadata
+            document={document}
+            folders={foldersQuery.data?.data ?? []}
+            canManageLibrary={canManageDocument}
+            canShare={canShareDocument}
+            canFavorite={true}
+            organizationMembers={organizationQuery.data?.members ?? []}
+            shares={sharesQuery.data?.data ?? document.shared_with ?? []}
+            ownerId={document.owner_id}
+            accessOpen={accessOpen}
+            onAccessOpenChange={setAccessDropdownOpen}
+            shareDraft={shareDraft}
+            setShareDraft={setShareDraft}
+            onSaveAccess={() => shareMutation.mutate()}
+            isSavingAccess={shareMutation.isPending}
+            isLoadingAccess={
+              sharesQuery.isLoading || organizationQuery.isLoading
             }
-            className="mt-5 text-base leading-7 text-muted-foreground"
-            data-testid="edit-description"
+            onMoveFolder={moveDocumentToFolder}
+            isMovingFolder={updateMutation.isPending}
+            onCreateFolder={() => setCreateFolderOpen(true)}
+            onToggleFavorite={toggleFavorite}
+            isTogglingFavorite={favoriteMutation.isPending}
+            onUpdateDates={(dates) => updateMutation.mutate(dates)}
+            isUpdatingDates={updateMutation.isPending}
+            viewSwitcher={documentViewToggle}
           />
-        ) : (
-          <p className="mt-5 text-base leading-7 text-muted-foreground">
-            {document.ai_generated_summary || document.description}
-          </p>
-        )}
-
-        <DocumentMetadata
-          document={document}
-          folders={foldersQuery.data?.data ?? []}
-          canManageLibrary={canManageDocument}
-          canShare={canShareDocument}
-          canFavorite={true}
-          organizationMembers={organizationQuery.data?.members ?? []}
-          shares={sharesQuery.data?.data ?? document.shared_with ?? []}
-          ownerId={document.owner_id}
-          accessOpen={accessOpen}
-          onAccessOpenChange={setAccessDropdownOpen}
-          shareDraft={shareDraft}
-          setShareDraft={setShareDraft}
-          onSaveAccess={() => shareMutation.mutate()}
-          isSavingAccess={shareMutation.isPending}
-          isLoadingAccess={sharesQuery.isLoading || organizationQuery.isLoading}
-          onMoveFolder={moveDocumentToFolder}
-          isMovingFolder={updateMutation.isPending}
-          onCreateFolder={() => setCreateFolderOpen(true)}
-          onToggleFavorite={toggleFavorite}
-          isTogglingFavorite={favoriteMutation.isPending}
-          onUpdateDates={(dates) => updateMutation.mutate(dates)}
-          isUpdatingDates={updateMutation.isPending}
-        />
+        </div>
 
         <FolderCreateDialog
           open={createFolderOpen}
@@ -1016,10 +1024,10 @@ function TaskforceDocumentDetail() {
 
         <div
           className={cn(
-            "gap-6",
+            "gap-6 pt-6",
             isSplit
-              ? "mt-8 grid grid-cols-1 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:overflow-hidden md:pb-4"
-              : "mt-8 block",
+              ? "grid grid-cols-1 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:overflow-hidden md:pb-4"
+              : "block",
           )}
         >
           {summaryVisible && (
@@ -1080,6 +1088,7 @@ function DocumentMetadata({
   isTogglingFavorite,
   onUpdateDates,
   isUpdatingDates,
+  viewSwitcher,
 }: {
   document: V2DocumentPublic
   folders: V2DocumentFolderPublic[]
@@ -1103,11 +1112,12 @@ function DocumentMetadata({
   isTogglingFavorite: boolean
   onUpdateDates: (dates: { created_at?: string; updated_at?: string }) => void
   isUpdatingDates: boolean
+  viewSwitcher: ReactNode
 }) {
   const sharedCount = shares.length
 
   return (
-    <div className="mt-5 flex flex-wrap items-center gap-2 border-y py-3 text-sm text-muted-foreground">
+    <div className="mt-4 flex flex-wrap items-center gap-3 border-y border-border py-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] text-muted-foreground">
       <DocumentDateField
         label="Created"
         value={document.created_at}
@@ -1131,10 +1141,11 @@ function DocumentMetadata({
           onSelect={onMoveFolder}
           onCreateFolder={onCreateFolder}
           triggerLabel={document.folder_name ?? "Unfiled"}
+          triggerClassName="h-7 px-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] [&_svg]:size-3"
         />
       ) : (
-        <span className="inline-flex min-w-0 items-center gap-1.5 text-foreground">
-          <Folder className="size-4 shrink-0 text-muted-foreground" />
+        <span className="inline-flex min-w-0 items-center gap-1.5 text-muted-foreground">
+          <Folder className="size-3 shrink-0 text-muted-foreground" />
           <span className="truncate">{document.folder_name ?? "Unfiled"}</span>
         </span>
       )}
@@ -1153,8 +1164,8 @@ function DocumentMetadata({
           isLoading={isLoadingAccess}
         />
       ) : (
-        <span className="inline-flex items-center gap-1.5 text-foreground">
-          <Share2 className="size-4 text-muted-foreground" />
+        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+          <Share2 className="size-3 text-muted-foreground" />
           {sharedCount > 0
             ? `${sharedCount} member${sharedCount === 1 ? "" : "s"}`
             : "Private"}
@@ -1170,10 +1181,11 @@ function DocumentMetadata({
         aria-pressed={document.is_favorite}
         onClick={onToggleFavorite}
         data-testid="document-favorite"
+        className="h-7 px-2 font-mono text-[0.66rem] uppercase tracking-[0.08em]"
       >
         <Star
           className={cn(
-            "size-4",
+            "size-3",
             document.is_favorite
               ? "fill-yellow-400 text-yellow-500"
               : "text-muted-foreground",
@@ -1181,6 +1193,7 @@ function DocumentMetadata({
         />
         {document.is_favorite ? "Favorited" : "Favorite"}
       </Button>
+      <div className="ml-auto">{viewSwitcher}</div>
     </div>
   )
 }
@@ -1204,7 +1217,7 @@ function DocumentDateField({
 
   if (!canEdit) {
     return (
-      <span className="whitespace-nowrap text-xs text-muted-foreground">
+      <span className="whitespace-nowrap text-[0.66rem] text-muted-foreground">
         {display}
       </span>
     )
@@ -1219,7 +1232,7 @@ function DocumentDateField({
         defaultValue={inputValue}
         disabled={disabled}
         aria-label={`${label} date`}
-        className="rounded border border-input bg-background px-1.5 py-0.5 text-xs text-foreground"
+        className="border border-input bg-background px-1.5 py-0.5 text-[0.66rem] text-foreground"
         onBlur={() => setEditing(false)}
         onChange={(event) => {
           const next = event.target.value
@@ -1236,7 +1249,7 @@ function DocumentDateField({
   return (
     <button
       type="button"
-      className="cursor-pointer whitespace-nowrap rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+      className="cursor-pointer whitespace-nowrap px-1.5 py-0.5 text-[0.66rem] text-muted-foreground hover:bg-muted hover:text-foreground"
       onClick={() => setEditing(true)}
       disabled={disabled}
     >
@@ -1296,6 +1309,7 @@ function DocumentAccessDropdown({
           variant="outline"
           size="sm"
           data-testid="document-access"
+          className="h-7 px-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] [&_svg]:size-3"
         >
           <Share2 className="size-4" />
           {persistedCount > 0
@@ -1419,7 +1433,7 @@ function ViewToggle({
       aria-selected={active}
       data-state={active ? "active" : "inactive"}
       onClick={onClick}
-      className="inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 py-1 text-sm font-medium text-foreground transition-[color,box-shadow] focus-visible:border-ring focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=active]:bg-background data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground"
+      className="inline-flex items-center justify-center gap-1.5 border-r border-border px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground transition-colors last:border-r-0 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:bg-muted data-[state=active]:text-foreground"
     >
       {label}
     </button>
@@ -1543,7 +1557,7 @@ function SummaryPane({
             onMouseUp={handleSummarySelection}
             onKeyUp={handleSummarySelection}
             className={cn(
-              "space-y-5 text-base leading-8 text-foreground",
+              "max-w-[64ch] space-y-5 text-[15.5px] leading-[1.65] text-foreground/85 [&_p]:text-pretty [&_strong]:font-semibold [&_strong]:text-foreground",
               anchorMode && "cursor-text select-text",
             )}
           >
@@ -1576,7 +1590,7 @@ function SummaryPane({
                           data-segment-key={segmentKey}
                           data-anchored="false"
                           className={cn(
-                            isPicked && "bg-purple-100 dark:bg-purple-950/60",
+                            isPicked && "bg-primary/15 text-foreground",
                           )}
                         >
                           {renderInlineMarkdown(
@@ -1601,7 +1615,7 @@ function SummaryPane({
                           if (anchorMode) return
                           onShowEvidence(evidenceAnchorId)
                         }}
-                        className="inline rounded-sm bg-purple-100/80 px-1 py-0.5 text-left text-purple-950 transition-colors hover:bg-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/70"
+                        className="inline border-b border-primary/40 bg-primary/15 px-1 py-0.5 align-baseline font-mono text-[0.68rem] text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {renderInlineMarkdown(
                           segment.text,
@@ -1643,7 +1657,7 @@ function EditableMainBody({
     <RichTextField
       value={markdown}
       onChange={(next) => onChange(markdownToParagraphs(next))}
-      className="text-base leading-8"
+      className="text-[15.5px] leading-[1.65]"
       data-testid="edit-main-body"
     />
   )
@@ -1725,13 +1739,13 @@ function DetailsPane({
     <section
       aria-label={`${fileName} markdown details`}
       className={cn(
-        "overflow-hidden rounded-md border bg-card",
+        "overflow-hidden border border-border bg-background",
         isSplit && "md:flex md:min-h-0 md:flex-col",
       )}
     >
       <div
         className={cn(
-          "flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-2 font-mono text-xs text-muted-foreground",
+          "flex items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-2 font-mono text-[0.66rem] uppercase tracking-[0.12em] text-muted-foreground",
           isSplit && "md:shrink-0",
         )}
       >
@@ -1798,7 +1812,7 @@ function DetailsPane({
                     details_markdown_sections: next,
                   })
                 }}
-                className="mb-5 text-sm leading-7"
+                className="mb-5 text-[15.5px] leading-[1.65]"
                 data-testid={`edit-section-${section.anchor_id}`}
               />
             )
@@ -1812,10 +1826,10 @@ function DetailsPane({
               data-testid={`ai-evidence-${section.anchor_id}`}
               data-active-evidence={isActive ? "true" : "false"}
               className={cn(
-                "scroll-mt-6 rounded-sm py-2 text-sm leading-7 text-foreground transition-colors",
+                "max-w-[64ch] scroll-mt-6 py-2 text-[15.5px] leading-[1.65] text-foreground/85 transition-colors [&_p]:text-pretty",
                 isActive &&
-                  "bg-purple-100/80 px-3 text-purple-950 dark:bg-purple-950/60 dark:text-purple-100",
-                isPicked && "outline outline-2 outline-purple-400",
+                  "border border-primary/40 bg-primary/15 px-3 text-foreground",
+                isPicked && "outline outline-2 outline-primary",
               )}
             >
               <MarkdownBlocks markdown={section.markdown} />

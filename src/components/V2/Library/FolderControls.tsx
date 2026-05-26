@@ -443,6 +443,7 @@ export function FolderPickerDropdown({
   onCreateFolder,
   align = "start",
   triggerLabel,
+  triggerClassName,
 }: {
   folders: V2DocumentFolderPublic[]
   currentFolderId: string | null
@@ -451,6 +452,7 @@ export function FolderPickerDropdown({
   onCreateFolder: () => void
   align?: "start" | "center" | "end"
   triggerLabel?: string
+  triggerClassName?: string
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -485,7 +487,10 @@ export function FolderPickerDropdown({
           variant="outline"
           size="sm"
           disabled={disabled}
-          className="max-w-full cursor-pointer justify-start"
+          className={cn(
+            "max-w-full cursor-pointer justify-start",
+            triggerClassName,
+          )}
         >
           <Folder className="size-4" />
           <span className="truncate">
