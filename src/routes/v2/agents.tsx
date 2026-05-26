@@ -5,16 +5,13 @@ import {
   Outlet,
   useRouterState,
 } from "@tanstack/react-router"
-import { Bot, Loader2 } from "lucide-react"
+import { Bot, LayoutGrid, List, Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
 
 import { type AgentSpecialistSummary, listAgents } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Skeleton } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
-import {
-  formatCompactNumber,
-  formatRelativeTime,
-} from "@/components/V2/Agents/formatters"
+import { AgentSessionCard } from "@/components/V2/Agents/AgentSessionCard"
 import {
   AGENT_EYEBROW_CLASS,
   AGENT_FEATURE_STRIP_VALUE_CLASS,
@@ -25,7 +22,33 @@ import {
   AGENT_STAT_LABEL_CLASS,
   AGENT_TABLE_HEADER_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
+import {
+  formatCompactNumber,
+  formatRelativeTime,
+} from "@/components/V2/Agents/formatters"
 import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
+import { cn } from "@/lib/utils"
+
+type AgentsViewMode = "grid" | "list"
+
+const AGENTS_VIEW_STORAGE_KEY = "v2-agents-view"
+
+function readStoredView(): AgentsViewMode {
+  if (typeof window === "undefined") return "list"
+  const stored = window.sessionStorage.getItem(AGENTS_VIEW_STORAGE_KEY)
+  return stored === "grid" || stored === "list" ? stored : "list"
+}
+
+function useAgentsViewMode(): [AgentsViewMode, (mode: AgentsViewMode) => void] {
+  const [view, setView] = useState<AgentsViewMode>(() => readStoredView())
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.sessionStorage.setItem(AGENTS_VIEW_STORAGE_KEY, view)
+  }, [view])
+
+  return [view, setView]
+}
 
 export const Route = createFileRoute("/v2/agents")({
   component: TaskforceAgents,
@@ -145,21 +168,86 @@ function AgentsFeatureStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
   )
 }
 
-function FilterPills() {
+function HeaderActions({
+  view,
+  onChange,
+}: {
+  view: AgentsViewMode
+  onChange: (mode: AgentsViewMode) => void
+}) {
   return (
-    <div className="flex flex-wrap gap-1.5 text-xs uppercase tracking-wide">
-      <span className="border border-zinc-950 bg-zinc-950 px-2 py-1 text-white dark:border-white dark:bg-white dark:text-zinc-950">
-        All
-      </span>
-      <span className="border border-border px-2 py-1 text-muted-foreground">
-        Mine
-      </span>
-      <span className="border border-border px-2 py-1 text-muted-foreground">
-        Team
-      </span>
+    <div className="flex flex-wrap items-center gap-1.5 text-xs uppercase tracking-wide">
+      <ViewToggle view={view} onChange={onChange} />
       <span className="border border-border px-2 py-1 text-muted-foreground normal-case">
         + Create profile
       </span>
+    </div>
+  )
+}
+
+function ViewToggle({
+  view,
+  onChange,
+}: {
+  view: AgentsViewMode
+  onChange: (mode: AgentsViewMode) => void
+}) {
+  return (
+    <div className="inline-flex border border-border">
+      <ToggleButton
+        active={view === "list"}
+        onClick={() => onChange("list")}
+        label="List view"
+        icon={<List className="size-3.5" aria-hidden />}
+      />
+      <ToggleButton
+        active={view === "grid"}
+        onClick={() => onChange("grid")}
+        label="Grid view"
+        icon={<LayoutGrid className="size-3.5" aria-hidden />}
+      />
+    </div>
+  )
+}
+
+function ToggleButton({
+  active,
+  onClick,
+  label,
+  icon,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+  icon: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      aria-label={label}
+      onClick={onClick}
+      className={cn(
+        "flex items-center justify-center px-2 py-1 transition-colors",
+        active
+          ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
+          : "text-muted-foreground hover:bg-muted",
+      )}
+    >
+      {icon}
+    </button>
+  )
+}
+
+function AgentsGrid({ agents }: { agents: AgentSpecialistSummary[] }) {
+  return (
+    <div
+      data-testid="agents-card-grid"
+      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+    >
+      {agents.map((agent) => (
+        <AgentSessionCard key={agent.id} agent={agent} />
+      ))}
     </div>
   )
 }
@@ -187,10 +275,7 @@ function AgentRow({ agent }: { agent: AgentSpecialistSummary }) {
 
       <div className="flex flex-wrap gap-1">
         {tags.map((tag) => (
-          <span
-            key={tag}
-            className={AGENT_ROUTE_CHIP_CLASS}
-          >
+          <span key={tag} className={AGENT_ROUTE_CHIP_CLASS}>
             {tag.toLowerCase()}
           </span>
         ))}
@@ -260,6 +345,7 @@ function EmptyAgents({ isDemoMode }: { isDemoMode: boolean }) {
 
 function AgentsIndex() {
   const { isDemoMode } = useDemoMode()
+  const [view, setView] = useAgentsViewMode()
   const agentsQuery = useQuery({
     queryKey: ["v2-agents", isDemoMode],
     queryFn: () => listAgents({ demo: isDemoMode }),
@@ -279,7 +365,7 @@ function AgentsIndex() {
             </div>
             <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
           </div>
-          <FilterPills />
+          <HeaderActions view={view} onChange={setView} />
         </header>
 
         <AgentsFeatureStrip agents={agents} />
@@ -287,7 +373,11 @@ function AgentsIndex() {
         {agentsQuery.isLoading ? (
           <AgentsLoading />
         ) : agents.length > 0 ? (
-          <AgentsList agents={agents} />
+          view === "grid" ? (
+            <AgentsGrid agents={agents} />
+          ) : (
+            <AgentsList agents={agents} />
+          )
         ) : (
           <EmptyAgents isDemoMode={isDemoMode} />
         )}
