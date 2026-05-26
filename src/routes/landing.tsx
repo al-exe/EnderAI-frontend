@@ -132,14 +132,14 @@ function LandingExpressive() {
             </div>
           </div>
 
-          <dl className="mt-10 grid border-t border-zinc-200 pt-4 font-mono text-[0.68rem] text-zinc-500 dark:border-white/10 dark:text-zinc-400 sm:grid-cols-3 md:mt-auto">
+          <dl className="mt-10 grid border-t border-zinc-200 pt-4 font-mono text-[0.85rem] text-zinc-500 dark:border-white/10 dark:text-zinc-400 sm:grid-cols-3 md:mt-auto">
             {proofStats.map((stat) => (
               <div
                 key={stat.label}
                 className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10"
               >
                 <dt className="uppercase tracking-[0.16em]">{stat.label}</dt>
-                <dd className="mt-1 font-sans text-sm font-semibold text-zinc-950 dark:text-white">
+                <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
                   {stat.value}
                 </dd>
               </div>
