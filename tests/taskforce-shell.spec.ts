@@ -93,7 +93,7 @@ test("Taskforce v2 sidebar includes drag collapse and Extras controls", async ({
 
   await expect(page.getByTestId("sidebar-collapse-toggle")).toHaveCount(0)
   await expect(sidebarRail).toBeVisible()
-  await expect(extrasHandle).toContainText("Extras")
+  await expect(extrasHandle).toHaveAttribute("aria-label", "Sidebar utilities")
   await expect(extrasDrawer).toContainText("Demo mode")
   await expect(documentLookup).toBeVisible()
   await expect(documentLookup).toHaveAttribute(
