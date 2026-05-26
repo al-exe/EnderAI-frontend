@@ -301,3 +301,25 @@ test("experimental mode shows expressive aggregate metrics", async ({
   await expect(page.getByTestId("metrics-session-filter-banner")).toHaveCount(0)
   expect(sessionSavingsRequests).toBe(0)
 })
+
+test("metrics methodology route renders from direct URL and metrics link", async ({
+  page,
+}) => {
+  await mockMetricsPage(page)
+
+  await page.goto("/v2/metrics/methodology")
+  await expect(page).toHaveURL(/\/v2\/metrics\/methodology$/)
+  await expect(
+    page.getByRole("heading", { name: /how we calculate savings/i }),
+  ).toBeVisible()
+  await expect(page.getByRole("link", { name: /back to metrics/i })).toBeVisible()
+
+  await page.getByRole("link", { name: /back to metrics/i }).click()
+  await expect(page).toHaveURL(/\/v2\/metrics$/)
+
+  await page.getByRole("link", { name: /learn how we calculate savings/i }).click()
+  await expect(page).toHaveURL(/\/v2\/metrics\/methodology$/)
+  await expect(
+    page.getByRole("heading", { name: /how we calculate savings/i }),
+  ).toBeVisible()
+})
