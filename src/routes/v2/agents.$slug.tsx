@@ -33,6 +33,7 @@ import {
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
 import {
+  V2_PAGE_BODY,
   V2_PAGE_CONTENT,
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
@@ -49,7 +50,7 @@ export const Route = createFileRoute("/v2/agents/$slug")({
   }),
 })
 
-const AGENTS_DETAIL_SHELL = V2_PAGE_CONTENT
+const AGENTS_DETAIL_SHELL = V2_PAGE_BODY
 
 function initials(name: string) {
   return name

@@ -842,7 +842,7 @@ function TaskforceDocumentDetail() {
         <div
           data-testid="v2-document-sticky-header"
           className={cn(
-            "sticky top-0 z-20 -mx-6 border-b bg-background px-6 pt-1 pb-3",
+            "sticky top-0 z-30 -mx-6 border-b bg-background px-6 pt-1 pb-3",
             isSplit && "md:shrink-0",
           )}
         >
