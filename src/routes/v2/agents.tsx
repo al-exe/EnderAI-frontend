@@ -207,11 +207,13 @@ function AgentRow({ agent }: { agent: AgentSpecialistSummary }) {
         {agent.invocations_count.toLocaleString()}
       </div>
 
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground md:justify-end">
+      <div className="ml-auto grid w-[7.25rem] grid-cols-[0.375rem_minmax(0,1fr)] items-center gap-1.5 text-xs text-muted-foreground">
         <span
-          className={`size-1.5 ${idle ? "bg-border" : "bg-emerald-600 dark:bg-emerald-400"}`}
+          className={`size-1.5 shrink-0 ${idle ? "bg-border" : "bg-emerald-600 dark:bg-emerald-400"}`}
         />
-        {formatRelativeTime(agent.last_invoked_at)}
+        <span className="truncate text-right">
+          {formatRelativeTime(agent.last_invoked_at)}
+        </span>
       </div>
     </article>
   )
