@@ -101,8 +101,8 @@ function LandingExpressive() {
       <section className="grid min-h-[calc(100svh-4.375rem)] md:grid-cols-2">
         <div className="relative flex flex-col justify-start border-b border-zinc-200 px-5 py-8 dark:border-white/10 md:border-r md:border-b-0 md:px-8 md:py-10">
           <div className="max-w-2xl">
-            <div className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#8447ff]">
-              AI work memory · for engineering teams
+            <div className="font-mono text-[0.85rem] font-medium uppercase tracking-[0.22em] text-[#8447ff]">
+              AI work memory for engineering teams
             </div>
             <h1 className="mt-4 max-w-[14ch] text-5xl font-semibold leading-[0.96] tracking-[-0.035em] text-balance md:text-6xl lg:text-7xl">
               Stop <em className="not-italic text-[#8447ff]">re-explaining</em>{" "}
