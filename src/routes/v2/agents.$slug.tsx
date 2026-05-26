@@ -9,17 +9,19 @@ import {
 } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
 import {
   agentSummaryToDetailPlaceholder,
   findAgentSummaryInList,
 } from "@/components/V2/Agents/agentDetailPlaceholder"
 import {
-  AGENT_DESCRIPTION_CLASS,
-  AGENT_DETAIL_NAME_CLASS,
   AGENT_BREADCRUMB_CLASS,
+  AGENT_DESCRIPTION_CLASS,
+  AGENT_DETAIL_AVATAR_CLASS,
+  AGENT_DETAIL_NAME_CLASS,
+  AGENT_DETAIL_SUBTITLE_CLASS,
   AGENT_PAGE_TITLE_CLASS,
-  AGENT_ROLE_CLASS,
   AGENT_ROUTE_CHIP_CLASS,
   AGENT_ROUTE_LABEL_CLASS,
   AGENT_SECTION_META_CLASS,
@@ -326,9 +328,7 @@ function AgentDetailPage() {
 
   if (showFullSkeleton) {
     return (
-      <section
-        className={`${V2_PAGE_FRAME} bg-white font-sans dark:bg-zinc-950`}
-      >
+      <section className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}>
         <AgentDetailSkeleton shellClassName={AGENTS_DETAIL_SHELL} />
       </section>
     )
@@ -336,14 +336,12 @@ function AgentDetailPage() {
 
   if (showNotFound || !agent) {
     return (
-      <section
-        className={`${V2_PAGE_FRAME} bg-white font-sans dark:bg-zinc-950`}
-      >
+      <section className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}>
         <div
           className={`${V2_PAGE_CONTENT} min-h-[50vh] items-center justify-center text-center`}
         >
           <h1 className={AGENT_PAGE_TITLE_CLASS}>Specialist not found</h1>
-          <p className="mt-3 max-w-lg text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+          <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
             This specialist is unavailable or you do not have access.
           </p>
           <Button asChild className="mt-6">
@@ -356,38 +354,32 @@ function AgentDetailPage() {
 
   return (
     <section
-      className={`${V2_PAGE_FRAME} bg-white font-sans text-zinc-950 dark:bg-zinc-950 dark:text-white`}
+      className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
     >
       <div className={AGENTS_DETAIL_SHELL}>
-        <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
+        <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div>
             <div className={AGENT_BREADCRUMB_CLASS}>
-              <Link
-                to="/v2/agents"
-                className="hover:text-zinc-950 dark:hover:text-white"
-              >
+              <Link to="/v2/agents" className="hover:text-foreground">
                 Agents
               </Link>
-              <span className="px-2 text-zinc-300 dark:text-zinc-700">/</span>
-              <span className="text-zinc-950 dark:text-white">
-                {agent.slug}
-              </span>
+              <span className="px-2 text-muted-foreground/50">/</span>
+              <span className="text-foreground">{agent.slug}</span>
             </div>
-            <div className="mt-2 flex items-start gap-3">
-              <span className="grid size-5 shrink-0 place-items-center border border-white bg-[#8447ff] font-mono text-[0.58rem] font-semibold text-white outline outline-1 outline-black/10 dark:border-zinc-950 dark:outline-white/15">
+            <div className="mt-1 flex items-center gap-3">
+              <span className={AGENT_DETAIL_AVATAR_CLASS}>
                 {initials(agent.name)}
               </span>
-              <div className="min-w-0">
-                <h1 className={AGENT_DETAIL_NAME_CLASS}>{agent.name}</h1>
-                <p className={AGENT_ROLE_CLASS}>
-                  <span className="font-medium text-zinc-950 dark:text-white">
-                    {agent.role}
-                  </span>
-                </p>
-              </div>
+              <h1 className={cn("min-w-0", AGENT_DETAIL_NAME_CLASS)}>
+                {agent.name}
+              </h1>
             </div>
+            <p className={AGENT_DETAIL_SUBTITLE_CLASS}>
+              <span className="font-semibold text-foreground">{agent.role}</span>
+              <span> · specialist playbook</span>
+            </p>
             {agent.description ? (
-              <p className={`mt-4 ${AGENT_DESCRIPTION_CLASS}`}>
+              <p className={cn("mt-4 max-w-3xl", AGENT_DESCRIPTION_CLASS)}>
                 {agent.description}
               </p>
             ) : null}
