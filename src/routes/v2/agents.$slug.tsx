@@ -32,7 +32,11 @@ import {
   formatCompactNumber,
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
-import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
+import {
+  V2_PAGE_CONTENT,
+  V2_PAGE_FRAME,
+  V2_STICKY_HEADER_CLASS,
+} from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/agents/$slug")({
   component: AgentDetailPage,
@@ -357,7 +361,13 @@ function AgentDetailPage() {
       className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
     >
       <div className={AGENTS_DETAIL_SHELL}>
-        <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <header
+          data-testid="agent-detail-sticky-header"
+          className={cn(
+            V2_STICKY_HEADER_CLASS,
+            "grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end",
+          )}
+        >
           <div>
             <div className={AGENT_BREADCRUMB_CLASS}>
               <Link to="/v2/agents" className="hover:text-foreground">
@@ -378,11 +388,6 @@ function AgentDetailPage() {
               <span className="font-semibold text-foreground">{agent.role}</span>
               <span> · specialist playbook</span>
             </p>
-            {agent.description ? (
-              <p className={cn("mt-4 max-w-3xl", AGENT_DESCRIPTION_CLASS)}>
-                {agent.description}
-              </p>
-            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-emerald-600 dark:border-white/12 dark:text-emerald-400">
@@ -397,6 +402,12 @@ function AgentDetailPage() {
             </Button>
           </div>
         </header>
+
+        {agent.description ? (
+          <p className={cn("max-w-3xl", AGENT_DESCRIPTION_CLASS)}>
+            {agent.description}
+          </p>
+        ) : null}
 
         {isHydratingDetail ? (
           <AgentDetailSkeleton
