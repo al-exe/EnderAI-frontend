@@ -149,9 +149,6 @@ function LandingExpressive() {
 
         <div className="flex min-h-[36rem] flex-col justify-end bg-zinc-50 px-5 py-6 dark:bg-zinc-900/40 md:min-h-0 md:items-end md:px-8 md:py-8">
           <div className="w-full max-w-[42rem]">
-            <div className="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-              Live · Claude Code /tf skill
-            </div>
             <div className="border border-zinc-950 bg-zinc-950 p-3 font-mono text-[0.68rem] leading-5 text-zinc-100 shadow-2xl dark:border-white/15 md:p-4 lg:text-[0.72rem]">
               <div className="mb-3 flex items-center gap-2 border-b border-white/15 pb-3">
                 <span className="size-1.5 bg-emerald-400" />
