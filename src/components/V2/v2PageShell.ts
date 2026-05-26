@@ -17,6 +17,12 @@ export const V2_PAGE_CONTENT = cn(
 )
 
 /**
+ * Padded page body when `V2_PAGE_FRAME` is the scroll container (avoids nested overflow
+ * breaking `position: sticky`).
+ */
+export const V2_PAGE_BODY = cn("flex flex-col gap-6", V2_PAGE_PADDING)
+
+/**
  * Library-style tab body: same padding as Agents, but overflow hidden for split panes.
  */
 export const V2_PAGE_CONTENT_FIXED = cn(
@@ -28,9 +34,9 @@ export const V2_PAGE_CONTENT_FIXED = cn(
 export const V2_TAB_EYEBROW_CLASS =
   "font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground"
 
-/** Sticky page header inside a `V2_PAGE_CONTENT` scroll area (offsets `p-6` padding). */
+/** Sticky page header inside a padded scroll area (offsets `p-6` padding). */
 export const V2_STICKY_HEADER_CLASS = cn(
-  "sticky top-0 z-20 -mx-6 shrink-0 border-b bg-background px-6 pb-4",
+  "sticky top-0 z-30 -mx-6 -mt-6 shrink-0 border-b bg-background px-6 pt-6 pb-4",
 )
 
 /** @deprecated Prefer V2_PAGE_CONTENT for tab pages. */
