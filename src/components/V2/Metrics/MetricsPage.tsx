@@ -576,10 +576,7 @@ function ExperimentalMetricsPage({
 
       <section className="grid border border-border md:grid-cols-[10rem_minmax(0,1fr)]">
         <div className="border-b border-border bg-muted/40 p-4 md:border-r md:border-b-0">
-          <div className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
-            Plain-English
-          </div>
-          <div className="mt-2 text-sm font-semibold">What this means</div>
+          <div className="text-sm font-semibold">Insights</div>
         </div>
         <p className="max-w-4xl p-4 text-sm leading-6 text-foreground">
           Taskforce avoided{" "}
