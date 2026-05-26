@@ -836,8 +836,8 @@ function TaskforceDocumentDetail() {
     >
       <article
         className={cn(
-          "flex w-full max-w-none flex-col p-6",
-          isSplit ? "md:min-h-0 md:flex-1 md:overflow-hidden" : "pb-16",
+          "flex w-full max-w-none flex-col px-6 pb-16 pt-0",
+          isSplit && "md:min-h-0 md:flex-1 md:overflow-hidden",
         )}
       >
         <div
@@ -947,16 +947,16 @@ function TaskforceDocumentDetail() {
 
           {editing ? (
             <PlainInlineEditor
-              value={editState.description}
+              value={editState.human_summary}
               onChange={(next) =>
-                setEditState({ ...editState, description: next })
+                setEditState({ ...editState, human_summary: next })
               }
               className="mt-2 max-w-[64ch] text-sm leading-6 text-muted-foreground"
               data-testid="edit-description"
             />
           ) : (
             <p className="mt-2 max-w-[64ch] text-sm leading-6 text-muted-foreground text-pretty">
-              {document.description}
+              {document.human_summary || document.description}
             </p>
           )}
 
@@ -1026,20 +1026,6 @@ function TaskforceDocumentDetail() {
               : "block",
           )}
         >
-          {summaryVisible && (
-            <SummaryPane
-              document={document}
-              editing={editing}
-              editState={editState}
-              setEditState={setEditState}
-              onShowEvidence={showEvidence}
-              isSplit={isSplit}
-              anchorMode={anchorMode}
-              summaryPick={summaryPick}
-              setSummaryPick={setSummaryPick}
-            />
-          )}
-
           {detailsVisible && (
             <DetailsPane
               document={document}
