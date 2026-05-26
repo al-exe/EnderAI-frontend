@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { V2_STICKY_HEADER_CLASS } from "@/components/V2/v2PageShell"
 
 function Bone({ className }: { className?: string }) {
   return (
@@ -42,7 +43,12 @@ export function AgentDetailSkeleton({
       aria-label="Loading specialist"
     >
       {!hideHeader && (
-        <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <header
+          className={cn(
+            V2_STICKY_HEADER_CLASS,
+            "grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end",
+          )}
+        >
           <div>
             <Bone className="h-[0.65rem] w-44" />
             <div className="mt-1 flex items-center gap-3">
@@ -50,13 +56,13 @@ export function AgentDetailSkeleton({
               <Bone className="h-7 w-56 max-w-full" />
             </div>
             <Bone className="mt-1 h-4 w-72 max-w-full" />
-            <Bone className="mt-4 h-4 w-full max-w-xl" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Bone className="h-8 w-28" />
             <Bone className="h-8 w-24" />
           </div>
         </header>
+        <Bone className="h-4 w-full max-w-xl" />
       )}
 
       <section className="my-4 grid border border-black/10 bg-white sm:grid-cols-2 lg:grid-cols-4 dark:border-white/12 dark:bg-zinc-950">
