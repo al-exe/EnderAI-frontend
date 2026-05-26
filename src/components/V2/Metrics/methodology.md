@@ -71,9 +71,3 @@ When a consultation didn't declare which model the agent was running, we default
 - Tokens loaded into the agent's context but never attended to by the model.
 
 These appear as observability counts elsewhere on the page, not as dollars saved.
-
-## Why this is defensible
-
-- **One formula, one story.** "Taskforce avoided N tokens of rediscovery this week" is something a CFO can quote without footnotes.
-- **No agent self-report required.** The savings come from the doc's structure plus the consultation event itself, not from the agent honestly flagging "I used the summary."
-- **Mechanically reproducible.** Anyone can open a doc, count its commands / files / decisions / sections / summary points, and recompute the rediscovery cost themselves. If a coefficient feels off, that's the conversation worth having.
