@@ -109,14 +109,13 @@ function LandingExpressive() {
               your codebase.
             </h1>
             <p className="mt-5 max-w-[50ch] text-sm leading-6 text-zinc-600 text-pretty dark:text-zinc-300 md:text-base">
-              Taskforce is a harness-agnostic, continual-learning memory layer
-              for coding agents. It captures agent work as linkable{" "}
+              Taskforce is a harness-agnostic, continual-learning{" "}
               <b className="font-medium text-zinc-950 dark:text-white">
-                documents
-              </b>
-              , routes new prompts to the right profile, and replays the
-              relevant decisions before another engineer starts from zero —
-              across Claude Code, Codex, Cursor, and any other harness.
+                memory
+              </b>{" "}
+              layer for coding agents. It remembers the work your team has
+              already done so the next agent doesn't rediscover the same
+              answers. Works with Claude Code, Codex, and Cursor.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link
