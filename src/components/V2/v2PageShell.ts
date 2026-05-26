@@ -30,7 +30,7 @@ export const V2_TAB_EYEBROW_CLASS =
 
 /** Sticky page header inside a `V2_PAGE_CONTENT` scroll area (offsets `p-6` padding). */
 export const V2_STICKY_HEADER_CLASS = cn(
-  "sticky top-0 z-20 -mx-6 shrink-0 border-b bg-background/95 px-6 pb-4 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+  "sticky top-0 z-20 -mx-6 shrink-0 border-b bg-background px-6 pb-4",
 )
 
 /** @deprecated Prefer V2_PAGE_CONTENT for tab pages. */
