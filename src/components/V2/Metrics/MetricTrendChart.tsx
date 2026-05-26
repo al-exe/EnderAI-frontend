@@ -30,14 +30,29 @@ function formatNumber(value: number): string {
   return value.toLocaleString("en-US", { maximumFractionDigits: 0 })
 }
 
+const DAY_MS = 86_400_000
+
+function parseDayUtc(day: string): number {
+  const parsed = Date.parse(`${day}T00:00:00Z`)
+  return Number.isFinite(parsed) ? parsed : Number.NaN
+}
+
 function formatDay(day: string): string {
-  const parsed = new Date(day)
-  if (Number.isNaN(parsed.getTime())) return day
+  const parsed = parseDayUtc(day)
+  if (Number.isNaN(parsed)) return day
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     timeZone: "UTC",
   }).format(parsed)
+}
+
+function formatDayFromTime(time: number): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(time)
 }
 
 type Plotted = {
@@ -50,7 +65,8 @@ type Plotted = {
 export function MetricTrendChart({ title, series }: Props) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
-  const { plotted, yMax, yMin, polylinePoints, areaPoints } = useMemo(() => {
+  const { plotted, yMax, yMin, polylinePoints, areaPoints, minTime, timeSpan } =
+    useMemo(() => {
     if (series.length === 0) {
       return {
         plotted: [] as Plotted[],
@@ -58,6 +74,8 @@ export function MetricTrendChart({ title, series }: Props) {
         yMin: 0,
         polylinePoints: "",
         areaPoints: "",
+        minTime: 0,
+        timeSpan: DAY_MS,
       }
     }
     const values = series.map((p) => toNumber(p.value))
@@ -67,14 +85,21 @@ export function MetricTrendChart({ title, series }: Props) {
     const minNice = rawMin < 0 ? -niceCeiling(-rawMin) : 0
     const span = Math.max(maxNice - minNice, 1)
 
-    const stepX =
-      series.length > 1 ? INNER_WIDTH / (series.length - 1) : INNER_WIDTH / 2
+    const times = series.map((p) => parseDayUtc(p.day))
+    const validTimes = times.filter((t) => !Number.isNaN(t))
+    const minTime =
+      validTimes.length > 0 ? Math.min(...validTimes) : 0
+    const maxTime =
+      validTimes.length > 0 ? Math.max(...validTimes) : minTime
+    const timeSpan = Math.max(maxTime - minTime, DAY_MS)
+
     const plotted: Plotted[] = series.map((point, index) => {
       const value = values[index]
+      const time = times[index]
       const x =
-        series.length === 1
+        series.length === 1 || Number.isNaN(time)
           ? PADDING_LEFT + INNER_WIDTH / 2
-          : PADDING_LEFT + index * stepX
+          : PADDING_LEFT + ((time - minTime) / timeSpan) * INNER_WIDTH
       const y =
         PADDING_TOP + INNER_HEIGHT - ((value - minNice) / span) * INNER_HEIGHT
       return { point, value, x, y }
@@ -96,6 +121,8 @@ export function MetricTrendChart({ title, series }: Props) {
       yMin: minNice,
       polylinePoints,
       areaPoints,
+      minTime,
+      timeSpan,
     }
   }, [series])
 
@@ -111,7 +138,7 @@ export function MetricTrendChart({ title, series }: Props) {
   }
 
   const yTicks = buildYTicks(yMin, yMax, 4)
-  const xTickIndexes = buildXTickIndexes(series.length, 5)
+  const xTickTimes = buildXTickTimes(minTime, minTime + timeSpan, 6)
   const baselineY = PADDING_TOP + INNER_HEIGHT
   const hovered = hoverIndex != null ? plotted[hoverIndex] : null
 
@@ -243,18 +270,17 @@ export function MetricTrendChart({ title, series }: Props) {
             />
           )}
 
-          {xTickIndexes.map((index) => {
-            const point = plotted[index]
-            if (!point) return null
+          {xTickTimes.map((tickTime, index) => {
+            const x = PADDING_LEFT + ((tickTime - minTime) / timeSpan) * INNER_WIDTH
             return (
               <text
-                key={point.point.day}
-                x={point.x}
+                key={tickTime}
+                x={x}
                 y={baselineY + 16}
                 textAnchor={
                   index === 0
                     ? "start"
-                    : index === series.length - 1
+                    : index === xTickTimes.length - 1
                       ? "end"
                       : "middle"
                 }
@@ -262,7 +288,7 @@ export function MetricTrendChart({ title, series }: Props) {
                 fill="currentColor"
                 fillOpacity="0.6"
               >
-                {formatDay(point.point.day)}
+                {formatDayFromTime(tickTime)}
               </text>
             )
           })}
@@ -317,14 +343,31 @@ function buildYTicks(min: number, max: number, count: number): number[] {
   return ticks
 }
 
-function buildXTickIndexes(length: number, max: number): number[] {
-  if (length <= max) {
-    return Array.from({ length }, (_, i) => i)
+function buildXTickTimes(
+  minTime: number,
+  maxTime: number,
+  maxTicks: number,
+): number[] {
+  const spanDays = Math.round((maxTime - minTime) / DAY_MS) + 1
+
+  if (spanDays <= maxTicks) {
+    return Array.from({ length: spanDays }, (_, i) => minTime + i * DAY_MS)
   }
-  const step = (length - 1) / (max - 1)
-  const indexes = new Set<number>()
-  for (let i = 0; i < max; i++) {
-    indexes.add(Math.round(i * step))
+
+  const niceDaySteps = [1, 2, 3, 5, 7, 14, 30]
+  const stepDays =
+    niceDaySteps.find((step) => Math.ceil(spanDays / step) <= maxTicks) ??
+    Math.max(1, Math.ceil(spanDays / maxTicks))
+
+  const ticks: number[] = []
+  for (let t = minTime; t <= maxTime; t += stepDays * DAY_MS) {
+    ticks.push(t)
   }
-  return Array.from(indexes).sort((a, b) => a - b)
+
+  const lastTick = ticks[ticks.length - 1]
+  if (lastTick < maxTime) {
+    ticks.push(maxTime)
+  }
+
+  return ticks
 }
