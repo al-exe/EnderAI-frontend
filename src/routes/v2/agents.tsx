@@ -73,20 +73,24 @@ function topPerformer(agents: AgentSpecialistSummary[]) {
 }
 
 function AgentsLoading() {
+  const cols =
+    "grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_6rem]"
+
   return (
     <div className="border-t border-border">
       <div
-        className={`grid grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_5.5rem_6rem] gap-4 border-b border-border bg-muted px-1.5 py-2 max-md:hidden ${AGENT_TABLE_HEADER_CLASS}`}
+        className={`grid ${cols} gap-4 border-b border-border bg-muted px-1.5 py-2 max-md:hidden ${AGENT_TABLE_HEADER_CLASS}`}
       >
-        <div>Specialist</div>
+        <div>Profile</div>
         <div>Routing tags</div>
-        <div className="text-right">Saved · runs</div>
+        <div className="text-right">Tokens saved</div>
+        <div className="text-right">Invocations</div>
         <div className="text-right">Last used</div>
       </div>
       {Array.from({ length: 5 }, (_, index) => (
         <div
           key={index}
-          className="grid gap-3 border-b border-border/60 px-1.5 py-3 md:grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_5.5rem_6rem] md:items-center md:gap-4"
+          className={`grid gap-3 border-b border-border/60 px-1.5 py-3 md:grid ${cols} md:items-center md:gap-4`}
         >
           <div>
             <Skeleton className="h-4 w-44" />
@@ -98,6 +102,7 @@ function AgentsLoading() {
             <Skeleton className="h-5 w-14" />
           </div>
           <Skeleton className="h-4 w-16 md:ml-auto" />
+          <Skeleton className="h-4 w-12 md:ml-auto" />
           <Skeleton className="h-4 w-20 md:ml-auto" />
         </div>
       ))}
@@ -124,7 +129,7 @@ function AgentsFeatureStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
       <div className="border-b border-border px-3.5 py-3 md:border-r md:border-b-0">
         <div className={AGENT_STAT_LABEL_CLASS}>Top performer</div>
         <div className={`mt-1 truncate text-base font-semibold`}>
-          {performer?.name ?? "No specialists"}
+          {performer?.name ?? "No profiles"}
         </div>
       </div>
       <div className="px-3.5 py-3">
@@ -132,7 +137,7 @@ function AgentsFeatureStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
         <div className={`mt-1 ${AGENT_FEATURE_STRIP_VALUE_CLASS}`}>
           {idleCount}{" "}
           <small className="text-xs font-medium text-muted-foreground">
-            specialists
+            profiles
           </small>
         </div>
       </div>
@@ -165,11 +170,11 @@ function AgentRow({ agent }: { agent: AgentSpecialistSummary }) {
   const idle = isIdle(agent)
 
   return (
-    <article className="group relative grid gap-3 border-b border-border/60 px-1.5 py-3 transition-colors hover:bg-muted/45 md:grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_5.5rem_6rem] md:items-center md:gap-4">
+    <article className="group relative grid gap-3 border-b border-border/60 px-1.5 py-3 transition-colors hover:bg-muted/45 md:grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_6rem] md:items-center md:gap-4">
       <Link
         to="/v2/agents/$slug"
         params={{ slug: agent.slug }}
-        aria-label={`Open specialist ${agent.name}`}
+        aria-label={`Open profile ${agent.name}`}
         className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
       />
 
@@ -195,10 +200,11 @@ function AgentRow({ agent }: { agent: AgentSpecialistSummary }) {
       </div>
 
       <div className="text-sm tabular-nums text-foreground md:text-right">
-        {formatCompactNumber(agent.tokens_saved)}{" "}
-        <span className="text-xs text-muted-foreground">
-          · {agent.invocations_count}
-        </span>
+        {formatCompactNumber(agent.tokens_saved)}
+      </div>
+
+      <div className="text-sm tabular-nums text-foreground md:text-right">
+        {agent.invocations_count.toLocaleString()}
       </div>
 
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground md:justify-end">
@@ -212,14 +218,18 @@ function AgentRow({ agent }: { agent: AgentSpecialistSummary }) {
 }
 
 function AgentsList({ agents }: { agents: AgentSpecialistSummary[] }) {
+  const cols =
+    "grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_6rem]"
+
   return (
     <div data-testid="agents-grid" className="border-t border-border">
       <div
-        className={`grid grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_5.5rem_6rem] gap-4 border-b border-border bg-muted px-1.5 py-2 max-md:hidden ${AGENT_TABLE_HEADER_CLASS}`}
+        className={`grid ${cols} gap-4 border-b border-border bg-muted px-1.5 py-2 max-md:hidden ${AGENT_TABLE_HEADER_CLASS}`}
       >
-        <div>Specialist</div>
+        <div>Profile</div>
         <div>Routing tags</div>
-        <div className="text-right">Saved · runs</div>
+        <div className="text-right">Tokens saved</div>
+        <div className="text-right">Invocations</div>
         <div className="text-right">Last used</div>
       </div>
 
@@ -236,11 +246,11 @@ function EmptyAgents({ isDemoMode }: { isDemoMode: boolean }) {
       <div className="mx-auto grid size-12 place-items-center border border-border bg-muted text-primary">
         <Bot className="size-6" />
       </div>
-      <h2 className={cn("mt-5", AGENT_PAGE_TITLE_CLASS)}>No specialists yet</h2>
+      <h2 className={cn("mt-5", AGENT_PAGE_TITLE_CLASS)}>No profiles yet</h2>
       <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
         {isDemoMode
-          ? "Seeded demo specialists have not been created for this account yet."
-          : "Agents will appear here after Taskforce packages reusable specialist knowledge from your work."}
+          ? "Seeded demo profiles have not been created for this account yet."
+          : "Agents will appear here after Taskforce packages reusable profile knowledge from your work."}
       </p>
     </div>
   )
@@ -265,9 +275,9 @@ function AgentsIndex() {
             <div className={AGENT_EYEBROW_CLASS}>
               Agents · {activeCount} active across team
             </div>
-            <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Agents</h1>
+            <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
             <p className="mt-1 max-w-[50ch] text-sm leading-5 text-muted-foreground">
-              Reusable specialists packaged from your team's prior work.
+              Reusable profiles packaged from your team's prior work.
             </p>
           </div>
           <FilterPills />
@@ -286,7 +296,7 @@ function AgentsIndex() {
         {agentsQuery.isFetching && !agentsQuery.isLoading && (
           <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-3 animate-spin" />
-            Refreshing specialists
+            Refreshing profiles
           </div>
         )}
       </div>
