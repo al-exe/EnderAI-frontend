@@ -594,10 +594,12 @@ function ExperimentalMetricsPage({
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
-        <MetricTrendChart
-          title="Tokens saved · daily"
-          series={tokensSaved?.series ?? []}
-        />
+        <div className="min-w-0">
+          <MetricTrendChart
+            title="Tokens saved · daily"
+            series={tokensSaved?.series ?? []}
+          />
+        </div>
         <ExperimentalBreakdownPanel
           title="Where savings came from"
           kicker="Savings by source"

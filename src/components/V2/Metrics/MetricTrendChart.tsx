@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { MetricSeriesPoint } from "@/api/v2Metrics"
 
 type Props = {
@@ -6,14 +6,38 @@ type Props = {
   series: MetricSeriesPoint[]
 }
 
-const PLOT_WIDTH = 600
 const PLOT_HEIGHT = 200
 const PADDING_LEFT = 56
-const PADDING_RIGHT = 16
+const PADDING_RIGHT = 12
 const PADDING_TOP = 12
 const PADDING_BOTTOM = 28
-const INNER_WIDTH = PLOT_WIDTH - PADDING_LEFT - PADDING_RIGHT
-const INNER_HEIGHT = PLOT_HEIGHT - PADDING_TOP - PADDING_BOTTOM
+const MIN_PLOT_WIDTH = 280
+const DEFAULT_PLOT_WIDTH = 600
+
+type ChartLayout = {
+  plotWidth: number
+  plotHeight: number
+  paddingLeft: number
+  paddingRight: number
+  paddingTop: number
+  paddingBottom: number
+  innerWidth: number
+  innerHeight: number
+}
+
+function getChartLayout(plotWidth: number): ChartLayout {
+  const width = Math.max(plotWidth, MIN_PLOT_WIDTH)
+  return {
+    plotWidth: width,
+    plotHeight: PLOT_HEIGHT,
+    paddingLeft: PADDING_LEFT,
+    paddingRight: PADDING_RIGHT,
+    paddingTop: PADDING_TOP,
+    paddingBottom: PADDING_BOTTOM,
+    innerWidth: width - PADDING_LEFT - PADDING_RIGHT,
+    innerHeight: PLOT_HEIGHT - PADDING_TOP - PADDING_BOTTOM,
+  }
+}
 
 function toNumber(s: string): number {
   const n = Number.parseFloat(s)
@@ -63,72 +87,101 @@ type Plotted = {
 }
 
 export function MetricTrendChart({ title, series }: Props) {
+  const chartAreaRef = useRef<HTMLDivElement>(null)
+  const [plotWidth, setPlotWidth] = useState(DEFAULT_PLOT_WIDTH)
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
+  const layout = useMemo(() => getChartLayout(plotWidth), [plotWidth])
+
+  useLayoutEffect(() => {
+    const element = chartAreaRef.current
+    if (!element) return
+
+    const updateWidth = () => {
+      const nextWidth = Math.floor(element.getBoundingClientRect().width)
+      if (nextWidth > 0) {
+        setPlotWidth((current) =>
+          current === nextWidth ? current : nextWidth,
+        )
+      }
+    }
+
+    updateWidth()
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
 
   const { plotted, yMax, yMin, polylinePoints, areaPoints, minTime, timeSpan } =
     useMemo(() => {
-    if (series.length === 0) {
-      return {
-        plotted: [] as Plotted[],
-        yMax: 1,
-        yMin: 0,
-        polylinePoints: "",
-        areaPoints: "",
-        minTime: 0,
-        timeSpan: DAY_MS,
+      const {
+        paddingLeft,
+        paddingTop,
+        innerWidth,
+        innerHeight,
+      } = layout
+
+      if (series.length === 0) {
+        return {
+          plotted: [] as Plotted[],
+          yMax: 1,
+          yMin: 0,
+          polylinePoints: "",
+          areaPoints: "",
+          minTime: 0,
+          timeSpan: DAY_MS,
+        }
       }
-    }
-    const values = series.map((p) => toNumber(p.value))
-    const rawMax = Math.max(...values, 0)
-    const rawMin = Math.min(...values, 0)
-    const maxNice = niceCeiling(rawMax || 1)
-    const minNice = rawMin < 0 ? -niceCeiling(-rawMin) : 0
-    const span = Math.max(maxNice - minNice, 1)
+      const values = series.map((p) => toNumber(p.value))
+      const rawMax = Math.max(...values, 0)
+      const rawMin = Math.min(...values, 0)
+      const maxNice = niceCeiling(rawMax || 1)
+      const minNice = rawMin < 0 ? -niceCeiling(-rawMin) : 0
+      const span = Math.max(maxNice - minNice, 1)
 
-    const times = series.map((p) => parseDayUtc(p.day))
-    const validTimes = times.filter((t) => !Number.isNaN(t))
-    const minTime =
-      validTimes.length > 0 ? Math.min(...validTimes) : 0
-    const maxTime =
-      validTimes.length > 0 ? Math.max(...validTimes) : minTime
-    const timeSpan = Math.max(maxTime - minTime, DAY_MS)
+      const times = series.map((p) => parseDayUtc(p.day))
+      const validTimes = times.filter((t) => !Number.isNaN(t))
+      const minTime =
+        validTimes.length > 0 ? Math.min(...validTimes) : 0
+      const maxTime =
+        validTimes.length > 0 ? Math.max(...validTimes) : minTime
+      const timeSpan = Math.max(maxTime - minTime, DAY_MS)
 
-    const plotted: Plotted[] = series.map((point, index) => {
-      const value = values[index]
-      const time = times[index]
-      const x =
-        series.length === 1 || Number.isNaN(time)
-          ? PADDING_LEFT + INNER_WIDTH / 2
-          : PADDING_LEFT + ((time - minTime) / timeSpan) * INNER_WIDTH
-      const y =
-        PADDING_TOP + INNER_HEIGHT - ((value - minNice) / span) * INNER_HEIGHT
-      return { point, value, x, y }
-    })
+      const plotted: Plotted[] = series.map((point, index) => {
+        const value = values[index]
+        const time = times[index]
+        const x =
+          series.length === 1 || Number.isNaN(time)
+            ? paddingLeft + innerWidth / 2
+            : paddingLeft + ((time - minTime) / timeSpan) * innerWidth
+        const y =
+          paddingTop + innerHeight - ((value - minNice) / span) * innerHeight
+        return { point, value, x, y }
+      })
 
-    const polylinePoints = plotted
-      .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
-      .join(" ")
-    const baselineY = PADDING_TOP + INNER_HEIGHT
-    const areaPoints = [
-      `${plotted[0].x.toFixed(1)},${baselineY.toFixed(1)}`,
-      ...plotted.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`),
-      `${plotted[plotted.length - 1].x.toFixed(1)},${baselineY.toFixed(1)}`,
-    ].join(" ")
+      const polylinePoints = plotted
+        .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+        .join(" ")
+      const baselineY = paddingTop + innerHeight
+      const areaPoints = [
+        `${plotted[0].x.toFixed(1)},${baselineY.toFixed(1)}`,
+        ...plotted.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`),
+        `${plotted[plotted.length - 1].x.toFixed(1)},${baselineY.toFixed(1)}`,
+      ].join(" ")
 
-    return {
-      plotted,
-      yMax: maxNice,
-      yMin: minNice,
-      polylinePoints,
-      areaPoints,
-      minTime,
-      timeSpan,
-    }
-  }, [series])
+      return {
+        plotted,
+        yMax: maxNice,
+        yMin: minNice,
+        polylinePoints,
+        areaPoints,
+        minTime,
+        timeSpan,
+      }
+    }, [layout, series])
 
   if (series.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-background p-4 shadow-sm">
+      <div className="min-w-0 w-full rounded-lg border border-border bg-background p-4 shadow-sm">
         <h3 className="mb-2 text-sm font-medium text-muted-foreground">
           {title}
         </h3>
@@ -139,7 +192,7 @@ export function MetricTrendChart({ title, series }: Props) {
 
   const yTicks = buildYTicks(yMin, yMax, 4)
   const xTickTimes = buildXTickTimes(minTime, minTime + timeSpan, 6)
-  const baselineY = PADDING_TOP + INNER_HEIGHT
+  const baselineY = layout.paddingTop + layout.innerHeight
   const hovered = hoverIndex != null ? plotted[hoverIndex] : null
 
   const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -147,7 +200,7 @@ export function MetricTrendChart({ title, series }: Props) {
     const svg = event.currentTarget
     const rect = svg.getBoundingClientRect()
     const ratioX = (event.clientX - rect.left) / rect.width
-    const svgX = ratioX * PLOT_WIDTH
+    const svgX = ratioX * layout.plotWidth
     let nearest = 0
     let nearestDist = Infinity
     for (let i = 0; i < plotted.length; i++) {
@@ -161,31 +214,33 @@ export function MetricTrendChart({ title, series }: Props) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-background p-4 shadow-sm">
+    <div className="min-w-0 w-full rounded-lg border border-border bg-background p-4 shadow-sm">
       <h3 className="mb-3 text-sm font-medium text-muted-foreground">
         {title}
       </h3>
-      <div className="relative">
+      <div ref={chartAreaRef} className="relative w-full min-w-0">
         <svg
           role="img"
           aria-label={title}
-          viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT}`}
-          className="block h-48 w-full"
-          preserveAspectRatio="xMidYMid meet"
+          viewBox={`0 0 ${layout.plotWidth} ${layout.plotHeight}`}
+          width={layout.plotWidth}
+          height={layout.plotHeight}
+          className="block w-full"
+          preserveAspectRatio="none"
           onPointerMove={handlePointerMove}
           onPointerLeave={() => setHoverIndex(null)}
         >
           <title>{title}</title>
           {yTicks.map((tick) => {
             const y =
-              PADDING_TOP +
-              INNER_HEIGHT -
-              ((tick - yMin) / Math.max(yMax - yMin, 1)) * INNER_HEIGHT
+              layout.paddingTop +
+              layout.innerHeight -
+              ((tick - yMin) / Math.max(yMax - yMin, 1)) * layout.innerHeight
             return (
               <g key={tick}>
                 <line
-                  x1={PADDING_LEFT}
-                  x2={PLOT_WIDTH - PADDING_RIGHT}
+                  x1={layout.paddingLeft}
+                  x2={layout.plotWidth - layout.paddingRight}
                   y1={y}
                   y2={y}
                   stroke="currentColor"
@@ -194,7 +249,7 @@ export function MetricTrendChart({ title, series }: Props) {
                   vectorEffect="non-scaling-stroke"
                 />
                 <text
-                  x={PADDING_LEFT - 8}
+                  x={layout.paddingLeft - 8}
                   y={y}
                   textAnchor="end"
                   dominantBaseline="central"
@@ -209,9 +264,9 @@ export function MetricTrendChart({ title, series }: Props) {
           })}
 
           <line
-            x1={PADDING_LEFT}
-            x2={PADDING_LEFT}
-            y1={PADDING_TOP}
+            x1={layout.paddingLeft}
+            x2={layout.paddingLeft}
+            y1={layout.paddingTop}
             y2={baselineY}
             stroke="currentColor"
             strokeOpacity="0.3"
@@ -219,8 +274,8 @@ export function MetricTrendChart({ title, series }: Props) {
             vectorEffect="non-scaling-stroke"
           />
           <line
-            x1={PADDING_LEFT}
-            x2={PLOT_WIDTH - PADDING_RIGHT}
+            x1={layout.paddingLeft}
+            x2={layout.plotWidth - layout.paddingRight}
             y1={baselineY}
             y2={baselineY}
             stroke="currentColor"
@@ -260,7 +315,7 @@ export function MetricTrendChart({ title, series }: Props) {
             <line
               x1={hovered.x}
               x2={hovered.x}
-              y1={PADDING_TOP}
+              y1={layout.paddingTop}
               y2={baselineY}
               stroke="currentColor"
               strokeOpacity="0.35"
@@ -271,7 +326,9 @@ export function MetricTrendChart({ title, series }: Props) {
           )}
 
           {xTickTimes.map((tickTime, index) => {
-            const x = PADDING_LEFT + ((tickTime - minTime) / timeSpan) * INNER_WIDTH
+            const x =
+              layout.paddingLeft +
+              ((tickTime - minTime) / timeSpan) * layout.innerWidth
             return (
               <text
                 key={tickTime}
@@ -296,8 +353,8 @@ export function MetricTrendChart({ title, series }: Props) {
           {hovered && (
             <foreignObject
               x={Math.min(
-                Math.max(hovered.x - 60, PADDING_LEFT),
-                PLOT_WIDTH - PADDING_RIGHT - 120,
+                Math.max(hovered.x - 60, layout.paddingLeft),
+                layout.plotWidth - layout.paddingRight - 120,
               )}
               y={Math.max(hovered.y - 52, 0)}
               width="120"
