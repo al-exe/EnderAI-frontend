@@ -82,7 +82,7 @@ function AgentsLoading() {
         className={`grid ${cols} gap-4 border-b border-border bg-muted px-1.5 py-2 max-md:hidden ${AGENT_TABLE_HEADER_CLASS}`}
       >
         <div>Profile</div>
-        <div>Routing tags</div>
+        <div>Tags</div>
         <div className="text-right">Tokens saved</div>
         <div className="text-right">Invocations</div>
         <div className="text-right">Last used</div>
@@ -227,7 +227,7 @@ function AgentsList({ agents }: { agents: AgentSpecialistSummary[] }) {
         className={`grid ${cols} gap-4 border-b border-border bg-muted px-1.5 py-2 max-md:hidden ${AGENT_TABLE_HEADER_CLASS}`}
       >
         <div>Profile</div>
-        <div>Routing tags</div>
+        <div>Tags</div>
         <div className="text-right">Tokens saved</div>
         <div className="text-right">Invocations</div>
         <div className="text-right">Last used</div>
