@@ -256,6 +256,7 @@ function SidebarUtilityDrawer({
         type="button"
         data-testid="taskforce-sidebar-utility-handle"
         aria-expanded={!isCollapsed}
+        aria-label="Sidebar utilities"
         className="flex h-8 w-full cursor-ns-resize items-center justify-between rounded-md px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         onClick={handleHandleClick}
         onPointerDown={handlePointerDown}
@@ -264,7 +265,6 @@ function SidebarUtilityDrawer({
         onPointerCancel={handlePointerUp}
       >
         <GripHorizontal className="size-4" />
-        <span className="group-data-[collapsible=icon]:sr-only">Extras</span>
         <span className="group-data-[collapsible=icon]:hidden">
           {isCollapsed ? (
             <ChevronUp className="size-4" />
