@@ -15,7 +15,7 @@ export function AgentHero({ agent }: Props) {
       <div className="relative max-w-4xl">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm text-white/80">
           <Sparkles className="size-4" />
-          Taskforce specialist
+          Taskforce profile
         </div>
         <h1 className="text-4xl font-semibold tracking-tight md:text-6xl">
           {agent.name}

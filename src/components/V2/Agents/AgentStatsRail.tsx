@@ -15,7 +15,7 @@ export function AgentStatsRail({ stats }: Props) {
 
   return (
     <aside className="rounded-3xl border bg-background p-6 shadow-sm">
-      <h2 className="text-lg font-semibold">Specialist impact</h2>
+      <h2 className="text-lg font-semibold">Profile impact</h2>
       <div className="mt-5 space-y-4">
         {rows.map(([label, value]) => (
           <div key={label} className="rounded-2xl bg-muted/40 p-4">

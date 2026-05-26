@@ -71,7 +71,7 @@ export function AgentCard({ agent }: Props) {
           </div>
           <Button asChild size="sm" variant="outline">
             <Link to="/v2/agents/$slug" params={{ slug: agent.slug }}>
-              View specialist
+              View profile
               <ArrowRight className="size-4" />
             </Link>
           </Button>

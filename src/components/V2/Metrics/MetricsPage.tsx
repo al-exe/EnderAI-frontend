@@ -707,7 +707,7 @@ function ExperimentalSessionMetrics({
               params={{ slug: sessionSavings.specialist_slug }}
               className="mt-3 inline-flex items-center gap-1.5 border border-border px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-foreground hover:bg-muted"
             >
-              Routed to{" "}
+              Selected profile:{" "}
               <span className="font-semibold normal-case tracking-normal">
                 {sessionSavings.specialist_name ??
                   sessionSavings.specialist_slug}
