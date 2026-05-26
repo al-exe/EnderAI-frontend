@@ -12,8 +12,8 @@ export const Route = createFileRoute("/landing")({
 })
 
 const proofStats = [
-  { label: "Saved in demo", value: "50,359 tokens" },
-  { label: "Specialist routed", value: "Jensen" },
+  { label: "Saved this week", value: "$614 / 40.9M tokens" },
+  { label: "Profile selected", value: "Jensen" },
   { label: "Setup", value: "4-min MCP" },
 ]
 
@@ -26,17 +26,17 @@ const terminalLines = [
   {
     name: "tf",
     tone: "dim",
-    text: "Checking Taskforce for the right specialist...",
+    text: "Checking Taskforce for the right profile...",
   },
   {
     name: "tf",
     tone: "dim",
-    text: 'Sending prompt + cwd + files + git_branch "demo/stripe-double-charge". No code body. No chat history.',
+    text: 'Sending prompt + cwd + files + git_branch "fix/stripe-webhook-double-fulfillment". No code body. No chat history.',
   },
   {
     name: "tf",
     tone: "body",
-    text: "Routed to Jensen — Billing Reliability Specialist.",
+    text: "Selected profile: Jensen — Billing Reliability.",
     accent: "Confidence: high · Stripe webhook retries · plan upgrades",
   },
   {
@@ -109,12 +109,14 @@ function LandingExpressive() {
               your codebase.
             </h1>
             <p className="mt-5 max-w-[50ch] text-sm leading-6 text-zinc-600 text-pretty dark:text-zinc-300 md:text-base">
-              Taskforce turns agent sessions into linkable{" "}
+              Taskforce is a harness-agnostic, continual-learning memory layer
+              for coding agents. It captures agent work as linkable{" "}
               <b className="font-medium text-zinc-950 dark:text-white">
                 documents
               </b>
-              , routes new prompts to the right specialist, and replays the
-              relevant decisions before another engineer starts from zero.
+              , routes new prompts to the right profile, and replays the
+              relevant decisions before another engineer starts from zero —
+              across Claude Code, Codex, Cursor, and any other harness.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link
@@ -153,7 +155,7 @@ function LandingExpressive() {
               <div className="mb-3 flex items-center gap-2 border-b border-white/15 pb-3">
                 <span className="size-1.5 bg-emerald-400" />
                 <span className="text-zinc-200">
-                  claude — demo/stripe-double-charge
+                  claude — fix/stripe-webhook-double-fulfillment
                 </span>
                 <span className="ml-auto text-[0.65rem] text-zinc-500">
                   foreground skill
@@ -199,7 +201,7 @@ function LandingExpressive() {
                     recorded
                   </div>
                   <div className="mt-1 text-zinc-200">
-                    Jensen invocation · 2 docs referenced
+                    Jensen profile · 2 docs referenced
                   </div>
                 </div>
                 <div>
@@ -207,7 +209,7 @@ function LandingExpressive() {
                     saved
                   </div>
                   <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
-                    50,359
+                    $614
                   </div>
                 </div>
                 <div>
