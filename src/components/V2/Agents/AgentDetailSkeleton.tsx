@@ -1,13 +1,10 @@
-import { cn } from "@/lib/utils"
 import { V2_STICKY_HEADER_CLASS } from "@/components/V2/v2PageShell"
+import { cn } from "@/lib/utils"
 
 function Bone({ className }: { className?: string }) {
   return (
     <div
-      className={cn(
-        "animate-pulse bg-zinc-200/90 dark:bg-white/10",
-        className,
-      )}
+      className={cn("animate-pulse bg-zinc-200/90 dark:bg-white/10", className)}
     />
   )
 }
@@ -37,32 +34,34 @@ export function AgentDetailSkeleton({
   hideHeader = false,
 }: AgentDetailSkeletonProps) {
   return (
-    <div
+    <output
       className={cn(shellClassName, "py-6")}
       aria-busy="true"
       aria-label="Loading specialist"
     >
       {!hideHeader && (
-        <header
-          className={cn(
-            V2_STICKY_HEADER_CLASS,
-            "grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end",
-          )}
-        >
-          <div>
-            <Bone className="h-[0.65rem] w-44" />
-            <div className="mt-1 flex items-center gap-3">
-              <Bone className="size-5 shrink-0" />
-              <Bone className="h-7 w-56 max-w-full" />
+        <>
+          <header
+            className={cn(
+              V2_STICKY_HEADER_CLASS,
+              "grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end",
+            )}
+          >
+            <div>
+              <Bone className="h-[0.65rem] w-44" />
+              <div className="mt-1 flex items-center gap-3">
+                <Bone className="size-5 shrink-0" />
+                <Bone className="h-7 w-56 max-w-full" />
+              </div>
+              <Bone className="mt-1 h-4 w-72 max-w-full" />
             </div>
-            <Bone className="mt-1 h-4 w-72 max-w-full" />
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Bone className="h-8 w-28" />
-            <Bone className="h-8 w-24" />
-          </div>
-        </header>
-        <Bone className="h-4 w-full max-w-xl" />
+            <div className="flex flex-wrap items-center gap-2">
+              <Bone className="h-8 w-28" />
+              <Bone className="h-8 w-24" />
+            </div>
+          </header>
+          <Bone className="h-4 w-full max-w-xl" />
+        </>
       )}
 
       <section className="my-4 grid border border-black/10 bg-white sm:grid-cols-2 lg:grid-cols-4 dark:border-white/12 dark:bg-zinc-950">
@@ -72,9 +71,7 @@ export function AgentDetailSkeleton({
             className="space-y-2 border-b border-black/10 p-4 last:border-b-0 sm:odd:border-r lg:border-r lg:border-b-0 lg:last:border-r-0 dark:border-white/12"
           >
             <Bone className="h-[0.62rem] w-24" />
-            <Bone
-              className={cn("h-8", index === 0 ? "w-28" : "w-20")}
-            />
+            <Bone className={cn("h-8", index === 0 ? "w-28" : "w-20")} />
             <Bone className="h-[0.68rem] w-36 max-w-full" />
           </div>
         ))}
@@ -219,6 +216,6 @@ export function AgentDetailSkeleton({
           </table>
         </div>
       </section>
-    </div>
+    </output>
   )
 }
