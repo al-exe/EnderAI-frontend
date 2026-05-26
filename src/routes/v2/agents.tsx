@@ -278,9 +278,6 @@ function AgentsIndex() {
               Agents · {activeCount} active across team
             </div>
             <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
-            <p className="mt-1 max-w-[50ch] text-sm leading-5 text-muted-foreground">
-              Reusable profiles packaged from your team's prior work.
-            </p>
           </div>
           <FilterPills />
         </header>
