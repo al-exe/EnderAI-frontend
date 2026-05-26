@@ -155,10 +155,10 @@ function FilterPills() {
         Mine
       </span>
       <span className="border border-border px-2 py-1 text-muted-foreground">
-        Org
+        Team
       </span>
-      <span className="border border-border px-2 py-1 text-muted-foreground">
-        + New
+      <span className="border border-border px-2 py-1 text-muted-foreground normal-case">
+        + Create profile
       </span>
     </div>
   )
