@@ -144,7 +144,9 @@ function AgentsFeatureStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
       <div className="border-b border-border px-3.5 py-3 md:border-r md:border-b-0">
         <div className={AGENT_STAT_LABEL_CLASS}>Total saved</div>
         <div className={`mt-1 ${AGENT_FEATURE_STRIP_VALUE_CLASS}`}>
-          {formatCompactNumber(tokensSaved)}{" "}
+          <span className="text-[#8447ff]">
+            {formatCompactNumber(tokensSaved)}
+          </span>{" "}
           <small className="text-xs font-medium text-muted-foreground">
             tokens
           </small>
@@ -179,8 +181,8 @@ function HeaderActions({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <ViewToggle view={view} onChange={onChange} />
-      <Button type="button" size="sm" variant="outline" className="w-fit">
-        + Create profile
+      <Button type="button" size="sm" className="w-fit">
+        + Profile
       </Button>
     </div>
   )
