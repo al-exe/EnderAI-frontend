@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { ArrowRight } from "lucide-react"
 
 import {
   type AgentSpecialistInvocationSummary,
@@ -68,13 +67,9 @@ export function AgentSessionCard({ agent }: Props) {
         />
       </div>
 
-      <footer className="mt-auto flex items-center justify-between gap-3 border-t border-border/70 px-4 py-2 text-xs text-muted-foreground">
+      <footer className="mt-auto border-t border-border/70 px-4 py-2 text-xs text-muted-foreground">
         <span className="tabular-nums">
           Last invoked {formatRelativeTime(agent.last_invoked_at)}
-        </span>
-        <span className="relative z-20 inline-flex items-center gap-1 text-foreground">
-          Open
-          <ArrowRight className="size-3.5" aria-hidden />
         </span>
       </footer>
     </article>
