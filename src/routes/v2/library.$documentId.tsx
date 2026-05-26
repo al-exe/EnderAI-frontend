@@ -278,9 +278,11 @@ function htmlToMarkdown(html: string): string {
 function MarkdownBlocks({
   markdown,
   className,
+  variant = "report",
 }: {
   markdown: string
   className?: string
+  variant?: "report" | "plain"
 }) {
   const blocks = markdown.trim() ? markdown.split(/\n{2,}/) : [markdown]
 
@@ -297,10 +299,14 @@ function MarkdownBlocks({
               key={`${trimmed}-${index}`}
               className={cn(
                 "text-foreground",
-                level === 1 && "text-xl font-semibold",
-                level === 2 &&
+                variant === "plain" && level === 1 && "text-2xl font-semibold",
+                variant === "plain" && level === 2 && "text-xl font-semibold",
+                variant === "plain" && level === 3 && "text-lg font-semibold",
+                variant === "report" && level === 1 && "text-xl font-semibold",
+                variant === "report" &&
+                  level === 2 &&
                   "border-t border-border pt-5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground",
-                level === 3 && "text-base font-semibold",
+                variant === "report" && level === 3 && "text-base font-semibold",
               )}
             >
               {renderInlineMarkdown(heading[2], `heading-${index}`)}
@@ -1605,7 +1611,7 @@ function SummaryPane({
                           if (anchorMode) return
                           onShowEvidence(evidenceAnchorId)
                         }}
-                        className="inline border-b border-primary/40 bg-primary/15 px-1 py-0.5 align-baseline font-mono text-[0.68rem] text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="inline border-b border-primary/40 bg-primary/15 px-1 py-0.5 text-left align-baseline font-mono text-[0.68rem] text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {renderInlineMarkdown(
                           segment.text,
@@ -1823,7 +1829,7 @@ function DetailsPane({
                 isPicked && "outline outline-2 outline-primary",
               )}
             >
-              <MarkdownBlocks markdown={section.markdown} />
+              <MarkdownBlocks markdown={section.markdown} variant="plain" />
             </div>
           )
         })}
