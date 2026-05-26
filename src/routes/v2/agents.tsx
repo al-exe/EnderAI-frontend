@@ -10,6 +10,7 @@ import { useEffect, useState } from "react"
 
 import { type AgentSpecialistSummary, listAgents } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentSessionCard } from "@/components/V2/Agents/AgentSessionCard"
 import {
@@ -151,7 +152,7 @@ function AgentsFeatureStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
       </div>
       <div className="border-b border-border px-3.5 py-3 md:border-r md:border-b-0">
         <div className={AGENT_STAT_LABEL_CLASS}>Top performer</div>
-        <div className={`mt-1 truncate text-base font-semibold`}>
+        <div className={`mt-1 truncate ${AGENT_FEATURE_STRIP_VALUE_CLASS}`}>
           {performer?.name ?? "No profiles"}
         </div>
       </div>
@@ -176,11 +177,11 @@ function HeaderActions({
   onChange: (mode: AgentsViewMode) => void
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5 text-xs uppercase tracking-wide">
+    <div className="flex flex-wrap items-center gap-2">
       <ViewToggle view={view} onChange={onChange} />
-      <span className="border border-border px-2 py-1 text-muted-foreground normal-case">
+      <Button type="button" size="sm" variant="outline" className="w-fit">
         + Create profile
-      </span>
+      </Button>
     </div>
   )
 }
@@ -193,7 +194,7 @@ function ViewToggle({
   onChange: (mode: AgentsViewMode) => void
 }) {
   return (
-    <div className="inline-flex border border-border">
+    <div className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground">
       <ToggleButton
         active={view === "list"}
         onClick={() => onChange("list")}
@@ -226,12 +227,12 @@ function ToggleButton({
       type="button"
       aria-pressed={active}
       aria-label={label}
+      data-state={active ? "active" : "inactive"}
       onClick={onClick}
       className={cn(
-        "flex items-center justify-center px-2 py-1 transition-colors",
-        active
-          ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
-          : "text-muted-foreground hover:bg-muted",
+        "inline-flex h-[calc(100%-1px)] items-center justify-center whitespace-nowrap rounded-md border border-transparent px-3 py-1 text-foreground transition-[color,box-shadow] focus-visible:border-ring focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "data-[state=active]:bg-background data-[state=active]:shadow-sm",
+        "dark:text-muted-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground",
       )}
     >
       {icon}
