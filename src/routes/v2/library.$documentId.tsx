@@ -491,8 +491,7 @@ function TaskforceDocumentDetail() {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { user } = useAuth()
 
-  // Default to full details; the AI summary view is hidden.
-  const [viewMode, setViewMode] = useState<ViewMode>("details")
+  const [viewMode, setViewMode] = useState<ViewMode>("summary")
   const [activeEvidenceAnchorId, setActiveEvidenceAnchorId] = useState<string>()
   const [isEditing, setIsEditing] = useState(false)
   const [editState, setEditState] = useState<EditableDoc | null>(null)
@@ -626,6 +625,7 @@ function TaskforceDocumentDetail() {
   })
 
   const isSplit = viewMode === "split"
+  const summaryVisible = viewMode === "summary" || isSplit
   const detailsVisible = viewMode === "details" || isSplit
 
   const showEvidence = useCallback((anchorId: string) => {
@@ -805,6 +805,15 @@ function TaskforceDocumentDetail() {
       aria-label="Document view"
       className="flex border border-border bg-background"
     >
+      <ViewToggle
+        label="Summary"
+        active={viewMode === "summary"}
+        onClick={() => {
+          setViewMode("summary")
+          setActiveEvidenceAnchorId(undefined)
+          setAnchorMode(false)
+        }}
+      />
       <ViewToggle
         label="Details"
         active={viewMode === "details"}
@@ -1010,6 +1019,20 @@ function TaskforceDocumentDetail() {
               : "block",
           )}
         >
+          {summaryVisible && (
+            <SummaryPane
+              document={document}
+              editing={editing}
+              editState={editState}
+              setEditState={setEditState}
+              onShowEvidence={showEvidence}
+              isSplit={isSplit}
+              anchorMode={anchorMode}
+              summaryPick={summaryPick}
+              setSummaryPick={setSummaryPick}
+            />
+          )}
+
           {detailsVisible && (
             <DetailsPane
               document={document}
@@ -1441,6 +1464,191 @@ function AnchorHelper({
         <li>Confirm to create the anchor.</li>
       </ol>
     </div>
+  )
+}
+
+function SummaryPane({
+  document,
+  editing,
+  editState,
+  setEditState,
+  onShowEvidence,
+  isSplit,
+  anchorMode,
+  summaryPick,
+  setSummaryPick,
+}: {
+  document: V2DocumentPublic
+  editing: boolean
+  editState: EditableDoc | null
+  setEditState: (next: EditableDoc) => void
+  onShowEvidence: (anchorId: string) => void
+  isSplit: boolean
+  anchorMode: boolean
+  summaryPick: AnchorPick | null
+  setSummaryPick: (pick: AnchorPick | null) => void
+}) {
+  const reportRef = useRef<HTMLDivElement | null>(null)
+
+  const handleSummarySelection = () => {
+    if (!anchorMode || !reportRef.current) return
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      return
+    }
+    const range = selection.getRangeAt(0)
+    const startSpan = (range.startContainer.parentElement?.closest(
+      "[data-segment-key]",
+    ) ?? null) as HTMLElement | null
+    const endSpan = (range.endContainer.parentElement?.closest(
+      "[data-segment-key]",
+    ) ?? null) as HTMLElement | null
+    if (!startSpan || !endSpan || startSpan !== endSpan) return
+    if (startSpan.dataset.anchored === "true") return
+
+    const key = startSpan.dataset.segmentKey
+    if (!key) return
+    const [pIdxStr, sIdxStr] = key.split("-")
+    const paragraphIndex = Number(pIdxStr)
+    const segmentIndex = Number(sIdxStr)
+
+    const start = getOffsetWithin(
+      startSpan,
+      range.startContainer,
+      range.startOffset,
+    )
+    const end = getOffsetWithin(startSpan, range.endContainer, range.endOffset)
+    if (start < 0 || end < 0 || end <= start) return
+
+    const text = startSpan.textContent?.slice(start, end) ?? ""
+    if (!text) return
+
+    setSummaryPick({ paragraphIndex, segmentIndex, start, end, text })
+  }
+
+  return (
+    <div
+      className={cn(
+        "space-y-9",
+        isSplit && "md:min-h-0 md:overflow-y-auto md:pb-4 md:pr-2",
+      )}
+    >
+      <section className="space-y-3">
+        {editing && editState ? (
+          <EditableMainBody
+            paragraphs={editState.main_body}
+            onChange={(next) => setEditState({ ...editState, main_body: next })}
+          />
+        ) : (
+          // biome-ignore lint/a11y/noStaticElementInteractions: captures text selection for evidence anchoring
+          <div
+            ref={reportRef}
+            onMouseUp={handleSummarySelection}
+            onKeyUp={handleSummarySelection}
+            className={cn(
+              "max-w-[64ch] space-y-5 text-[15.5px] leading-[1.65] text-foreground/85 [&_p]:text-pretty [&_strong]:font-semibold [&_strong]:text-foreground",
+              anchorMode && "cursor-text select-text",
+            )}
+          >
+            {document.main_body.map((paragraph, paragraphIndex) => {
+              const hasAnchors = paragraph.segments.some(
+                (segment) => segment.evidence_anchor_id,
+              )
+              if (!hasAnchors && paragraph.segments.length === 1) {
+                return (
+                  <MarkdownBlocks
+                    key={paragraphIndex}
+                    markdown={paragraph.segments[0].text}
+                  />
+                )
+              }
+
+              return (
+                <p key={paragraphIndex}>
+                  {paragraph.segments.map((segment, segmentIndex) => {
+                    const segmentKey = `${paragraphIndex}-${segmentIndex}`
+                    const isAnchored = Boolean(segment.evidence_anchor_id)
+                    const isPicked =
+                      summaryPick?.paragraphIndex === paragraphIndex &&
+                      summaryPick?.segmentIndex === segmentIndex
+
+                    if (!isAnchored) {
+                      return (
+                        <span
+                          key={segmentKey}
+                          data-segment-key={segmentKey}
+                          data-anchored="false"
+                          className={cn(
+                            isPicked && "bg-primary/15 text-foreground",
+                          )}
+                        >
+                          {renderInlineMarkdown(
+                            segment.text,
+                            `segment-${segmentKey}`,
+                          )}
+                        </span>
+                      )
+                    }
+
+                    const evidenceAnchorId =
+                      segment.evidence_anchor_id as string
+                    return (
+                      <button
+                        key={segmentKey}
+                        type="button"
+                        data-segment-key={segmentKey}
+                        data-anchored="true"
+                        aria-label={`Show evidence for: ${segment.text}`}
+                        data-testid={`human-evidence-${evidenceAnchorId}`}
+                        onClick={() => {
+                          if (anchorMode) return
+                          onShowEvidence(evidenceAnchorId)
+                        }}
+                        className="inline border-b border-primary/40 bg-primary/15 px-1 py-0.5 align-baseline font-mono text-[0.68rem] text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {renderInlineMarkdown(
+                          segment.text,
+                          `segment-${segmentKey}`,
+                        )}
+                      </button>
+                    )
+                  })}
+                </p>
+              )
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}
+
+function paragraphsToMarkdown(paragraphs: V2DocumentParagraph[]): string {
+  return paragraphs
+    .map((paragraph) => paragraph.segments.map((s) => s.text).join(""))
+    .join("\n\n")
+}
+
+function markdownToParagraphs(markdown: string): V2DocumentParagraph[] {
+  return [{ segments: [{ text: markdown }] }]
+}
+
+function EditableMainBody({
+  paragraphs,
+  onChange,
+}: {
+  paragraphs: V2DocumentParagraph[]
+  onChange: (next: V2DocumentParagraph[]) => void
+}) {
+  const markdown = useMemo(() => paragraphsToMarkdown(paragraphs), [paragraphs])
+
+  return (
+    <RichTextField
+      value={markdown}
+      onChange={(next) => onChange(markdownToParagraphs(next))}
+      className="text-[15.5px] leading-[1.65]"
+      data-testid="edit-main-body"
+    />
   )
 }
 
