@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { ArrowLeft } from "lucide-react"
+import type { ReactNode } from "react"
 
 import methodologyRaw from "@/components/V2/Metrics/methodology.md?raw"
+import { V2_PAGE_CONTENT } from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/metrics/methodology")({
   component: MetricsMethodology,
@@ -16,105 +18,164 @@ export const Route = createFileRoute("/v2/metrics/methodology")({
 
 function MetricsMethodology() {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
-      <Link
-        to="/v2/metrics"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Back to Metrics
-      </Link>
-      <article className="prose prose-sm max-w-none dark:prose-invert">
-        <Markdown source={methodologyRaw} />
-      </article>
+    <div className={V2_PAGE_CONTENT}>
+      <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-6">
+        <Link
+          to="/v2/metrics"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Back to Metrics
+        </Link>
+        <article className="pb-8 text-sm leading-6 text-foreground">
+          <Markdown source={methodologyRaw} />
+        </article>
+      </div>
     </div>
   )
 }
 
-// Tiny inline markdown renderer — the page is a single static doc and we
-// don't want to pull in a full markdown lib for one route. Handles the
-// subset of constructs used in methodology.md.
 function Markdown({ source }: { source: string }) {
   const lines = source.split("\n")
-  const blocks: React.ReactNode[] = []
-  let listBuffer: string[] = []
+  const blocks: ReactNode[] = []
+  let bulletBuffer: string[] = []
+  let orderedBuffer: string[] = []
   let paragraphBuffer: string[] = []
+  let codeBuffer: string[] | null = null
 
-  const flushList = () => {
-    if (listBuffer.length > 0) {
-      blocks.push(
-        <ul key={`ul-${blocks.length}`} className="my-3 list-disc pl-6">
-          {listBuffer.map((item, i) => (
-            <li key={i}>{renderInline(item)}</li>
-          ))}
-        </ul>,
-      )
-      listBuffer = []
-    }
+  const flushBullets = () => {
+    if (bulletBuffer.length === 0) return
+    blocks.push(
+      <ul key={`ul-${blocks.length}`} className="my-3 list-disc space-y-1 pl-6">
+        {bulletBuffer.map((item, index) => (
+          <li key={index}>{renderInline(item)}</li>
+        ))}
+      </ul>,
+    )
+    bulletBuffer = []
   }
+
+  const flushOrdered = () => {
+    if (orderedBuffer.length === 0) return
+    blocks.push(
+      <ol
+        key={`ol-${blocks.length}`}
+        className="my-3 list-decimal space-y-2 pl-6"
+      >
+        {orderedBuffer.map((item, index) => (
+          <li key={index}>{renderInline(item)}</li>
+        ))}
+      </ol>,
+    )
+    orderedBuffer = []
+  }
+
   const flushParagraph = () => {
-    if (paragraphBuffer.length > 0) {
-      const text = paragraphBuffer.join(" ")
-      blocks.push(
-        <p key={`p-${blocks.length}`} className="my-3">
-          {renderInline(text)}
-        </p>,
-      )
-      paragraphBuffer = []
-    }
+    if (paragraphBuffer.length === 0) return
+    const text = paragraphBuffer.join(" ")
+    blocks.push(
+      <p key={`p-${blocks.length}`} className="my-3 text-pretty">
+        {renderInline(text)}
+      </p>,
+    )
+    paragraphBuffer = []
+  }
+
+  const flushCode = () => {
+    if (codeBuffer === null || codeBuffer.length === 0) return
+    blocks.push(
+      <pre
+        key={`pre-${blocks.length}`}
+        className="my-4 overflow-x-auto rounded-md border border-border bg-muted p-4 font-mono text-[0.8125rem] leading-relaxed text-foreground"
+      >
+        <code>{codeBuffer.join("\n")}</code>
+      </pre>,
+    )
+    codeBuffer = null
+  }
+
+  const flushAll = () => {
+    flushCode()
+    flushBullets()
+    flushOrdered()
+    flushParagraph()
   }
 
   for (const raw of lines) {
     const line = raw.trimEnd()
+
+    if (line.startsWith("```")) {
+      if (codeBuffer === null) {
+        flushBullets()
+        flushOrdered()
+        flushParagraph()
+        codeBuffer = []
+      } else {
+        flushCode()
+      }
+      continue
+    }
+
+    if (codeBuffer !== null) {
+      codeBuffer.push(raw)
+      continue
+    }
+
     if (line.startsWith("# ")) {
-      flushList()
-      flushParagraph()
+      flushAll()
       blocks.push(
-        <h1 key={`h-${blocks.length}`} className="mt-6 text-2xl font-semibold">
+        <h1
+          key={`h-${blocks.length}`}
+          className="mt-2 text-2xl font-semibold tracking-tight"
+        >
           {line.slice(2)}
         </h1>,
       )
     } else if (line.startsWith("## ")) {
-      flushList()
-      flushParagraph()
+      flushAll()
       blocks.push(
-        <h2 key={`h-${blocks.length}`} className="mt-6 text-lg font-semibold">
+        <h2 key={`h-${blocks.length}`} className="mt-8 text-lg font-semibold">
           {line.slice(3)}
         </h2>,
       )
     } else if (line.startsWith("### ")) {
-      flushList()
-      flushParagraph()
+      flushAll()
       blocks.push(
-        <h3 key={`h-${blocks.length}`} className="mt-4 text-base font-semibold">
+        <h3 key={`h-${blocks.length}`} className="mt-6 text-base font-semibold">
           {line.slice(4)}
         </h3>,
       )
     } else if (line.startsWith("- ")) {
+      flushOrdered()
       flushParagraph()
-      listBuffer.push(line.slice(2))
+      bulletBuffer.push(line.slice(2))
+    } else if (/^\d+\.\s/.test(line)) {
+      flushBullets()
+      flushParagraph()
+      orderedBuffer.push(line.replace(/^\d+\.\s/, ""))
     } else if (line === "") {
-      flushList()
+      flushBullets()
+      flushOrdered()
       flushParagraph()
     } else {
-      flushList()
+      flushBullets()
+      flushOrdered()
       paragraphBuffer.push(line)
     }
   }
-  flushList()
-  flushParagraph()
+
+  flushAll()
   return <>{blocks}</>
 }
 
-function renderInline(text: string): React.ReactNode {
-  // Italic via *...*, code via `...`, links via [text](url). Run them in that
-  // order so nesting works out for the methodology doc's content.
-  const parts: React.ReactNode[] = []
+function renderInline(text: string): ReactNode {
+  const parts: ReactNode[] = []
   let cursor = 0
-  const re = /\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`|\*([^*]+)\*/g
-  let match: RegExpExecArray | null
-  let i = 0
-  match = re.exec(text)
+  const re =
+    /\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*/g
+  let match: RegExpExecArray | null = re.exec(text)
+  let index = 0
+
   while (match !== null) {
     if (match.index > cursor) {
       parts.push(text.slice(cursor, match.index))
@@ -122,7 +183,7 @@ function renderInline(text: string): React.ReactNode {
     if (match[1] != null && match[2] != null) {
       parts.push(
         <a
-          key={i}
+          key={index}
           href={match[2]}
           className="text-primary underline-offset-4 hover:underline"
           target="_blank"
@@ -133,17 +194,27 @@ function renderInline(text: string): React.ReactNode {
       )
     } else if (match[3] != null) {
       parts.push(
-        <code key={i} className="rounded bg-muted px-1 py-0.5 text-[0.85em]">
+        <code
+          key={index}
+          className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]"
+        >
           {match[3]}
         </code>,
       )
     } else if (match[4] != null) {
-      parts.push(<em key={i}>{match[4]}</em>)
+      parts.push(
+        <strong key={index} className="font-semibold text-foreground">
+          {match[4]}
+        </strong>,
+      )
+    } else if (match[5] != null) {
+      parts.push(<em key={index}>{match[5]}</em>)
     }
     cursor = re.lastIndex
-    i += 1
+    index += 1
     match = re.exec(text)
   }
+
   if (cursor < text.length) parts.push(text.slice(cursor))
   return parts
 }
