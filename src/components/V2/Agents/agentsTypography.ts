@@ -18,9 +18,9 @@ export const AGENT_EYEBROW_CLASS =
 /** Detail breadcrumb — same mono eyebrow as Agents list meta line. */
 export const AGENT_BREADCRUMB_CLASS = AGENT_EYEBROW_CLASS
 
-/** Role · playbook line under the specialist name (indented past the avatar). */
+/** Role · playbook line — left-aligned with avatar and breadcrumb. */
 export const AGENT_DETAIL_SUBTITLE_CLASS =
-  "mt-1 pl-8 text-sm leading-5 text-muted-foreground"
+  "mt-1 text-sm leading-5 text-muted-foreground"
 
 export const AGENT_DETAIL_AVATAR_CLASS =
   "grid size-5 shrink-0 place-items-center border border-background bg-[#8447ff] font-mono text-[0.58rem] font-semibold text-white outline outline-1 outline-border"
