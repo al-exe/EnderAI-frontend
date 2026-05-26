@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { ArrowLeft, ArrowUpRight, Copy, Loader2 } from "lucide-react"
+import { ArrowUpRight, Copy, Loader2, Pencil } from "lucide-react"
 
 import {
   type AgentSpecialistDetail,
@@ -9,7 +9,6 @@ import {
 } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
 import {
   agentSummaryToDetailPlaceholder,
@@ -38,6 +37,7 @@ import {
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
 } from "@/components/V2/v2PageShell"
+import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/v2/agents/$slug")({
   component: AgentDetailPage,
@@ -203,9 +203,15 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
             {agent.linked_knowledge.map((document) => (
               <tr
                 key={`${document.document_id}-${document.anchor_id ?? "summary"}`}
-                className="border-b border-black/5 dark:border-white/10"
+                className="group relative border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
               >
-                <td className="py-3 pr-3 align-top">
+                <td className="relative py-3 pr-3 align-top">
+                  <a
+                    href={document.href}
+                    className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                  >
+                    <span className="sr-only">Open {document.title}</span>
+                  </a>
                   <div className="text-base font-semibold text-zinc-950 dark:text-white">
                     {document.title}
                   </div>
@@ -220,14 +226,10 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
                   {document.reason ?? "Pinned knowledge"}
                 </td>
                 <td className="py-3 pl-3 text-right align-top">
-                  <a
-                    href={document.href}
-                    aria-label={`Open ${document.title}`}
-                    className="inline-flex items-center justify-end gap-1 text-xs font-medium text-[#8447ff]"
-                  >
+                  <span className="inline-flex items-center justify-end gap-1 text-xs font-medium text-[#8447ff]">
                     Open
                     <ArrowUpRight className="size-4" />
-                  </a>
+                  </span>
                 </td>
               </tr>
             ))}
@@ -259,20 +261,18 @@ function RecentInvocations({ agent }: { agent: AgentSpecialistDetail }) {
             {agent.recent_invocations.map((invocation) => (
               <tr
                 key={invocation.id}
-                className="border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
+                className="group relative border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
               >
-                <td className="py-3 pr-3 align-top text-sm text-zinc-800 dark:text-zinc-200">
-                  {invocation.session_id ? (
+                <td className="relative py-3 pr-3 align-top text-sm text-zinc-800 dark:text-zinc-200">
+                  {invocation.session_id && (
                     <Link
                       to="/v2/metrics"
                       search={{ session_id: invocation.session_id }}
-                      className="hover:text-[#8447ff]"
-                    >
-                      "{invocation.prompt}"
-                    </Link>
-                  ) : (
-                    `"${invocation.prompt}"`
+                      aria-label={`Open metrics for "${invocation.prompt}"`}
+                      className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                    />
                   )}
+                  "{invocation.prompt}"
                 </td>
                 <td className="px-3 py-3 align-top text-sm text-zinc-500 dark:text-zinc-400">
                   {invocation.repo ?? "Taskforce"}
@@ -333,7 +333,9 @@ function AgentDetailPage() {
 
   if (showFullSkeleton) {
     return (
-      <section className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}>
+      <section
+        className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
+      >
         <AgentDetailSkeleton shellClassName={AGENTS_DETAIL_SHELL} />
       </section>
     )
@@ -341,7 +343,9 @@ function AgentDetailPage() {
 
   if (showNotFound || !agent) {
     return (
-      <section className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}>
+      <section
+        className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
+      >
         <div
           className={`${V2_PAGE_CONTENT} min-h-[50vh] items-center justify-center text-center`}
         >
@@ -386,7 +390,9 @@ function AgentDetailPage() {
               </h1>
             </div>
             <p className={AGENT_DETAIL_SUBTITLE_CLASS}>
-              <span className="font-semibold text-foreground">{agent.role}</span>
+              <span className="font-semibold text-foreground">
+                {agent.role}
+              </span>
               <span> · profile playbook</span>
             </p>
           </div>
@@ -395,12 +401,10 @@ function AgentDetailPage() {
               <span className="size-1.5 rounded-full bg-emerald-500" />
               Active
             </span>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/v2/agents">
-                <ArrowLeft className="size-4" />
-                Back
-              </Link>
-            </Button>
+            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground dark:border-white/12">
+              <Pencil className="size-3.5" aria-hidden />
+              Edit
+            </span>
           </div>
         </header>
 
@@ -420,17 +424,9 @@ function AgentDetailPage() {
             <StatLine agent={agent} />
 
             <section className="pt-2">
-              <SectionHeader
-                title="Routing rules"
-                meta="Fires when triggers match and negative triggers miss"
-              />
+              <SectionHeader title="Tags" />
               <div className="space-y-3 py-3">
                 <div className="space-y-2">
-                  <div className={AGENT_ROUTE_LABEL_CLASS}>
-                    <span className="text-zinc-400 dark:text-zinc-600">
-                      route_when:
-                    </span>
-                  </div>
                   <Chips values={agent.routing_triggers} />
                 </div>
                 {agent.negative_triggers.length > 0 && (
