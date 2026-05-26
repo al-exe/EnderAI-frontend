@@ -26,7 +26,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
+import {
+  V2_PAGE_CONTENT,
+  V2_PAGE_FRAME,
+  V2_TAB_EYEBROW_CLASS,
+} from "@/components/V2/v2PageShell"
 import { usePersistentState } from "@/hooks/usePersistentState"
 import { formatDelta, formatMetricValue } from "./formatters"
 import { MethodologyLink } from "./MethodologyLink"
@@ -514,7 +518,7 @@ function ExperimentalMetricsPage({
     >
       <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <div>
-          <div className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          <div className={V2_TAB_EYEBROW_CLASS}>
             Metrics · {windowCopy.label} · personal
           </div>
           <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
@@ -687,7 +691,7 @@ function ExperimentalSessionMetrics({
     >
       <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <div>
-          <div className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          <div className={V2_TAB_EYEBROW_CLASS}>
             Metrics · session · {sessionShortId}
           </div>
           <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">

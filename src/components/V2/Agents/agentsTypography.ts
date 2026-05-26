@@ -1,3 +1,5 @@
+import { V2_TAB_EYEBROW_CLASS } from "@/components/V2/v2PageShell"
+
 /** Page title — matches Library / Metrics v2 tabs. */
 export const AGENT_PAGE_TITLE_CLASS = "text-2xl font-semibold"
 
@@ -11,12 +13,11 @@ export const AGENT_ROLE_CLASS = "text-sm leading-4 text-muted-foreground"
 /** Detail page specialist name (same scale as other v2 tab titles). */
 export const AGENT_DETAIL_NAME_CLASS = AGENT_PAGE_TITLE_CLASS
 
-/** Page eyebrow — matches Library tab meta line. */
-export const AGENT_EYEBROW_CLASS =
-  "font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground"
+/** Page eyebrow — matches Metrics tab meta line. */
+export const AGENT_EYEBROW_CLASS = V2_TAB_EYEBROW_CLASS
 
 /** Detail breadcrumb — same mono eyebrow as Agents list meta line. */
-export const AGENT_BREADCRUMB_CLASS = AGENT_EYEBROW_CLASS
+export const AGENT_BREADCRUMB_CLASS = V2_TAB_EYEBROW_CLASS
 
 /** Role · playbook line — left-aligned with avatar and breadcrumb. */
 export const AGENT_DETAIL_SUBTITLE_CLASS =

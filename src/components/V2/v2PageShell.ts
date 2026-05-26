@@ -24,6 +24,10 @@ export const V2_PAGE_CONTENT_FIXED = cn(
   V2_PAGE_PADDING,
 )
 
+/** Tab page meta line (e.g. "Metrics · 7d · personal"). */
+export const V2_TAB_EYEBROW_CLASS =
+  "font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground"
+
 /** Sticky page header inside a `V2_PAGE_CONTENT` scroll area (offsets `p-6` padding). */
 export const V2_STICKY_HEADER_CLASS = cn(
   "sticky top-0 z-20 -mx-6 shrink-0 border-b bg-background/95 px-6 pb-4 backdrop-blur supports-[backdrop-filter]:bg-background/80",
