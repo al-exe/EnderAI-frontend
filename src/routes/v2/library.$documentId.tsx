@@ -944,21 +944,6 @@ function TaskforceDocumentDetail() {
             </div>
           </div>
 
-          {editing ? (
-            <PlainInlineEditor
-              value={editState.human_summary}
-              onChange={(next) =>
-                setEditState({ ...editState, human_summary: next })
-              }
-              className="mt-2 max-w-[64ch] text-sm leading-6 text-muted-foreground"
-              data-testid="edit-description"
-            />
-          ) : (
-            <p className="mt-2 max-w-[64ch] text-sm leading-6 text-muted-foreground text-pretty">
-              {document.human_summary || document.description}
-            </p>
-          )}
-
           <DocumentMetadata
             document={document}
             folders={foldersQuery.data?.data ?? []}
