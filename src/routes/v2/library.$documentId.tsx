@@ -850,7 +850,7 @@ function TaskforceDocumentDetail() {
     >
       <article
         className={cn(
-          "flex w-full max-w-none flex-col px-6 pb-16 pt-0",
+          "flex w-full max-w-none flex-col px-6 pb-6 pt-0",
           isSplit && "md:min-h-0 md:flex-1 md:overflow-hidden",
         )}
       >
