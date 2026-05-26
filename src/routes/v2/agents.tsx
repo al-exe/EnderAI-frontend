@@ -74,7 +74,7 @@ function topPerformer(agents: AgentSpecialistSummary[]) {
 
 function AgentsLoading() {
   const cols =
-    "grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_6rem]"
+    "grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_minmax(5.5rem,7rem)]"
 
   return (
     <div className="border-t border-border">
@@ -103,7 +103,7 @@ function AgentsLoading() {
           </div>
           <Skeleton className="h-4 w-16 md:ml-auto" />
           <Skeleton className="h-4 w-12 md:ml-auto" />
-          <Skeleton className="h-4 w-20 md:ml-auto" />
+          <Skeleton className="h-4 w-20 md:justify-self-end" />
         </div>
       ))}
     </div>
@@ -207,11 +207,11 @@ function AgentRow({ agent }: { agent: AgentSpecialistSummary }) {
         {agent.invocations_count.toLocaleString()}
       </div>
 
-      <div className="ml-auto grid w-[7.25rem] grid-cols-[0.375rem_minmax(0,1fr)] items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="flex min-w-0 items-center justify-end gap-1.5 text-xs text-muted-foreground">
         <span
           className={`size-1.5 shrink-0 ${idle ? "bg-border" : "bg-emerald-600 dark:bg-emerald-400"}`}
         />
-        <span className="truncate text-right">
+        <span className="min-w-0 truncate tabular-nums">
           {formatRelativeTime(agent.last_invoked_at)}
         </span>
       </div>
@@ -221,7 +221,7 @@ function AgentRow({ agent }: { agent: AgentSpecialistSummary }) {
 
 function AgentsList({ agents }: { agents: AgentSpecialistSummary[] }) {
   const cols =
-    "grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_6rem]"
+    "grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_minmax(5.5rem,7rem)]"
 
   return (
     <div data-testid="agents-grid" className="border-t border-border">
