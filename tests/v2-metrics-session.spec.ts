@@ -322,4 +322,7 @@ test("metrics methodology route renders from direct URL and metrics link", async
   await expect(
     page.getByRole("heading", { name: /how we calculate savings/i }),
   ).toBeVisible()
+  await expect(page.getByText("derived, not asserted")).toBeVisible()
+  await expect(page.locator("pre code")).toContainText("net_saved_tokens")
+  await expect(page.getByRole("listitem").first()).toBeVisible()
 })
