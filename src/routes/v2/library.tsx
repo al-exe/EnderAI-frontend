@@ -680,7 +680,7 @@ function TaskforceLibrary() {
                 className="w-fit"
                 onClick={() => setCreateDocumentOpen(true)}
               >
-                + New document
+                + Document
               </Button>
             </div>
           </div>
