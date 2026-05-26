@@ -371,7 +371,7 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
               search={{}}
               className="font-medium underline-offset-4 hover:underline"
             >
-              view all metrics →
+              View all metrics →
             </Link>
           </div>
         )}
@@ -728,7 +728,7 @@ function ExperimentalSessionMetrics({
           search={{}}
           className="border border-border px-3 py-2 text-sm font-medium text-foreground underline-offset-4 hover:bg-muted"
         >
-          view all metrics →
+          View all metrics →
         </Link>
       </header>
 
