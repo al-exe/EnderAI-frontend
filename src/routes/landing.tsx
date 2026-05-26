@@ -62,25 +62,25 @@ function LandingExpressive() {
       data-testid="landing-expressive"
       className="min-h-svh overflow-hidden bg-white text-zinc-950 dark:bg-zinc-950 dark:text-white"
     >
-      <nav className="relative z-10 flex h-14 items-center justify-between border-b border-zinc-200 bg-white px-5 dark:border-white/10 dark:bg-zinc-950 md:px-8">
+      <nav className="relative z-10 flex h-[4.375rem] items-center justify-between border-b border-zinc-200 bg-white px-5 dark:border-white/10 dark:bg-zinc-950 md:px-8">
         <Link
           to="/landing"
-          className="inline-flex items-center gap-2 text-sm font-semibold"
+          className="inline-flex items-center gap-2.5 text-[1.09375rem] font-semibold leading-none"
           aria-label="Taskforce landing"
         >
           <img
             src="/assets/brand/tf-icon-filled.svg"
             alt=""
-            className="size-6 dark:hidden"
+            className="size-[1.875rem] dark:hidden"
           />
           <img
             src="/assets/brand/tf-icon-filled-dark.svg"
             alt=""
-            className="hidden size-6 dark:block"
+            className="hidden size-[1.875rem] dark:block"
           />
           Taskforce
         </Link>
-        <div className="flex items-center gap-4 font-mono text-[0.68rem] text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center gap-4 font-mono text-[0.85rem] text-zinc-500 dark:text-zinc-400">
           <span className="hidden sm:inline">Docs</span>
           <span className="hidden sm:inline">Pricing</span>
           <Link
@@ -91,14 +91,14 @@ function LandingExpressive() {
           </Link>
           <Link
             to="/signup"
-            className="bg-zinc-950 px-3 py-2 text-white dark:bg-white dark:text-zinc-950"
+            className="bg-zinc-950 px-[0.9375rem] py-2.5 text-white dark:bg-white dark:text-zinc-950"
           >
             Sign up →
           </Link>
         </div>
       </nav>
 
-      <section className="grid min-h-[calc(100svh-3.5rem)] md:grid-cols-2">
+      <section className="grid min-h-[calc(100svh-4.375rem)] md:grid-cols-2">
         <div className="relative flex flex-col justify-start border-b border-zinc-200 px-5 py-8 dark:border-white/10 md:border-r md:border-b-0 md:px-8 md:py-10">
           <div className="max-w-2xl">
             <div className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#8447ff]">
