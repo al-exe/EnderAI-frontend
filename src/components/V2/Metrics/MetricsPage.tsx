@@ -45,11 +45,31 @@ type Props = {
 }
 
 const PRIMARY_METRICS = ["tokens_saved", "usd_saved", "reuse_rate"]
-const SECONDARY_METRICS = [
-  "tokens_consumed",
-  "usd_consumed",
-  "documents_touched",
-]
+const SECONDARY_METRICS = ["tokens_consumed"]
+
+const SAVINGS_V2_DETAIL_METRICS = [
+  "avoided_rediscovery",
+  "avoided_rediscovery_usd",
+  "documents_consulted",
+] as const
+
+type DetailMetricEntry =
+  | { kind: "usd_net_saved" }
+  | { kind: "metric"; name: string }
+
+function detailMetricEntries(savingsV2Flag: boolean): DetailMetricEntry[] {
+  const entries: DetailMetricEntry[] = [
+    { kind: "usd_net_saved" },
+    { kind: "metric", name: "usd_consumed" },
+  ]
+  if (savingsV2Flag) {
+    for (const name of SAVINGS_V2_DETAIL_METRICS) {
+      entries.push({ kind: "metric", name })
+    }
+  }
+  entries.push({ kind: "metric", name: "documents_touched" })
+  return entries
+}
 const SESSION_PRICING_MODEL_ID = "claude-opus-4-7"
 const SESSION_PRIMARY_METRICS = [
   "tokens_saved",
@@ -392,22 +412,6 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
           />
         )}
 
-        {savingsV2Flag && !scopedSessionId && (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {[
-              "avoided_rediscovery",
-              "avoided_rediscovery_usd",
-              "documents_consulted",
-            ].map((name) => {
-              const def = definitionsByName[name]
-              if (!def) return null
-              return (
-                <MetricCard key={name} definition={def} value={metrics[name]} />
-              )
-            })}
-          </section>
-        )}
-
         <MethodologyLink />
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -423,6 +427,29 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
         </section>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {detailMetricEntries(savingsV2Flag).map((entry) => {
+            if (entry.kind === "usd_net_saved") {
+              return (
+                <MetricCard
+                  key="usd_net_saved"
+                  definition={USD_NET_SAVED_DEFINITION}
+                  value={usdNetSaved}
+                />
+              )
+            }
+            const def = definitionsByName[entry.name]
+            if (!def) return null
+            return (
+              <MetricCard
+                key={entry.name}
+                definition={def}
+                value={metrics[entry.name]}
+              />
+            )
+          })}
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {SECONDARY_METRICS.map((name) => {
             const def = definitionsByName[name]
             if (!def) return null
@@ -430,10 +457,6 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
               <MetricCard key={name} definition={def} value={metrics[name]} />
             )
           })}
-          <MetricCard
-            definition={USD_NET_SAVED_DEFINITION}
-            value={usdNetSaved}
-          />
         </section>
 
         <section>
@@ -608,46 +631,31 @@ function ExperimentalMetricsPage({
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        {[
-          ["usd_consumed", metrics.usd_consumed],
-          ["documents_touched", documentsTouched],
-        ].map(([name, value]) => {
-          const def = definitionsByName[name as string]
+        {detailMetricEntries(savingsV2Flag).map((entry) => {
+          if (entry.kind === "usd_net_saved") {
+            return (
+              <ExperimentalMetricTile
+                key="usd_net_saved"
+                definition={USD_NET_SAVED_DEFINITION}
+                value={usdNetSaved}
+              />
+            )
+          }
+          const def = definitionsByName[entry.name]
+          const value =
+            entry.name === "documents_touched"
+              ? documentsTouched
+              : metrics[entry.name]
           if (!def) return null
           return (
             <ExperimentalMetricTile
-              key={name as string}
+              key={entry.name}
               definition={def}
-              value={value as MetricValuePublic | undefined}
+              value={value}
             />
           )
         })}
-        <ExperimentalMetricTile
-          definition={USD_NET_SAVED_DEFINITION}
-          value={usdNetSaved}
-        />
       </section>
-
-      {savingsV2Flag && (
-        <section className="grid gap-4 md:grid-cols-3">
-          {[
-            "avoided_rediscovery",
-            "avoided_rediscovery_usd",
-            "documents_consulted",
-          ].map((name) => {
-            const def = definitionsByName[name]
-            const value = metrics[name]
-            if (!def) return null
-            return (
-              <ExperimentalMetricTile
-                key={name}
-                definition={def}
-                value={value}
-              />
-            )
-          })}
-        </section>
-      )}
 
       <ExperimentalBreakdownPanel
         title="Top models by tokens used"
