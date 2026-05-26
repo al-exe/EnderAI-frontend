@@ -49,7 +49,7 @@ export function AgentDetailSkeleton({
               <Bone className="size-5 shrink-0" />
               <Bone className="h-7 w-56 max-w-full" />
             </div>
-            <Bone className="mt-1 ml-8 h-4 w-72 max-w-full" />
+            <Bone className="mt-1 h-4 w-72 max-w-full" />
             <Bone className="mt-4 h-4 w-full max-w-xl" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
