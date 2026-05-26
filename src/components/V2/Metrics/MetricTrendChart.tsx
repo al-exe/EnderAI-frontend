@@ -99,9 +99,7 @@ export function MetricTrendChart({ title, series }: Props) {
     const updateWidth = () => {
       const nextWidth = Math.floor(element.getBoundingClientRect().width)
       if (nextWidth > 0) {
-        setPlotWidth((current) =>
-          current === nextWidth ? current : nextWidth,
-        )
+        setPlotWidth((current) => (current === nextWidth ? current : nextWidth))
       }
     }
 
@@ -113,12 +111,7 @@ export function MetricTrendChart({ title, series }: Props) {
 
   const { plotted, yMax, yMin, polylinePoints, areaPoints, minTime, timeSpan } =
     useMemo(() => {
-      const {
-        paddingLeft,
-        paddingTop,
-        innerWidth,
-        innerHeight,
-      } = layout
+      const { paddingLeft, paddingTop, innerWidth, innerHeight } = layout
 
       if (series.length === 0) {
         return {
@@ -140,10 +133,8 @@ export function MetricTrendChart({ title, series }: Props) {
 
       const times = series.map((p) => parseDayUtc(p.day))
       const validTimes = times.filter((t) => !Number.isNaN(t))
-      const minTime =
-        validTimes.length > 0 ? Math.min(...validTimes) : 0
-      const maxTime =
-        validTimes.length > 0 ? Math.max(...validTimes) : minTime
+      const minTime = validTimes.length > 0 ? Math.min(...validTimes) : 0
+      const maxTime = validTimes.length > 0 ? Math.max(...validTimes) : minTime
       const timeSpan = Math.max(maxTime - minTime, DAY_MS)
 
       const plotted: Plotted[] = series.map((point, index) => {
@@ -191,7 +182,8 @@ export function MetricTrendChart({ title, series }: Props) {
   }
 
   const yTicks = buildYTicks(yMin, yMax, 4)
-  const xTickTimes = buildXTickTimes(minTime, minTime + timeSpan, 6)
+  const maxXTicks = Math.max(4, Math.floor(layout.innerWidth / 80))
+  const xTickTimes = buildXTickTimes(minTime, minTime + timeSpan, maxXTicks)
   const baselineY = layout.paddingTop + layout.innerHeight
   const hovered = hoverIndex != null ? plotted[hoverIndex] : null
 
@@ -223,10 +215,10 @@ export function MetricTrendChart({ title, series }: Props) {
           role="img"
           aria-label={title}
           viewBox={`0 0 ${layout.plotWidth} ${layout.plotHeight}`}
-          width={layout.plotWidth}
           height={layout.plotHeight}
           className="block w-full"
-          preserveAspectRatio="none"
+          style={{ height: layout.plotHeight }}
+          preserveAspectRatio="xMidYMid meet"
           onPointerMove={handlePointerMove}
           onPointerLeave={() => setHoverIndex(null)}
         >
@@ -419,11 +411,6 @@ function buildXTickTimes(
   const ticks: number[] = []
   for (let t = minTime; t <= maxTime; t += stepDays * DAY_MS) {
     ticks.push(t)
-  }
-
-  const lastTick = ticks[ticks.length - 1]
-  if (lastTick < maxTime) {
-    ticks.push(maxTime)
   }
 
   return ticks
