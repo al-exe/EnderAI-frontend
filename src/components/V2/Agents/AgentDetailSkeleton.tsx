@@ -42,17 +42,15 @@ export function AgentDetailSkeleton({
       aria-label="Loading specialist"
     >
       {!hideHeader && (
-        <header className="grid gap-4 border-b border-black/10 pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end dark:border-white/12">
-          <div className="space-y-3">
+        <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <div>
             <Bone className="h-[0.65rem] w-44" />
-            <div className="flex items-center gap-3">
+            <div className="mt-1 flex items-center gap-3">
               <Bone className="size-5 shrink-0" />
-              <div className="min-w-0 flex-1 space-y-2">
-                <Bone className="h-4 w-56 max-w-full" />
-                <Bone className="h-3 w-40 max-w-full" />
-              </div>
+              <Bone className="h-7 w-56 max-w-full" />
             </div>
-            <Bone className="h-3.5 w-full max-w-xl" />
+            <Bone className="mt-1 ml-8 h-4 w-72 max-w-full" />
+            <Bone className="mt-4 h-4 w-full max-w-xl" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Bone className="h-8 w-28" />
