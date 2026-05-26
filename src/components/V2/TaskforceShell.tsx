@@ -6,8 +6,8 @@ import {
   useRouterState,
 } from "@tanstack/react-router"
 import {
-  BarChart3,
-  BookOpenText,
+  BookOpen,
+  LineChart,
   Bot,
   ChevronDown,
   ChevronUp,
@@ -65,9 +65,9 @@ type TaskforceNavItem = {
 
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Search, title: "Search", path: "/v2/search" },
-  { icon: BookOpenText, title: "Library", path: "/v2/library" },
+  { icon: BookOpen, title: "Library", path: "/v2/library" },
   { icon: Bot, title: "Agents", path: "/v2/agents" },
-  { icon: BarChart3, title: "Metrics", path: "/v2/metrics" },
+  { icon: LineChart, title: "Metrics", path: "/v2/metrics" },
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
 ]
 
