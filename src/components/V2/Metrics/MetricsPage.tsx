@@ -32,6 +32,7 @@ import {
   V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 import { usePersistentState } from "@/hooks/usePersistentState"
+import { cn } from "@/lib/utils"
 import { formatDelta, formatMetricValue } from "./formatters"
 import { MethodologyLink } from "./MethodologyLink"
 import { MetricBreakdown } from "./MetricBreakdown"
@@ -840,7 +841,14 @@ function ExperimentalMetricTile({
         {total}
       </div>
       {delta && (
-        <div className="mt-1 font-mono text-xs text-muted-foreground">
+        <div
+          className={cn(
+            "mt-1 font-mono text-xs",
+            delta.sign === "up" && "text-emerald-600 dark:text-emerald-400",
+            delta.sign === "down" && "text-rose-600 dark:text-rose-400",
+            delta.sign === "flat" && "text-muted-foreground",
+          )}
+        >
           {delta.sign === "flat"
             ? "No change"
             : `${delta.sign === "up" ? "▲" : "▼"} ${delta.label} vs previous`}
@@ -1014,7 +1022,6 @@ function formatRatioValue(value: number) {
     maximumFractionDigits: value >= 10 ? 0 : 1,
   })
 }
-
 
 function SessionLogTable({
   entries,

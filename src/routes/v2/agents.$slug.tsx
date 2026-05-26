@@ -22,7 +22,6 @@ import {
   AGENT_DETAIL_SUBTITLE_CLASS,
   AGENT_PAGE_TITLE_CLASS,
   AGENT_ROUTE_CHIP_CLASS,
-  AGENT_ROUTE_LABEL_CLASS,
   AGENT_SECTION_META_CLASS,
   AGENT_SECTION_TITLE_CLASS,
   AGENT_STAT_LABEL_CLASS,
@@ -131,23 +130,13 @@ function SectionHeader({ title, meta }: { title: string; meta?: string }) {
   )
 }
 
-function Chips({
-  values,
-  variant = "positive",
-}: {
-  values: string[]
-  variant?: "positive" | "negative"
-}) {
+function Chips({ values }: { values: string[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {values.map((value) => (
         <span
           key={value}
-          className={`${
-            variant === "negative"
-              ? "border border-zinc-200 px-1.5 py-0.5 text-xs text-zinc-500 line-through dark:border-white/10 dark:text-zinc-500"
-              : `${AGENT_ROUTE_CHIP_CLASS} border-[#8447ff]/30 text-[#8447ff]`
-          }`}
+          className={`${AGENT_ROUTE_CHIP_CLASS} border-[#8447ff]/30 text-[#8447ff]`}
         >
           {value}
         </span>
@@ -425,23 +414,8 @@ function AgentDetailPage() {
 
             <section className="pt-2">
               <SectionHeader title="Tags" />
-              <div className="space-y-3 py-3">
-                <div className="space-y-2">
-                  <Chips values={agent.routing_triggers} />
-                </div>
-                {agent.negative_triggers.length > 0 && (
-                  <div className="space-y-2">
-                    <div className={AGENT_ROUTE_LABEL_CLASS}>
-                      <span className="text-zinc-400 dark:text-zinc-600">
-                        do_not_route_when:
-                      </span>
-                    </div>
-                    <Chips
-                      values={agent.negative_triggers}
-                      variant="negative"
-                    />
-                  </div>
-                )}
+              <div className="py-3">
+                <Chips values={agent.routing_triggers} />
               </div>
             </section>
 
