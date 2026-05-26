@@ -1,87 +1,79 @@
 # How we calculate savings
 
-Tokens Saved and USD Offset come from three **attributable** sources. Anything we can't attribute cleanly is not counted — keeping the dollar figure defensible matters more than making it look bigger.
+Every number on the Metrics page is **derived, not asserted**. If we can't trace a saving back to a specific document and a specific consultation, we don't count it. Keeping the dollar figure defensible matters more than making it look bigger.
 
-## What "actually used" means
-
-We count tokens the API call **billed**, not the byte size of the document. Cache reads count at the cache-read rate. Tokens prepared in a tool result but never returned to the model don't count. Raw Details markdown sitting on the doc but not loaded into the turn doesn't count.
-
-## The three sources
-
-### Cache savings — *measured*
-
-Every cache-read token costs ~10% of base input under the Anthropic pricing schedule. We count the delta — `(base_input − cache_read) × cache_read_tokens` — as saved.
-
-### Summary-instead-of-Details — *measured*
-
-When the agent reports `view_consulted: "summary"` on a turn, it told us the model didn't read the full Details payload. We attribute `details_tokens × base_input` as saved — the tokens that would otherwise have been loaded.
-
-If the agent doesn't pass that flag, we don't claim the saving.
-
-### Reuse-on-begin — *estimated*
-
-When the scoring engine reuses an existing document instead of creating a fresh one, we estimate `min(20k, summary_tokens + details_tokens) × base_input` as saved — a conservative floor on what a from-scratch session would have to re-derive. The 20k cap is intentional; a 200k-token doc doesn't mean a from-scratch session would re-derive 200k of context.
-
-## What we don't count
-
-- Conversations the agent shortened heuristically without telling us. Not measurable.
-- Conflict signals that blocked a bad reuse — saved future tokens, but the counterfactual is too speculative for a dollar figure.
-- Tokens loaded but never attended to by the model.
-
-These show up as observability (counts), not as dollars saved.
-
-## Pricing
-
-We use the rates published at [platform.claude.com pricing](https://platform.claude.com/docs/en/about-claude/pricing). Each price change is recorded as a new effective-from row; events priced before the change keep pointing at their original snapshot. No retroactive rewriting.
-
----
-
-## Avoided Rediscovery (Phase 3, TF-177) — *behind feature flag*
-
-A new savings model is rolling in alongside the three sources above. Once it's the default, the three sources collapse into one defensible card.
-
-### The story
-
-Every document carries a **rediscovery cost** — an estimate of "what would it take an agent to redo this investigation from scratch". When that doc gets surfaced to the agent (via the Taskforce hook on every user prompt — see TF-176), the savings for that consultation is the rediscovery cost minus what the consult actually cost in tokens.
+## The one-line formula
 
 ```
-net_saved_tokens = max(0, document.rediscovery_cost_tokens − summary_tokens_read)
+net_saved_tokens = max(0, rediscovery_cost − tokens_we_used)
 ```
 
-### How we estimate rediscovery cost (v1)
+For each time Taskforce surfaces a document to your agent:
+
+1. We estimate what it would have cost the agent to re-derive that document's content from scratch (**rediscovery cost**).
+2. We subtract the tokens Taskforce actually injected (the summary the model read).
+3. The difference is what Taskforce saved you on that consultation.
+
+Multiply by the consultation count in the window for the headline number. Multiply by the model's input rate at the time of consultation for the USD figure.
+
+## How we estimate rediscovery cost
+
+Every document carries a **rediscovery cost** computed from its own structure when it was last edited:
 
 ```
-rediscovery_cost_tokens =
-    1500 × commands
-  + 2500 × files inspected
-  +  500 × decisions
-  + 3000 × details sections
-  + 1000 × summary points
+rediscovery_cost =
+    1500 × (shell commands in the doc)
+  + 2500 × (files inspected during the original investigation)
+  +  500 × (decisions captured)
+  + 3000 × (Details sections)
+  + 1000 × (Summary points)
 ```
 
-Capped at **50,000 tokens** per doc so a runaway formula never inflates the dashboard. Coefficients are deliberately round; we'll tune them quarterly from real consult-vs-redo data.
+Capped at **50,000 tokens per document** so an outlier doc never inflates the dashboard. Coefficients are deliberately round; we tune them quarterly against real consult-vs-redo measurements.
 
 Where the counts come from:
-- **Commands** — shell prompts (`$`/`>` lines) and fenced code blocks inside the doc's Details sections
-- **Files inspected** — distinct file paths referenced in details (`src/api/foo.py` etc.), with inline-backtick references and basename fallback
-- **Decisions** — lines with verbs like "decided to", "picked", "chose"
-- **Details sections** — `len(details_markdown_sections)`
-- **Summary points** — `len(main_body)` paragraphs
 
-### Worked example
+- **Commands** — shell prompts (`$` / `>` lines) and fenced code blocks inside the doc
+- **Files** — distinct paths the doc references (`app/api/foo.py` etc.)
+- **Decisions** — lines starting with "chose", "decided to", "ruled out", "picked"
+- **Details sections** — the doc's right-hand panels
+- **Summary points** — the doc's left-hand bullets
 
-A document captures: 5 commands, 3 files inspected, 2 decisions, 3 details sections, 4 summary points.
+## Worked example
+
+A real doc in your library: 5 commands, 3 files inspected, 2 decisions, 3 Details sections, 4 Summary points.
 
 ```
 rediscovery_cost = 5×1500 + 3×2500 + 2×500 + 3×3000 + 4×1000
-                = 7500 + 7500 + 1000 + 9000 + 4000
+                = 7,500 + 7,500 + 1,000 + 9,000 + 4,000
                 = 29,000 tokens
 ```
 
-The hook later surfaces this doc with an 800-token summary. Net saved = `max(0, 29000 − 800)` = **28,200 tokens**, priced ≈ **$0.14** at opus rates. Taskforce's own cost to deliver that match: about **$0.002** in summarizer fees. ~70× recovered on a single consult.
+When Taskforce surfaces this doc to your agent, the agent reads an 800-token summary. Net saved on this consultation:
 
-### Why this is better than the three-source model
+```
+max(0, 29,000 − 800) = 28,200 tokens
+≈ $0.42 at Opus 4.7 input pricing
+```
 
-- **No agent self-report required.** The current `summary_only` source depends on the agent honestly setting `view_consulted: "summary"`. The new model derives savings from the doc's structure plus the consult fact itself.
-- **One number, one story.** "Taskforce avoided ~N tokens of rediscovery in this window" is something a CFO can quote.
-- **Defensible to skeptics.** The formula is mechanical and tunable. If someone pushes back on the multiplier, we point at the coefficients and the cap.
+What Taskforce itself cost to deliver that match: about **$0.002** in summarizer fees. ~200× recovered on a single consult.
+
+## Pricing
+
+USD figures use the model rates published at [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing) **at the moment of consultation**, not the current rate. Each rate change is stored as a new effective-from row; events priced before the change keep pointing at their original snapshot. No retroactive rewriting.
+
+When a consultation didn't declare which model the agent was running, we default to Opus 4.7 input pricing.
+
+## What we don't count
+
+- Conversations the agent shortened on its own without telling us. Not measurable.
+- Bad reuses Taskforce *prevented* (the agent was about to write a duplicate doc and we caught it). Real value, but the counterfactual is too speculative for a dollar figure.
+- Tokens loaded into the agent's context but never attended to by the model.
+
+These appear as observability counts elsewhere on the page, not as dollars saved.
+
+## Why this is defensible
+
+- **One formula, one story.** "Taskforce avoided N tokens of rediscovery this week" is something a CFO can quote without footnotes.
+- **No agent self-report required.** The savings come from the doc's structure plus the consultation event itself, not from the agent honestly flagging "I used the summary."
+- **Mechanically reproducible.** Anyone can open a doc, count its commands / files / decisions / sections / summary points, and recompute the rediscovery cost themselves. If a coefficient feels off, that's the conversation worth having.
