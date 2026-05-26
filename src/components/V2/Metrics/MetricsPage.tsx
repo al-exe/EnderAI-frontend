@@ -576,9 +576,9 @@ function ExperimentalMetricsPage({
 
       <section className="grid border border-border md:grid-cols-[10rem_minmax(0,1fr)]">
         <div className="border-b border-border bg-muted/40 p-4 md:border-r md:border-b-0">
-          <div className="text-sm font-semibold">Insights</div>
+          <div className="text-sm font-semibold text-primary">Insights</div>
         </div>
-        <p className="max-w-4xl p-4 text-sm leading-6 text-foreground">
+        <p className="w-full p-4 text-sm leading-6 text-justify text-foreground">
           Taskforce avoided{" "}
           <b>{formatMetricValue(savedTokens, "compact-int")} tokens</b> and
           offset <b>{formatMetricValue(savedUsd, "usd")}</b> while using{" "}
