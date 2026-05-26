@@ -491,7 +491,8 @@ function TaskforceDocumentDetail() {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { user } = useAuth()
 
-  const [viewMode, setViewMode] = useState<ViewMode>("summary")
+  // Default to full details; the AI summary view is hidden.
+  const [viewMode, setViewMode] = useState<ViewMode>("details")
   const [activeEvidenceAnchorId, setActiveEvidenceAnchorId] = useState<string>()
   const [isEditing, setIsEditing] = useState(false)
   const [editState, setEditState] = useState<EditableDoc | null>(null)
@@ -625,7 +626,7 @@ function TaskforceDocumentDetail() {
   })
 
   const isSplit = viewMode === "split"
-  const summaryVisible = viewMode === "summary" || isSplit
+  const summaryVisible = false
   const detailsVisible = viewMode === "details" || isSplit
 
   const showEvidence = useCallback((anchorId: string) => {
@@ -806,15 +807,6 @@ function TaskforceDocumentDetail() {
       className="flex border border-border bg-background"
     >
       <ViewToggle
-        label="Summary"
-        active={viewMode === "summary"}
-        onClick={() => {
-          setViewMode("summary")
-          setActiveEvidenceAnchorId(undefined)
-          setAnchorMode(false)
-        }}
-      />
-      <ViewToggle
         label="Details"
         active={viewMode === "details"}
         onClick={() => {
@@ -851,7 +843,7 @@ function TaskforceDocumentDetail() {
         <div
           data-testid="v2-document-sticky-header"
           className={cn(
-            "sticky top-0 z-20 -mx-6 border-b bg-background/95 px-6 pt-2 pb-4 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+            "sticky top-0 z-20 -mx-6 border-b bg-background/95 px-6 pt-1 pb-3 backdrop-blur supports-[backdrop-filter]:bg-background/80",
             isSplit && "md:shrink-0",
           )}
         >
@@ -878,19 +870,6 @@ function TaskforceDocumentDetail() {
                   View only
                 </Badge>
               )}
-              {!editing && canEditDocument && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={enterEdit}
-                  data-testid="document-edit"
-                  className="h-7 px-2.5 font-mono text-[0.65rem]"
-                >
-                  <Pencil className="size-4" />
-                  Edit
-                </Button>
-              )}
               {editing && (
                 <>
                   <Button
@@ -916,7 +895,7 @@ function TaskforceDocumentDetail() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             {editing ? (
               <PlainInlineEditor
                 value={editState.title}
@@ -968,16 +947,16 @@ function TaskforceDocumentDetail() {
 
           {editing ? (
             <PlainInlineEditor
-              value={editState.ai_generated_summary}
+              value={editState.description}
               onChange={(next) =>
-                setEditState({ ...editState, ai_generated_summary: next })
+                setEditState({ ...editState, description: next })
               }
               className="mt-2 max-w-[64ch] text-sm leading-6 text-muted-foreground"
               data-testid="edit-description"
             />
           ) : (
             <p className="mt-2 max-w-[64ch] text-sm leading-6 text-muted-foreground text-pretty">
-              {document.ai_generated_summary || document.description}
+              {document.description}
             </p>
           )}
 
@@ -1006,7 +985,24 @@ function TaskforceDocumentDetail() {
             isTogglingFavorite={favoriteMutation.isPending}
             onUpdateDates={(dates) => updateMutation.mutate(dates)}
             isUpdatingDates={updateMutation.isPending}
-            viewSwitcher={documentViewToggle}
+            viewSwitcher={
+              <div className="flex items-center gap-2">
+                {documentViewToggle}
+                {!editing && canEditDocument && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={enterEdit}
+                    data-testid="document-edit"
+                    className="h-7 px-2.5 font-mono text-[0.65rem]"
+                  >
+                    <Pencil className="size-4" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+            }
           />
         </div>
 
@@ -1117,7 +1113,7 @@ function DocumentMetadata({
   const sharedCount = shares.length
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 border-y border-border py-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] text-muted-foreground">
+    <div className="mt-4 flex flex-wrap items-center gap-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] text-muted-foreground">
       <DocumentDateField
         label="Created"
         value={document.created_at}
