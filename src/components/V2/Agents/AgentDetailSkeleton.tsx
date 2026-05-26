@@ -37,7 +37,7 @@ export function AgentDetailSkeleton({
     <output
       className={cn(shellClassName, "py-6")}
       aria-busy="true"
-      aria-label="Loading specialist"
+      aria-label="Loading profile"
     >
       {!hideHeader && (
         <>

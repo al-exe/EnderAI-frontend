@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 const navItems = [
   { icon: Search, label: "Search" },
   { icon: BookOpenText, label: "Library" },
-  { icon: Bot, label: "Agents" },
+  { icon: Bot, label: "Profiles" },
   { icon: BarChart3, label: "Metrics" },
 ]
 

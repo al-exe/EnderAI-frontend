@@ -43,7 +43,7 @@ export const Route = createFileRoute("/v2/agents/$slug")({
   head: () => ({
     meta: [
       {
-        title: "Taskforce | Agent Specialist",
+        title: "Taskforce | Profile",
       },
     ],
   }),
@@ -344,12 +344,12 @@ function AgentDetailPage() {
         <div
           className={`${V2_PAGE_CONTENT} min-h-[50vh] items-center justify-center text-center`}
         >
-          <h1 className={AGENT_PAGE_TITLE_CLASS}>Specialist not found</h1>
+          <h1 className={AGENT_PAGE_TITLE_CLASS}>Profile not found</h1>
           <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-            This specialist is unavailable or you do not have access.
+            This profile is unavailable or you do not have access.
           </p>
           <Button asChild className="mt-6">
-            <Link to="/v2/agents">Back to agents</Link>
+            <Link to="/v2/agents">Back to profiles</Link>
           </Button>
         </div>
       </section>
@@ -386,7 +386,7 @@ function AgentDetailPage() {
             </div>
             <p className={AGENT_DETAIL_SUBTITLE_CLASS}>
               <span className="font-semibold text-foreground">{agent.role}</span>
-              <span> · specialist playbook</span>
+              <span> · profile playbook</span>
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -457,7 +457,7 @@ function AgentDetailPage() {
         {agentQuery.isFetching && !isHydratingDetail && (
           <div className="mt-5 inline-flex items-center gap-2 text-sm text-zinc-400 dark:text-zinc-500">
             <Loader2 className="size-4 animate-spin" />
-            Refreshing specialist
+            Refreshing profile
           </div>
         )}
       </div>
