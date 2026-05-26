@@ -1546,7 +1546,8 @@ function SummaryPane({
             onMouseUp={handleSummarySelection}
             onKeyUp={handleSummarySelection}
             className={cn(
-              "max-w-[64ch] space-y-5 text-[15.5px] leading-[1.65] text-foreground/85 [&_p]:text-pretty [&_strong]:font-semibold [&_strong]:text-foreground",
+              "space-y-5 text-[15.5px] leading-[1.65] text-foreground/85 [&_p]:text-pretty [&_strong]:font-semibold [&_strong]:text-foreground",
+              isSplit && "max-w-[64ch]",
               anchorMode && "cursor-text select-text",
             )}
           >
@@ -1815,7 +1816,8 @@ function DetailsPane({
               data-testid={`ai-evidence-${section.anchor_id}`}
               data-active-evidence={isActive ? "true" : "false"}
               className={cn(
-                "max-w-[64ch] scroll-mt-6 py-2 text-[15.5px] leading-[1.65] text-foreground/85 transition-colors [&_p]:text-pretty",
+                "scroll-mt-6 py-2 text-[15.5px] leading-[1.65] text-foreground/85 transition-colors [&_p]:text-pretty",
+                isSplit && "max-w-[64ch]",
                 isActive &&
                   "border border-primary/40 bg-primary/15 px-3 text-foreground",
                 isPicked && "outline outline-2 outline-primary",
