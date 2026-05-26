@@ -83,6 +83,7 @@ import { cn } from "@/lib/utils"
 import {
   V2_PAGE_CONTENT_FIXED,
   V2_PAGE_FRAME,
+  V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/library")({
@@ -657,7 +658,7 @@ function TaskforceLibrary() {
         <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 backdrop-blur">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground">
+              <div className={V2_TAB_EYEBROW_CLASS}>
                 Library · {totalDocumentCount} documents ·{" "}
                 {teamSharedDocumentCount} shared with team
               </div>
