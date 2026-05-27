@@ -66,8 +66,9 @@ function PublicPricing() {
           <div className="font-mono text-[0.85rem] font-medium uppercase tracking-[0.22em] text-[#8447ff]">
             Pricing
           </div>
-          <h1 className="text-4xl font-semibold leading-tight tracking-[-0.025em] md:text-5xl">
-            Choose the Taskforce tier right for your team
+          <h1 className="text-2xl font-semibold leading-tight tracking-[-0.025em] md:whitespace-nowrap md:text-4xl">
+            Choose the <span className="text-[#8447ff]">Taskforce</span> tier
+            right for your team
           </h1>
         </div>
 

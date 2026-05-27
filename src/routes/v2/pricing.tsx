@@ -68,8 +68,9 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
           <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             Taskforce Membership
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Choose the Taskforce tier right for your team
+          <h1 className="text-2xl font-semibold tracking-tight md:whitespace-nowrap md:text-3xl">
+            Choose the <span className="text-[#8447ff]">Taskforce</span> tier
+            right for your team
           </h1>
         </div>
 
