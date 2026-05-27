@@ -13,8 +13,8 @@ export const Route = createFileRoute("/landing")({
 
 const proofStats = [
   { label: "Saved this week", value: "$614 / 40.9M tokens" },
-  { label: "Profile selected", value: "Jensen" },
-  { label: "Setup", value: "4-min MCP" },
+  { label: "Context saved today", value: "127 work sessions" },
+  { label: "Setup time", value: "3 minutes" },
 ]
 
 const terminalLines = [
@@ -80,9 +80,13 @@ function LandingExpressive() {
           />
           Taskforce
         </Link>
-        <div className="flex items-center gap-5 font-mono text-[1.0625rem] text-zinc-500 dark:text-zinc-400">
-          <span className="hidden sm:inline">Docs</span>
-          <span className="hidden sm:inline">Pricing</span>
+        <div className="flex items-center gap-5 font-mono text-[0.796875rem] text-zinc-500 dark:text-zinc-400">
+          <Link
+            to="/pricing"
+            className="hidden hover:text-zinc-950 dark:hover:text-white sm:inline"
+          >
+            Pricing
+          </Link>
           <Link
             to="/login"
             className="hover:text-zinc-950 dark:hover:text-white"
@@ -91,7 +95,7 @@ function LandingExpressive() {
           </Link>
           <Link
             to="/signup"
-            className="bg-zinc-950 px-[1.171875rem] py-[0.78125rem] text-white dark:bg-white dark:text-zinc-950"
+            className="bg-zinc-950 px-[0.78125rem] py-[0.46875rem] text-white dark:bg-white dark:text-zinc-950"
           >
             Sign up →
           </Link>
@@ -155,9 +159,6 @@ function LandingExpressive() {
                 <span className="size-1.5 bg-emerald-400" />
                 <span className="text-zinc-200">
                   claude — fix/stripe-webhook-double-fulfillment
-                </span>
-                <span className="ml-auto text-[0.65rem] text-zinc-500">
-                  foreground skill
                 </span>
               </div>
 
