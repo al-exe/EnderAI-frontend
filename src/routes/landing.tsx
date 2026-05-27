@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
+import { useCallback, useEffect, useRef, useState } from "react"
 
-import { LandingTerminal } from "@/components/V2/LandingTerminal"
+import {
+  LandingTerminal,
+  type LandingTerminalEvent,
+} from "@/components/V2/LandingTerminal"
 
 export const Route = createFileRoute("/landing")({
   component: LandingExpressive,
@@ -13,13 +17,81 @@ export const Route = createFileRoute("/landing")({
   }),
 })
 
-const proofStats = [
-  { label: "Tokens saved", value: "$1,237 / 82.4M tokens" },
-  { label: "Context saved", value: "127 work sessions" },
-  { label: "Setup time", value: "3 minutes" },
-]
+const BASE_TOKENS = 82_400_000
+const BASE_DOLLARS = 1_237
+const BASE_SESSIONS = 127
+const TOKENS_PER_DOLLAR = BASE_TOKENS / BASE_DOLLARS
+
+function formatTokens(n: number): string {
+  return (n / 1_000_000).toFixed(1) + "M tokens"
+}
+
+function formatDollars(n: number): string {
+  return "$" + Math.round(n).toLocaleString("en-US")
+}
+
+function formatSessions(n: number): string {
+  return Math.round(n).toLocaleString("en-US") + " work sessions"
+}
+
+function CountUp({
+  value,
+  format,
+  duration = 750,
+}: {
+  value: number
+  format: (n: number) => string
+  duration?: number
+}) {
+  const [displayed, setDisplayed] = useState(value)
+  const fromRef = useRef(value)
+  useEffect(() => {
+    const from = fromRef.current
+    if (from === value) {
+      setDisplayed(value)
+      return
+    }
+    const start = performance.now()
+    let raf = 0
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplayed(from + (value - from) * eased)
+      if (t < 1) {
+        raf = requestAnimationFrame(tick)
+      } else {
+        fromRef.current = value
+      }
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration])
+  return <span className="tabular-nums">{format(displayed)}</span>
+}
 
 function LandingExpressive() {
+  const [stats, setStats] = useState({
+    tokens: BASE_TOKENS,
+    dollars: BASE_DOLLARS,
+    sessions: BASE_SESSIONS,
+  })
+
+  const handleTerminalEvent = useCallback((event: LandingTerminalEvent) => {
+    if (event.type === "cycle-reset") {
+      setStats({
+        tokens: BASE_TOKENS,
+        dollars: BASE_DOLLARS,
+        sessions: BASE_SESSIONS,
+      })
+    } else if (event.type === "reveal") {
+      setStats((prev) => ({
+        tokens: prev.tokens + event.savedUsd * TOKENS_PER_DOLLAR,
+        dollars: prev.dollars + event.savedUsd,
+        sessions: prev.sessions + 1,
+      }))
+    }
+  }, [])
+
   return (
     <main
       data-testid="landing-expressive"
@@ -76,12 +148,12 @@ function LandingExpressive() {
               your codebase.
             </h1>
             <p className="mt-5 max-w-[50ch] text-sm leading-6 text-zinc-600 text-pretty dark:text-zinc-300 md:text-base">
-              Taskforce is a harness-agnostic, continual-learning{" "}
-              <b className="font-medium text-zinc-950 dark:text-white">
-                memory
-              </b>{" "}
-              layer for coding agents. It remembers the work your team has
-              already done so the next agent doesn't rediscover the same
+              Taskforce is a{" "}
+              <span className="text-[#8447ff]">
+                continual-learning memory layer
+              </span>{" "}
+              for coding agents. It remembers the work your team has already
+              done so the next agent doesn't have to rediscover the same
               answers. Works with Claude Code, Codex, and Cursor.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
@@ -101,23 +173,32 @@ function LandingExpressive() {
           </div>
 
           <dl className="mt-10 grid border-t border-zinc-200 pt-4 font-mono text-[0.85rem] text-zinc-500 dark:border-white/10 dark:text-zinc-400 sm:grid-cols-3 md:mt-auto">
-            {proofStats.map((stat) => (
-              <div
-                key={stat.label}
-                className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10"
-              >
-                <dt className="uppercase tracking-[0.16em]">{stat.label}</dt>
-                <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
-                  {stat.value}
-                </dd>
-              </div>
-            ))}
+            <div className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10">
+              <dt className="uppercase tracking-[0.16em]">Tokens saved</dt>
+              <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
+                <CountUp value={stats.tokens} format={formatTokens} />
+                {" / "}
+                <CountUp value={stats.dollars} format={formatDollars} />
+              </dd>
+            </div>
+            <div className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10">
+              <dt className="uppercase tracking-[0.16em]">Context saved</dt>
+              <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
+                <CountUp value={stats.sessions} format={formatSessions} />
+              </dd>
+            </div>
+            <div className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10">
+              <dt className="uppercase tracking-[0.16em]">Setup time</dt>
+              <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
+                3 minutes
+              </dd>
+            </div>
           </dl>
         </div>
 
         <div className="flex min-h-[36rem] flex-col justify-end bg-zinc-50 px-5 py-6 dark:bg-zinc-900/40 md:min-h-0 md:items-end md:px-8 md:py-8">
           <div className="w-full max-w-[42rem]">
-            <LandingTerminal />
+            <LandingTerminal onEvent={handleTerminalEvent} />
           </div>
         </div>
       </section>

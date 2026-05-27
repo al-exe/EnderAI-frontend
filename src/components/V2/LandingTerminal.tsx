@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -239,6 +239,7 @@ const PRE_LINE_PAUSE_YOU = 650
 const PRE_LINE_PAUSE_TF = 380
 const POST_LINE_PAUSE = 320
 const SUMMARY_HOLD_MS = 5000
+const CLOSE_FADE_MS = 420
 const LOOP_PAUSE_MS = 700
 
 type ActiveLine = {
@@ -270,11 +271,28 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches
 }
 
-export function LandingTerminal() {
+export type LandingTerminalEvent =
+  | { type: "cycle-reset" }
+  | { type: "reveal"; savedUsd: number }
+
+function parseSavedUsd(s: string): number {
+  return Number(s.replace(/[^0-9.]/g, ""))
+}
+
+export function LandingTerminal({
+  onEvent,
+}: {
+  onEvent?: (event: LandingTerminalEvent) => void
+} = {}) {
   const [scenarioIndex, setScenarioIndex] = useState(0)
   const [visibleCount, setVisibleCount] = useState(0)
   const [active, setActive] = useState<ActiveLine | null>(null)
   const [summaryVisible, setSummaryVisible] = useState(false)
+  const [bodyVisible, setBodyVisible] = useState(true)
+  const onEventRef = useRef(onEvent)
+  useEffect(() => {
+    onEventRef.current = onEvent
+  }, [onEvent])
 
   useEffect(() => {
     if (prefersReducedMotion()) {
@@ -312,11 +330,16 @@ export function LandingTerminal() {
     const play = async () => {
       try {
         let s = Math.floor(Math.random() * SCENARIOS.length)
+        let revealsInCycle = 0
         while (!signal.aborted) {
+          if (revealsInCycle === 0) {
+            onEventRef.current?.({ type: "cycle-reset" })
+          }
           setScenarioIndex(s)
           setVisibleCount(0)
           setActive(null)
           setSummaryVisible(false)
+          setBodyVisible(true)
           await wait(LOOP_PAUSE_MS)
 
           const scenario = SCENARIOS[s]
@@ -333,8 +356,16 @@ export function LandingTerminal() {
 
           await wait(500)
           setSummaryVisible(true)
+          onEventRef.current?.({
+            type: "reveal",
+            savedUsd: parseSavedUsd(scenario.summary.saved),
+          })
           await wait(SUMMARY_HOLD_MS)
 
+          setBodyVisible(false)
+          await wait(CLOSE_FADE_MS)
+
+          revealsInCycle = (revealsInCycle + 1) % SCENARIOS.length
           s = (s + 1) % SCENARIOS.length
         }
       } catch (error) {
@@ -361,7 +392,15 @@ export function LandingTerminal() {
         <span className="text-zinc-200">claude — {scenario.branch}</span>
       </div>
 
-      <div className="space-y-1.5" aria-hidden="true">
+      <div
+        className={cn(
+          "space-y-1.5 transition-opacity",
+          bodyVisible
+            ? "opacity-100 duration-200"
+            : "opacity-0 duration-[420ms]",
+        )}
+        aria-hidden="true"
+      >
         {scenario.lines.map((line, index) => {
           const isFull = index < visibleCount
           const isActive = active?.index === index
@@ -409,10 +448,12 @@ export function LandingTerminal() {
 
       <div
         className={cn(
-          "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-opacity duration-300 sm:grid-cols-[1fr_auto_auto]",
-          summaryVisible ? "opacity-100" : "pointer-events-none opacity-0",
+          "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-opacity sm:grid-cols-[1fr_auto_auto]",
+          summaryVisible && bodyVisible
+            ? "opacity-100 duration-300"
+            : "pointer-events-none opacity-0 duration-[420ms]",
         )}
-        aria-hidden={!summaryVisible}
+        aria-hidden={!summaryVisible || !bodyVisible}
       >
         <div>
           <div className="uppercase tracking-[0.16em] text-zinc-500">
