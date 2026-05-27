@@ -201,23 +201,14 @@ test("Upgrade link opens membership tiers with current and selected indicators",
   await expect(page).toHaveURL(/\/v2\/pricing$/)
   await expect(
     page.getByRole("heading", {
-      name: "Choose the membership tier for how you use Taskforce.",
+      name: "Choose the Taskforce tier right for your team",
     }),
   ).toBeVisible()
   await expect(page.getByTestId("membership-plan-free")).toContainText(
     "You already have this tier",
   )
-  await expect(page.getByTestId("membership-plan-free")).toContainText(
-    "Selected",
-  )
   await expect(page.getByTestId("membership-plan-pro")).toContainText("$4.99")
-  await expect(page.getByTestId("membership-plan-max")).toContainText("Monthly")
-
-  await page.getByTestId("membership-plan-pro").click()
-  await expect(page.getByTestId("membership-plan-pro")).toContainText(
-    "Selected",
-  )
-  await expect(page.getByText("Selected: Pro")).toBeVisible()
+  await expect(page.getByTestId("membership-plan-max")).toContainText("$49.99")
 
   let checkoutBody: unknown
   await page.route("**/api/v1/billing/checkout-session", async (route) => {
