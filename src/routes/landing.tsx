@@ -5,6 +5,7 @@ import {
   LandingTerminal,
   type LandingTerminalEvent,
 } from "@/components/V2/LandingTerminal"
+import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/landing")({
   component: LandingExpressive,
@@ -75,6 +76,16 @@ function LandingExpressive() {
     dollars: BASE_DOLLARS,
     sessions: BASE_SESSIONS,
   })
+  const [tokensPulsing, setTokensPulsing] = useState(false)
+  const pulseTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (pulseTimerRef.current !== null) {
+        window.clearTimeout(pulseTimerRef.current)
+      }
+    }
+  }, [])
 
   const handleTerminalEvent = useCallback((event: LandingTerminalEvent) => {
     if (event.type === "cycle-reset") {
@@ -83,12 +94,25 @@ function LandingExpressive() {
         dollars: BASE_DOLLARS,
         sessions: BASE_SESSIONS,
       })
+      setTokensPulsing(false)
+      if (pulseTimerRef.current !== null) {
+        window.clearTimeout(pulseTimerRef.current)
+        pulseTimerRef.current = null
+      }
     } else if (event.type === "reveal") {
       setStats((prev) => ({
         tokens: prev.tokens + event.savedUsd * TOKENS_PER_DOLLAR,
         dollars: prev.dollars + event.savedUsd,
         sessions: prev.sessions + 1,
       }))
+      setTokensPulsing(true)
+      if (pulseTimerRef.current !== null) {
+        window.clearTimeout(pulseTimerRef.current)
+      }
+      pulseTimerRef.current = window.setTimeout(() => {
+        setTokensPulsing(false)
+        pulseTimerRef.current = null
+      }, 5000)
     }
   }, [])
 
@@ -154,7 +178,9 @@ function LandingExpressive() {
               </span>{" "}
               for coding agents. It remembers the work your team has already
               done so the next agent doesn't have to rediscover the same
-              answers. Works with Claude Code, Codex, and Cursor.
+              answers.
+              <br />
+              Works with Claude Code, Codex, and Cursor.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link
@@ -175,7 +201,14 @@ function LandingExpressive() {
           <dl className="mt-10 grid border-t border-zinc-200 pt-4 font-mono text-[0.85rem] text-zinc-500 dark:border-white/10 dark:text-zinc-400 sm:grid-cols-3 md:mt-auto">
             <div className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10">
               <dt className="uppercase tracking-[0.16em]">Tokens saved</dt>
-              <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
+              <dd
+                className={cn(
+                  "mt-1 font-sans text-[1.09375rem] font-semibold leading-snug transition-colors duration-700",
+                  tokensPulsing
+                    ? "text-[#8447ff]"
+                    : "text-zinc-950 dark:text-white",
+                )}
+              >
                 <CountUp value={stats.tokens} format={formatTokens} />
                 {" / "}
                 <CountUp value={stats.dollars} format={formatDollars} />
