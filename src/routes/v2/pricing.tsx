@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { Check, Circle, ExternalLink, Sparkles } from "lucide-react"
+import { Check, Circle, ExternalLink } from "lucide-react"
 import { useState } from "react"
 
 import { createCheckoutSession } from "@/api/billing"
@@ -43,11 +43,10 @@ const membershipPlans: MembershipPlan[] = [
     price: "$0",
     priceDetail: "/ month",
     description:
-      "A lightweight workspace for trying Taskforce and keeping basic agent context organized.",
+      "A lightweight workspace for trying Taskforce and keeping your context organized.",
     benefits: [
-      "Placeholder benefit for personal document memory",
-      "Placeholder benefit for basic search and library access",
-      "Placeholder benefit for getting started with agent handoffs",
+      "Up to 3 agent profiles",
+      "256 MB of library storage",
     ],
     cta: "Included",
   },
@@ -58,11 +57,11 @@ const membershipPlans: MembershipPlan[] = [
     price: "$4.99",
     priceDetail: "/ month for the first 3 months",
     description:
-      "A focused membership for individual builders who want stronger Taskforce workflows.",
+      "A robust memory layer for serious builders and teams.",
     benefits: [
-      "Placeholder benefit for richer project memory",
-      "Placeholder benefit for Pro search workflows with your own key",
-      "Placeholder benefit for early adopter product access",
+      "Up to 100 agent profiles",
+      "100 GB of document storage",
+      "Organizations up to 100 members",
     ],
     cta: "Select this tier",
     highlighted: true,
@@ -70,15 +69,16 @@ const membershipPlans: MembershipPlan[] = [
   {
     tier: "max",
     name: "Max",
-    eyebrow: "Managed usage",
-    price: "Monthly",
-    priceDetail: "",
+    eyebrow: "The ultimate package",
+    price: "$49.99",
+    priceDetail: "/ month",
     description:
-      "A higher ceiling for heavier usage, managed model costs, and larger context operations.",
+      "For enterprise scale teams who can't waste a moment or token.",
     benefits: [
-      "Placeholder benefit for covered LLM usage",
-      "Placeholder benefit for expanded workspace limits",
-      "Placeholder benefit for priority Taskforce capabilities",
+      "Up to 1,000 agent profiles",
+      "1 TB of library storage",
+      "Organizations up to 1,000 members",
+      "Access to Enterprise Search in Taskforce",
     ],
     cta: "Select this tier",
   },
@@ -121,10 +121,6 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
     onError: handleError.bind(showErrorToast),
   })
 
-  const selectedPlan = membershipPlans.find(
-    (plan) => plan.tier === selectedTier,
-  )
-
   return (
     <section className="flex min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 py-8">
@@ -133,13 +129,8 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
             Taskforce Membership
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">
-            Choose the membership tier for how you use Taskforce.
+            Choose the Taskforce tier right for your team
           </h1>
-          <p className="max-w-3xl text-base leading-7 text-muted-foreground">
-            Free, Pro, and Max are sketched here with placeholder benefit copy
-            until the final tier details are locked. Pro keeps the existing
-            early adopter $4.99 discount.
-          </p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
@@ -170,12 +161,6 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
                       {isCurrent && (
                         <Badge variant="secondary">
                           You already have this tier
-                        </Badge>
-                      )}
-                      {isSelected && (
-                        <Badge data-testid="membership-selected-indicator">
-                          <Sparkles className="size-3" />
-                          Selected
                         </Badge>
                       )}
                     </div>
@@ -238,15 +223,6 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
               </Card>
             )
           })}
-        </div>
-
-        <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
-          Selected:{" "}
-          <span className="font-medium text-foreground">
-            {selectedPlan?.name ?? "Free"}
-          </span>
-          . Final copy, limits, and entitlement details can replace these
-          placeholders when the tiers are finalized.
         </div>
       </div>
     </section>
