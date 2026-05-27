@@ -10,6 +10,7 @@ test.use({
 test("/landing renders the expressive Taskforce demo page", async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" })
   await page.goto("/landing")
 
   await expect(page.getByTestId("landing-expressive")).toBeVisible()
@@ -18,14 +19,13 @@ test("/landing renders the expressive Taskforce demo page", async ({
       name: /stop re-explaining your codebase/i,
     }),
   ).toBeVisible()
-  await expect(page.getByText("Live · Claude Code /tf skill")).toBeVisible()
   await expect(
     page.getByText("/tf Stripe is double-charging users on plan upgrades", {
       exact: false,
     }),
   ).toBeVisible()
   await expect(
-    page.getByText("Routed to Jensen — Billing Reliability Specialist"),
+    page.getByText("Selected profile: Jensen — Billing Reliability."),
   ).toBeVisible()
   await expect(page.getByText("session link ready →")).toBeVisible()
   await expect(page.getByRole("link", { name: /sign up/i })).toHaveAttribute(

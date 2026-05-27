@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
 
+import { LandingTerminal } from "@/components/V2/LandingTerminal"
+
 export const Route = createFileRoute("/landing")({
   component: LandingExpressive,
   head: () => ({
@@ -12,48 +14,9 @@ export const Route = createFileRoute("/landing")({
 })
 
 const proofStats = [
-  { label: "Saved this week", value: "$614 / 40.9M tokens" },
-  { label: "Context saved today", value: "127 work sessions" },
+  { label: "Tokens saved", value: "$1,237 / 82.4M tokens" },
+  { label: "Context saved", value: "127 work sessions" },
   { label: "Setup time", value: "3 minutes" },
-]
-
-const terminalLines = [
-  {
-    name: "you",
-    tone: "prompt",
-    text: "/tf Stripe is double-charging users on plan upgrades — webhook retries are getting fulfilled twice. Can you fix it?",
-  },
-  {
-    name: "tf",
-    tone: "dim",
-    text: "Checking Taskforce for the right profile...",
-  },
-  {
-    name: "tf",
-    tone: "dim",
-    text: 'Sending prompt + cwd + files + git_branch "fix/stripe-webhook-double-fulfillment". No code body. No chat history.',
-  },
-  {
-    name: "tf",
-    tone: "body",
-    text: "Selected profile: Jensen — Billing Reliability.",
-    accent: "Confidence: high · Stripe webhook retries · plan upgrades",
-  },
-  {
-    name: "tf",
-    tone: "body",
-    text: "Jensen is bringing in Stripe webhook idempotency strategy and the plan-upgrade replay regression pattern.",
-  },
-  {
-    name: "you",
-    tone: "prompt",
-    text: "Apply that pattern and prove the retry only fulfills once.",
-  },
-  {
-    name: "tf",
-    tone: "body",
-    text: "Patch written. Regression test passes. Recording the session back to Taskforce.",
-  },
 ]
 
 function LandingExpressive() {
@@ -154,72 +117,7 @@ function LandingExpressive() {
 
         <div className="flex min-h-[36rem] flex-col justify-end bg-zinc-50 px-5 py-6 dark:bg-zinc-900/40 md:min-h-0 md:items-end md:px-8 md:py-8">
           <div className="w-full max-w-[42rem]">
-            <div className="border border-zinc-950 bg-zinc-950 p-3 font-mono text-[0.68rem] leading-5 text-zinc-100 shadow-2xl dark:border-white/15 md:p-4 lg:text-[0.72rem]">
-              <div className="mb-3 flex items-center gap-2 border-b border-white/15 pb-3">
-                <span className="size-1.5 bg-emerald-400" />
-                <span className="text-zinc-200">
-                  claude — fix/stripe-webhook-double-fulfillment
-                </span>
-              </div>
-
-              <div className="space-y-1.5">
-                {terminalLines.map((line, index) => (
-                  <div
-                    key={`${line.name}-${index}`}
-                    className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2"
-                  >
-                    <span
-                      className={
-                        line.name === "tf" ? "text-[#c9a8ff]" : "text-zinc-500"
-                      }
-                    >
-                      {line.name}
-                    </span>
-                    <span
-                      className={
-                        line.tone === "dim"
-                          ? "text-zinc-500"
-                          : line.tone === "prompt"
-                            ? "text-zinc-100"
-                            : "text-zinc-300"
-                      }
-                    >
-                      {line.text}
-                      {line.accent && (
-                        <span className="block text-emerald-300">
-                          {line.accent}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] sm:grid-cols-[1fr_auto_auto]">
-                <div>
-                  <div className="uppercase tracking-[0.16em] text-zinc-500">
-                    recorded
-                  </div>
-                  <div className="mt-1 text-zinc-200">
-                    Jensen profile · 2 docs referenced
-                  </div>
-                </div>
-                <div>
-                  <div className="uppercase tracking-[0.16em] text-zinc-500">
-                    saved
-                  </div>
-                  <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
-                    $614
-                  </div>
-                </div>
-                <div>
-                  <div className="uppercase tracking-[0.16em] text-zinc-500">
-                    metrics
-                  </div>
-                  <div className="mt-1 text-zinc-200">session link ready →</div>
-                </div>
-              </div>
-            </div>
+            <LandingTerminal />
           </div>
         </div>
       </section>
