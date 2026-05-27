@@ -239,7 +239,7 @@ const PRE_LINE_PAUSE_YOU = 650
 const PRE_LINE_PAUSE_TF = 380
 const POST_LINE_PAUSE = 320
 const SUMMARY_HOLD_MS = 5000
-const CLOSE_FADE_MS = 620
+const CLOSE_SLIDE_MS = 720
 const LOOP_PAUSE_MS = 700
 
 type ActiveLine = {
@@ -363,7 +363,7 @@ export function LandingTerminal({
           await wait(SUMMARY_HOLD_MS)
 
           setBodyVisible(false)
-          await wait(CLOSE_FADE_MS)
+          await wait(CLOSE_SLIDE_MS)
 
           revealsInCycle = (revealsInCycle + 1) % SCENARIOS.length
           s = (s + 1) % SCENARIOS.length
@@ -386,7 +386,7 @@ export function LandingTerminal({
   const scenario = SCENARIOS[scenarioIndex]
 
   return (
-    <div className="border border-zinc-950 bg-zinc-950 p-3 font-mono text-[0.68rem] leading-5 text-zinc-100 shadow-2xl dark:border-white/15 md:p-4 lg:text-[0.72rem]">
+    <div className="overflow-hidden border border-zinc-950 bg-zinc-950 p-3 font-mono text-[0.68rem] leading-5 text-zinc-100 shadow-2xl dark:border-white/15 md:p-4 lg:text-[0.72rem]">
       <div className="mb-3 flex items-center gap-2 border-b border-white/15 pb-3">
         <span className="size-1.5 bg-emerald-400" />
         <span className="text-zinc-200">claude — {scenario.branch}</span>
@@ -394,13 +394,13 @@ export function LandingTerminal({
 
       <div
         className={cn(
-          "space-y-1.5 transition-[opacity,transform] ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform",
+          "transition-transform ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform",
           bodyVisible
-            ? "translate-y-0 opacity-100 duration-200"
-            : "translate-y-10 opacity-0 duration-[600ms]",
+            ? "translate-y-0 duration-200"
+            : "translate-y-[120%] duration-[720ms]",
         )}
-        aria-hidden="true"
       >
+        <div className="space-y-1.5" aria-hidden="true">
         {scenario.lines.map((line, index) => {
           const isFull = index < visibleCount
           const isActive = active?.index === index
@@ -444,36 +444,35 @@ export function LandingTerminal({
             </div>
           )
         })}
-      </div>
+        </div>
 
-      <div
-        className={cn(
-          "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-[opacity,transform] ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform sm:grid-cols-[1fr_auto_auto]",
-          summaryVisible && bodyVisible
-            ? "translate-y-0 opacity-100 duration-300"
-            : bodyVisible
-              ? "pointer-events-none translate-y-0 opacity-0 duration-300"
-              : "pointer-events-none translate-y-10 opacity-0 duration-[600ms]",
-        )}
-        aria-hidden={!summaryVisible || !bodyVisible}
-      >
-        <div>
-          <div className="uppercase tracking-[0.16em] text-zinc-500">
-            recorded
+        <div
+          className={cn(
+            "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-opacity duration-300 sm:grid-cols-[1fr_auto_auto]",
+            summaryVisible
+              ? "opacity-100"
+              : "pointer-events-none opacity-0",
+          )}
+          aria-hidden={!summaryVisible}
+        >
+          <div>
+            <div className="uppercase tracking-[0.16em] text-zinc-500">
+              recorded
+            </div>
+            <div className="mt-1 text-zinc-200">{scenario.summary.profile}</div>
           </div>
-          <div className="mt-1 text-zinc-200">{scenario.summary.profile}</div>
-        </div>
-        <div>
-          <div className="uppercase tracking-[0.16em] text-zinc-500">saved</div>
-          <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
-            {scenario.summary.saved}
+          <div>
+            <div className="uppercase tracking-[0.16em] text-zinc-500">saved</div>
+            <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
+              {scenario.summary.saved}
+            </div>
           </div>
-        </div>
-        <div>
-          <div className="uppercase tracking-[0.16em] text-zinc-500">
-            metrics
+          <div>
+            <div className="uppercase tracking-[0.16em] text-zinc-500">
+              metrics
+            </div>
+            <div className="mt-1 text-zinc-200">session link ready →</div>
           </div>
-          <div className="mt-1 text-zinc-200">session link ready →</div>
         </div>
       </div>
     </div>
