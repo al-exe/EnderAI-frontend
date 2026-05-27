@@ -239,7 +239,7 @@ const PRE_LINE_PAUSE_YOU = 650
 const PRE_LINE_PAUSE_TF = 380
 const POST_LINE_PAUSE = 320
 const SUMMARY_HOLD_MS = 5000
-const CLOSE_FADE_MS = 420
+const CLOSE_FADE_MS = 620
 const LOOP_PAUSE_MS = 700
 
 type ActiveLine = {
@@ -394,10 +394,10 @@ export function LandingTerminal({
 
       <div
         className={cn(
-          "space-y-1.5 transition-opacity",
+          "space-y-1.5 transition-[opacity,transform] ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform",
           bodyVisible
-            ? "opacity-100 duration-200"
-            : "opacity-0 duration-[420ms]",
+            ? "translate-y-0 opacity-100 duration-200"
+            : "translate-y-10 opacity-0 duration-[600ms]",
         )}
         aria-hidden="true"
       >
@@ -448,10 +448,12 @@ export function LandingTerminal({
 
       <div
         className={cn(
-          "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-opacity sm:grid-cols-[1fr_auto_auto]",
+          "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-[opacity,transform] ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform sm:grid-cols-[1fr_auto_auto]",
           summaryVisible && bodyVisible
-            ? "opacity-100 duration-300"
-            : "pointer-events-none opacity-0 duration-[420ms]",
+            ? "translate-y-0 opacity-100 duration-300"
+            : bodyVisible
+              ? "pointer-events-none translate-y-0 opacity-0 duration-300"
+              : "pointer-events-none translate-y-10 opacity-0 duration-[600ms]",
         )}
         aria-hidden={!summaryVisible || !bodyVisible}
       >

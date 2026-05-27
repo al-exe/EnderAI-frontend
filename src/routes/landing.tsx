@@ -179,7 +179,8 @@ function LandingExpressive() {
               for coding agents. It remembers the work your team has already
               done so the next agent doesn't have to rediscover the same
               answers.
-              <br />
+            </p>
+            <p className="mt-3 max-w-[50ch] font-mono text-xs leading-5 tracking-[0.02em] text-zinc-500 dark:text-zinc-400">
               Works with Claude Code, Codex, and Cursor.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
