@@ -311,7 +311,7 @@ export function LandingTerminal() {
 
     const play = async () => {
       try {
-        let s = 0
+        let s = Math.floor(Math.random() * SCENARIOS.length)
         while (!signal.aborted) {
           setScenarioIndex(s)
           setVisibleCount(0)
