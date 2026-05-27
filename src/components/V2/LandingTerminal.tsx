@@ -386,7 +386,7 @@ export function LandingTerminal({
   const scenario = SCENARIOS[scenarioIndex]
 
   return (
-    <div className="overflow-hidden border border-zinc-950 bg-zinc-950 p-3 font-mono text-[0.68rem] leading-5 text-zinc-100 shadow-2xl dark:border-white/15 md:p-4 lg:text-[0.72rem]">
+    <div className="border border-zinc-950 bg-zinc-950 p-3 font-mono text-[0.68rem] leading-5 text-zinc-100 shadow-2xl dark:border-white/15 md:p-4 lg:text-[0.72rem]">
       <div className="mb-3 flex items-center gap-2 border-b border-white/15 pb-3">
         <span className="size-1.5 bg-emerald-400" />
         <span className="text-zinc-200">claude — {scenario.branch}</span>
@@ -394,84 +394,92 @@ export function LandingTerminal({
 
       <div
         className={cn(
-          "transition-transform ease-[cubic-bezier(0.65,0,0.35,1)] will-change-transform",
+          "grid transition-[grid-template-rows] ease-[cubic-bezier(0.65,0,0.35,1)]",
           bodyVisible
-            ? "translate-y-0 duration-200"
-            : "translate-y-[120%] duration-[720ms]",
+            ? "grid-rows-[1fr] duration-200"
+            : "grid-rows-[0fr] duration-[720ms]",
         )}
       >
-        <div className="space-y-1.5" aria-hidden="true">
-        {scenario.lines.map((line, index) => {
-          const isFull = index < visibleCount
-          const isActive = active?.index === index
-          if (!isFull && !isActive) return null
+        <div className="overflow-hidden">
+          <div className="space-y-1.5" aria-hidden="true">
+            {scenario.lines.map((line, index) => {
+              const isFull = index < visibleCount
+              const isActive = active?.index === index
+              if (!isFull && !isActive) return null
 
-          const displayedText = isFull ? line.text : (active?.text ?? "")
-          const displayedAccent = isFull ? line.accent : (active?.accent ?? "")
+              const displayedText = isFull ? line.text : (active?.text ?? "")
+              const displayedAccent = isFull
+                ? line.accent
+                : (active?.accent ?? "")
 
-          return (
-            <div
-              key={`${scenarioIndex}-${index}`}
-              className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2"
-            >
-              <span
-                className={
-                  line.name === "tf" ? "text-[#c9a8ff]" : "text-zinc-500"
-                }
-              >
-                {line.name}
-              </span>
-              <span
-                className={
-                  line.tone === "dim"
-                    ? "text-zinc-500"
-                    : line.tone === "prompt"
-                      ? "text-zinc-100"
-                      : "text-zinc-300"
-                }
-              >
-                {displayedText}
-                {isActive && !displayedAccent && (
-                  <BlinkingCaret tone={line.tone} />
-                )}
-                {(displayedAccent || (isFull && line.accent)) && (
-                  <span className="block text-emerald-300">
-                    {displayedAccent}
-                    {isActive && line.accent && <BlinkingCaret tone="accent" />}
+              return (
+                <div
+                  key={`${scenarioIndex}-${index}`}
+                  className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2"
+                >
+                  <span
+                    className={
+                      line.name === "tf" ? "text-[#c9a8ff]" : "text-zinc-500"
+                    }
+                  >
+                    {line.name}
                   </span>
-                )}
-              </span>
-            </div>
-          )
-        })}
-        </div>
+                  <span
+                    className={
+                      line.tone === "dim"
+                        ? "text-zinc-500"
+                        : line.tone === "prompt"
+                          ? "text-zinc-100"
+                          : "text-zinc-300"
+                    }
+                  >
+                    {displayedText}
+                    {isActive && !displayedAccent && (
+                      <BlinkingCaret tone={line.tone} />
+                    )}
+                    {(displayedAccent || (isFull && line.accent)) && (
+                      <span className="block text-emerald-300">
+                        {displayedAccent}
+                        {isActive && line.accent && (
+                          <BlinkingCaret tone="accent" />
+                        )}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
 
-        <div
-          className={cn(
-            "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-opacity duration-300 sm:grid-cols-[1fr_auto_auto]",
-            summaryVisible
-              ? "opacity-100"
-              : "pointer-events-none opacity-0",
-          )}
-          aria-hidden={!summaryVisible}
-        >
-          <div>
-            <div className="uppercase tracking-[0.16em] text-zinc-500">
-              recorded
+          <div
+            className={cn(
+              "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-opacity duration-300 sm:grid-cols-[1fr_auto_auto]",
+              summaryVisible ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+            aria-hidden={!summaryVisible}
+          >
+            <div>
+              <div className="uppercase tracking-[0.16em] text-zinc-500">
+                recorded
+              </div>
+              <div className="mt-1 text-zinc-200">
+                {scenario.summary.profile}
+              </div>
             </div>
-            <div className="mt-1 text-zinc-200">{scenario.summary.profile}</div>
-          </div>
-          <div>
-            <div className="uppercase tracking-[0.16em] text-zinc-500">saved</div>
-            <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
-              {scenario.summary.saved}
+            <div>
+              <div className="uppercase tracking-[0.16em] text-zinc-500">
+                saved
+              </div>
+              <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
+                {scenario.summary.saved}
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="uppercase tracking-[0.16em] text-zinc-500">
-              metrics
+            <div>
+              <div className="uppercase tracking-[0.16em] text-zinc-500">
+                metrics
+              </div>
+              <div className="mt-1 text-zinc-200">session link ready →</div>
             </div>
-            <div className="mt-1 text-zinc-200">session link ready →</div>
           </div>
         </div>
       </div>
