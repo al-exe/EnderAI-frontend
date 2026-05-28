@@ -450,37 +450,35 @@ export function LandingTerminal({
               )
             })}
           </div>
+        </div>
+      </div>
 
-          <div
-            className={cn(
-              "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-opacity duration-300 sm:grid-cols-[1fr_auto_auto]",
-              summaryVisible ? "opacity-100" : "pointer-events-none opacity-0",
-            )}
-            aria-hidden={!summaryVisible}
-          >
-            <div>
-              <div className="uppercase tracking-[0.16em] text-zinc-500">
-                recorded
-              </div>
-              <div className="mt-1 text-zinc-200">
-                {scenario.summary.profile}
-              </div>
-            </div>
-            <div>
-              <div className="uppercase tracking-[0.16em] text-zinc-500">
-                saved
-              </div>
-              <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
-                {scenario.summary.saved}
-              </div>
-            </div>
-            <div>
-              <div className="uppercase tracking-[0.16em] text-zinc-500">
-                metrics
-              </div>
-              <div className="mt-1 text-zinc-200">session link ready →</div>
-            </div>
+      <div
+        className={cn(
+          "mt-4 grid gap-3 border border-white/15 bg-white/[0.04] p-3 text-[0.65rem] transition-opacity duration-300 sm:grid-cols-[1fr_auto_auto]",
+          summaryVisible && bodyVisible
+            ? "opacity-100"
+            : "pointer-events-none opacity-0",
+        )}
+        aria-hidden={!summaryVisible || !bodyVisible}
+      >
+        <div>
+          <div className="uppercase tracking-[0.16em] text-zinc-500">
+            recorded
           </div>
+          <div className="mt-1 text-zinc-200">{scenario.summary.profile}</div>
+        </div>
+        <div>
+          <div className="uppercase tracking-[0.16em] text-zinc-500">saved</div>
+          <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
+            {scenario.summary.saved}
+          </div>
+        </div>
+        <div>
+          <div className="uppercase tracking-[0.16em] text-zinc-500">
+            metrics
+          </div>
+          <div className="mt-1 text-zinc-200">session link ready →</div>
         </div>
       </div>
     </div>
