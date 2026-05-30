@@ -176,8 +176,8 @@ function LandingExpressive() {
               <span className="text-[#8447ff]">
                 continual-learning memory layer
               </span>{" "}
-              for coding agents. It remembers the work your team has already
-              done so the next agent doesn't have to rediscover the same
+              for coding agents. It remembers the work you've done so the next
+              agent doesn't have to rediscover the same
               answers.
             </p>
             <p className="mt-3 max-w-[50ch] font-mono text-xs leading-5 tracking-[0.02em] text-zinc-500 dark:text-zinc-400">
