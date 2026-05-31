@@ -24,15 +24,15 @@ const BASE_SESSIONS = 127
 const TOKENS_PER_DOLLAR = BASE_TOKENS / BASE_DOLLARS
 
 function formatTokens(n: number): string {
-  return (n / 1_000_000).toFixed(1) + "M tokens"
+  return `${(n / 1_000_000).toFixed(1)}M tokens`
 }
 
 function formatDollars(n: number): string {
-  return "$" + Math.round(n).toLocaleString("en-US")
+  return `$${Math.round(n).toLocaleString("en-US")}`
 }
 
 function formatSessions(n: number): string {
-  return Math.round(n).toLocaleString("en-US") + " work sessions"
+  return `${Math.round(n).toLocaleString("en-US")} work sessions`
 }
 
 function CountUp({
@@ -56,7 +56,7 @@ function CountUp({
     let raf = 0
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration)
-      const eased = 1 - Math.pow(1 - t, 3)
+      const eased = 1 - (1 - t) ** 3
       setDisplayed(from + (value - from) * eased)
       if (t < 1) {
         raf = requestAnimationFrame(tick)
@@ -177,8 +177,7 @@ function LandingExpressive() {
                 continual-learning memory layer
               </span>{" "}
               for coding agents. It remembers the work you've done so the next
-              agent doesn't have to rediscover the same
-              answers.
+              agent doesn't have to rediscover the same answers.
             </p>
             <p className="mt-3 max-w-[50ch] font-mono text-xs leading-5 tracking-[0.02em] text-zinc-500 dark:text-zinc-400">
               Works with Claude Code, Codex, and Cursor.

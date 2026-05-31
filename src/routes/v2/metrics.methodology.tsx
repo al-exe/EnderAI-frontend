@@ -171,8 +171,7 @@ function Markdown({ source }: { source: string }) {
 function renderInline(text: string): ReactNode {
   const parts: ReactNode[] = []
   let cursor = 0
-  const re =
-    /\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*/g
+  const re = /\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*/g
   let match: RegExpExecArray | null = re.exec(text)
   let index = 0
 

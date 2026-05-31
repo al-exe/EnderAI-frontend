@@ -1,4 +1,4 @@
-import { UsersService, type UserPublic } from "@/client"
+import { type UserPublic, UsersService } from "@/client"
 
 let cachedUser: UserPublic | null = null
 let inflight: Promise<UserPublic> | null = null

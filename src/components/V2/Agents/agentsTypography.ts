@@ -36,7 +36,8 @@ export const AGENT_DESCRIPTION_CLASS = "text-sm leading-5 text-muted-foreground"
 export const AGENT_STAT_LABEL_CLASS =
   "text-xs uppercase tracking-wide text-muted-foreground"
 
-export const AGENT_STAT_VALUE_CLASS = "text-sm font-semibold tabular-nums text-foreground"
+export const AGENT_STAT_VALUE_CLASS =
+  "text-sm font-semibold tabular-nums text-foreground"
 
 export const AGENT_SECTION_TITLE_CLASS = "text-sm font-semibold text-foreground"
 

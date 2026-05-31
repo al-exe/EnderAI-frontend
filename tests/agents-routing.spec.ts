@@ -152,9 +152,9 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
-  await expect(page.getByRole("heading", { name: "Agents", level: 1 })).toHaveCount(
-    0,
-  )
+  await expect(
+    page.getByRole("heading", { name: "Agents", level: 1 }),
+  ).toHaveCount(0)
 })
 
 test("agent detail navigation does not flash no-access or not-found", async ({
@@ -215,7 +215,9 @@ test("agents grid links to specialist detail and session metrics", async ({
 
   await page.goto("/v2/agents")
 
-  await expect(page.getByRole("heading", { name: "Agents", level: 1 })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Agents", level: 1 }),
+  ).toBeVisible()
   await expect(page.getByTestId("agents-grid")).toBeVisible()
   await expect(
     page.getByRole("heading", { name: "Jensen", level: 3 }),
