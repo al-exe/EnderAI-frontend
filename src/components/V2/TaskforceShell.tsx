@@ -6,7 +6,6 @@ import {
   useRouterState,
 } from "@tanstack/react-router"
 import {
-  ArrowLeftRight,
   BookOpen,
   Bot,
   ChevronDown,
@@ -69,11 +68,6 @@ const taskforceItems: TaskforceNavItem[] = [
   { icon: BookOpen, title: "Library", path: "/v2/library" },
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
   { icon: LineChart, title: "Metrics", path: "/v2/metrics" },
-  {
-    icon: ArrowLeftRight,
-    title: "Cross-boundary reuse",
-    path: "/v2/cross-boundary-reuse",
-  },
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
 ]
 
