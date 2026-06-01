@@ -73,6 +73,11 @@ import {
   FolderCreateDialog,
   FolderPickerDropdown,
 } from "@/components/V2/Library/FolderControls"
+import {
+  V2_PAGE_CONTENT_FIXED,
+  V2_PAGE_FRAME,
+  V2_TAB_EYEBROW_CLASS,
+} from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
 import {
   enumDeserializer,
@@ -80,11 +85,6 @@ import {
   usePersistentState,
 } from "@/hooks/usePersistentState"
 import { cn } from "@/lib/utils"
-import {
-  V2_PAGE_CONTENT_FIXED,
-  V2_PAGE_FRAME,
-  V2_TAB_EYEBROW_CLASS,
-} from "@/components/V2/v2PageShell"
 
 export const Route = createFileRoute("/v2/library")({
   component: TaskforceLibrary,
@@ -655,187 +655,187 @@ function TaskforceLibrary() {
     >
       <section className={cn(V2_PAGE_FRAME, "overflow-hidden")}>
         <div className={V2_PAGE_CONTENT_FIXED}>
-        <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 backdrop-blur">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className={V2_TAB_EYEBROW_CLASS}>
-                Library · {totalDocumentCount} documents ·{" "}
-                {teamSharedDocumentCount} shared with team
+          <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 backdrop-blur">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className={V2_TAB_EYEBROW_CLASS}>
+                  Library · {totalDocumentCount} documents ·{" "}
+                  {teamSharedDocumentCount} shared with team
+                </div>
+                <h1 className="mt-1 text-2xl font-semibold">Library</h1>
               </div>
-              <h1 className="mt-1 text-2xl font-semibold">Library</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="w-fit"
+                  onClick={() => setCreateFolderOpen(true)}
+                >
+                  + Folder
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => setCreateDocumentOpen(true)}
+                >
+                  + Document
+                </Button>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="w-fit"
-                onClick={() => setCreateFolderOpen(true)}
+              <div
+                role="tablist"
+                aria-label="Document ownership"
+                className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
               >
-                + Folder
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="w-fit"
-                onClick={() => setCreateDocumentOpen(true)}
-              >
-                + Document
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div
-              role="tablist"
-              aria-label="Document ownership"
-              className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-            >
-              <LibraryViewToggle
-                label="Owned by you"
-                active={ownershipFilter === "owned"}
-                onClick={() => {
-                  setOwnershipFilter("owned")
-                  setSelectedFolderId("all")
-                }}
-              />
-              <LibraryViewToggle
-                label="Shared with you"
-                active={ownershipFilter === "shared"}
-                onClick={() => {
-                  setOwnershipFilter("shared")
-                  setSelectedFolderId("all")
-                }}
-              />
-            </div>
-            <div
-              role="tablist"
-              aria-label="Library view"
-              className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-            >
-              <LibraryViewToggle
-                label="Files"
-                active={libraryView === "files"}
-                onClick={() => setLibraryView("files")}
-              />
-              <LibraryViewToggle
-                label="Folders"
-                active={libraryView === "folders"}
-                onClick={() => setLibraryView("folders")}
-              />
-            </div>
-          </div>
-        </div>
-
-        <FolderCreateDialog
-          open={createFolderOpen}
-          onOpenChange={setCreateFolderOpen}
-          demo={isDemoMode}
-          folders={folders}
-          onCreated={(folder) => setSelectedFolderId(folder.id)}
-        />
-
-        <CreateDocumentDialog
-          open={createDocumentOpen}
-          onOpenChange={setCreateDocumentOpen}
-          folders={folders}
-          defaultFolderId={
-            selectedFolderId !== "all" &&
-            selectedFolderId !== "favorites" &&
-            selectedFolderId !== "unfiled"
-              ? selectedFolderId
-              : null
-          }
-          isCreating={createDocumentMutation.isPending}
-          onSubmit={(values) => createDocumentMutation.mutate(values)}
-        />
-
-        <DeleteDocumentDialog
-          document={deleteDocumentTarget}
-          isDeleting={deleteDocumentMutation.isPending}
-          onCancel={() => setDeleteDocumentTarget(null)}
-          onConfirm={(document) => deleteDocumentMutation.mutate(document.id)}
-        />
-
-        {isLoading && <LibraryLoadingSkeleton view={libraryView} />}
-
-        {isEmpty && (
-          <div className="border bg-card p-6 text-sm text-muted-foreground">
-            No documents yet.
-          </div>
-        )}
-
-        {!isLoading && documents.length > 0 && libraryView === "files" && (
-          <div className="grid min-h-0 flex-1 gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
-            <FolderNav
-              folderTree={folderTree}
-              selectedFolderId={selectedFolderId}
-              setSelectedFolderId={setSelectedFolderId}
-              allCount={documents.length}
-              favoritesCount={favoriteDocuments.length}
-              unfiledCount={folderCounts.unfiled}
-              folderCounts={folderCounts.counts}
-              loading={foldersQuery.isLoading}
-              currentUserId={currentUser.id}
-              demo={isDemoMode}
-              onFolderDeleted={handleFolderDeleted}
-            />
-            <div className="min-h-0 min-w-0 overflow-y-auto pr-1">
-              {isFolderEmpty && (
-                <div className="border bg-card p-6 text-sm text-muted-foreground">
-                  No documents in this folder.
-                </div>
-              )}
-              {!isFolderEmpty && (
-                <InfiniteDocumentGrid
-                  documents={visibleDocuments}
-                  canFavorite={!favoriteMutation.isPending}
-                  onToggleFavorite={toggleFavorite}
+                <LibraryViewToggle
+                  label="Owned by you"
+                  active={ownershipFilter === "owned"}
+                  onClick={() => {
+                    setOwnershipFilter("owned")
+                    setSelectedFolderId("all")
+                  }}
                 />
-              )}
+                <LibraryViewToggle
+                  label="Shared with you"
+                  active={ownershipFilter === "shared"}
+                  onClick={() => {
+                    setOwnershipFilter("shared")
+                    setSelectedFolderId("all")
+                  }}
+                />
+              </div>
+              <div
+                role="tablist"
+                aria-label="Library view"
+                className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+              >
+                <LibraryViewToggle
+                  label="Files"
+                  active={libraryView === "files"}
+                  onClick={() => setLibraryView("files")}
+                />
+                <LibraryViewToggle
+                  label="Folders"
+                  active={libraryView === "folders"}
+                  onClick={() => setLibraryView("folders")}
+                />
+              </div>
             </div>
           </div>
-        )}
 
-        {!isLoading &&
-          (documents.length > 0 || folders.length > 0) &&
-          libraryView === "folders" && (
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-              <FolderDirectory
-                folderTree={folderTree}
-                documentsByFolder={documentsByFolder}
-                openFolderIds={openFolderIds}
-                dragOverFolderId={dragOverFolderId}
-                canMoveItems={canMutateLibrary}
-                canFavorite={!favoriteMutation.isPending}
-                currentUserId={currentUser.id}
-                demo={isDemoMode}
-                onToggleFolder={toggleFolderOpen}
-                onFolderDragStart={(event, folder) => {
-                  event.stopPropagation()
-                  event.dataTransfer.effectAllowed = "move"
-                  event.dataTransfer.setData(
-                    "application/x-v2-folder",
-                    folder.id,
-                  )
-                }}
-                onDocumentDragStart={(event, document) => {
-                  event.dataTransfer.effectAllowed = "move"
-                  event.dataTransfer.setData(
-                    "application/x-v2-document",
-                    document.id,
-                  )
-                }}
-                onDocumentDragEnd={() => setDragOverFolderId(null)}
-                onToggleFavorite={toggleFavorite}
-                onFolderDragOver={handleFolderDragOver}
-                onFolderDrop={handleFolderDrop}
-                onUnfiledDrop={handleUnfiledDrop}
-                onRootFolderDrop={handleRootFolderDrop}
-                onFolderDragLeave={() => setDragOverFolderId(null)}
-                onFolderDeleted={handleFolderDeleted}
-              />
+          <FolderCreateDialog
+            open={createFolderOpen}
+            onOpenChange={setCreateFolderOpen}
+            demo={isDemoMode}
+            folders={folders}
+            onCreated={(folder) => setSelectedFolderId(folder.id)}
+          />
+
+          <CreateDocumentDialog
+            open={createDocumentOpen}
+            onOpenChange={setCreateDocumentOpen}
+            folders={folders}
+            defaultFolderId={
+              selectedFolderId !== "all" &&
+              selectedFolderId !== "favorites" &&
+              selectedFolderId !== "unfiled"
+                ? selectedFolderId
+                : null
+            }
+            isCreating={createDocumentMutation.isPending}
+            onSubmit={(values) => createDocumentMutation.mutate(values)}
+          />
+
+          <DeleteDocumentDialog
+            document={deleteDocumentTarget}
+            isDeleting={deleteDocumentMutation.isPending}
+            onCancel={() => setDeleteDocumentTarget(null)}
+            onConfirm={(document) => deleteDocumentMutation.mutate(document.id)}
+          />
+
+          {isLoading && <LibraryLoadingSkeleton view={libraryView} />}
+
+          {isEmpty && (
+            <div className="border bg-card p-6 text-sm text-muted-foreground">
+              No documents yet.
             </div>
           )}
+
+          {!isLoading && documents.length > 0 && libraryView === "files" && (
+            <div className="grid min-h-0 flex-1 gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
+              <FolderNav
+                folderTree={folderTree}
+                selectedFolderId={selectedFolderId}
+                setSelectedFolderId={setSelectedFolderId}
+                allCount={documents.length}
+                favoritesCount={favoriteDocuments.length}
+                unfiledCount={folderCounts.unfiled}
+                folderCounts={folderCounts.counts}
+                loading={foldersQuery.isLoading}
+                currentUserId={currentUser.id}
+                demo={isDemoMode}
+                onFolderDeleted={handleFolderDeleted}
+              />
+              <div className="min-h-0 min-w-0 overflow-y-auto pr-1">
+                {isFolderEmpty && (
+                  <div className="border bg-card p-6 text-sm text-muted-foreground">
+                    No documents in this folder.
+                  </div>
+                )}
+                {!isFolderEmpty && (
+                  <InfiniteDocumentGrid
+                    documents={visibleDocuments}
+                    canFavorite={!favoriteMutation.isPending}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {!isLoading &&
+            (documents.length > 0 || folders.length > 0) &&
+            libraryView === "folders" && (
+              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <FolderDirectory
+                  folderTree={folderTree}
+                  documentsByFolder={documentsByFolder}
+                  openFolderIds={openFolderIds}
+                  dragOverFolderId={dragOverFolderId}
+                  canMoveItems={canMutateLibrary}
+                  canFavorite={!favoriteMutation.isPending}
+                  currentUserId={currentUser.id}
+                  demo={isDemoMode}
+                  onToggleFolder={toggleFolderOpen}
+                  onFolderDragStart={(event, folder) => {
+                    event.stopPropagation()
+                    event.dataTransfer.effectAllowed = "move"
+                    event.dataTransfer.setData(
+                      "application/x-v2-folder",
+                      folder.id,
+                    )
+                  }}
+                  onDocumentDragStart={(event, document) => {
+                    event.dataTransfer.effectAllowed = "move"
+                    event.dataTransfer.setData(
+                      "application/x-v2-document",
+                      document.id,
+                    )
+                  }}
+                  onDocumentDragEnd={() => setDragOverFolderId(null)}
+                  onToggleFavorite={toggleFavorite}
+                  onFolderDragOver={handleFolderDragOver}
+                  onFolderDrop={handleFolderDrop}
+                  onUnfiledDrop={handleUnfiledDrop}
+                  onRootFolderDrop={handleRootFolderDrop}
+                  onFolderDragLeave={() => setDragOverFolderId(null)}
+                  onFolderDeleted={handleFolderDeleted}
+                />
+              </div>
+            )}
         </div>
       </section>
     </DocumentDeleteContext.Provider>

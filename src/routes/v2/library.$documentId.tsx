@@ -306,7 +306,9 @@ function MarkdownBlocks({
                 variant === "report" &&
                   level === 2 &&
                   "border-t border-border pt-5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground",
-                variant === "report" && level === 3 && "text-base font-semibold",
+                variant === "report" &&
+                  level === 3 &&
+                  "text-base font-semibold",
               )}
             >
               {renderInlineMarkdown(heading[2], `heading-${index}`)}

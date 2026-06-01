@@ -16,10 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { LoadingButton } from "@/components/ui/loading-button"
-import {
-  membershipPlans,
-  type MembershipTier,
-} from "@/data/membershipPlans"
+import { type MembershipTier, membershipPlans } from "@/data/membershipPlans"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"

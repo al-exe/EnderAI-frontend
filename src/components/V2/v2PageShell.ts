@@ -1,8 +1,7 @@
 import { cn } from "@/lib/utils"
 
 /** Scrollable v2 page frame inside TaskforceShell (no extra inset). */
-export const V2_PAGE_FRAME =
-  "flex min-h-0 flex-1 flex-col overflow-y-auto"
+export const V2_PAGE_FRAME = "flex min-h-0 flex-1 flex-col overflow-y-auto"
 
 /** Shared padding for v2 tab bodies (Agents default). */
 export const V2_PAGE_PADDING = "p-6"
