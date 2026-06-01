@@ -25,7 +25,6 @@ import { Route as V2PricingRouteImport } from './routes/v2/pricing'
 import { Route as V2MetricsRouteImport } from './routes/v2/metrics'
 import { Route as V2LibraryRouteImport } from './routes/v2/library'
 import { Route as V2HomeRouteImport } from './routes/v2/home'
-import { Route as V2CrossBoundaryReuseRouteImport } from './routes/v2/cross-boundary-reuse'
 import { Route as V2AgentsRouteImport } from './routes/v2/agents'
 import { Route as V2AdminRouteImport } from './routes/v2/admin'
 import { Route as LayoutTopicsRouteImport } from './routes/_layout/topics'
@@ -117,11 +116,6 @@ const V2HomeRoute = V2HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => V2Route,
 } as any)
-const V2CrossBoundaryReuseRoute = V2CrossBoundaryReuseRouteImport.update({
-  id: '/cross-boundary-reuse',
-  path: '/cross-boundary-reuse',
-  getParentRoute: () => V2Route,
-} as any)
 const V2AgentsRoute = V2AgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
@@ -195,7 +189,6 @@ export interface FileRoutesByFullPath {
   '/topics': typeof LayoutTopicsRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
-  '/v2/cross-boundary-reuse': typeof V2CrossBoundaryReuseRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
   '/v2/metrics': typeof V2MetricsRouteWithChildren
@@ -223,7 +216,6 @@ export interface FileRoutesByTo {
   '/topics': typeof LayoutTopicsRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
-  '/v2/cross-boundary-reuse': typeof V2CrossBoundaryReuseRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
   '/v2/metrics': typeof V2MetricsRouteWithChildren
@@ -254,7 +246,6 @@ export interface FileRoutesById {
   '/_layout/topics': typeof LayoutTopicsRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
-  '/v2/cross-boundary-reuse': typeof V2CrossBoundaryReuseRoute
   '/v2/home': typeof V2HomeRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
   '/v2/metrics': typeof V2MetricsRouteWithChildren
@@ -285,7 +276,6 @@ export interface FileRouteTypes {
     | '/topics'
     | '/v2/admin'
     | '/v2/agents'
-    | '/v2/cross-boundary-reuse'
     | '/v2/home'
     | '/v2/library'
     | '/v2/metrics'
@@ -313,7 +303,6 @@ export interface FileRouteTypes {
     | '/topics'
     | '/v2/admin'
     | '/v2/agents'
-    | '/v2/cross-boundary-reuse'
     | '/v2/home'
     | '/v2/library'
     | '/v2/metrics'
@@ -343,7 +332,6 @@ export interface FileRouteTypes {
     | '/_layout/topics'
     | '/v2/admin'
     | '/v2/agents'
-    | '/v2/cross-boundary-reuse'
     | '/v2/home'
     | '/v2/library'
     | '/v2/metrics'
@@ -480,13 +468,6 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/v2/home'
       preLoaderRoute: typeof V2HomeRouteImport
-      parentRoute: typeof V2Route
-    }
-    '/v2/cross-boundary-reuse': {
-      id: '/v2/cross-boundary-reuse'
-      path: '/cross-boundary-reuse'
-      fullPath: '/v2/cross-boundary-reuse'
-      preLoaderRoute: typeof V2CrossBoundaryReuseRouteImport
       parentRoute: typeof V2Route
     }
     '/v2/agents': {
@@ -629,7 +610,6 @@ const V2MetricsRouteWithChildren = V2MetricsRoute._addFileChildren(
 interface V2RouteChildren {
   V2AdminRoute: typeof V2AdminRoute
   V2AgentsRoute: typeof V2AgentsRouteWithChildren
-  V2CrossBoundaryReuseRoute: typeof V2CrossBoundaryReuseRoute
   V2HomeRoute: typeof V2HomeRoute
   V2LibraryRoute: typeof V2LibraryRouteWithChildren
   V2MetricsRoute: typeof V2MetricsRouteWithChildren
@@ -642,7 +622,6 @@ interface V2RouteChildren {
 const V2RouteChildren: V2RouteChildren = {
   V2AdminRoute: V2AdminRoute,
   V2AgentsRoute: V2AgentsRouteWithChildren,
-  V2CrossBoundaryReuseRoute: V2CrossBoundaryReuseRoute,
   V2HomeRoute: V2HomeRoute,
   V2LibraryRoute: V2LibraryRouteWithChildren,
   V2MetricsRoute: V2MetricsRouteWithChildren,
