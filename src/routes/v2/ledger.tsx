@@ -14,7 +14,9 @@ const searchSchema = z.object({
   client: z.string().optional(),
   cross_boundary: boolSearchParam,
   q: z.string().optional(),
+  session_id: z.string().optional(),
   specialist: z.string().optional(),
+  sort: z.enum(["newest", "oldest"]).optional(),
 })
 
 export const Route = createFileRoute("/v2/ledger")({
