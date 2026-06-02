@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { ArrowLeftRight, Loader2, Search } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { readLedger } from "@/api/v2Ledger"
 import { useDemoMode } from "@/components/demo-mode-provider"
@@ -34,24 +34,67 @@ const CLIENT_LABELS: Record<string, string> = {
   cursor: "Cursor",
 }
 
+type LedgerSearchFilters = {
+  actor_id?: string
+  client?: string
+  cross_boundary?: boolean
+  q?: string
+  specialist?: string
+}
+
 function clientLabel(value: string | null): string {
   if (!value) return "—"
   return CLIENT_LABELS[value] ?? value
 }
 
-export function LedgerPage() {
+function cleanLedgerSearch(filters: LedgerSearchFilters): LedgerSearchFilters {
+  return {
+    actor_id: filters.actor_id || undefined,
+    client: filters.client || undefined,
+    cross_boundary: filters.cross_boundary || undefined,
+    q: filters.q || undefined,
+    specialist: filters.specialist || undefined,
+  }
+}
+
+export function LedgerPage({
+  searchFilters,
+}: {
+  searchFilters: LedgerSearchFilters
+}) {
   const { isDemoMode } = useDemoMode()
-  const [search, setSearch] = useState("")
-  const [query, setQuery] = useState("")
-  const [crossOnly, setCrossOnly] = useState(false)
+  const navigate = useNavigate({ from: "/v2/ledger" })
+  const query = searchFilters.q?.trim() ?? ""
+  const crossOnly = searchFilters.cross_boundary === true
+  const specialist = searchFilters.specialist?.trim() || undefined
+  const client = searchFilters.client?.trim() || undefined
+  const actorId = searchFilters.actor_id?.trim() || undefined
+  const [search, setSearch] = useState(query)
+
+  useEffect(() => {
+    setSearch(query)
+  }, [query])
+
+  const setLedgerSearch = (next: Partial<LedgerSearchFilters>) => {
+    void navigate({
+      to: "/v2/ledger",
+      search: cleanLedgerSearch({ ...searchFilters, ...next }),
+    })
+  }
 
   const ledgerQuery = useQuery({
-    queryKey: ["v2-ledger", { demo: isDemoMode, q: query, crossOnly }],
+    queryKey: [
+      "v2-ledger",
+      { actorId, client, crossOnly, demo: isDemoMode, q: query, specialist },
+    ],
     queryFn: () =>
       readLedger({
+        actorId,
+        client,
         demo: isDemoMode,
         q: query || undefined,
         crossBoundary: crossOnly || undefined,
+        specialist,
       }),
   })
 
@@ -60,8 +103,12 @@ export function LedgerPage() {
 
   const onSearchSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    setQuery(search.trim())
+    setLedgerSearch({ q: search.trim() || undefined })
   }
+
+  const hasActiveFilters = Boolean(
+    actorId || client || crossOnly || query || specialist,
+  )
 
   return (
     <section
@@ -94,12 +141,39 @@ export function LedgerPage() {
             type="button"
             variant={crossOnly ? "default" : "outline"}
             size="sm"
-            onClick={() => setCrossOnly((value) => !value)}
+            onClick={() =>
+              setLedgerSearch({ cross_boundary: crossOnly ? undefined : true })
+            }
             aria-pressed={crossOnly}
           >
             <ArrowLeftRight className="size-4" />
             Cross-boundary only
           </Button>
+          {specialist ? (
+            <Badge variant="outline">Profile · {specialist}</Badge>
+          ) : null}
+          {client ? (
+            <Badge variant="outline">Tool · {clientLabel(client)}</Badge>
+          ) : null}
+          {query ? <Badge variant="outline">Search · {query}</Badge> : null}
+          {hasActiveFilters ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                setLedgerSearch({
+                  actor_id: undefined,
+                  client: undefined,
+                  cross_boundary: undefined,
+                  q: undefined,
+                  specialist: undefined,
+                })
+              }
+            >
+              Clear
+            </Button>
+          ) : null}
         </div>
 
         {ledgerQuery.isError ? (

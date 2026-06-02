@@ -23,6 +23,7 @@ const agents = [
       "Stripe webhooks, subscriptions, and double-charge prevention.",
     domain_tags: ["Stripe", "Billing", "Webhooks", "Reliability"],
     status: "active",
+    created_from: "earned",
     linked_docs_count: 3,
     invocations_count: 12,
     tokens_saved: 42000,
@@ -37,6 +38,7 @@ const agents = [
       "Indexer drift, pgvector retrieval, and citation anchors.",
     domain_tags: ["Search", "Retrieval", "Citations"],
     status: "active",
+    created_from: "seeded",
     linked_docs_count: 2,
     invocations_count: 4,
     tokens_saved: 12000,
@@ -49,6 +51,7 @@ const jensenDetail = {
   slug: "jensen",
   name: "Jensen",
   role: "Billing Reliability Specialist",
+  created_from: "earned",
   description:
     "Helps debug Stripe billing, subscription upgrades, webhook retries, idempotency, duplicate invoices, and customer double-charge incidents.",
   domain_tags: ["Stripe", "Billing", "Webhooks", "Reliability"],
@@ -152,6 +155,8 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
+  await expect(page.getByText("Earned from")).toBeVisible()
+  await expect(page.getByText("Earned profile")).toBeVisible()
   await expect(
     page.getByRole("heading", { name: "Agents", level: 1 }),
   ).toHaveCount(0)
@@ -232,6 +237,10 @@ test("agents grid links to specialist detail and session metrics", async ({
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
+  await expect(page.getByRole("link", { name: /^Sessions$/ })).toHaveAttribute(
+    "href",
+    "/v2/ledger?specialist=jensen",
+  )
 
   const linkedKnowledge = page.getByRole("link", {
     name: /Stripe webhook idempotency strategy/,

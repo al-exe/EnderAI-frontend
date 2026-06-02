@@ -11,6 +11,7 @@ export interface AgentSpecialistSummary {
   short_description: string
   domain_tags: string[]
   status: AgentSpecialistStatus
+  created_from: string
   linked_docs_count: number
   invocations_count: number
   tokens_saved: number
@@ -55,6 +56,7 @@ export interface AgentSpecialistDetail {
   name: string
   role: string
   description: string
+  created_from: string
   domain_tags: string[]
   routing_triggers: string[]
   negative_triggers: string[]

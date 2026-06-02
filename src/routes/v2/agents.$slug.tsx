@@ -172,12 +172,28 @@ function Instructions({ instructions }: { instructions: string[] }) {
 }
 
 function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
+  const originLabel =
+    agent.created_from === "earned" ? "Earned profile" : "Seeded profile"
+
   return (
     <section className="pt-5">
       <SectionHeader
-        title="Linked knowledge"
+        title="Earned from"
         meta={`${agent.linked_knowledge.length} documents`}
       />
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="inline-flex h-7 items-center border border-black/10 px-2.5 font-mono text-[0.66rem] uppercase tracking-[0.12em] text-muted-foreground dark:border-white/12">
+          {originLabel}
+        </span>
+        <Link
+          to="/v2/ledger"
+          search={{ specialist: agent.slug }}
+          className="inline-flex h-7 items-center gap-1.5 border border-black/10 px-2.5 text-xs font-medium text-foreground hover:bg-zinc-50 dark:border-white/12 dark:hover:bg-white/5"
+        >
+          Sessions
+          <ArrowUpRight className="size-3.5" />
+        </Link>
+      </div>
       <div className="mt-2 overflow-x-auto">
         <table className="w-full min-w-[42rem] border-collapse text-sm">
           <thead>
@@ -389,6 +405,9 @@ function AgentDetailPage() {
             <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-emerald-600 dark:border-white/12 dark:text-emerald-400">
               <span className="size-1.5 rounded-full bg-emerald-500" />
               Active
+            </span>
+            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground dark:border-white/12">
+              {agent.created_from === "earned" ? "Earned" : "Seeded"}
             </span>
             <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground dark:border-white/12">
               <Pencil className="size-3.5" aria-hidden />

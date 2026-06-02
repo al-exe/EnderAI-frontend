@@ -79,3 +79,21 @@ export function readLedger(
     },
   })
 }
+
+export function readDocumentLedgerSessions(
+  documentId: string,
+  args: Pick<ReadLedgerArgs, "demo" | "limit" | "offset"> = {},
+): CancelablePromise<LedgerResponse> {
+  return request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/v2/taskforce/documents/{document_id}/sessions",
+    path: {
+      document_id: documentId,
+    },
+    query: {
+      demo: args.demo || undefined,
+      limit: args.limit ?? undefined,
+      offset: args.offset ?? undefined,
+    },
+  })
+}

@@ -114,6 +114,22 @@ const documents = [
 ]
 
 export async function mockV2Documents(page: Page) {
+  await page.route(
+    "**/api/v1/v2/taskforce/documents/*/sessions**",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          scope: "organization",
+          organization_id: null,
+          total: 0,
+          limit: 6,
+          offset: 0,
+          rows: [],
+        },
+      })
+    },
+  )
+
   await page.route("**/api/v1/v2/documents/**", async (route) => {
     const url = new URL(route.request().url())
     const pathname = url.pathname
