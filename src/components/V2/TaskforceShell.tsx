@@ -6,6 +6,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router"
 import {
+  ArrowLeftRight,
   BookOpen,
   Bot,
   ChevronDown,
@@ -63,10 +64,14 @@ type TaskforceNavItem = {
   path: string
 }
 
+// Ordered by the pipeline's distillation altitude (TF-206): most-distilled
+// first (Profiles ← Library ← Ledger), then Metrics as the rollup. Search stays
+// on top as the entry point; Upgrade stays at the bottom.
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Search, title: "Search", path: "/v2/search" },
-  { icon: BookOpen, title: "Library", path: "/v2/library" },
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
+  { icon: BookOpen, title: "Library", path: "/v2/library" },
+  { icon: ArrowLeftRight, title: "Ledger", path: "/v2/ledger" },
   { icon: LineChart, title: "Metrics", path: "/v2/metrics" },
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
 ]
