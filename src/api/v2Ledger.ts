@@ -17,6 +17,30 @@ export interface LedgerDocRef {
   document_id: string
   title: string
   href: string
+  state?: "fresh" | "stale" | "new" | "unknown"
+}
+
+export type LedgerTranscriptEventKind =
+  | "prompt"
+  | "reply"
+  | "command"
+  | "edit"
+  | "note"
+
+export interface LedgerTranscriptEvent {
+  kind: LedgerTranscriptEventKind
+  occurred_at: string | null
+  role: string | null
+  who: string | null
+  text: string | null
+  cmd: string | null
+  exit_code: number | null
+  output: string | null
+  file: string | null
+  added: number | null
+  removed: number | null
+  note: string | null
+  repo: string | null
 }
 
 export interface LedgerSessionRow {
@@ -35,6 +59,34 @@ export interface LedgerSessionRow {
   cross_boundary: boolean
   occurred_at_first: string
   occurred_at_last: string
+  title: string | null
+  short_session_id: string | null
+  actor_handle: string | null
+  harness_label: string | null
+  harness_version: string | null
+  model_id: string | null
+  repo: string | null
+  branch: string | null
+  cwd: string | null
+  started_at: string | null
+  ended_at: string | null
+  duration_ms: number
+  imported_at: string | null
+  message_count: number
+  command_count: number
+  edit_count: number
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  cache_write_tokens: number
+  source: string | null
+  transcript_available: boolean
+}
+
+export interface LedgerSessionDetail extends LedgerSessionRow {
+  transcript_events: LedgerTranscriptEvent[]
+  raw_transcript_available: boolean
+  source_metadata: Record<string, unknown>
 }
 
 export interface LedgerResponse {
@@ -55,6 +107,7 @@ export interface ReadLedgerArgs {
   since?: string
   until?: string
   q?: string
+  sort?: "newest" | "oldest"
   limit?: number
   offset?: number
 }
@@ -74,8 +127,25 @@ export function readLedger(
       since: args.since || undefined,
       until: args.until || undefined,
       q: args.q || undefined,
+      sort: args.sort || undefined,
       limit: args.limit ?? undefined,
       offset: args.offset ?? undefined,
+    },
+  })
+}
+
+export function readLedgerSessionDetail(
+  sessionId: string,
+  args: Pick<ReadLedgerArgs, "demo"> = {},
+): CancelablePromise<LedgerSessionDetail> {
+  return request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/v2/taskforce/ledger/{session_id}",
+    path: {
+      session_id: sessionId,
+    },
+    query: {
+      demo: args.demo || undefined,
     },
   })
 }
