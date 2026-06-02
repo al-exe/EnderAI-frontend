@@ -61,6 +61,22 @@ async function mockTaskforceAuth(
 
     await route.fulfill({ json: { data, count: data.length } })
   })
+
+  await page.route(
+    "**/api/v1/v2/taskforce/documents/*/sessions**",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          scope: "organization",
+          organization_id: null,
+          total: 0,
+          limit: 6,
+          offset: 0,
+          rows: [],
+        },
+      })
+    },
+  )
 }
 
 async function dragSidebarRail(page: Page, deltaX: number) {

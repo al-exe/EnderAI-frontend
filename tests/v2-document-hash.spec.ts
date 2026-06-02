@@ -98,6 +98,8 @@ test("V2 document viewer leaves summary mode unchanged without URL hash", async 
     "data-state",
     "inactive",
   )
+  await expect(page.getByText("Sessions / Reused by")).toBeVisible()
+  await expect(page.getByText("No sessions recorded yet")).toBeVisible()
   await expect
     .poll(() =>
       page.evaluate(

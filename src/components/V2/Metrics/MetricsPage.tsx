@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+import { ArrowLeftRight } from "lucide-react"
 import { useMemo, useState } from "react"
 import {
   type MetricDefinitionPublic,
@@ -47,6 +48,8 @@ type Props = {
 
 const PRIMARY_METRICS = ["tokens_saved", "usd_saved", "reuse_rate"]
 const SECONDARY_METRICS = ["tokens_consumed"]
+const CROSS_BOUNDARY_RATE_METRIC = "cross_boundary_reuse_rate"
+const CROSS_BOUNDARY_SAVINGS_METRIC = "cross_boundary_tokens_saved"
 
 const SAVINGS_V2_DETAIL_METRICS = [
   "avoided_rediscovery",
@@ -228,6 +231,97 @@ function formatPreciseSessionUsd(value: string | number | null | undefined) {
   return formatMetricValue(value, "usd")
 }
 
+function CrossBoundaryReusePanel({
+  rateDefinition,
+  rateValue,
+  savingsDefinition,
+  savingsValue,
+  experimental = false,
+}: {
+  rateDefinition: MetricDefinitionPublic | undefined
+  rateValue: MetricValuePublic | undefined
+  savingsDefinition: MetricDefinitionPublic | undefined
+  savingsValue: MetricValuePublic | undefined
+  experimental?: boolean
+}) {
+  const rows = savingsValue?.breakdown_by_source ?? []
+  const totalTokens = rows.reduce((sum, row) => sum + row.tokens, 0)
+  const rateLabel = formatMetricValue(rateValue?.total, "ratio")
+  const savedLabel = formatMetricValue(savingsValue?.total, "compact-int")
+
+  return (
+    <Link
+      to="/v2/ledger"
+      search={{ cross_boundary: true }}
+      data-testid="cross-boundary-metric"
+      className={cn(
+        "group block border border-border bg-background p-4 text-foreground transition-colors hover:bg-muted/40",
+        experimental ? "" : "rounded-lg shadow-sm",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium text-muted-foreground">
+            {rateDefinition?.display_name ?? "Boundary-Crossing Reuse"}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {savingsDefinition?.description ??
+              "Tokens saved when work crossed a person or tool boundary."}
+          </p>
+        </div>
+        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground group-hover:text-foreground">
+          <ArrowLeftRight className="size-4" />
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div>
+          <div className="text-3xl font-semibold tabular-nums">{rateLabel}</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            of document consultations
+          </div>
+        </div>
+        <div>
+          <div className="text-3xl font-semibold tabular-nums">
+            {savedLabel}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {savingsDefinition?.display_name ?? "Boundary savings"}
+          </div>
+        </div>
+      </div>
+
+      {rows.length > 0 ? (
+        <div className="mt-4 space-y-2">
+          {rows.map((row) => {
+            const share = totalTokens > 0 ? row.tokens / totalTokens : 0
+            return (
+              <div key={row.key} className="space-y-1">
+                <div className="flex items-baseline justify-between gap-3 text-xs">
+                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className="tabular-nums">
+                    {formatMetricValue(row.tokens, "compact-int")}
+                  </span>
+                </div>
+                <div className="h-1 bg-muted">
+                  <div
+                    className="h-1 bg-primary"
+                    style={{ width: `${Math.round(share * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">
+          No cross-boundary reuse yet.
+        </p>
+      )}
+    </Link>
+  )
+}
+
 // Org-scope toggle is intentionally deferred. The backend supports
 // scope=organization on /v2/metrics (admin-gated), but the generated
 // OpenAPI client doesn't yet expose organization_id / organization_role
@@ -304,6 +398,8 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
   }
   const tokensSaved = metrics.tokens_saved
   const tokensConsumed = metrics.tokens_consumed
+  const crossBoundaryRate = metrics[CROSS_BOUNDARY_RATE_METRIC]
+  const crossBoundarySavings = metrics[CROSS_BOUNDARY_SAVINGS_METRIC]
   const usdOffset = toMetricNumber(metrics.usd_saved?.total)
   const usdSpent = toMetricNumber(metrics.usd_consumed?.total)
   const usdNetSaved: MetricValuePublic = {
@@ -404,6 +500,15 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
             },
           )}
         </section>
+
+        {!scopedSessionId && (
+          <CrossBoundaryReusePanel
+            rateDefinition={definitionsByName[CROSS_BOUNDARY_RATE_METRIC]}
+            rateValue={crossBoundaryRate}
+            savingsDefinition={definitionsByName[CROSS_BOUNDARY_SAVINGS_METRIC]}
+            savingsValue={crossBoundarySavings}
+          />
+        )}
 
         {scopedSessionId && (
           <SessionLogTable
@@ -528,6 +633,8 @@ function ExperimentalMetricsPage({
   const savedUsd = metrics.usd_saved?.total ?? 0
   const consumedTokens = tokensConsumed?.total ?? 0
   const reuseRate = metrics.reuse_rate?.total ?? 0
+  const crossBoundaryRate = metrics[CROSS_BOUNDARY_RATE_METRIC]
+  const crossBoundarySavings = metrics[CROSS_BOUNDARY_SAVINGS_METRIC]
   const savingsRatio =
     toMetricNumber(consumedTokens) > 0
       ? toMetricNumber(savedTokens) / toMetricNumber(consumedTokens)
@@ -616,6 +723,14 @@ function ExperimentalMetricsPage({
           spend.
         </p>
       </section>
+
+      <CrossBoundaryReusePanel
+        experimental
+        rateDefinition={definitionsByName[CROSS_BOUNDARY_RATE_METRIC]}
+        rateValue={crossBoundaryRate}
+        savingsDefinition={definitionsByName[CROSS_BOUNDARY_SAVINGS_METRIC]}
+        savingsValue={crossBoundarySavings}
+      />
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
         <div className="min-w-0">

@@ -2,7 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
   ArrowLeft,
+  ArrowLeftRight,
   Bold,
+  Clock,
+  ExternalLink,
   Eye,
   Folder,
   Heading1,
@@ -47,6 +50,10 @@ import {
   type V2DocumentSharePublic,
   type V2DocumentUpdate,
 } from "@/api/v2Documents"
+import {
+  type LedgerSessionRow,
+  readDocumentLedgerSessions,
+} from "@/api/v2Ledger"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -57,6 +64,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import {
+  formatCompactNumber,
+  formatRelativeTime,
+} from "@/components/V2/Agents/formatters"
 import {
   FolderCreateDialog,
   FolderPickerDropdown,
@@ -142,6 +153,27 @@ function formatDateOnly(value: string | null): string {
     dateStyle: "medium",
     timeZone: "UTC",
   }).format(new Date(value))
+}
+
+const DOCUMENT_CLIENT_LABELS: Record<string, string> = {
+  "claude-code": "Claude Code",
+  codex: "Codex",
+  cursor: "Cursor",
+}
+
+function documentClientLabel(value: string | null): string {
+  if (!value) return "Unknown tool"
+  return DOCUMENT_CLIENT_LABELS[value] ?? value
+}
+
+function documentSessionAction(row: LedgerSessionRow): string {
+  if (row.kinds.some((kind) => kind === "document.created")) {
+    return "Produced by"
+  }
+  if (row.kinds.some((kind) => kind === "document.consulted")) {
+    return "Reused by"
+  }
+  return "Touched by"
 }
 
 function shortAnchorId(): string {
@@ -517,6 +549,15 @@ function TaskforceDocumentDetail() {
   })
 
   const document = documentQuery.data
+  const documentSessionsQuery = useQuery({
+    queryKey: ["v2-document-sessions", documentId, { demo: isDemoMode }],
+    queryFn: () =>
+      readDocumentLedgerSessions(documentId, {
+        demo: isDemoMode,
+        limit: 6,
+      }),
+    enabled: Boolean(document),
+  })
   const isOwner = Boolean(document && user?.id === document.owner_id)
   const canEditDocument = Boolean(document && document.user_access !== "viewer")
   const canManageDocument = isOwner
@@ -1019,6 +1060,13 @@ function TaskforceDocumentDetail() {
           <AnchorHelper summaryPick={summaryPick} detailsPick={detailsPick} />
         )}
 
+        <DocumentProvenanceStrip
+          rows={documentSessionsQuery.data?.rows ?? []}
+          total={documentSessionsQuery.data?.total ?? 0}
+          isLoading={documentSessionsQuery.isLoading}
+          isError={documentSessionsQuery.isError}
+        />
+
         <div
           className={cn(
             "gap-6 pt-6",
@@ -1058,6 +1106,89 @@ function TaskforceDocumentDetail() {
           )}
         </div>
       </article>
+    </section>
+  )
+}
+
+function DocumentProvenanceStrip({
+  rows,
+  total,
+  isLoading,
+  isError,
+}: {
+  rows: LedgerSessionRow[]
+  total: number
+  isLoading: boolean
+  isError: boolean
+}) {
+  return (
+    <section className="border-b border-border py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="font-mono text-[0.66rem] uppercase tracking-[0.14em] text-muted-foreground">
+            Sessions / Reused by
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {isLoading
+              ? "Loading session provenance..."
+              : isError
+                ? "Session provenance unavailable."
+                : total > 0
+                  ? `${total} session${total === 1 ? "" : "s"} found`
+                  : "No sessions recorded yet"}
+          </div>
+        </div>
+        <Link
+          to="/v2/ledger"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Open ledger
+          <ExternalLink className="size-3.5" />
+        </Link>
+      </div>
+
+      {rows.length > 0 ? (
+        <div className="mt-3 grid gap-2 lg:grid-cols-3">
+          {rows.slice(0, 3).map((row) => (
+            <Link
+              key={row.session_id}
+              to="/v2/metrics"
+              search={{ session_id: row.session_id }}
+              className="group min-w-0 border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/40"
+            >
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <span className="truncate font-medium">
+                  {documentSessionAction(row)} {row.actor_name}
+                </span>
+                {row.cross_boundary ? (
+                  <Badge
+                    variant="secondary"
+                    className="shrink-0 gap-1 normal-case"
+                    title="Crossed a person or tool boundary"
+                  >
+                    <ArrowLeftRight className="size-3" />
+                    cross
+                  </Badge>
+                ) : null}
+              </div>
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Clock className="size-3" />
+                <span>{documentClientLabel(row.client)}</span>
+                <span>·</span>
+                <span>{formatRelativeTime(row.occurred_at_last)}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+                <span className="truncate text-muted-foreground">
+                  {row.specialist_name ?? row.specialist_slug ?? "No profile"}
+                </span>
+                <span className="shrink-0 tabular-nums text-foreground">
+                  {formatCompactNumber(row.net_saved_tokens)} tok
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : null}
     </section>
   )
 }

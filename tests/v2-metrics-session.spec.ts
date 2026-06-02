@@ -51,6 +51,29 @@ function metricValue(total: string) {
   }
 }
 
+function crossBoundarySavingsValue() {
+  return {
+    total: "750",
+    delta_vs_prev_window: null,
+    series: [],
+    breakdown_by_source: [
+      {
+        key: "cross_boundary",
+        label: "Cross-boundary",
+        tokens: 750,
+        usd: "0.08",
+      },
+      {
+        key: "same_boundary",
+        label: "Same owner/tool",
+        tokens: 250,
+        usd: "0.03",
+      },
+    ],
+    top_models: null,
+  }
+}
+
 async function mockMetricsPage(
   page: Page,
   options: { experimental?: boolean } = {},
@@ -109,6 +132,18 @@ async function mockMetricsPage(
             "count",
             "count",
           ),
+          metricDefinition(
+            "cross_boundary_reuse_rate",
+            "Boundary-Crossing Reuse",
+            "ratio",
+            "ratio",
+          ),
+          metricDefinition(
+            "cross_boundary_tokens_saved",
+            "Boundary-Crossing Savings",
+            "compact-int",
+            "tokens",
+          ),
         ],
       },
     })
@@ -129,7 +164,22 @@ async function mockMetricsPage(
           tokens_consumed: metricValue("2000"),
           usd_consumed: metricValue("0.25"),
           documents_touched: metricValue("4"),
+          cross_boundary_reuse_rate: metricValue("0.25"),
+          cross_boundary_tokens_saved: crossBoundarySavingsValue(),
         },
+      },
+    })
+  })
+
+  await page.route("**/api/v1/v2/taskforce/ledger?*", async (route) => {
+    await route.fulfill({
+      json: {
+        scope: "organization",
+        organization_id: "org-1",
+        total: 0,
+        limit: 10,
+        offset: 0,
+        rows: [],
       },
     })
   })
@@ -273,6 +323,11 @@ test("metrics page keeps aggregate dashboard without session_id", async ({
   await expect(page.getByText("Reuse Rate", { exact: true })).toBeVisible()
   await expect(page.getByText("1K", { exact: true }).first()).toBeVisible()
   await expect(page.getByText("$1.23", { exact: true }).first()).toBeVisible()
+  await expect(page.getByTestId("cross-boundary-metric")).toContainText(
+    "Boundary-Crossing Reuse",
+  )
+  await page.getByTestId("cross-boundary-metric").click()
+  await expect(page).toHaveURL(/\/v2\/ledger\?cross_boundary=true$/)
   expect(sessionSavingsRequests).toBe(0)
 })
 
@@ -296,6 +351,9 @@ test("experimental mode shows expressive aggregate metrics", async ({
     page.getByRole("heading", { name: /you saved 1k tokens this week/i }),
   ).toBeVisible()
   await expect(page.getByText("Saved / used")).toBeVisible()
+  await expect(page.getByTestId("cross-boundary-metric")).toContainText(
+    "Boundary-Crossing Reuse",
+  )
   await expect(page.getByText("Top models by tokens used")).toBeVisible()
   await expect(page.getByText("Documents Touched")).toBeVisible()
   await expect(page.getByTestId("metrics-session-filter-banner")).toHaveCount(0)
