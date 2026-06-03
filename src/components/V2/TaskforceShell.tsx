@@ -76,6 +76,8 @@ const taskforceItems: TaskforceNavItem[] = [
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
 ]
 
+const SIDEBAR_TAB_LABEL_CLASS = "text-[calc(18px*0.85)]"
+
 const TASKFORCE_DISCORD_URL = ""
 const EXTRAS_DRAWER_COLLAPSED_STORAGE_KEY = "taskforce.sidebar.extras.collapsed"
 
@@ -158,7 +160,7 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
             <SidebarMenuButton tooltip={item.title} isActive={isActive} asChild>
               <RouterLink to={item.path} onClick={handleMenuClick}>
                 <item.icon className="size-[18px]" />
-                <span>{item.title}</span>
+                <span className={SIDEBAR_TAB_LABEL_CLASS}>{item.title}</span>
               </RouterLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
