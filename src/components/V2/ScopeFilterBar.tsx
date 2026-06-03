@@ -28,7 +28,7 @@ export function ScopeFilterBar<TKey extends string>({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-stretch border-y border-border font-mono text-[10px] uppercase tracking-[0.1em]",
+        "flex flex-wrap items-stretch border-y border-border font-mono text-[11px] uppercase tracking-[0.1em]",
         className,
       )}
     >
@@ -47,7 +47,7 @@ export function ScopeFilterBar<TKey extends string>({
           >
             {item.label}
             {item.count !== undefined && (
-              <span className="text-muted-foreground/60">{item.count}</span>
+              <span className="text-muted-foreground/80">{item.count}</span>
             )}
           </button>
         )

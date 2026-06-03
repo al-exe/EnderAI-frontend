@@ -47,7 +47,7 @@ function AgentStats({ stats }: { stats: Stat[] }) {
           >
             {stat.value}
           </div>
-          <div className="mt-[3px] font-mono text-[8.5px] uppercase tracking-[0.12em] text-muted-foreground/70">
+          <div className="mt-[3px] font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted-foreground/90">
             {stat.label}
           </div>
         </div>
@@ -84,21 +84,21 @@ export function AgentProfileCard({ agent }: { agent: AgentSpecialistSummary }) {
           <div className="truncate text-sm font-semibold tracking-[-0.01em]">
             {agent.name}
           </div>
-          <div className="mt-[3px] font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">
+          <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/90">
             {agent.role}
           </div>
         </div>
       </div>
 
       {agent.short_description && (
-        <p className="mt-3 line-clamp-2 text-[11px] leading-[1.45] text-muted-foreground">
+        <p className="mt-3 line-clamp-2 text-[12px] leading-[1.45] text-muted-foreground">
           {agent.short_description}
         </p>
       )}
 
       <AgentStats stats={stats} />
 
-      <div className="-mx-4 flex items-center justify-between gap-2 border-t border-border/60 px-4 py-[9px] font-mono text-[9.5px] tracking-[0.03em] text-muted-foreground/70">
+      <div className="-mx-4 flex items-center justify-between gap-2 border-t border-border/60 px-4 py-[9px] font-mono text-[10.5px] tracking-[0.03em] text-muted-foreground/90">
         <div className="flex items-center gap-1.5 whitespace-nowrap">
           <span
             className={cn(
