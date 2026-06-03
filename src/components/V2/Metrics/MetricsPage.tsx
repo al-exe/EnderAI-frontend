@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_CONTENT,
   V2_PAGE_FRAME,
@@ -40,6 +41,12 @@ import { MetricBreakdown } from "./MetricBreakdown"
 import { MetricCard } from "./MetricCard"
 import { MetricsTimeRange } from "./MetricsTimeRange"
 import { MetricTrendChart } from "./MetricTrendChart"
+
+const METRICS_WINDOWS: { key: MetricsWindow; label: string }[] = [
+  { key: "7d", label: "7 days" },
+  { key: "30d", label: "30 days" },
+  { key: "all", label: "All time" },
+]
 
 type Props = {
   currentUser: UserPublic
@@ -443,14 +450,14 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
   return (
     <section className={V2_PAGE_FRAME}>
       <div className={V2_PAGE_CONTENT}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">Metrics</h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <MetricsTimeRange value={window} onChange={setWindow} />
-          </div>
+        <div>
+          <h1 className="text-2xl font-semibold">Metrics</h1>
         </div>
+        <ScopeFilterBar
+          items={METRICS_WINDOWS}
+          active={window}
+          onChange={setWindow}
+        />
 
         {scopedSessionId && (
           <div

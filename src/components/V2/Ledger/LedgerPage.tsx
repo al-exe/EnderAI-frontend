@@ -21,6 +21,7 @@ import {
 } from "@/api/v2Ledger"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { formatCompactNumber } from "@/components/V2/Agents/formatters"
+import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import { cn } from "@/lib/utils"
 
 import styles from "./LedgerPage.module.css"
@@ -61,13 +62,6 @@ type DayGroup = {
 function clientLabel(value: string | null | undefined): string {
   if (!value) return "Unknown"
   return CLIENT_LABELS[value] ?? value
-}
-
-function harnessDisplay(value: string | undefined): string {
-  return (
-    HARNESS_OPTIONS.find((option) => option.value === (value ?? "all"))
-      ?.label ?? "All harnesses"
-  )
 }
 
 function cleanLedgerSearch(filters: LedgerSearchFilters): LedgerSearchFilters {
@@ -393,18 +387,6 @@ export function LedgerPage({
                 />
               </form>
               <FilterChip
-                ariaLabel="Filter by harness"
-                display={harnessDisplay(client)}
-                onChange={(value) =>
-                  setLedgerSearch({
-                    client: value === "all" ? undefined : value,
-                    session_id: undefined,
-                  })
-                }
-                options={HARNESS_OPTIONS}
-                value={client ?? "all"}
-              />
-              <FilterChip
                 ariaLabel="Sort sessions"
                 caret={sort === "newest" ? "↓" : "↑"}
                 display={sort === "newest" ? "Newest" : "Oldest"}
@@ -422,6 +404,21 @@ export function LedgerPage({
               />
             </div>
           </header>
+
+          <ScopeFilterBar
+            className="border-b-0 px-7"
+            items={HARNESS_OPTIONS.map((option) => ({
+              key: option.value,
+              label: option.label,
+            }))}
+            active={client ?? "all"}
+            onChange={(value) =>
+              setLedgerSearch({
+                client: value === "all" ? undefined : value,
+                session_id: undefined,
+              })
+            }
+          />
 
           <div className={styles.cols}>
             <div>Time</div>
