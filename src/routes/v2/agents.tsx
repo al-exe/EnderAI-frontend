@@ -1,11 +1,18 @@
-import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  createFileRoute,
+  Outlet,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router"
 import { Bot, Loader2 } from "lucide-react"
 import { useMemo, useState } from "react"
 
 import {
+  type AgentSpecialistCreate,
   type AgentSpecialistStatus,
   type AgentSpecialistSummary,
+  createAgent,
   listAgents,
 } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
@@ -16,7 +23,9 @@ import {
   AGENT_EYEBROW_CLASS,
   AGENT_PAGE_TITLE_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
+import { CreateProfileDialog } from "@/components/V2/Agents/CreateProfileDialog"
 import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
+import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 
 type AgentScope = "all" | AgentSpecialistStatus
@@ -125,13 +134,31 @@ function EmptyAgents({ isDemoMode }: { isDemoMode: boolean }) {
 
 function AgentsIndex() {
   const { isDemoMode } = useDemoMode()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
   const [scope, setScope] = useState<AgentScope>("all")
+  const [createProfileOpen, setCreateProfileOpen] = useState(false)
   const agentsQuery = useQuery({
     queryKey: ["v2-agents", isDemoMode],
     queryFn: () => listAgents({ demo: isDemoMode }),
   })
   const agents = agentsQuery.data?.items ?? []
   const activeCount = agents.filter((agent) => agent.status === "active").length
+
+  const createProfileMutation = useMutation({
+    mutationFn: (values: AgentSpecialistCreate) =>
+      createAgent(values, { demo: isDemoMode }),
+    onSuccess: (agent) => {
+      queryClient.invalidateQueries({ queryKey: ["v2-agents", isDemoMode] })
+      setCreateProfileOpen(false)
+      showSuccessToast("Profile created.")
+      navigate({ to: "/v2/agents/$slug", params: { slug: agent.slug } })
+    },
+    onError: () => {
+      showErrorToast("Could not create profile.")
+    },
+  })
 
   const visible = useMemo(() => {
     const filtered =
@@ -156,10 +183,22 @@ function AgentsIndex() {
             </div>
             <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
           </div>
-          <Button type="button" size="sm" className="w-fit">
+          <Button
+            type="button"
+            size="sm"
+            className="w-fit"
+            onClick={() => setCreateProfileOpen(true)}
+          >
             + Profile
           </Button>
         </header>
+
+        <CreateProfileDialog
+          open={createProfileOpen}
+          onOpenChange={setCreateProfileOpen}
+          isCreating={createProfileMutation.isPending}
+          onSubmit={(values) => createProfileMutation.mutate(values)}
+        />
 
         <ScopeFilterBar agents={agents} active={scope} onChange={setScope} />
 
