@@ -5,7 +5,6 @@ import {
   ArrowLeftRight,
   Bold,
   Clock,
-  ExternalLink,
   Eye,
   Folder,
   Heading1,
