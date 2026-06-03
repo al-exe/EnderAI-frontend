@@ -69,10 +69,16 @@ import {
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
+  DOCUMENT_SCOPE_DOT,
+  DOCUMENT_SCOPE_LABEL,
+  getDocumentScope,
+} from "@/components/V2/Library/documentScope"
+import {
   FolderActionsMenu,
   FolderCreateDialog,
   FolderPickerDropdown,
 } from "@/components/V2/Library/FolderControls"
+import { LibraryRecentReel } from "@/components/V2/Library/LibraryRecentReel"
 import {
   V2_PAGE_CONTENT_FIXED,
   V2_PAGE_FRAME,
@@ -111,7 +117,14 @@ type FolderTreeNode = {
 }
 
 type DirectoryDropTargetId = "root" | "unfiled" | string
-type OwnershipFilter = "owned" | "shared"
+type LibraryScope = "all" | "mine" | "shared" | "org"
+
+const LIBRARY_SCOPES: { key: LibraryScope; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "mine", label: "Mine" },
+  { key: "shared", label: "Shared with me" },
+  { key: "org", label: "Org" },
+]
 type FavoriteUpdate = { documentId: string; favorite: boolean }
 
 function buildFolderTree(folders: V2DocumentFolderPublic[]): FolderTreeNode[] {
@@ -183,10 +196,13 @@ function TaskforceLibrary() {
     "files",
     { deserialize: enumDeserializer(["files", "folders"]) },
   )
-  const [ownershipFilter, setOwnershipFilter] =
-    usePersistentState<OwnershipFilter>("library.ownership", "owned", {
-      deserialize: enumDeserializer(["owned", "shared"]),
-    })
+  const [scopeFilter, setScopeFilter] = usePersistentState<LibraryScope>(
+    "library.scope",
+    "all",
+    {
+      deserialize: enumDeserializer(["all", "mine", "shared", "org"]),
+    },
+  )
   const [selectedFolderId, setSelectedFolderId] = useState("all")
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [createDocumentOpen, setCreateDocumentOpen] = useState(false)
@@ -455,15 +471,23 @@ function TaskforceLibrary() {
 
   const allDocuments = documentsQuery.data?.data ?? []
   const documents = useMemo(() => {
-    if (ownershipFilter === "owned") {
-      return allDocuments.filter(
-        (document) => document.owner_id === currentUser.id,
-      )
+    switch (scopeFilter) {
+      case "mine":
+        return allDocuments.filter(
+          (document) => document.owner_id === currentUser.id,
+        )
+      case "shared":
+        return allDocuments.filter(
+          (document) => document.owner_id !== currentUser.id,
+        )
+      case "org":
+        return allDocuments.filter(
+          (document) => document.visibility === "organization",
+        )
+      default:
+        return allDocuments
     }
-    return allDocuments.filter(
-      (document) => document.owner_id !== currentUser.id,
-    )
-  }, [allDocuments, currentUser.id, ownershipFilter])
+  }, [allDocuments, currentUser.id, scopeFilter])
   const folders = foldersQuery.data?.data ?? []
   const folderTree = useMemo(() => buildFolderTree(folders), [folders])
   const favoriteDocuments = useMemo(
@@ -665,6 +689,22 @@ function TaskforceLibrary() {
                 <h1 className="mt-1 text-2xl font-semibold">Library</h1>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <div
+                  role="tablist"
+                  aria-label="Library view"
+                  className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+                >
+                  <LibraryViewToggle
+                    label="Files"
+                    active={libraryView === "files"}
+                    onClick={() => setLibraryView("files")}
+                  />
+                  <LibraryViewToggle
+                    label="Folders"
+                    active={libraryView === "folders"}
+                    onClick={() => setLibraryView("folders")}
+                  />
+                </div>
                 <Button
                   type="button"
                   size="sm"
@@ -684,44 +724,31 @@ function TaskforceLibrary() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div
-                role="tablist"
-                aria-label="Document ownership"
-                className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-              >
-                <LibraryViewToggle
-                  label="Owned by you"
-                  active={ownershipFilter === "owned"}
-                  onClick={() => {
-                    setOwnershipFilter("owned")
-                    setSelectedFolderId("all")
-                  }}
-                />
-                <LibraryViewToggle
-                  label="Shared with you"
-                  active={ownershipFilter === "shared"}
-                  onClick={() => {
-                    setOwnershipFilter("shared")
-                    setSelectedFolderId("all")
-                  }}
-                />
-              </div>
-              <div
-                role="tablist"
-                aria-label="Library view"
-                className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-              >
-                <LibraryViewToggle
-                  label="Files"
-                  active={libraryView === "files"}
-                  onClick={() => setLibraryView("files")}
-                />
-                <LibraryViewToggle
-                  label="Folders"
-                  active={libraryView === "folders"}
-                  onClick={() => setLibraryView("folders")}
-                />
+            <div className="flex flex-wrap items-stretch border-t font-mono text-[10px] uppercase tracking-[0.1em]">
+              {LIBRARY_SCOPES.map((scope) => {
+                const isActive = scope.key === scopeFilter
+                return (
+                  <button
+                    key={scope.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => {
+                      setScopeFilter(scope.key)
+                      setSelectedFolderId("all")
+                    }}
+                    className={cn(
+                      "border-r px-3 py-2 text-muted-foreground transition-colors hover:text-foreground",
+                      isActive &&
+                        "text-foreground shadow-[inset_0_-2px_0_#8447ff]",
+                    )}
+                  >
+                    {scope.label}
+                  </button>
+                )
+              })}
+              <div className="ml-auto px-3 py-2 text-muted-foreground">
+                Sort: recent ↓
               </div>
             </div>
           </div>
@@ -762,6 +789,13 @@ function TaskforceLibrary() {
             <div className="border bg-card p-6 text-sm text-muted-foreground">
               No documents yet.
             </div>
+          )}
+
+          {!isLoading && documents.length > 0 && (
+            <LibraryRecentReel
+              documents={documents}
+              currentUser={currentUser}
+            />
           )}
 
           {!isLoading && documents.length > 0 && libraryView === "files" && (
@@ -1112,6 +1146,7 @@ function FolderDirectory({
         dragOver={false}
         canMoveItems={false}
         canFavorite={canFavorite}
+        currentUserId={currentUserId}
         onToggle={() => onToggleFolder("favorites")}
         onDocumentDragStart={onDocumentDragStart}
         onDocumentDragEnd={onDocumentDragEnd}
@@ -1128,6 +1163,7 @@ function FolderDirectory({
         dragOver={dragOverFolderId === "unfiled"}
         canMoveItems={canMoveItems}
         canFavorite={canFavorite}
+        currentUserId={currentUserId}
         onToggle={() => onToggleFolder("unfiled")}
         onDocumentDragStart={onDocumentDragStart}
         onDocumentDragEnd={onDocumentDragEnd}
@@ -1266,6 +1302,7 @@ function DirectoryUnfiled({
   dragOver,
   canMoveItems,
   canFavorite,
+  currentUserId,
   onToggle,
   onDocumentDragStart,
   onDocumentDragEnd,
@@ -1281,6 +1318,7 @@ function DirectoryUnfiled({
   dragOver: boolean
   canMoveItems: boolean
   canFavorite: boolean
+  currentUserId: string
   onToggle: () => void
   onDocumentDragStart: (
     event: DragEvent<HTMLAnchorElement>,
@@ -1330,6 +1368,7 @@ function DirectoryUnfiled({
               depth={0}
               draggable={canMoveItems}
               canFavorite={canFavorite}
+              currentUserId={currentUserId}
               onDragStart={onDocumentDragStart}
               onDragEnd={onDocumentDragEnd}
               onToggleFavorite={onToggleFavorite}
@@ -1459,6 +1498,7 @@ function DirectoryFolder({
               depth={depth + 1}
               draggable={canMoveItems}
               canFavorite={canFavorite}
+              currentUserId={currentUserId}
               onDragStart={onDocumentDragStart}
               onDragEnd={onDocumentDragEnd}
               onToggleFavorite={onToggleFavorite}
@@ -1475,6 +1515,7 @@ function DirectoryDocumentRow({
   depth,
   draggable,
   canFavorite,
+  currentUserId,
   onDragStart,
   onDragEnd,
   onToggleFavorite,
@@ -1483,6 +1524,7 @@ function DirectoryDocumentRow({
   depth: number
   draggable: boolean
   canFavorite: boolean
+  currentUserId: string
   onDragStart: (
     event: DragEvent<HTMLAnchorElement>,
     document: V2DocumentPublic,
@@ -1491,6 +1533,7 @@ function DirectoryDocumentRow({
   onToggleFavorite: (document: V2DocumentPublic) => void
 }) {
   const { canDelete, onDelete } = useDocumentDelete()
+  const scope = getDocumentScope(document, currentUserId)
   return (
     <div className="flex items-center hover:bg-muted">
       <Link
@@ -1509,8 +1552,12 @@ function DirectoryDocumentRow({
           <FileText className="size-4 shrink-0 text-muted-foreground" />
           <span className="truncate font-medium">{document.title}</span>
         </span>
-        <span className="truncate text-xs text-muted-foreground max-md:hidden">
-          {document.visibility === "organization" ? "Organization" : "Private"}
+        <span className="flex items-center gap-2 truncate text-xs text-muted-foreground max-md:hidden">
+          <span
+            className={cn("size-1.5 shrink-0", DOCUMENT_SCOPE_DOT[scope])}
+            aria-hidden
+          />
+          {DOCUMENT_SCOPE_LABEL[scope]}
         </span>
         <span className="truncate text-xs text-muted-foreground max-md:hidden">
           {formatDateOnly(document.updated_at)}
