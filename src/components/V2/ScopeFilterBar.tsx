@@ -8,9 +8,12 @@ export type ScopeFilterItem<TKey extends string> = {
 }
 
 /**
- * Shared horizontal scope/filter bar used across v2 pages (Profiles, Library).
- * Single source of truth for the bordered tab strip + trailing sort chip so the
- * two pages can't drift apart visually.
+ * Shared horizontal scope/filter bar used across Taskforce v2 pages (Profiles,
+ * Library, Metrics, Ledger). Single source of truth for the bordered tab strip
+ * (+ optional trailing sort chip) so the pages can't drift apart visually.
+ *
+ * Omit `sortLabel` when a page filters but doesn't sort — the trailing chip is
+ * then dropped so the bar works as a pure scope selector.
  */
 export function ScopeFilterBar<TKey extends string>({
   items,
@@ -22,7 +25,7 @@ export function ScopeFilterBar<TKey extends string>({
   items: ScopeFilterItem<TKey>[]
   active: TKey
   onChange: (key: TKey) => void
-  sortLabel: string
+  sortLabel?: string
   className?: string
 }) {
   return (
@@ -52,9 +55,11 @@ export function ScopeFilterBar<TKey extends string>({
           </button>
         )
       })}
-      <div className="ml-auto border-l border-border px-3 py-2 text-muted-foreground">
-        Sort: {sortLabel}
-      </div>
+      {sortLabel !== undefined && (
+        <div className="ml-auto border-l border-border px-3 py-2 text-muted-foreground">
+          Sort: {sortLabel}
+        </div>
+      )}
     </div>
   )
 }
