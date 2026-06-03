@@ -3,16 +3,17 @@ import { z } from "zod"
 
 import { LedgerPage } from "@/components/V2/Ledger/LedgerPage"
 
-const boolSearchParam = z.preprocess((value) => {
-  if (value === true || value === "true") return true
-  if (value === false || value === "false") return false
-  return undefined
-}, z.boolean().optional())
-
 const searchSchema = z.object({
   actor_id: z.string().optional(),
   client: z.string().optional(),
-  cross_boundary: boolSearchParam,
+  cross_boundary: z
+    .union([z.boolean(), z.literal("true"), z.literal("false")])
+    .optional()
+    .transform((value) => {
+      if (value === true || value === "true") return true
+      if (value === false || value === "false") return false
+      return undefined
+    }),
   q: z.string().optional(),
   session_id: z.string().optional(),
   specialist: z.string().optional(),
