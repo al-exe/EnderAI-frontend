@@ -1,17 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
+import { Loader2 } from "lucide-react"
 import {
-  ArrowLeft,
-  ArrowLeftRight,
-  ChevronRight,
-  Copy,
-  ExternalLink,
-  FileText,
-  Loader2,
-  Search,
-  Terminal,
-} from "lucide-react"
-import {
+  type CSSProperties,
   type FormEvent,
   type ReactNode,
   useCallback,
@@ -21,6 +12,7 @@ import {
 } from "react"
 
 import {
+  type LedgerDocRef,
   type LedgerSessionDetail,
   type LedgerSessionRow,
   type LedgerTranscriptEvent,
@@ -28,29 +20,25 @@ import {
   readLedgerSessionDetail,
 } from "@/api/v2Ledger"
 import { useDemoMode } from "@/components/demo-mode-provider"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { formatCompactNumber } from "@/components/V2/Agents/formatters"
-import {
-  V2_PAGE_CONTENT,
-  V2_PAGE_FRAME,
-  V2_TAB_EYEBROW_CLASS,
-} from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
+
+import styles from "./LedgerPage.module.css"
+
+const GRID = "86px minmax(0,1.6fr) 168px 150px minmax(0,1fr) 16px"
 
 const CLIENT_LABELS: Record<string, string> = {
   "claude-code": "Claude Code",
   codex: "Codex",
   cursor: "Cursor",
 }
+
+const HARNESS_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "all", label: "All harnesses" },
+  { value: "claude-code", label: "Claude Code" },
+  { value: "codex", label: "Codex" },
+  { value: "cursor", label: "Cursor" },
+]
 
 type LedgerSort = "newest" | "oldest"
 
@@ -75,6 +63,13 @@ function clientLabel(value: string | null | undefined): string {
   return CLIENT_LABELS[value] ?? value
 }
 
+function harnessDisplay(value: string | undefined): string {
+  return (
+    HARNESS_OPTIONS.find((option) => option.value === (value ?? "all"))
+      ?.label ?? "All harnesses"
+  )
+}
+
 function cleanLedgerSearch(filters: LedgerSearchFilters): LedgerSearchFilters {
   return {
     actor_id: filters.actor_id || undefined,
@@ -93,106 +88,195 @@ function dateFrom(value: string | null | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
+function pad(value: number): string {
+  return String(value).padStart(2, "0")
+}
+
+/** "14:02" */
 function formatClock(value: string | null | undefined): string {
   const date = dateFrom(value)
   if (!date) return "—"
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date)
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-function formatDateTime(value: string | null | undefined): string {
+/** "14:02:11" */
+function formatTimeOfDay(value: string | null | undefined): string {
   const date = dateFrom(value)
   if (!date) return "—"
-  return new Intl.DateTimeFormat(undefined, {
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+/** "2026-06-01 14:02:11" */
+function formatStamp(value: string | null | undefined): string {
+  const date = dateFrom(value)
+  if (!date) return "—"
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+/** "Tue Jun 1 2026" */
+function formatDateLong(value: string | null | undefined): string {
+  const date = dateFrom(value)
+  if (!date) return ""
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
     month: "short",
     day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date)
+    year: "numeric",
+  })
+    .format(date)
+    .replace(/,/g, "")
 }
 
+/** Short timezone label for the clock subscript, e.g. "PDT" / "GMT-7". */
+function timeZoneLabel(value: string | null | undefined): string {
+  const date = dateFrom(value)
+  if (!date) return ""
+  const part = new Intl.DateTimeFormat("en-US", { timeZoneName: "short" })
+    .formatToParts(date)
+    .find((entry) => entry.type === "timeZoneName")
+  return part?.value ?? ""
+}
+
+/** "18m 58s" / "1h 5m" / "42s" */
 function formatDuration(durationMs: number): string {
-  if (!durationMs) return "—"
-  const minutes = Math.max(1, Math.round(durationMs / 60000))
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  const remainder = minutes % 60
-  return remainder ? `${hours}h ${remainder}m` : `${hours}h`
+  if (!durationMs || durationMs < 0) return "—"
+  const totalSeconds = Math.round(durationMs / 1000)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  if (hours) return `${hours}h ${minutes}m`
+  if (minutes) return `${minutes}m ${seconds}s`
+  return `${seconds}s`
 }
 
-function dayKey(value: string): string {
+function dayKey(value: string | null | undefined): string {
   const date = dateFrom(value)
   if (!date) return "unknown"
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
 function dayLabel(key: string): string {
   if (key === "unknown") return "Undated"
-  const today = dayKey(new Date().toISOString())
-  const yesterday = new Date()
+  const now = new Date()
+  const todayKey = dayKey(now.toISOString())
+  const yesterday = new Date(now)
   yesterday.setDate(yesterday.getDate() - 1)
   const yesterdayKey = dayKey(yesterday.toISOString())
-  if (key === today) return "Today"
-  if (key === yesterdayKey) return "Yesterday"
   const date = new Date(`${key}T00:00:00`)
-  if (Number.isNaN(date.getTime())) return key
-  return new Intl.DateTimeFormat(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(date)
+  const long = Number.isNaN(date.getTime())
+    ? key
+    : new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+        .format(date)
+        .replace(/,/g, "")
+  if (key === todayKey) return `Today · ${long}`
+  if (key === yesterdayKey) return `Yesterday · ${long}`
+  return long
 }
 
 function groupRows(rows: LedgerSessionRow[]): DayGroup[] {
+  const order: string[] = []
   const groups = new Map<string, LedgerSessionRow[]>()
   for (const row of rows) {
     const key = dayKey(row.started_at ?? row.occurred_at_last)
-    groups.set(key, [...(groups.get(key) ?? []), row])
+    if (!groups.has(key)) {
+      groups.set(key, [])
+      order.push(key)
+    }
+    groups.get(key)?.push(row)
   }
-  return Array.from(groups.entries()).map(([key, groupRows]) => ({
+  return order.map((key) => ({
     key,
     label: dayLabel(key),
-    rows: groupRows,
+    rows: groups.get(key) ?? [],
   }))
 }
 
+function shortId(row: LedgerSessionRow): string {
+  return row.short_session_id ?? row.session_id.slice(0, 8)
+}
+
 function sessionTitle(row: LedgerSessionRow): string {
-  return (
-    row.title ||
-    row.documents[0]?.title ||
-    `Session ${row.short_session_id ?? row.session_id.slice(0, 8)}`
-  )
+  return row.title || row.documents[0]?.title || `Session ${shortId(row)}`
 }
 
 function agentLabel(row: LedgerSessionRow): string {
   return row.model_id || row.specialist_name || row.specialist_slug || "Agent"
 }
 
+function whoLabel(row: LedgerSessionRow): string {
+  return row.actor_handle ?? row.actor_name ?? "Unknown"
+}
+
+function eventWho(event: LedgerTranscriptEvent, row: LedgerSessionRow): string {
+  return event.who ?? whoLabel(row)
+}
+
+function harnessWithVersion(row: LedgerSessionRow): string {
+  const label = clientLabel(row.harness_label ?? row.client)
+  return row.harness_version ? `${label} ${row.harness_version}` : label
+}
+
+function tokenSummary(detail: LedgerSessionDetail): string {
+  return `${formatCompactNumber(detail.input_tokens)} in · ${formatCompactNumber(detail.output_tokens)} out`
+}
+
 function buildMarkdown(detail: LedgerSessionDetail): string {
   const lines = [
     `# ${sessionTitle(detail)}`,
     "",
-    `Session: ${detail.session_id}`,
-    `Harness: ${clientLabel(detail.harness_label ?? detail.client)}`,
-    `Agent: ${agentLabel(detail)}`,
-    `Started: ${formatDateTime(detail.started_at ?? detail.occurred_at_first)}`,
+    `- Session: ${detail.session_id}`,
+    `- User: ${whoLabel(detail)}`,
+    `- Harness: ${harnessWithVersion(detail)}`,
+    `- Agent: ${agentLabel(detail)}`,
+    `- Started: ${formatStamp(detail.started_at ?? detail.occurred_at_first)}`,
+    `- Ended: ${formatStamp(detail.ended_at ?? detail.occurred_at_last)}`,
     "",
     "## Transcript",
     "",
   ]
   for (const event of detail.transcript_events) {
-    const label = event.kind.toUpperCase()
-    const body = event.text || event.cmd || event.file || event.note || ""
-    lines.push(`### ${label} · ${formatDateTime(event.occurred_at)}`)
-    lines.push(body)
-    lines.push("")
+    const time = formatTimeOfDay(event.occurred_at)
+    if (event.kind === "prompt") {
+      lines.push(
+        `**${time} · ${eventWho(event, detail)} asked**`,
+        "",
+        event.text ?? "",
+        "",
+      )
+    } else if (event.kind === "reply") {
+      lines.push(
+        `**${time} · ${agentLabel(detail)} replied**`,
+        "",
+        event.text ?? "",
+        "",
+      )
+    } else if (event.kind === "command") {
+      lines.push(
+        `**${time} · ran command**`,
+        "",
+        "```",
+        event.cmd ?? "",
+        event.output ?? "",
+        "```",
+        "",
+      )
+    } else if (event.kind === "edit") {
+      lines.push(
+        `**${time} · edited ${event.file ?? ""}** (+${event.added ?? 0} −${event.removed ?? 0})`,
+        "",
+        event.note ?? "",
+        "",
+      )
+    } else {
+      lines.push(`> ${time} · ${event.note ?? event.text ?? ""}`, "")
+    }
   }
-  return lines.join("\n")
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n")
 }
 
 export function LedgerPage({
@@ -208,7 +292,7 @@ export function LedgerPage({
   const client = searchFilters.client?.trim() || undefined
   const actorId = searchFilters.actor_id?.trim() || undefined
   const selectedSessionId = searchFilters.session_id?.trim() || undefined
-  const sort = searchFilters.sort === "oldest" ? "oldest" : "newest"
+  const sort: LedgerSort = searchFilters.sort === "oldest" ? "oldest" : "newest"
   const [search, setSearch] = useState(query)
 
   useEffect(() => {
@@ -260,9 +344,7 @@ export function LedgerPage({
   useEffect(() => {
     if (!selectedSessionId) return
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setLedgerSearch({ session_id: undefined })
-      }
+      if (event.key === "Escape") setLedgerSearch({ session_id: undefined })
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
@@ -276,184 +358,132 @@ export function LedgerPage({
     setLedgerSearch({ q: search.trim() || undefined, session_id: undefined })
   }
 
-  const hasActiveFilters = Boolean(
-    actorId || client || crossOnly || query || specialist || sort === "oldest",
-  )
-
   return (
-    <section
-      className={cn(V2_PAGE_FRAME, "bg-background font-sans text-foreground")}
-    >
-      <div className={cn(V2_PAGE_CONTENT, "gap-5")}>
-        {selectedSessionId ? (
-          <LedgerDetailView
-            detail={detailQuery.data}
-            isError={detailQuery.isError}
-            isLoading={detailQuery.isLoading}
-            onBack={() => setLedgerSearch({ session_id: undefined })}
-          />
-        ) : (
-          <>
-            <LedgerHeader total={ledgerQuery.data?.total} />
-            <LedgerToolbar
-              client={client}
-              crossOnly={crossOnly}
-              hasActiveFilters={hasActiveFilters}
-              isFetching={ledgerQuery.isFetching && !ledgerQuery.isLoading}
-              onClear={() =>
-                setLedgerSearch({
-                  actor_id: undefined,
-                  client: undefined,
-                  cross_boundary: undefined,
-                  q: undefined,
-                  session_id: undefined,
-                  specialist: undefined,
-                  sort: undefined,
-                })
-              }
-              onClientChange={(value) =>
-                setLedgerSearch({
-                  client: value === "all" ? undefined : value,
-                  session_id: undefined,
-                })
-              }
-              onCrossChange={() =>
-                setLedgerSearch({
-                  cross_boundary: crossOnly ? undefined : true,
-                  session_id: undefined,
-                })
-              }
-              onSearchSubmit={onSearchSubmit}
-              onSearchValueChange={setSearch}
-              onSortChange={(value) =>
-                setLedgerSearch({
-                  session_id: undefined,
-                  sort: value as LedgerSort,
-                })
-              }
-              query={query}
-              search={search}
-              sort={sort}
-              specialist={specialist}
-            />
-            <LedgerIndex
-              groups={groups}
-              isError={ledgerQuery.isError}
-              isLoading={ledgerQuery.isLoading}
-              onOpenSession={(sessionId) =>
-                setLedgerSearch({ session_id: sessionId })
-              }
-            />
-          </>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function LedgerHeader({ total }: { total?: number }) {
-  return (
-    <header className="flex flex-col gap-1">
-      <span className={V2_TAB_EYEBROW_CLASS}>
-        Ledger{typeof total === "number" ? ` · ${total} sessions archived` : ""}
-      </span>
-      <h1 className="text-2xl font-semibold tracking-tight">Ledger</h1>
-    </header>
-  )
-}
-
-function LedgerToolbar({
-  client,
-  crossOnly,
-  hasActiveFilters,
-  isFetching,
-  onClear,
-  onClientChange,
-  onCrossChange,
-  onSearchSubmit,
-  onSearchValueChange,
-  onSortChange,
-  query,
-  search,
-  sort,
-  specialist,
-}: {
-  client?: string
-  crossOnly: boolean
-  hasActiveFilters: boolean
-  isFetching: boolean
-  onClear: () => void
-  onClientChange: (value: string) => void
-  onCrossChange: () => void
-  onSearchSubmit: (event: FormEvent) => void
-  onSearchValueChange: (value: string) => void
-  onSortChange: (value: string) => void
-  query: string
-  search: string
-  sort: LedgerSort
-  specialist?: string
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <form onSubmit={onSearchSubmit} className="relative min-w-64 flex-1">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="h-9 pl-9 font-mono text-sm"
-          placeholder="/ Search transcripts, commands, files..."
-          value={search}
-          onChange={(event) => onSearchValueChange(event.target.value)}
+    <div className={cn(styles.app, "-m-6 md:-m-8")}>
+      {selectedSessionId ? (
+        <LedgerDetail
+          detail={detailQuery.data}
+          isError={detailQuery.isError}
+          isLoading={detailQuery.isLoading}
+          onBack={() => setLedgerSearch({ session_id: undefined })}
         />
-      </form>
-      <Select value={client ?? "all"} onValueChange={onClientChange}>
-        <SelectTrigger className="h-9 w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All harnesses</SelectItem>
-          <SelectItem value="codex">Codex</SelectItem>
-          <SelectItem value="claude-code">Claude Code</SelectItem>
-          <SelectItem value="cursor">Cursor</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={sort} onValueChange={onSortChange}>
-        <SelectTrigger className="h-9 w-32">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="newest">Newest</SelectItem>
-          <SelectItem value="oldest">Oldest</SelectItem>
-        </SelectContent>
-      </Select>
-      <Button
-        type="button"
-        variant={crossOnly ? "default" : "outline"}
-        size="sm"
-        onClick={onCrossChange}
-        aria-pressed={crossOnly}
-      >
-        <ArrowLeftRight className="size-4" />
-        Cross
-      </Button>
-      {specialist ? (
-        <Badge variant="outline">Profile · {specialist}</Badge>
-      ) : null}
-      {query ? <Badge variant="outline">Search · {query}</Badge> : null}
-      {hasActiveFilters ? (
-        <Button type="button" variant="ghost" size="sm" onClick={onClear}>
-          Clear
-        </Button>
-      ) : null}
-      {isFetching ? (
-        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-          <Loader2 className="size-3 animate-spin" />
-          Refreshing
-        </span>
-      ) : null}
+      ) : (
+        <div
+          className={styles.scroll}
+          style={{ "--grid": GRID } as CSSProperties}
+        >
+          <header className={styles.head}>
+            <div>
+              <div className={styles.crumb}>
+                Ledger
+                {typeof ledgerQuery.data?.total === "number"
+                  ? ` · ${ledgerQuery.data.total} sessions archived`
+                  : ""}
+              </div>
+              <h1 className={styles.h1}>Ledger</h1>
+            </div>
+            <div className={styles.tools}>
+              <form className={styles.search} onSubmit={onSearchSubmit}>
+                <input
+                  className={styles.searchInput}
+                  placeholder="/ Search transcripts, commands, files…"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  aria-label="Search the ledger"
+                />
+              </form>
+              <FilterChip
+                ariaLabel="Filter by harness"
+                display={harnessDisplay(client)}
+                onChange={(value) =>
+                  setLedgerSearch({
+                    client: value === "all" ? undefined : value,
+                    session_id: undefined,
+                  })
+                }
+                options={HARNESS_OPTIONS}
+                value={client ?? "all"}
+              />
+              <FilterChip
+                ariaLabel="Sort sessions"
+                caret={sort === "newest" ? "↓" : "↑"}
+                display={sort === "newest" ? "Newest" : "Oldest"}
+                onChange={(value) =>
+                  setLedgerSearch({
+                    session_id: undefined,
+                    sort: value === "oldest" ? "oldest" : undefined,
+                  })
+                }
+                options={[
+                  { value: "newest", label: "Newest" },
+                  { value: "oldest", label: "Oldest" },
+                ]}
+                value={sort}
+              />
+            </div>
+          </header>
+
+          <div className={styles.cols}>
+            <div>Time</div>
+            <div>Session</div>
+            <div>Harness · agent</div>
+            <div>Activity</div>
+            <div>Referenced by</div>
+            <div />
+          </div>
+
+          <LedgerList
+            groups={groups}
+            isError={ledgerQuery.isError}
+            isLoading={ledgerQuery.isLoading}
+            onOpenSession={(sessionId) =>
+              setLedgerSearch({ session_id: sessionId })
+            }
+          />
+        </div>
+      )}
     </div>
   )
 }
 
-function LedgerIndex({
+function FilterChip({
+  ariaLabel,
+  caret = "▾",
+  display,
+  onChange,
+  options,
+  value,
+}: {
+  ariaLabel: string
+  caret?: string
+  display: string
+  onChange: (value: string) => void
+  options: Array<{ value: string; label: string }>
+  value: string
+}) {
+  return (
+    <label className={styles.sel}>
+      <span>{display}</span>
+      <span aria-hidden className={styles.selCaret}>
+        {caret}
+      </span>
+      <select
+        aria-label={ariaLabel}
+        className={styles.selNative}
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function LedgerList({
   groups,
   isError,
   isLoading,
@@ -466,55 +496,41 @@ function LedgerIndex({
 }) {
   if (isError) {
     return (
-      <div className="rounded-md border border-dashed border-border bg-background p-8 text-sm text-muted-foreground">
-        Couldn't load the organization ledger.
-      </div>
+      <div className={styles.empty}>Couldn't load the organization ledger.</div>
     )
   }
-
   if (isLoading) {
     return (
-      <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
-        Loading sessions...
+      <div className={styles.status}>
+        <Loader2 className={styles.spin} size={13} />
+        Loading sessions…
       </div>
     )
   }
-
   if (groups.length === 0) {
-    return (
-      <div className="rounded-md border border-dashed border-border bg-background p-10 text-center text-sm text-muted-foreground">
-        No sessions match.
-      </div>
-    )
+    return <div className={styles.empty}>No sessions match.</div>
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border border-border">
-      <div className="min-w-[960px]">
-        <div className="sticky top-0 z-10 grid grid-cols-[86px_minmax(220px,1.6fr)_168px_150px_minmax(160px,1fr)_32px] border-b border-border bg-muted/80 px-4 py-2 text-[11px] font-medium uppercase text-muted-foreground">
-          <div>Time</div>
-          <div>Session</div>
-          <div>Harness · agent</div>
-          <div>Activity</div>
-          <div>Referenced by</div>
-          <div />
-        </div>
-        {groups.map((group) => (
-          <div key={group.key}>
-            <div className="border-b border-border bg-background px-4 py-2 text-xs font-medium text-muted-foreground">
-              {group.label} · {group.rows.length}
-            </div>
-            {group.rows.map((row) => (
-              <LedgerRow
-                key={row.session_id}
-                row={row}
-                onOpen={() => onOpenSession(row.session_id)}
-              />
-            ))}
+    <div>
+      {groups.map((group) => (
+        <div key={group.key}>
+          <div className={styles.day}>
+            <span className={styles.dayLbl}>{group.label}</span>
+            <span className={styles.daySp} />
+            <span className={styles.dayCt}>
+              {group.rows.length} session{group.rows.length === 1 ? "" : "s"}
+            </span>
           </div>
-        ))}
-      </div>
+          {group.rows.map((row) => (
+            <LedgerRow
+              key={row.session_id}
+              onOpen={() => onOpenSession(row.session_id)}
+              row={row}
+            />
+          ))}
+        </div>
+      ))}
     </div>
   )
 }
@@ -526,74 +542,61 @@ function LedgerRow({
   onOpen: () => void
   row: LedgerSessionRow
 }) {
+  const time = row.started_at ?? row.occurred_at_last
+  const messages = row.message_count || row.event_count
+  const tz = timeZoneLabel(time)
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="grid w-full grid-cols-[86px_minmax(220px,1.6fr)_168px_150px_minmax(160px,1fr)_32px] items-center border-b border-border px-4 py-3 text-left transition-colors hover:bg-muted/45"
-    >
-      <div className="min-w-0">
-        <div className="text-sm font-medium tabular-nums">
-          {formatClock(row.started_at ?? row.occurred_at_last)}
-        </div>
-        <div className="truncate text-[11px] text-muted-foreground">
-          {row.started_at ? "local" : "latest"}
+    <button className={styles.row} onClick={onOpen} type="button">
+      <div className={styles.clock}>
+        {formatClock(time)}
+        {tz ? <small>{tz}</small> : null}
+      </div>
+      <div className={styles.main}>
+        <div className={styles.ttl}>{sessionTitle(row)}</div>
+        <div className={styles.sub}>
+          <span className={styles.subId}>{shortId(row)}</span>
+          <span className={styles.subDot}>·</span>
+          <span className={styles.subWho}>{whoLabel(row)}</span>
+          {row.branch ? (
+            <>
+              <span className={styles.subDot}>·</span>
+              <span className={styles.subBranch}>⎇ {row.branch}</span>
+            </>
+          ) : null}
         </div>
       </div>
-      <div className="min-w-0 pr-4">
-        <div className="truncate text-sm font-medium">{sessionTitle(row)}</div>
-        <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-          <span className="shrink-0 font-mono">
-            {row.short_session_id ?? row.session_id.slice(0, 8)}
-          </span>
-          <span className="truncate">{row.actor_handle ?? row.actor_name}</span>
-          {row.branch ? <span className="truncate">· {row.branch}</span> : null}
-        </div>
-      </div>
-      <div className="min-w-0 pr-4">
-        <div className="truncate text-sm">
+      <div className={styles.harness}>
+        <div className={styles.harnessH}>
           {clientLabel(row.harness_label ?? row.client)}
         </div>
-        <div className="truncate text-xs text-muted-foreground">
-          {agentLabel(row)}
-        </div>
+        <div className={styles.harnessAg}>{agentLabel(row)}</div>
       </div>
-      <div className="flex flex-wrap gap-1 pr-4 text-xs text-muted-foreground">
-        <ActivityPill
-          count={row.message_count || row.event_count}
-          label="msg"
-        />
-        <ActivityPill count={row.command_count} label="cmd" />
-        <ActivityPill count={row.edit_count} label="edit" />
+      <div className={styles.act}>
+        <span className={styles.actN}>{messages}</span> msgs ·{" "}
+        <span className={styles.actN}>{row.command_count}</span> cmds ·{" "}
+        <span className={styles.actN}>{row.edit_count}</span> edits
       </div>
-      <div className="min-w-0 pr-4">
+      <div className={styles.backs}>
         {row.documents.length > 0 ? (
-          <div className="flex min-w-0 items-center gap-1">
-            <span className="truncate text-sm">{row.documents[0].title}</span>
+          <span className={styles.backsLink}>
+            <span className={styles.backsMk} />
+            <span className={styles.backsTt}>{row.documents[0].title}</span>
             {row.documents.length > 1 ? (
-              <Badge variant="outline" className="h-5 px-1 text-[10px]">
+              <span className={styles.backsExtra}>
                 +{row.documents.length - 1}
-              </Badge>
+              </span>
             ) : null}
-          </div>
+          </span>
         ) : (
-          <span className="text-sm text-muted-foreground">None</span>
+          <span className={styles.backsNone}>—</span>
         )}
       </div>
-      <ChevronRight className="size-4 text-muted-foreground" />
+      <div className={styles.chev}>›</div>
     </button>
   )
 }
 
-function ActivityPill({ count, label }: { count: number; label: string }) {
-  return (
-    <span className="rounded border border-border bg-background px-1.5 py-0.5 tabular-nums">
-      {formatCompactNumber(count)} {label}
-    </span>
-  )
-}
-
-function LedgerDetailView({
+function LedgerDetail({
   detail,
   isError,
   isLoading,
@@ -606,143 +609,172 @@ function LedgerDetailView({
 }) {
   if (isLoading) {
     return (
-      <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
-        Loading session...
+      <div className={styles.detail}>
+        <div className={styles.subbar}>
+          <button className={styles.back} onClick={onBack} type="button">
+            ← Ledger
+          </button>
+        </div>
+        <div className={styles.status}>
+          <Loader2 className={styles.spin} size={13} />
+          Loading session…
+        </div>
       </div>
     )
   }
 
   if (isError || !detail) {
     return (
-      <div className="flex flex-col gap-3">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="w-fit"
-          onClick={onBack}
-        >
-          <ArrowLeft className="size-4" />
-          Back to Ledger
-        </Button>
-        <div className="rounded-md border border-dashed border-border bg-background p-8 text-sm text-muted-foreground">
-          Couldn't load this session.
+      <div className={styles.detail}>
+        <div className={styles.subbar}>
+          <button className={styles.back} onClick={onBack} type="button">
+            ← Ledger
+          </button>
         </div>
+        <div className={styles.empty}>Couldn't load this session.</div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
-        <Button type="button" variant="ghost" size="sm" onClick={onBack}>
-          <ArrowLeft className="size-4" />
-          Back to Ledger
-        </Button>
-        <span className="font-mono text-xs text-muted-foreground">
-          {detail.session_id}
-        </span>
-        <Badge variant="outline">
-          {clientLabel(detail.harness_label ?? detail.client)}
-        </Badge>
-        <Badge variant="secondary">{agentLabel(detail)}</Badge>
+    <div className={styles.detail}>
+      <div className={styles.subbar}>
+        <button className={styles.back} onClick={onBack} type="button">
+          ← Ledger
+        </button>
+        <span className={styles.idText}>{detail.session_id}</span>
+        <span className={styles.subSp} />
+        <span className={styles.pill}>{harnessWithVersion(detail)}</span>
+        <span className={styles.pill}>{agentLabel(detail)}</span>
       </div>
-
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_296px]">
-        <main className="min-w-0">
-          <div className="mb-4">
-            <span className={V2_TAB_EYEBROW_CLASS}>
-              {formatDateTime(detail.started_at ?? detail.occurred_at_first)}
-            </span>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              {sessionTitle(detail)}
-            </h1>
+      <div className={styles.dbody}>
+        <div className={styles.transcript}>
+          <div className={styles.tHead}>
+            <div className={styles.eyebrow}>
+              {formatDateLong(detail.started_at ?? detail.occurred_at_first)} ·{" "}
+              {whoLabel(detail)} ·{" "}
+              {clientLabel(detail.harness_label ?? detail.client)}
+            </div>
+            <h2>{sessionTitle(detail)}</h2>
           </div>
-          <div className="flex flex-col gap-3">
-            {detail.transcript_events.length > 0 ? (
-              detail.transcript_events.map((event, index) => (
-                <TranscriptEventCard
-                  key={`${event.kind}-${event.occurred_at ?? index}-${index}`}
-                  event={event}
-                />
-              ))
-            ) : (
-              <div className="rounded-md border border-dashed border-border p-8 text-sm text-muted-foreground">
-                Transcript archive is not available for this older session.
-              </div>
-            )}
-          </div>
-        </main>
+          {detail.transcript_events.length > 0 ? (
+            detail.transcript_events.map((event, index) => (
+              <TranscriptEvent
+                detail={detail}
+                event={event}
+                key={`${event.kind}-${event.occurred_at ?? index}-${index}`}
+              />
+            ))
+          ) : (
+            <div className={styles.empty}>
+              Transcript archive is not available for this older session.
+            </div>
+          )}
+        </div>
         <SessionRail detail={detail} />
       </div>
     </div>
   )
 }
 
-function TranscriptEventCard({ event }: { event: LedgerTranscriptEvent }) {
-  const title =
-    event.kind === "command"
-      ? "Command"
-      : event.kind === "edit"
-        ? "Edit"
-        : event.kind === "note"
-          ? "Note"
-          : event.kind === "prompt"
-            ? "Prompt"
-            : "Reply"
+function TranscriptEvent({
+  detail,
+  event,
+}: {
+  detail: LedgerSessionDetail
+  event: LedgerTranscriptEvent
+}) {
+  const time = formatTimeOfDay(event.occurred_at)
 
-  return (
-    <article className="rounded-md border border-border bg-background p-4">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          {event.kind === "command" ? (
-            <Terminal className="size-4 text-muted-foreground" />
-          ) : event.kind === "edit" ? (
-            <FileText className="size-4 text-muted-foreground" />
-          ) : null}
-          <span>{title}</span>
+  if (event.kind === "prompt") {
+    return (
+      <EventShell modifier={styles.evPrompt} time={time}>
+        <div className={styles.lab}>
+          <b>{eventWho(event, detail)} asked</b>
         </div>
-        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-          {formatClock(event.occurred_at)}
-        </span>
-      </div>
-      {event.kind === "command" ? (
-        <div className="space-y-2">
-          <pre className="overflow-x-auto rounded bg-muted p-3 font-mono text-xs">
-            {event.cmd}
-          </pre>
-          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {event.exit_code === null ? null : (
-              <Badge
-                variant={event.exit_code === 0 ? "secondary" : "destructive"}
-              >
-                exit {event.exit_code}
-              </Badge>
-            )}
-            {event.repo ? <span>{event.repo}</span> : null}
+        {event.text ? <div className={styles.txt}>{event.text}</div> : null}
+      </EventShell>
+    )
+  }
+
+  if (event.kind === "reply") {
+    return (
+      <EventShell modifier={styles.evReply} time={time}>
+        <div className={styles.lab}>
+          <b>{agentLabel(detail)}</b> replied
+        </div>
+        {event.text ? <div className={styles.txt}>{event.text}</div> : null}
+      </EventShell>
+    )
+  }
+
+  if (event.kind === "command") {
+    const failed = event.exit_code !== null && event.exit_code !== 0
+    const repo = event.repo ?? detail.repo
+    return (
+      <EventShell time={time}>
+        <div className={styles.lab}>ran command</div>
+        <div className={styles.cmd}>
+          <div className={styles.cmdLine}>
+            <span className={styles.cmdPr}>$</span>
+            <span className={styles.cmdC}>{event.cmd}</span>
           </div>
           {event.output ? (
-            <pre className="overflow-x-auto rounded border border-border p-3 font-mono text-xs text-muted-foreground">
-              {event.output}
-            </pre>
+            <div className={styles.cmdOut}>{event.output}</div>
           ) : null}
+          <div className={styles.cmdMeta}>
+            {event.exit_code !== null ? (
+              <span className={cn(styles.exit, failed && styles.exitFail)}>
+                <span className={styles.exitD} />
+                exit {event.exit_code}
+              </span>
+            ) : null}
+            {repo ? <span>{repo}</span> : null}
+          </div>
         </div>
-      ) : event.kind === "edit" ? (
-        <div className="space-y-2">
-          <div className="font-mono text-sm">{event.file}</div>
-          {event.note ? (
-            <p className="text-sm leading-6 text-muted-foreground">
-              {event.note}
-            </p>
-          ) : null}
+      </EventShell>
+    )
+  }
+
+  if (event.kind === "edit") {
+    return (
+      <EventShell time={time}>
+        <div className={styles.lab}>edited file</div>
+        <div className={styles.edit}>
+          <span className={styles.editFile}>{event.file}</span>
+          <span className={styles.editStat}>
+            <span className={styles.editAdd}>+{event.added ?? 0}</span>{" "}
+            <span className={styles.editRem}>−{event.removed ?? 0}</span>
+          </span>
         </div>
-      ) : (
-        <p className="whitespace-pre-wrap text-sm leading-6">
-          {event.text || event.note || "—"}
-        </p>
-      )}
-    </article>
+        {event.note ? (
+          <div className={styles.editNote}>{event.note}</div>
+        ) : null}
+      </EventShell>
+    )
+  }
+
+  return (
+    <EventShell modifier={styles.evNote} time={time}>
+      <div className={styles.noteTxt}>● {event.note ?? event.text}</div>
+    </EventShell>
+  )
+}
+
+function EventShell({
+  children,
+  modifier,
+  time,
+}: {
+  children: ReactNode
+  modifier?: string
+  time: string
+}) {
+  return (
+    <div className={cn(styles.ev, modifier)}>
+      <div className={styles.evT}>{time}</div>
+      <div className={styles.evC}>{children}</div>
+    </div>
   )
 }
 
@@ -750,113 +782,95 @@ function SessionRail({ detail }: { detail: LedgerSessionDetail }) {
   const copyMarkdown = () => {
     void navigator.clipboard?.writeText(buildMarkdown(detail))
   }
+  const messages = detail.message_count || detail.event_count
 
   return (
-    <aside className="flex flex-col gap-4">
-      <RailSection title="Session">
-        <RailRow
-          label="ID"
-          value={detail.short_session_id ?? detail.session_id.slice(0, 8)}
-        />
-        <RailRow
-          label="Actor"
-          value={detail.actor_handle ?? detail.actor_name}
-        />
-        <RailRow
-          label="Harness"
-          value={clientLabel(detail.harness_label ?? detail.client)}
-        />
-        <RailRow label="Agent" value={agentLabel(detail)} />
-        <RailRow label="Repo" value={detail.repo ?? "—"} />
-      </RailSection>
-      <RailSection title="Timing">
-        <RailRow
-          label="Started"
-          value={formatDateTime(detail.started_at ?? detail.occurred_at_first)}
-        />
-        <RailRow
-          label="Ended"
-          value={formatDateTime(detail.ended_at ?? detail.occurred_at_last)}
-        />
-        <RailRow label="Duration" value={formatDuration(detail.duration_ms)} />
-      </RailSection>
-      <RailSection title="Activity">
-        <RailRow
-          label="Messages"
-          value={String(detail.message_count || detail.event_count)}
-        />
-        <RailRow label="Commands" value={String(detail.command_count)} />
-        <RailRow label="Edits" value={String(detail.edit_count)} />
-        <RailRow
-          label="Tokens"
-          value={`${formatCompactNumber(detail.input_tokens + detail.output_tokens)}`}
-        />
-      </RailSection>
-      <RailSection title="Referenced by">
-        {detail.documents.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {detail.documents.map((doc) => (
-              <Link
-                key={doc.document_id}
-                to="/v2/library/$documentId"
-                params={{ documentId: doc.document_id }}
-                className="flex items-center justify-between gap-2 rounded border border-border px-2 py-1.5 text-sm hover:bg-muted"
-              >
-                <span className="truncate">{doc.title}</span>
-                <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <span className="text-sm text-muted-foreground">None</span>
-        )}
-      </RailSection>
-      <div className="flex flex-col gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
+    <aside className={styles.rail}>
+      <div className={cn(styles.grp, styles.grpFirst)}>Session</div>
+      <Kv k="ID" mono value={detail.session_id} />
+      <Kv k="User" value={`${whoLabel(detail)} · ${detail.actor_name}`} />
+      <Kv k="Agent" mono value={agentLabel(detail)} />
+      <Kv k="Harness" value={harnessWithVersion(detail)} />
+      {detail.repo ? <Kv k="Repo" mono value={detail.repo} /> : null}
+      {detail.branch ? <Kv k="Branch" mono value={detail.branch} /> : null}
+
+      <div className={styles.grp}>Timing</div>
+      <Kv
+        k="Started"
+        mono
+        value={formatStamp(detail.started_at ?? detail.occurred_at_first)}
+      />
+      <Kv
+        k="Ended"
+        mono
+        value={formatStamp(detail.ended_at ?? detail.occurred_at_last)}
+      />
+      <Kv k="Duration" value={formatDuration(detail.duration_ms)} />
+
+      <div className={styles.grp}>Activity</div>
+      <Kv k="Messages" value={String(messages)} />
+      <Kv k="Commands" value={String(detail.command_count)} />
+      <Kv k="Edits" value={String(detail.edit_count)} />
+      <Kv k="Tokens" mono value={tokenSummary(detail)} />
+
+      <div className={styles.grp}>Provenance</div>
+      {detail.source ? <Kv k="Source" value={detail.source} /> : null}
+      <Kv k="Imported" mono value={formatTimeOfDay(detail.imported_at)} />
+
+      <div className={styles.grp}>Referenced by</div>
+      {detail.documents.length > 0 ? (
+        detail.documents.map((doc) => (
+          <RailDoc doc={doc} key={doc.document_id} />
+        ))
+      ) : (
+        <div className={styles.kv}>
+          <span className={styles.kvK}>—</span>
+        </div>
+      )}
+
+      <div className={styles.actRow}>
+        <button
+          className={cn(styles.btn, styles.btnSolid)}
           disabled={!detail.raw_transcript_available}
-        >
-          <ExternalLink className="size-4" />
-          Open raw transcript
-        </Button>
-        <Button
           type="button"
-          variant="outline"
-          size="sm"
-          onClick={copyMarkdown}
         >
-          <Copy className="size-4" />
+          Open raw transcript
+        </button>
+        <button className={styles.btn} onClick={copyMarkdown} type="button">
           Copy as Markdown
-        </Button>
+        </button>
       </div>
     </aside>
   )
 }
 
-function RailSection({
-  children,
-  title,
-}: {
-  children: ReactNode
-  title: string
-}) {
+function Kv({ k, mono, value }: { k: string; mono?: boolean; value: string }) {
   return (
-    <section className="border-b border-border pb-4">
-      <h2 className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-        {title}
-      </h2>
-      <div className="flex flex-col gap-1.5">{children}</div>
-    </section>
+    <div className={styles.kv}>
+      <span className={styles.kvK}>{k}</span>
+      <span className={cn(styles.kvV, mono && styles.kvVMono)}>{value}</span>
+    </div>
   )
 }
 
-function RailRow({ label, value }: { label: string; value: string }) {
+function RailDoc({ doc }: { doc: LedgerDocRef }) {
   return (
-    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-2 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="truncate text-right">{value}</span>
-    </div>
+    <Link
+      className={styles.doc}
+      params={{ documentId: doc.document_id }}
+      to="/v2/library/$documentId"
+    >
+      <span className={styles.docMk} />
+      <span className={styles.docDt}>
+        <span className={styles.docLink}>{doc.title}</span>
+        {doc.state === "stale" ? (
+          <span className={cn(styles.flag, styles.flagStale)}>
+            ⚠ may be stale
+          </span>
+        ) : doc.state === "new" ? (
+          <span className={cn(styles.flag, styles.flagFresh)}>+ new doc</span>
+        ) : null}
+      </span>
+    </Link>
   )
 }
