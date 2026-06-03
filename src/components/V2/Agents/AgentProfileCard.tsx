@@ -47,7 +47,7 @@ function AgentStats({ stats }: { stats: Stat[] }) {
           >
             {stat.value}
           </div>
-          <div className="mt-[3px] font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted-foreground/90">
+          <div className="mt-[3px] font-mono text-[9.5px] uppercase tracking-[0.12em] text-foreground/70">
             {stat.label}
           </div>
         </div>
@@ -84,14 +84,14 @@ export function AgentProfileCard({ agent }: { agent: AgentSpecialistSummary }) {
           <div className="truncate text-sm font-semibold tracking-[-0.01em]">
             {agent.name}
           </div>
-          <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/90">
+          <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/70">
             {agent.role}
           </div>
         </div>
       </div>
 
       {agent.short_description && (
-        <p className="mt-3 line-clamp-2 text-[12px] leading-[1.45] text-muted-foreground">
+        <p className="mt-3 line-clamp-2 text-[12px] leading-[1.45] text-foreground/80">
           {agent.short_description}
         </p>
       )}
