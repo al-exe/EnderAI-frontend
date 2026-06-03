@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils"
 
 import styles from "./LedgerPage.module.css"
 
-const GRID = "86px minmax(0,1.6fr) 168px 150px minmax(0,1fr) 16px"
+const GRID = "100px minmax(0,1.6fr) 188px 204px minmax(0,1fr) 20px"
 
 const CLIENT_LABELS: Record<string, string> = {
   "claude-code": "Claude Code",
