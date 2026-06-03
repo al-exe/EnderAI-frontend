@@ -2,12 +2,12 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import {
   ArrowLeft,
-  ArrowLeftRight,
   ChevronRight,
   Copy,
   ExternalLink,
   FileText,
   Loader2,
+  ReceiptText,
   Search,
   Terminal,
 } from "lucide-react"
@@ -431,7 +431,7 @@ function LedgerToolbar({
         onClick={onCrossChange}
         aria-pressed={crossOnly}
       >
-        <ArrowLeftRight className="size-4" />
+        <ReceiptText className="size-4" />
         Cross
       </Button>
       {specialist ? (

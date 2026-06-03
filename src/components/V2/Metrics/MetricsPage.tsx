@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { ArrowLeftRight } from "lucide-react"
+import { ReceiptText } from "lucide-react"
 import { useMemo, useState } from "react"
 import {
   type MetricDefinitionPublic,
@@ -270,7 +270,7 @@ function CrossBoundaryReusePanel({
           </p>
         </div>
         <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground group-hover:text-foreground">
-          <ArrowLeftRight className="size-4" />
+          <ReceiptText className="size-4" />
         </span>
       </div>
 

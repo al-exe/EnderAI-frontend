@@ -13,6 +13,7 @@ import {
   Heading3,
   Italic,
   Link as LinkIcon,
+  ReceiptText,
   Pencil,
   Pilcrow,
   Search,
@@ -1143,7 +1144,7 @@ function DocumentProvenanceStrip({
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           Open ledger
-          <ExternalLink className="size-3.5" />
+          <ReceiptText className="size-3.5" />
         </Link>
       </div>
 
