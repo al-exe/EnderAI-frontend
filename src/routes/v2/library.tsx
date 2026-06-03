@@ -79,6 +79,7 @@ import {
   FolderPickerDropdown,
 } from "@/components/V2/Library/FolderControls"
 import { LibraryRecentReel } from "@/components/V2/Library/LibraryRecentReel"
+import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_CONTENT,
   V2_PAGE_FRAME,
@@ -488,6 +489,21 @@ function TaskforceLibrary() {
         return allDocuments
     }
   }, [allDocuments, currentUser.id, scopeFilter])
+  const scopeDocumentCounts = useMemo<Record<LibraryScope, number>>(
+    () => ({
+      all: allDocuments.length,
+      mine: allDocuments.filter(
+        (document) => document.owner_id === currentUser.id,
+      ).length,
+      shared: allDocuments.filter(
+        (document) => document.owner_id !== currentUser.id,
+      ).length,
+      org: allDocuments.filter(
+        (document) => document.visibility === "organization",
+      ).length,
+    }),
+    [allDocuments, currentUser.id],
+  )
   const folders = foldersQuery.data?.data ?? []
   const folderTree = useMemo(() => buildFolderTree(folders), [folders])
   const favoriteDocuments = useMemo(
@@ -679,7 +695,7 @@ function TaskforceLibrary() {
     >
       <section className={cn(V2_PAGE_FRAME, "-mt-6 overflow-hidden md:-mt-8")}>
         <div className={V2_PAGE_CONTENT}>
-          <div className="sticky top-0 z-20 -mx-6 -mt-6 flex shrink-0 flex-col gap-4 border-b bg-background/95 px-6 pt-6 pb-4 backdrop-blur">
+          <div className="sticky top-0 z-20 -mx-6 -mt-6 flex shrink-0 flex-col gap-4 bg-background/95 px-6 pt-6 pb-4 backdrop-blur">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className={V2_TAB_EYEBROW_CLASS}>
@@ -724,33 +740,20 @@ function TaskforceLibrary() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-wrap items-stretch border-t font-mono text-[10px] uppercase tracking-[0.1em]">
-              {LIBRARY_SCOPES.map((scope) => {
-                const isActive = scope.key === scopeFilter
-                return (
-                  <button
-                    key={scope.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() => {
-                      setScopeFilter(scope.key)
-                      setSelectedFolderId("all")
-                    }}
-                    className={cn(
-                      "border-r px-3 py-2 text-muted-foreground transition-colors hover:text-foreground",
-                      isActive &&
-                        "text-foreground shadow-[inset_0_-2px_0_#8447ff]",
-                    )}
-                  >
-                    {scope.label}
-                  </button>
-                )
-              })}
-              <div className="ml-auto px-3 py-2 text-muted-foreground">
-                Sort: recent ↓
-              </div>
-            </div>
+            <ScopeFilterBar
+              className="border-b-0"
+              items={LIBRARY_SCOPES.map((scope) => ({
+                key: scope.key,
+                label: scope.label,
+                count: scopeDocumentCounts[scope.key],
+              }))}
+              active={scopeFilter}
+              onChange={(key) => {
+                setScopeFilter(key)
+                setSelectedFolderId("all")
+              }}
+              sortLabel="recent ↓"
+            />
           </div>
 
           <FolderCreateDialog

@@ -11,7 +11,6 @@ import { useMemo, useState } from "react"
 import {
   type AgentSpecialistCreate,
   type AgentSpecialistStatus,
-  type AgentSpecialistSummary,
   createAgent,
   listAgents,
 } from "@/api/v2Agents"
@@ -24,6 +23,7 @@ import {
   AGENT_PAGE_TITLE_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
 import { CreateProfileDialog } from "@/components/V2/Agents/CreateProfileDialog"
+import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -72,46 +72,6 @@ function AgentsLoading() {
           </div>
         </div>
       ))}
-    </div>
-  )
-}
-
-function ScopeFilterBar({
-  agents,
-  active,
-  onChange,
-}: {
-  agents: AgentSpecialistSummary[]
-  active: AgentScope
-  onChange: (scope: AgentScope) => void
-}) {
-  return (
-    <div className="flex flex-wrap items-stretch border-y border-border font-mono text-[10px] uppercase tracking-[0.1em]">
-      {AGENT_SCOPES.map((scope) => {
-        const count =
-          scope.key === "all"
-            ? agents.length
-            : agents.filter((agent) => agent.status === scope.key).length
-        const isActive = scope.key === active
-        return (
-          <button
-            key={scope.key}
-            type="button"
-            aria-pressed={isActive}
-            onClick={() => onChange(scope.key)}
-            className={cn(
-              "flex items-center gap-1.5 border-r border-border px-3 py-2 text-muted-foreground transition-colors hover:text-foreground",
-              isActive && "text-foreground shadow-[inset_0_-2px_0_#8447ff]",
-            )}
-          >
-            {scope.label}
-            <span className="text-muted-foreground/60">{count}</span>
-          </button>
-        )
-      })}
-      <div className="ml-auto border-l border-border px-3 py-2 text-muted-foreground">
-        Sort: tokens saved ↓
-      </div>
     </div>
   )
 }
@@ -200,7 +160,20 @@ function AgentsIndex() {
           onSubmit={(values) => createProfileMutation.mutate(values)}
         />
 
-        <ScopeFilterBar agents={agents} active={scope} onChange={setScope} />
+        <ScopeFilterBar
+          items={AGENT_SCOPES.map((agentScope) => ({
+            key: agentScope.key,
+            label: agentScope.label,
+            count:
+              agentScope.key === "all"
+                ? agents.length
+                : agents.filter((agent) => agent.status === agentScope.key)
+                    .length,
+          }))}
+          active={scope}
+          onChange={setScope}
+          sortLabel="tokens saved ↓"
+        />
 
         {agentsQuery.isLoading ? (
           <AgentsLoading />
