@@ -143,7 +143,10 @@ function AgentsIndex() {
 
   return (
     <section
-      className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
+      className={cn(
+        V2_PAGE_FRAME,
+        "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+      )}
     >
       <div className={V2_PAGE_CONTENT}>
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
