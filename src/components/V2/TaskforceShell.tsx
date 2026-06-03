@@ -17,7 +17,6 @@ import {
   Rocket,
   Search,
   Shield,
-  Users,
 } from "lucide-react"
 import {
   Fragment,
@@ -71,7 +70,6 @@ type TaskforceNavItem = {
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Search, title: "Search", path: "/v2/search" },
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
-  { icon: Users, title: "People", path: "/v2/profiles" },
   { icon: BookOpen, title: "Library", path: "/v2/library" },
   { icon: ReceiptText, title: "Ledger", path: "/v2/ledger" },
   { icon: LineChart, title: "Metrics", path: "/v2/metrics" },
