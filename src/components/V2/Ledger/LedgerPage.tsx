@@ -359,7 +359,7 @@ export function LedgerPage({
   }
 
   return (
-    <div className={cn(styles.app, "-m-6 md:-m-8")}>
+    <div className={styles.app}>
       {selectedSessionId ? (
         <LedgerDetail
           detail={detailQuery.data}

@@ -80,7 +80,7 @@ import {
 } from "@/components/V2/Library/FolderControls"
 import { LibraryRecentReel } from "@/components/V2/Library/LibraryRecentReel"
 import {
-  V2_PAGE_CONTENT_FIXED,
+  V2_PAGE_CONTENT,
   V2_PAGE_FRAME,
   V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
@@ -678,8 +678,8 @@ function TaskforceLibrary() {
       }}
     >
       <section className={cn(V2_PAGE_FRAME, "overflow-hidden")}>
-        <div className={V2_PAGE_CONTENT_FIXED}>
-          <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-4 border-b bg-background/95 backdrop-blur">
+        <div className={V2_PAGE_CONTENT}>
+          <div className="sticky top-0 z-20 -mx-6 -mt-6 flex shrink-0 flex-col gap-4 border-b bg-background/95 px-6 pt-6 pb-4 backdrop-blur">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className={V2_TAB_EYEBROW_CLASS}>
@@ -799,7 +799,7 @@ function TaskforceLibrary() {
           )}
 
           {!isLoading && documents.length > 0 && libraryView === "files" && (
-            <div className="grid min-h-0 flex-1 gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
+            <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
               <FolderNav
                 folderTree={folderTree}
                 selectedFolderId={selectedFolderId}
@@ -813,7 +813,7 @@ function TaskforceLibrary() {
                 demo={isDemoMode}
                 onFolderDeleted={handleFolderDeleted}
               />
-              <div className="min-h-0 min-w-0 overflow-y-auto pr-1">
+              <div className="min-w-0 pr-1">
                 {isFolderEmpty && (
                   <div className="border bg-card p-6 text-sm text-muted-foreground">
                     No documents in this folder.
@@ -833,7 +833,7 @@ function TaskforceLibrary() {
           {!isLoading &&
             (documents.length > 0 || folders.length > 0) &&
             libraryView === "folders" && (
-              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+              <div className="pr-1">
                 <FolderDirectory
                   folderTree={folderTree}
                   documentsByFolder={documentsByFolder}

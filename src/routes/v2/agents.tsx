@@ -1,331 +1,108 @@
 import { useQuery } from "@tanstack/react-query"
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useRouterState,
-} from "@tanstack/react-router"
-import { Bot, LayoutGrid, List, Loader2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router"
+import { Bot, Loader2 } from "lucide-react"
+import { useMemo, useState } from "react"
 
-import { type AgentSpecialistSummary, listAgents } from "@/api/v2Agents"
+import {
+  type AgentSpecialistStatus,
+  type AgentSpecialistSummary,
+  listAgents,
+} from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AgentSessionCard } from "@/components/V2/Agents/AgentSessionCard"
+import { AgentProfileCard } from "@/components/V2/Agents/AgentProfileCard"
 import {
   AGENT_EYEBROW_CLASS,
-  AGENT_FEATURE_STRIP_VALUE_CLASS,
-  AGENT_NAME_CLASS,
   AGENT_PAGE_TITLE_CLASS,
-  AGENT_ROLE_CLASS,
-  AGENT_ROUTE_CHIP_CLASS,
-  AGENT_STAT_LABEL_CLASS,
-  AGENT_TABLE_HEADER_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
-import {
-  formatCompactNumber,
-  formatRelativeTime,
-} from "@/components/V2/Agents/formatters"
 import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
 
-type AgentsViewMode = "grid" | "list"
+type AgentScope = "all" | AgentSpecialistStatus
 
-const AGENTS_VIEW_STORAGE_KEY = "v2-agents-view"
-
-function readStoredView(): AgentsViewMode {
-  if (typeof window === "undefined") return "list"
-  const stored = window.sessionStorage.getItem(AGENTS_VIEW_STORAGE_KEY)
-  return stored === "grid" || stored === "list" ? stored : "list"
-}
-
-function useAgentsViewMode(): [AgentsViewMode, (mode: AgentsViewMode) => void] {
-  const [view, setView] = useState<AgentsViewMode>(() => readStoredView())
-
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    window.sessionStorage.setItem(AGENTS_VIEW_STORAGE_KEY, view)
-  }, [view])
-
-  return [view, setView]
-}
+const AGENT_SCOPES: { key: AgentScope; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "draft", label: "Draft" },
+  { key: "archived", label: "Archived" },
+]
 
 export const Route = createFileRoute("/v2/agents")({
   component: TaskforceAgents,
   head: () => ({
     meta: [
       {
-        title: "Taskforce | Agents",
+        title: "Taskforce | Profiles",
       },
     ],
   }),
 })
 
-function ownerLabel(agent: AgentSpecialistSummary) {
-  const lowerRole = agent.role.toLowerCase()
-  if (lowerRole.includes("billing") || lowerRole.includes("frontend")) {
-    return "@alex"
-  }
-  if (lowerRole.includes("search") || lowerRole.includes("retrieval")) {
-    return "@team"
-  }
-  return "org-shared"
-}
-
-function isIdle(agent: AgentSpecialistSummary) {
-  if (!agent.last_invoked_at) {
-    return true
-  }
-
-  const lastUsed = new Date(agent.last_invoked_at).getTime()
-  if (Number.isNaN(lastUsed)) {
-    return true
-  }
-
-  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
-  return Date.now() - lastUsed > thirtyDaysMs
-}
-
-function topPerformer(agents: AgentSpecialistSummary[]) {
-  return agents.reduce<AgentSpecialistSummary | null>((top, agent) => {
-    if (!top || agent.tokens_saved > top.tokens_saved) {
-      return agent
-    }
-    return top
-  }, null)
-}
-
 function AgentsLoading() {
-  const cols =
-    "grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_minmax(5.5rem,7rem)]"
-
   return (
-    <div className="border-t border-border">
-      <div
-        className={`grid ${cols} gap-4 border-b border-border bg-muted px-1.5 py-2 max-md:hidden ${AGENT_TABLE_HEADER_CLASS}`}
-      >
-        <div>Profile</div>
-        <div>Tags</div>
-        <div className="text-right">Tokens saved</div>
-        <div className="text-right">Invocations</div>
-        <div className="text-right">Last used</div>
-      </div>
-      {Array.from({ length: 5 }, (_, index) => (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }, (_, index) => (
         <div
           key={index}
-          className={`grid gap-3 border-b border-border/60 px-1.5 py-3 md:grid ${cols} md:items-center md:gap-4`}
+          className="flex min-h-[168px] flex-col border border-border bg-card px-4 pt-[15px]"
         >
-          <div>
-            <Skeleton className="h-4 w-44" />
-            <Skeleton className="mt-2 h-3 w-32" />
+          <div className="flex items-center gap-[11px]">
+            <Skeleton className="size-[38px] rounded-none" />
+            <div className="min-w-0 flex-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="mt-2 h-3 w-24" />
+            </div>
           </div>
-          <div className="flex gap-1">
-            <Skeleton className="h-5 w-16" />
-            <Skeleton className="h-5 w-20" />
-            <Skeleton className="h-5 w-14" />
+          <Skeleton className="mt-3 h-3 w-full" />
+          <Skeleton className="mt-1.5 h-3 w-2/3" />
+          <div className="mt-auto grid grid-cols-3 gap-3 border-t border-border/60 pt-3">
+            <Skeleton className="h-5 w-10" />
+            <Skeleton className="h-5 w-10" />
+            <Skeleton className="h-5 w-10" />
           </div>
-          <Skeleton className="h-4 w-16 md:ml-auto" />
-          <Skeleton className="h-4 w-12 md:ml-auto" />
-          <Skeleton className="h-4 w-20 md:justify-self-end" />
         </div>
       ))}
     </div>
   )
 }
 
-function AgentsFeatureStrip({ agents }: { agents: AgentSpecialistSummary[] }) {
-  const tokensSaved = agents.reduce((sum, agent) => sum + agent.tokens_saved, 0)
-  const performer = topPerformer(agents)
-  const idleCount = agents.filter(isIdle).length
-
-  return (
-    <section className="grid border border-border bg-background md:grid-cols-3">
-      <div className="border-b border-border px-3.5 py-3 md:border-r md:border-b-0">
-        <div className={AGENT_STAT_LABEL_CLASS}>Total saved</div>
-        <div className={`mt-1 ${AGENT_FEATURE_STRIP_VALUE_CLASS}`}>
-          <span className="text-[#8447ff]">
-            {formatCompactNumber(tokensSaved)}
-          </span>{" "}
-          <small className="text-xs font-medium text-muted-foreground">
-            tokens
-          </small>
-        </div>
-      </div>
-      <div className="border-b border-border px-3.5 py-3 md:border-r md:border-b-0">
-        <div className={AGENT_STAT_LABEL_CLASS}>Top performer</div>
-        <div className={`mt-1 truncate ${AGENT_FEATURE_STRIP_VALUE_CLASS}`}>
-          {performer?.name ?? "No profiles"}
-        </div>
-      </div>
-      <div className="px-3.5 py-3">
-        <div className={AGENT_STAT_LABEL_CLASS}>Idle &gt; 30d</div>
-        <div className={`mt-1 ${AGENT_FEATURE_STRIP_VALUE_CLASS}`}>
-          {idleCount}{" "}
-          <small className="text-xs font-medium text-muted-foreground">
-            profiles
-          </small>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function HeaderActions({
-  view,
-  onChange,
-}: {
-  view: AgentsViewMode
-  onChange: (mode: AgentsViewMode) => void
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <ViewToggle view={view} onChange={onChange} />
-      <Button type="button" size="sm" className="w-fit">
-        + Profile
-      </Button>
-    </div>
-  )
-}
-
-function ViewToggle({
-  view,
-  onChange,
-}: {
-  view: AgentsViewMode
-  onChange: (mode: AgentsViewMode) => void
-}) {
-  return (
-    <div className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground">
-      <ToggleButton
-        active={view === "list"}
-        onClick={() => onChange("list")}
-        label="List view"
-        icon={<List className="size-3.5" aria-hidden />}
-      />
-      <ToggleButton
-        active={view === "grid"}
-        onClick={() => onChange("grid")}
-        label="Grid view"
-        icon={<LayoutGrid className="size-3.5" aria-hidden />}
-      />
-    </div>
-  )
-}
-
-function ToggleButton({
+function ScopeFilterBar({
+  agents,
   active,
-  onClick,
-  label,
-  icon,
+  onChange,
 }: {
-  active: boolean
-  onClick: () => void
-  label: string
-  icon: React.ReactNode
+  agents: AgentSpecialistSummary[]
+  active: AgentScope
+  onChange: (scope: AgentScope) => void
 }) {
   return (
-    <button
-      type="button"
-      aria-pressed={active}
-      aria-label={label}
-      data-state={active ? "active" : "inactive"}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-[calc(100%-1px)] items-center justify-center whitespace-nowrap rounded-md border border-transparent px-3 py-1 text-foreground transition-[color,box-shadow] focus-visible:border-ring focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        "data-[state=active]:bg-background data-[state=active]:shadow-sm",
-        "dark:text-muted-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground",
-      )}
-    >
-      {icon}
-    </button>
-  )
-}
-
-function AgentsGrid({ agents }: { agents: AgentSpecialistSummary[] }) {
-  return (
-    <div
-      data-testid="agents-card-grid"
-      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-    >
-      {agents.map((agent) => (
-        <AgentSessionCard key={agent.id} agent={agent} />
-      ))}
-    </div>
-  )
-}
-
-function AgentRow({ agent }: { agent: AgentSpecialistSummary }) {
-  const tags = agent.domain_tags.slice(0, 3)
-  const hiddenTagCount = Math.max(0, agent.domain_tags.length - tags.length)
-  const idle = isIdle(agent)
-
-  return (
-    <article className="group relative grid gap-3 border-b border-border/60 px-1.5 py-3 transition-colors hover:bg-muted/45 md:grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_6rem] md:items-center md:gap-4">
-      <Link
-        to="/v2/agents/$slug"
-        params={{ slug: agent.slug }}
-        aria-label={`Open profile ${agent.name}`}
-        className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-      />
-
-      <div className="min-w-0">
-        <h3 className={cn("truncate", AGENT_NAME_CLASS)}>{agent.name}</h3>
-        <p className={cn("truncate", AGENT_ROLE_CLASS)}>
-          {agent.role} · {ownerLabel(agent)}
-        </p>
+    <div className="flex flex-wrap items-stretch border-y border-border font-mono text-[10px] uppercase tracking-[0.1em]">
+      {AGENT_SCOPES.map((scope) => {
+        const count =
+          scope.key === "all"
+            ? agents.length
+            : agents.filter((agent) => agent.status === scope.key).length
+        const isActive = scope.key === active
+        return (
+          <button
+            key={scope.key}
+            type="button"
+            aria-pressed={isActive}
+            onClick={() => onChange(scope.key)}
+            className={cn(
+              "flex items-center gap-1.5 border-r border-border px-3 py-2 text-muted-foreground transition-colors hover:text-foreground",
+              isActive && "text-foreground shadow-[inset_0_-2px_0_#8447ff]",
+            )}
+          >
+            {scope.label}
+            <span className="text-muted-foreground/60">{count}</span>
+          </button>
+        )
+      })}
+      <div className="ml-auto border-l border-border px-3 py-2 text-muted-foreground">
+        Sort: tokens saved ↓
       </div>
-
-      <div className="flex flex-wrap gap-1">
-        {tags.map((tag) => (
-          <span key={tag} className={AGENT_ROUTE_CHIP_CLASS}>
-            {tag.toLowerCase()}
-          </span>
-        ))}
-        {hiddenTagCount > 0 && (
-          <span className={AGENT_ROUTE_CHIP_CLASS}>+{hiddenTagCount}</span>
-        )}
-      </div>
-
-      <div className="text-sm tabular-nums text-foreground md:text-right">
-        {formatCompactNumber(agent.tokens_saved)}
-      </div>
-
-      <div className="text-sm tabular-nums text-foreground md:text-right">
-        {agent.invocations_count.toLocaleString()}
-      </div>
-
-      <div className="flex min-w-0 items-center justify-end gap-1.5 text-xs text-muted-foreground">
-        <span
-          className={`size-1.5 shrink-0 ${idle ? "bg-border" : "bg-emerald-600 dark:bg-emerald-400"}`}
-        />
-        <span className="min-w-0 truncate tabular-nums">
-          {formatRelativeTime(agent.last_invoked_at)}
-        </span>
-      </div>
-    </article>
-  )
-}
-
-function AgentsList({ agents }: { agents: AgentSpecialistSummary[] }) {
-  const cols =
-    "grid-cols-[minmax(0,1.4fr)_minmax(10rem,1fr)_6.5rem_5.25rem_minmax(5.5rem,7rem)]"
-
-  return (
-    <div data-testid="agents-grid" className="border-t border-border">
-      <div
-        className={`grid ${cols} gap-4 border-b border-border bg-muted px-1.5 py-2 max-md:hidden ${AGENT_TABLE_HEADER_CLASS}`}
-      >
-        <div>Profile</div>
-        <div>Tags</div>
-        <div className="text-right">Tokens saved</div>
-        <div className="text-right">Invocations</div>
-        <div className="text-right">Last used</div>
-      </div>
-
-      {agents.map((agent) => (
-        <AgentRow key={agent.id} agent={agent} />
-      ))}
     </div>
   )
 }
@@ -348,13 +125,21 @@ function EmptyAgents({ isDemoMode }: { isDemoMode: boolean }) {
 
 function AgentsIndex() {
   const { isDemoMode } = useDemoMode()
-  const [view, setView] = useAgentsViewMode()
+  const [scope, setScope] = useState<AgentScope>("all")
   const agentsQuery = useQuery({
     queryKey: ["v2-agents", isDemoMode],
     queryFn: () => listAgents({ demo: isDemoMode }),
   })
   const agents = agentsQuery.data?.items ?? []
   const activeCount = agents.filter((agent) => agent.status === "active").length
+
+  const visible = useMemo(() => {
+    const filtered =
+      scope === "all"
+        ? agents
+        : agents.filter((agent) => agent.status === scope)
+    return [...filtered].sort((a, b) => b.tokens_saved - a.tokens_saved)
+  }, [agents, scope])
 
   return (
     <section
@@ -368,21 +153,30 @@ function AgentsIndex() {
             </div>
             <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
           </div>
-          <HeaderActions view={view} onChange={setView} />
+          <Button type="button" size="sm" className="w-fit">
+            + Profile
+          </Button>
         </header>
 
-        <AgentsFeatureStrip agents={agents} />
+        <ScopeFilterBar agents={agents} active={scope} onChange={setScope} />
 
         {agentsQuery.isLoading ? (
           <AgentsLoading />
-        ) : agents.length > 0 ? (
-          view === "grid" ? (
-            <AgentsGrid agents={agents} />
-          ) : (
-            <AgentsList agents={agents} />
-          )
-        ) : (
+        ) : agents.length === 0 ? (
           <EmptyAgents isDemoMode={isDemoMode} />
+        ) : visible.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No profiles match this filter.
+          </p>
+        ) : (
+          <div
+            data-testid="agents-card-grid"
+            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            {visible.map((agent) => (
+              <AgentProfileCard key={agent.id} agent={agent} />
+            ))}
+          </div>
         )}
 
         {agentsQuery.isFetching && !agentsQuery.isLoading && (
