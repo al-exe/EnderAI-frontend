@@ -677,7 +677,7 @@ function TaskforceLibrary() {
         onDelete: requestDeleteDocument,
       }}
     >
-      <section className={cn(V2_PAGE_FRAME, "overflow-hidden")}>
+      <section className={cn(V2_PAGE_FRAME, "-mt-6 overflow-hidden md:-mt-8")}>
         <div className={V2_PAGE_CONTENT}>
           <div className="sticky top-0 z-20 -mx-6 -mt-6 flex shrink-0 flex-col gap-4 border-b bg-background/95 px-6 pt-6 pb-4 backdrop-blur">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

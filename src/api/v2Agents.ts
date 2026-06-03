@@ -22,6 +22,13 @@ export interface AgentsListResponse {
   items: AgentSpecialistSummary[]
 }
 
+export interface AgentSpecialistCreate {
+  name: string
+  role: string
+  short_description?: string
+  domain_tags?: string[]
+}
+
 export interface AgentSpecialistLinkedDoc {
   document_id: string
   title: string
@@ -75,6 +82,20 @@ export function listAgents(
     query: {
       demo: options.demo || undefined,
     },
+  })
+}
+
+export function createAgent(
+  body: AgentSpecialistCreate,
+  options: { demo?: boolean } = {},
+): CancelablePromise<AgentSpecialistDetail> {
+  return request(OpenAPI, {
+    method: "POST",
+    url: "/api/v1/v2/agents",
+    query: {
+      demo: options.demo || undefined,
+    },
+    body,
   })
 }
 
