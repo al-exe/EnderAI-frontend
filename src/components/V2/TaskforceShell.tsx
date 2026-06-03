@@ -6,7 +6,6 @@ import {
   useRouterState,
 } from "@tanstack/react-router"
 import {
-  ArrowLeftRight,
   BookOpen,
   Bot,
   ChevronDown,
@@ -14,6 +13,7 @@ import {
   GripHorizontal,
   LineChart,
   MessageCircle,
+  ReceiptText,
   Rocket,
   Search,
   Shield,
@@ -71,7 +71,7 @@ const taskforceItems: TaskforceNavItem[] = [
   { icon: Search, title: "Search", path: "/v2/search" },
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
   { icon: BookOpen, title: "Library", path: "/v2/library" },
-  { icon: ArrowLeftRight, title: "Ledger", path: "/v2/ledger" },
+  { icon: ReceiptText, title: "Ledger", path: "/v2/ledger" },
   { icon: LineChart, title: "Metrics", path: "/v2/metrics" },
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
 ]
