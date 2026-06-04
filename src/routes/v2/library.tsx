@@ -693,68 +693,70 @@ function TaskforceLibrary() {
         onDelete: requestDeleteDocument,
       }}
     >
-      <section className={cn(V2_PAGE_FRAME, "-mt-6 overflow-hidden md:-mt-8")}>
+      <section
+        className={cn(
+          V2_PAGE_FRAME,
+          "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+        )}
+      >
         <div className={V2_PAGE_CONTENT}>
-          <div className="sticky top-0 z-20 -mx-6 -mt-6 flex shrink-0 flex-col gap-4 bg-background/95 px-6 pt-6 pb-4 backdrop-blur">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <div className={V2_TAB_EYEBROW_CLASS}>
-                  Library · {totalDocumentCount} documents ·{" "}
-                  {teamSharedDocumentCount} shared with team
-                </div>
-                <h1 className="mt-1 text-2xl font-semibold">Library</h1>
+          <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className={V2_TAB_EYEBROW_CLASS}>
+                Library · {totalDocumentCount} documents ·{" "}
+                {teamSharedDocumentCount} shared with team
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <div
-                  role="tablist"
-                  aria-label="Library view"
-                  className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-                >
-                  <LibraryViewToggle
-                    label="Files"
-                    active={libraryView === "files"}
-                    onClick={() => setLibraryView("files")}
-                  />
-                  <LibraryViewToggle
-                    label="Folders"
-                    active={libraryView === "folders"}
-                    onClick={() => setLibraryView("folders")}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="w-fit"
-                  onClick={() => setCreateFolderOpen(true)}
-                >
-                  + Folder
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="w-fit"
-                  onClick={() => setCreateDocumentOpen(true)}
-                >
-                  + Document
-                </Button>
-              </div>
+              <h1 className="mt-1 text-2xl font-semibold">Library</h1>
             </div>
-            <ScopeFilterBar
-              className="border-b-0"
-              items={LIBRARY_SCOPES.map((scope) => ({
-                key: scope.key,
-                label: scope.label,
-                count: scopeDocumentCounts[scope.key],
-              }))}
-              active={scopeFilter}
-              onChange={(key) => {
-                setScopeFilter(key)
-                setSelectedFolderId("all")
-              }}
-              sortLabel="recent ↓"
-            />
-          </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                role="tablist"
+                aria-label="Library view"
+                className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+              >
+                <LibraryViewToggle
+                  label="Files"
+                  active={libraryView === "files"}
+                  onClick={() => setLibraryView("files")}
+                />
+                <LibraryViewToggle
+                  label="Folders"
+                  active={libraryView === "folders"}
+                  onClick={() => setLibraryView("folders")}
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="w-fit"
+                onClick={() => setCreateFolderOpen(true)}
+              >
+                + Folder
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="w-fit"
+                onClick={() => setCreateDocumentOpen(true)}
+              >
+                + Document
+              </Button>
+            </div>
+          </header>
+          <ScopeFilterBar
+            items={LIBRARY_SCOPES.map((scope) => ({
+              key: scope.key,
+              label: scope.label,
+              count: scopeDocumentCounts[scope.key],
+            }))}
+            active={scopeFilter}
+            onChange={(key) => {
+              setScopeFilter(key)
+              setSelectedFolderId("all")
+            }}
+            sortLabel="recent ↓"
+          />
 
           <FolderCreateDialog
             open={createFolderOpen}
