@@ -1,12 +1,15 @@
 /*
  * Ledger surface — a faithful port of docs/ledger-target.html.
  *
- * The mock drives every measurement here; values are copied from the target
- * (then scaled up ~25% per design feedback) so the index and the
- * session-detail ("ledger item") view match the intent. The standalone mock
- * defined a `--tf-*` palette in a missing `_shared.css`; we reconstruct that
- * palette on `.app` from the app's own theme tokens so the surface inherits
- * light/dark mode automatically.
+ * Type and spacing are normalized to the rest of the v2 surface (Profiles /
+ * Library): the mono eyebrow matches V2_TAB_EYEBROW_CLASS (12px), the page
+ * title matches text-2xl (24px), horizontal insets match the p-6 content
+ * padding (24px), and body/label sizes round to the standard Tailwind scale
+ * (12 / 14 / 16 / 24) so the page reads the same as every other tab.
+ *
+ * The standalone mock defined a `--tf-*` palette in a missing `_shared.css`;
+ * we reconstruct that palette on `.app` from the app's own theme tokens so the
+ * surface inherits light/dark mode automatically.
  *
  * Structural grays (hairline, dots, panel fills) are mixed from --foreground,
  * not the app's alpha-based --border, so the timeline and the command/edit
@@ -41,7 +44,7 @@
   background: var(--tf-bg);
   color: var(--tf-fg);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 16px;
 }
 
 /* biome-ignore lint/correctness/noUnknownPseudoClass: CSS Modules :global() scope selector. */
@@ -63,7 +66,7 @@
 }
 
 .head {
-  padding: 22px 28px 14px;
+  padding: 24px 24px 16px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 14px;
@@ -71,15 +74,15 @@
 }
 .crumb {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--tf-faint-fg);
+  color: var(--tf-muted-fg);
 }
 .h1 {
-  margin: 7px 0 0;
-  font-size: 29px;
-  letter-spacing: -0.022em;
+  margin: 4px 0 0;
+  font-size: 24px;
+  letter-spacing: -0.018em;
   font-weight: 600;
 }
 .tools {
@@ -103,7 +106,7 @@
   border: 0;
   background: transparent;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tf-fg);
   outline: none;
 }
@@ -117,7 +120,7 @@
   padding: 0 11px;
   border: 1px solid var(--tf-border);
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--tf-muted-fg);
   display: flex;
   align-items: center;
@@ -137,7 +140,7 @@
   height: 100%;
   opacity: 0;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* Column header */
@@ -149,11 +152,11 @@
   display: grid;
   grid-template-columns: var(--grid);
   gap: 16px;
-  padding: 11px 28px;
+  padding: 11px 24px;
   border-top: 1px solid var(--tf-border);
   border-bottom: 1px solid var(--tf-border);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--tf-faint-fg);
@@ -163,7 +166,7 @@
   display: flex;
   align-items: baseline;
   gap: 12px;
-  padding: 10px 28px;
+  padding: 10px 24px;
   background: var(--tf-card);
   border-bottom: 1px solid var(--tf-hairline);
 }
@@ -190,7 +193,7 @@
   grid-template-columns: var(--grid);
   gap: 16px;
   align-items: center;
-  padding: 14px 28px;
+  padding: 14px 24px;
   border: 0;
   border-bottom: 1px solid var(--tf-hairline);
   width: 100%;
@@ -205,13 +208,13 @@
 }
 .clock {
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: 14px;
   color: var(--tf-muted-fg);
   font-variant-numeric: tabular-nums;
 }
 .clock small {
   display: block;
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--tf-faint-fg);
   margin-top: 2px;
   letter-spacing: 0.04em;
@@ -220,7 +223,7 @@
   min-width: 0;
 }
 .ttl {
-  font-size: 15.5px;
+  font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.005em;
   overflow: hidden;
@@ -230,7 +233,7 @@
 .sub {
   margin-top: 4px;
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--tf-muted-fg);
   display: flex;
   align-items: center;
@@ -262,7 +265,7 @@
   min-width: 0;
 }
 .harnessH {
-  font-size: 13.5px;
+  font-size: 14px;
   color: var(--tf-fg);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -278,7 +281,7 @@
 }
 .act {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--tf-muted-fg);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -290,7 +293,7 @@
   min-width: 0;
 }
 .backsLink {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tf-primary);
   text-decoration: none;
   display: flex;
@@ -314,7 +317,7 @@
   color: var(--tf-faint-fg);
 }
 .backsNone {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tf-faint-fg);
 }
 .chev {
@@ -328,17 +331,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 24px 28px;
+  padding: 24px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tf-muted-fg);
 }
 .empty {
-  margin: 24px 28px;
+  margin: 24px;
   border: 1px dashed var(--tf-border);
   padding: 44px;
   text-align: center;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--tf-muted-fg);
 }
 
@@ -354,12 +357,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 28px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--tf-border);
 }
 .back {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tf-muted-fg);
   cursor: pointer;
   display: flex;
@@ -374,7 +377,7 @@
 }
 .idText {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tf-faint-fg);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -409,13 +412,13 @@
 }
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
+  font-size: 12px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--tf-faint-fg);
+  color: var(--tf-muted-fg);
 }
 .tHead h2 {
-  margin: 9px 0 0;
+  margin: 4px 0 0;
   font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.018em;
@@ -472,10 +475,10 @@
   text-transform: none;
   letter-spacing: 0;
   font-family: var(--font-sans);
-  font-size: 14.5px;
+  font-size: 14px;
 }
 .txt {
-  font-size: 15.5px;
+  font-size: 16px;
   line-height: 1.55;
   color: var(--tf-fg);
   margin-top: 7px;
@@ -492,7 +495,7 @@
   border: 1px solid var(--tf-border);
   background: var(--tf-card);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
 }
 .cmdLine {
   padding: 8px 11px;
@@ -548,13 +551,13 @@
 }
 .editFile {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tf-fg);
   word-break: break-all;
 }
 .editStat {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   margin-left: auto;
   white-space: nowrap;
 }
@@ -566,7 +569,7 @@
 }
 .editNote {
   margin-top: 8px;
-  font-size: 14.5px;
+  font-size: 14px;
   color: var(--tf-muted-fg);
   line-height: 1.55;
   max-width: 70ch;
@@ -591,7 +594,7 @@
 }
 .grp {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--tf-faint-fg);
@@ -605,7 +608,7 @@
   grid-template-columns: 96px 1fr;
   gap: 10px;
   padding: 5px 0;
-  font-size: 13.5px;
+  font-size: 14px;
 }
 .kvK {
   color: var(--tf-faint-fg);
@@ -617,7 +620,7 @@
 }
 .kvVMono {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .doc {
@@ -639,7 +642,7 @@
   min-width: 0;
 }
 .docLink {
-  font-size: 14.5px;
+  font-size: 14px;
   color: var(--tf-primary);
   text-decoration: none;
   font-weight: 500;
@@ -651,7 +654,7 @@
   gap: 5px;
   margin-top: 4px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -670,7 +673,7 @@
 }
 .btn {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 8px 11px;
