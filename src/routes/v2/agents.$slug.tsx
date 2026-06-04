@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
-import { Copy, Loader2, Pencil } from "lucide-react"
+import { ChevronDown, ChevronUp, Loader2, Pencil } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -152,6 +152,8 @@ function Chips({ values }: { values: string[] }) {
 }
 
 function Instructions({ instructions }: { instructions: string[] }) {
+  const [expanded, setExpanded] = useState(false)
+
   return (
     <section className="pt-5">
       <SectionHeader
@@ -163,15 +165,29 @@ function Instructions({ instructions }: { instructions: string[] }) {
           <span>system prompt</span>
           <span className="text-[#8447ff]">live</span>
         </div>
-        <pre className="max-h-36 overflow-hidden whitespace-pre-wrap px-3 py-3 text-sm leading-5 text-zinc-600 dark:text-zinc-300">
+        <pre
+          className={cn(
+            "whitespace-pre-wrap px-3 py-3 text-sm leading-5 text-zinc-600 dark:text-zinc-300",
+            !expanded && "max-h-36 overflow-hidden",
+          )}
+        >
           {instructions
             .map((instruction, index) => `${index + 1}. ${instruction}`)
             .join("\n")}
         </pre>
-        <div className="flex items-center justify-between border-t border-black/10 px-3 py-2 text-xs uppercase tracking-wide text-[#8447ff] dark:border-white/12">
-          <span>Expand</span>
-          <Copy className="size-4" />
-        </div>
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-expanded={expanded}
+          className="flex w-full items-center justify-between border-t border-black/10 px-3 py-2 text-xs uppercase tracking-wide text-[#8447ff] transition-colors hover:bg-[#8447ff]/5 dark:border-white/12"
+        >
+          <span>{expanded ? "Collapse" : "Expand"}</span>
+          {expanded ? (
+            <ChevronUp className="size-4" />
+          ) : (
+            <ChevronDown className="size-4" />
+          )}
+        </button>
       </div>
     </section>
   )
@@ -181,7 +197,7 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
   return (
     <section className="pt-5">
       <SectionHeader
-        title="Earned from"
+        title="Sessions & documents"
         meta={`${agent.recent_invocations.length} sessions · ${agent.linked_knowledge.length} documents`}
       />
 
@@ -472,11 +488,6 @@ function AgentDetailPage() {
               <span className="size-1.5 rounded-full bg-emerald-500" />
               Active
             </span>
-            {agent.created_from === "earned" ? (
-              <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground dark:border-white/12">
-                Earned
-              </span>
-            ) : null}
             <button
               type="button"
               onClick={() => setEditOpen(true)}
