@@ -29,6 +29,13 @@ export interface AgentSpecialistCreate {
   domain_tags?: string[]
 }
 
+export interface AgentSpecialistUpdate {
+  name?: string
+  role?: string
+  short_description?: string
+  domain_tags?: string[]
+}
+
 export interface AgentSpecialistLinkedDoc {
   document_id: string
   title: string
@@ -62,6 +69,7 @@ export interface AgentSpecialistDetail {
   slug: string
   name: string
   role: string
+  short_description: string
   description: string
   created_from: string
   domain_tags: string[]
@@ -105,6 +113,40 @@ export function getAgent(
 ): CancelablePromise<AgentSpecialistDetail> {
   return request(OpenAPI, {
     method: "GET",
+    url: "/api/v1/v2/agents/{slug}",
+    path: {
+      slug,
+    },
+    query: {
+      demo: options.demo || undefined,
+    },
+  })
+}
+
+export function updateAgent(
+  slug: string,
+  body: AgentSpecialistUpdate,
+  options: { demo?: boolean } = {},
+): CancelablePromise<AgentSpecialistDetail> {
+  return request(OpenAPI, {
+    method: "PATCH",
+    url: "/api/v1/v2/agents/{slug}",
+    path: {
+      slug,
+    },
+    query: {
+      demo: options.demo || undefined,
+    },
+    body,
+  })
+}
+
+export function deleteAgent(
+  slug: string,
+  options: { demo?: boolean } = {},
+): CancelablePromise<void> {
+  return request(OpenAPI, {
+    method: "DELETE",
     url: "/api/v1/v2/agents/{slug}",
     path: {
       slug,

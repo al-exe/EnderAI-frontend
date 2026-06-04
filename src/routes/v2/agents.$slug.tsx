@@ -1,11 +1,15 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
-import { ArrowUpRight, Copy, Loader2, Pencil } from "lucide-react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { Copy, Loader2, Pencil } from "lucide-react"
+import { useState } from "react"
 
 import {
   type AgentSpecialistDetail,
+  type AgentSpecialistUpdate,
   type AgentsListResponse,
+  deleteAgent,
   getAgent,
+  updateAgent,
 } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
@@ -26,6 +30,7 @@ import {
   AGENT_SECTION_TITLE_CLASS,
   AGENT_STAT_LABEL_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
+import { EditProfileDialog } from "@/components/V2/Agents/EditProfileDialog"
 import {
   formatCompactNumber,
   formatRelativeTime,
@@ -36,6 +41,7 @@ import {
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
 } from "@/components/V2/v2PageShell"
+import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/v2/agents/$slug")({
@@ -172,45 +178,82 @@ function Instructions({ instructions }: { instructions: string[] }) {
 }
 
 function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
-  const originLabel =
-    agent.created_from === "earned" ? "Earned profile" : "Seeded profile"
-
   return (
     <section className="pt-5">
       <SectionHeader
         title="Earned from"
-        meta={`${agent.linked_knowledge.length} documents`}
+        meta={`${agent.recent_invocations.length} sessions · ${agent.linked_knowledge.length} documents`}
       />
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <span className="inline-flex h-7 items-center border border-black/10 px-2.5 font-mono text-[0.66rem] uppercase tracking-[0.12em] text-muted-foreground dark:border-white/12">
-          {originLabel}
-        </span>
-        <Link
-          to="/v2/ledger"
-          search={{ specialist: agent.slug }}
-          className="inline-flex h-7 items-center gap-1.5 border border-black/10 px-2.5 text-xs font-medium text-foreground hover:bg-zinc-50 dark:border-white/12 dark:hover:bg-white/5"
-        >
-          Sessions
-          <ArrowUpRight className="size-3.5" />
-        </Link>
+
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full min-w-[42rem] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-black/10 text-xs uppercase tracking-wide text-zinc-400 dark:border-white/12 dark:text-zinc-500">
+              <th className="py-2 pr-3 text-left font-medium">Session</th>
+              <th className="px-3 text-left font-medium">Repo</th>
+              <th className="px-3 text-right font-medium">Saved</th>
+              <th className="py-2 pl-3 text-right font-medium">When</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agent.recent_invocations.length === 0 ? (
+              <tr className="border-b border-black/5 dark:border-white/10">
+                <td
+                  colSpan={4}
+                  className="py-3 text-sm text-zinc-500 dark:text-zinc-400"
+                >
+                  No sessions yet.
+                </td>
+              </tr>
+            ) : (
+              agent.recent_invocations.map((invocation) => (
+                <tr
+                  key={invocation.id}
+                  className="group relative cursor-pointer border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
+                >
+                  <td className="py-3 pr-3 align-top text-sm text-zinc-950 dark:text-white">
+                    {invocation.session_id && (
+                      <Link
+                        to="/v2/ledger"
+                        search={{ session_id: invocation.session_id }}
+                        aria-label={`Open session "${invocation.prompt}"`}
+                        className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                      />
+                    )}
+                    <div className="font-semibold">"{invocation.prompt}"</div>
+                  </td>
+                  <td className="px-3 py-3 align-top text-sm text-zinc-500 dark:text-zinc-400">
+                    {invocation.repo ?? "Taskforce"}
+                  </td>
+                  <td className="px-3 py-3 text-right align-top text-sm font-semibold text-[#8447ff]">
+                    +{formatCompactNumber(invocation.tokens_saved)}
+                  </td>
+                  <td className="py-3 pl-3 text-right align-top text-xs text-zinc-400 dark:text-zinc-500">
+                    {formatRelativeTime(invocation.created_at)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
+
       <div className="mt-2 overflow-x-auto">
         <table className="w-full min-w-[42rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-black/10 text-xs uppercase tracking-wide text-zinc-400 dark:border-white/12 dark:text-zinc-500">
               <th className="py-2 pr-3 text-left font-medium">Document</th>
               <th className="px-3 text-left font-medium">Anchor</th>
-              <th className="px-3 text-right font-medium">Reason</th>
-              <th className="py-2 pl-3 text-right font-medium">Open</th>
+              <th className="py-2 px-3 text-right font-medium">Reason</th>
             </tr>
           </thead>
           <tbody>
             {agent.linked_knowledge.map((document) => (
               <tr
                 key={`${document.document_id}-${document.anchor_id ?? "summary"}`}
-                className="group relative border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
+                className="group relative cursor-pointer border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
               >
-                <td className="relative py-3 pr-3 align-top">
+                <td className="py-3 pr-3 align-top">
                   <a
                     href={document.href}
                     className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
@@ -229,12 +272,6 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
                 </td>
                 <td className="px-3 py-3 text-right align-top text-xs text-zinc-500 dark:text-zinc-400">
                   {document.reason ?? "Pinned knowledge"}
-                </td>
-                <td className="py-3 pl-3 text-right align-top">
-                  <span className="inline-flex items-center justify-end gap-1 text-xs font-medium text-[#8447ff]">
-                    Open
-                    <ArrowUpRight className="size-4" />
-                  </span>
                 </td>
               </tr>
             ))}
@@ -301,6 +338,35 @@ function AgentDetailPage() {
   const { slug } = Route.useParams()
   const { isDemoMode } = useDemoMode()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+  const [editOpen, setEditOpen] = useState(false)
+  const updateMutation = useMutation({
+    mutationFn: (values: AgentSpecialistUpdate) =>
+      updateAgent(slug, values, { demo: isDemoMode }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["v2-agent", slug, isDemoMode], updated)
+      queryClient.invalidateQueries({ queryKey: ["v2-agents", isDemoMode] })
+      setEditOpen(false)
+      showSuccessToast("Profile updated.")
+    },
+    onError: () => {
+      showErrorToast("Could not update profile.")
+    },
+  })
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteAgent(slug, { demo: isDemoMode }),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["v2-agent", slug, isDemoMode] })
+      queryClient.invalidateQueries({ queryKey: ["v2-agents", isDemoMode] })
+      setEditOpen(false)
+      showSuccessToast("Profile deleted.")
+      navigate({ to: "/v2/agents" })
+    },
+    onError: () => {
+      showErrorToast("Could not delete profile.")
+    },
+  })
   const agentQuery = useQuery({
     queryKey: ["v2-agent", slug, isDemoMode],
     queryFn: () => getAgent(slug, { demo: isDemoMode }),
@@ -406,15 +472,31 @@ function AgentDetailPage() {
               <span className="size-1.5 rounded-full bg-emerald-500" />
               Active
             </span>
-            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground dark:border-white/12">
-              {agent.created_from === "earned" ? "Earned" : "Seeded"}
-            </span>
-            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground dark:border-white/12">
+            {agent.created_from === "earned" ? (
+              <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground dark:border-white/12">
+                Earned
+              </span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground transition-colors hover:bg-zinc-50 dark:border-white/12 dark:hover:bg-white/5"
+            >
               <Pencil className="size-3.5" aria-hidden />
               Edit
-            </span>
+            </button>
           </div>
         </header>
+
+        <EditProfileDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          agent={agent}
+          isSaving={updateMutation.isPending}
+          isDeleting={deleteMutation.isPending}
+          onSubmit={(values) => updateMutation.mutate(values)}
+          onDelete={() => deleteMutation.mutate()}
+        />
 
         {agent.description ? (
           <p className={cn("max-w-3xl", AGENT_DESCRIPTION_CLASS)}>

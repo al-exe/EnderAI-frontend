@@ -406,7 +406,7 @@ export function LedgerPage({
           </header>
 
           <ScopeFilterBar
-            className="px-6"
+            className="mb-4 px-6"
             items={HARNESS_OPTIONS.map((option) => ({
               key: option.value,
               label: option.label,

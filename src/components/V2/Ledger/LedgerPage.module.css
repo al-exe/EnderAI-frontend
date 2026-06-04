@@ -75,6 +75,8 @@
 .crumb {
   font-family: var(--font-mono);
   font-size: 12px;
+  /* Match Tailwind text-xs (16px) so the title stacks identically to Profiles. */
+  line-height: 1rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--tf-muted-fg);
@@ -82,6 +84,9 @@
 .h1 {
   margin: 4px 0 0;
   font-size: 24px;
+  /* Match Tailwind text-2xl line-height so the title baseline lines up with the
+     Profiles page title (which inherits Tailwind's controlled line-heights). */
+  line-height: 2rem;
   letter-spacing: -0.018em;
   font-weight: 600;
 }
