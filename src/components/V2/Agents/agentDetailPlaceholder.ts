@@ -12,6 +12,7 @@ export function agentSummaryToDetailPlaceholder(
     slug: summary.slug,
     name: summary.name,
     role: summary.role,
+    short_description: summary.short_description,
     description: summary.short_description,
     created_from: summary.created_from,
     domain_tags: summary.domain_tags,
