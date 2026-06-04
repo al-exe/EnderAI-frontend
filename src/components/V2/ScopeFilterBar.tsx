@@ -20,12 +20,15 @@ export function ScopeFilterBar<TKey extends string>({
   active,
   onChange,
   sortLabel,
+  onSortToggle,
   className,
 }: {
   items: ScopeFilterItem<TKey>[]
   active: TKey
   onChange: (key: TKey) => void
   sortLabel?: string
+  /** When provided, the trailing sort chip becomes a clickable toggle. */
+  onSortToggle?: () => void
   className?: string
 }) {
   return (
@@ -55,11 +58,20 @@ export function ScopeFilterBar<TKey extends string>({
           </button>
         )
       })}
-      {sortLabel !== undefined && (
-        <div className="ml-auto border-l border-border px-3 py-2 text-muted-foreground">
-          Sort: {sortLabel}
-        </div>
-      )}
+      {sortLabel !== undefined &&
+        (onSortToggle ? (
+          <button
+            type="button"
+            onClick={onSortToggle}
+            className="ml-auto border-l border-border px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Sort: {sortLabel}
+          </button>
+        ) : (
+          <div className="ml-auto border-l border-border px-3 py-2 text-muted-foreground">
+            Sort: {sortLabel}
+          </div>
+        ))}
     </div>
   )
 }

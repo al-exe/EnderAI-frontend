@@ -205,6 +205,7 @@ function TaskforceLibrary() {
     },
   )
   const [selectedFolderId, setSelectedFolderId] = useState("all")
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc")
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [createDocumentOpen, setCreateDocumentOpen] = useState(false)
   const [deleteDocumentTarget, setDeleteDocumentTarget] =
@@ -472,23 +473,29 @@ function TaskforceLibrary() {
 
   const allDocuments = documentsQuery.data?.data ?? []
   const documents = useMemo(() => {
-    switch (scopeFilter) {
-      case "mine":
-        return allDocuments.filter(
-          (document) => document.owner_id === currentUser.id,
-        )
-      case "shared":
-        return allDocuments.filter(
-          (document) => document.owner_id !== currentUser.id,
-        )
-      case "org":
-        return allDocuments.filter(
-          (document) => document.visibility === "organization",
-        )
-      default:
-        return allDocuments
-    }
-  }, [allDocuments, currentUser.id, scopeFilter])
+    const scoped = (() => {
+      switch (scopeFilter) {
+        case "mine":
+          return allDocuments.filter(
+            (document) => document.owner_id === currentUser.id,
+          )
+        case "shared":
+          return allDocuments.filter(
+            (document) => document.owner_id !== currentUser.id,
+          )
+        case "org":
+          return allDocuments.filter(
+            (document) => document.visibility === "organization",
+          )
+        default:
+          return allDocuments
+      }
+    })()
+    const recencyOf = (document: V2DocumentPublic) =>
+      new Date(document.updated_at ?? document.created_at ?? 0).getTime()
+    const sorted = [...scoped].sort((a, b) => recencyOf(b) - recencyOf(a))
+    return sortDir === "asc" ? sorted.reverse() : sorted
+  }, [allDocuments, currentUser.id, scopeFilter, sortDir])
   const scopeDocumentCounts = useMemo<Record<LibraryScope, number>>(
     () => ({
       all: allDocuments.length,
@@ -755,7 +762,10 @@ function TaskforceLibrary() {
               setScopeFilter(key)
               setSelectedFolderId("all")
             }}
-            sortLabel="recent ↓"
+            sortLabel={`recent ${sortDir === "desc" ? "↓" : "↑"}`}
+            onSortToggle={() =>
+              setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
+            }
           />
 
           <FolderCreateDialog

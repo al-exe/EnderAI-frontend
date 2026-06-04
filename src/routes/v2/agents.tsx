@@ -98,6 +98,7 @@ function AgentsIndex() {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [scope, setScope] = useState<AgentScope>("all")
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc")
   const [createProfileOpen, setCreateProfileOpen] = useState(false)
   const agentsQuery = useQuery({
     queryKey: ["v2-agents", isDemoMode],
@@ -125,8 +126,9 @@ function AgentsIndex() {
       scope === "all"
         ? agents
         : agents.filter((agent) => agent.status === scope)
-    return [...filtered].sort((a, b) => b.tokens_saved - a.tokens_saved)
-  }, [agents, scope])
+    const sorted = [...filtered].sort((a, b) => b.tokens_saved - a.tokens_saved)
+    return sortDir === "asc" ? sorted.reverse() : sorted
+  }, [agents, scope, sortDir])
 
   return (
     <section
@@ -172,7 +174,10 @@ function AgentsIndex() {
           }))}
           active={scope}
           onChange={setScope}
-          sortLabel="tokens saved ↓"
+          sortLabel={`tokens saved ${sortDir === "desc" ? "↓" : "↑"}`}
+          onSortToggle={() =>
+            setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
+          }
         />
 
         {agentsQuery.isLoading ? (

@@ -386,22 +386,6 @@ export function LedgerPage({
                   aria-label="Search the ledger"
                 />
               </form>
-              <FilterChip
-                ariaLabel="Sort sessions"
-                caret={sort === "newest" ? "↓" : "↑"}
-                display={sort === "newest" ? "Newest" : "Oldest"}
-                onChange={(value) =>
-                  setLedgerSearch({
-                    session_id: undefined,
-                    sort: value === "oldest" ? "oldest" : undefined,
-                  })
-                }
-                options={[
-                  { value: "newest", label: "Newest" },
-                  { value: "oldest", label: "Oldest" },
-                ]}
-                value={sort}
-              />
             </div>
           </header>
 
@@ -416,6 +400,13 @@ export function LedgerPage({
               setLedgerSearch({
                 client: value === "all" ? undefined : value,
                 session_id: undefined,
+              })
+            }
+            sortLabel={`recent ${sort === "newest" ? "↓" : "↑"}`}
+            onSortToggle={() =>
+              setLedgerSearch({
+                session_id: undefined,
+                sort: sort === "newest" ? "oldest" : undefined,
               })
             }
           />
@@ -440,43 +431,6 @@ export function LedgerPage({
         </div>
       )}
     </div>
-  )
-}
-
-function FilterChip({
-  ariaLabel,
-  caret = "▾",
-  display,
-  onChange,
-  options,
-  value,
-}: {
-  ariaLabel: string
-  caret?: string
-  display: string
-  onChange: (value: string) => void
-  options: Array<{ value: string; label: string }>
-  value: string
-}) {
-  return (
-    <label className={styles.sel}>
-      <span>{display}</span>
-      <span aria-hidden className={styles.selCaret}>
-        {caret}
-      </span>
-      <select
-        aria-label={ariaLabel}
-        className={styles.selNative}
-        onChange={(event) => onChange(event.target.value)}
-        value={value}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
   )
 }
 
