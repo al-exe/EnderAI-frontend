@@ -366,50 +366,52 @@ export function LedgerPage({
           className={styles.scroll}
           style={{ "--grid": GRID } as CSSProperties}
         >
-          <header className={styles.head}>
-            <div>
-              <div className={styles.crumb}>
-                Ledger
-                {typeof ledgerQuery.data?.total === "number"
-                  ? ` · ${ledgerQuery.data.total} sessions archived`
-                  : ""}
+          <div className={styles.stickyHead}>
+            <header className={styles.head}>
+              <div>
+                <div className={styles.crumb}>
+                  Ledger
+                  {typeof ledgerQuery.data?.total === "number"
+                    ? ` · ${ledgerQuery.data.total} sessions archived`
+                    : ""}
+                </div>
+                <h1 className={styles.h1}>Ledger</h1>
               </div>
-              <h1 className={styles.h1}>Ledger</h1>
-            </div>
-            <div className={styles.tools}>
-              <form className={styles.search} onSubmit={onSearchSubmit}>
-                <input
-                  className={styles.searchInput}
-                  placeholder="/ Search transcripts, commands, files…"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  aria-label="Search the ledger"
-                />
-              </form>
-            </div>
-          </header>
+              <div className={styles.tools}>
+                <form className={styles.search} onSubmit={onSearchSubmit}>
+                  <input
+                    className={styles.searchInput}
+                    placeholder="/ Search transcripts, commands, files…"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    aria-label="Search the ledger"
+                  />
+                </form>
+              </div>
+            </header>
 
-          <ScopeFilterBar
-            className="mx-6 mb-6"
-            items={HARNESS_OPTIONS.map((option) => ({
-              key: option.value,
-              label: option.label,
-            }))}
-            active={client ?? "all"}
-            onChange={(value) =>
-              setLedgerSearch({
-                client: value === "all" ? undefined : value,
-                session_id: undefined,
-              })
-            }
-            sortLabel={`recent ${sort === "newest" ? "↓" : "↑"}`}
-            onSortToggle={() =>
-              setLedgerSearch({
-                session_id: undefined,
-                sort: sort === "newest" ? "oldest" : undefined,
-              })
-            }
-          />
+            <ScopeFilterBar
+              className="mx-6 mb-6"
+              items={HARNESS_OPTIONS.map((option) => ({
+                key: option.value,
+                label: option.label,
+              }))}
+              active={client ?? "all"}
+              onChange={(value) =>
+                setLedgerSearch({
+                  client: value === "all" ? undefined : value,
+                  session_id: undefined,
+                })
+              }
+              sortLabel={`recent ${sort === "newest" ? "↓" : "↑"}`}
+              onSortToggle={() =>
+                setLedgerSearch({
+                  session_id: undefined,
+                  sort: sort === "newest" ? "oldest" : undefined,
+                })
+              }
+            />
+          </div>
 
           <div className={styles.cols}>
             <div>Time</div>

@@ -65,6 +65,16 @@
   overflow: auto;
 }
 
+/* Pin the eyebrow, title, and filter bar to the top while the list scrolls.
+   flow-root keeps the filter bar's bottom margin inside the opaque background. */
+.stickyHead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flow-root;
+  background: var(--tf-bg);
+}
+
 .head {
   padding: 24px 24px 16px;
   display: grid;
