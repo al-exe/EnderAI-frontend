@@ -76,7 +76,8 @@
 }
 
 .head {
-  padding: 24px 24px 16px;
+  /* 24px bottom matches the Profiles gap-6 between the title block and the bar. */
+  padding: 24px 24px 24px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 14px;
