@@ -658,10 +658,15 @@ export function FleetPage() {
   }
 
   return (
-    <div className={V2_PAGE_FRAME}>
-      <div className={V2_PAGE_BODY}>
-        <header className={V2_STICKY_HEADER_CLASS}>
-          <div className="flex flex-wrap items-start justify-between gap-4">
+    <section
+      className={cn(
+        V2_PAGE_FRAME,
+        "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+      )}
+    >
+      <div className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}>
+        <div className={V2_STICKY_HEADER_CLASS}>
+          <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className={V2_TAB_EYEBROW_CLASS}>Active agent control panel</p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">
@@ -669,6 +674,7 @@ export function FleetPage() {
               </h1>
             </div>
             <Button
+              className="w-fit"
               onClick={() => {
                 setMutationError(null)
                 setCreateRequest({})
@@ -677,9 +683,10 @@ export function FleetPage() {
               <Plus />
               New Fleet session
             </Button>
-          </div>
-        </header>
+          </header>
+        </div>
 
+        <div className="flex flex-col gap-6">
         {Boolean(mutationError) && (
           <div className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
             {errorMessage(mutationError)}
@@ -799,6 +806,7 @@ export function FleetPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       <CreateFleetDialog
@@ -824,6 +832,6 @@ export function FleetPage() {
         {detail?.kind === "agent" && <AgentDetail agent={detail.agent} />}
         {detail?.kind === "fleet" && <FleetDetail fleet={detail.fleet} />}
       </Sheet>
-    </div>
+    </section>
   )
 }
