@@ -419,38 +419,39 @@ export function LedgerPage({
                 </div>
               </header>
 
-              <ScopeFilterBar
-                items={HARNESS_OPTIONS.map((option) => ({
-                  key: option.value,
-                  label: option.label,
-                }))}
-                active={client ?? "all"}
-                onChange={(value) =>
-                  setLedgerSearch({
-                    client: value === "all" ? undefined : value,
-                    session_id: undefined,
-                  })
-                }
-                sortLabel={`recent ${sort === "newest" ? "↓" : "↑"}`}
-                onSortToggle={() =>
-                  setLedgerSearch({
-                    session_id: undefined,
-                    sort: sort === "newest" ? "oldest" : undefined,
-                  })
-                }
-              />
+              <div>
+                <ScopeFilterBar
+                  items={HARNESS_OPTIONS.map((option) => ({
+                    key: option.value,
+                    label: option.label,
+                  }))}
+                  active={client ?? "all"}
+                  onChange={(value) =>
+                    setLedgerSearch({
+                      client: value === "all" ? undefined : value,
+                      session_id: undefined,
+                    })
+                  }
+                  sortLabel={`recent ${sort === "newest" ? "↓" : "↑"}`}
+                  onSortToggle={() =>
+                    setLedgerSearch({
+                      session_id: undefined,
+                      sort: sort === "newest" ? "oldest" : undefined,
+                    })
+                  }
+                />
+                <div className={styles.cols}>
+                  <div>Time</div>
+                  <div>Session</div>
+                  <div>Harness · agent</div>
+                  <div>Activity</div>
+                  <div>Referenced by</div>
+                  <div />
+                </div>
+              </div>
             </div>
 
             <div className={styles.listShell}>
-              <div className={styles.cols}>
-                <div>Time</div>
-                <div>Session</div>
-                <div>Harness · agent</div>
-                <div>Activity</div>
-                <div>Referenced by</div>
-                <div />
-              </div>
-
               <LedgerList
                 groups={groups}
                 isError={ledgerQuery.isError}

@@ -42,6 +42,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  --ledger-row-padding-inline: 1rem;
   background: var(--tf-bg);
   color: var(--tf-fg);
   font-family: var(--font-sans);
@@ -63,7 +64,7 @@
 
 /* Extra inset for table text inside the shared v2 page padding. */
 .listShell {
-  --ledger-row-padding-inline: 1rem;
+  min-width: 0;
 }
 
 .head {
@@ -156,7 +157,6 @@
   grid-template-columns: var(--grid);
   gap: 16px;
   padding: 11px var(--ledger-row-padding-inline, 1rem);
-  border-top: 1px solid var(--tf-border);
   border-bottom: 1px solid var(--tf-border);
   font-family: var(--font-mono);
   font-size: 12px;
