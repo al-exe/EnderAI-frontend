@@ -3,8 +3,9 @@
  *
  * Type and spacing are normalized to the rest of the v2 surface (Profiles /
  * Library): the mono eyebrow matches V2_TAB_EYEBROW_CLASS (12px), the page
- * title matches text-2xl (24px), horizontal insets match the p-6 content
- * padding (24px), and body/label sizes round to the standard Tailwind scale
+ * title matches text-2xl (24px), horizontal insets come from V2_PAGE_CONTENT
+ * padding on the page shell, and body/label sizes round to the standard
+ * Tailwind scale
  * (12 / 14 / 16 / 24) so the page reads the same as every other tab.
  *
  * The standalone mock defined a `--tf-*` palette in a missing `_shared.css`;
@@ -77,7 +78,7 @@
 
 .head {
   /* 24px bottom matches the Profiles gap-6 between the title block and the bar. */
-  padding: 24px 24px 24px;
+  padding: 0 0 24px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 14px;
@@ -168,7 +169,7 @@
   display: grid;
   grid-template-columns: var(--grid);
   gap: 16px;
-  padding: 11px 24px;
+  padding: 11px 0;
   border-top: 1px solid var(--tf-border);
   border-bottom: 1px solid var(--tf-border);
   font-family: var(--font-mono);
@@ -182,7 +183,7 @@
   display: flex;
   align-items: baseline;
   gap: 12px;
-  padding: 10px 24px;
+  padding: 10px 0;
   background: var(--tf-card);
   border-bottom: 1px solid var(--tf-hairline);
 }
@@ -209,7 +210,7 @@
   grid-template-columns: var(--grid);
   gap: 16px;
   align-items: center;
-  padding: 14px 24px;
+  padding: 14px 0;
   border: 0;
   border-bottom: 1px solid var(--tf-hairline);
   width: 100%;
@@ -347,13 +348,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 24px;
+  padding: 24px 0;
   font-family: var(--font-mono);
   font-size: 14px;
   color: var(--tf-muted-fg);
 }
 .empty {
-  margin: 24px;
+  margin: 24px 0;
   border: 1px dashed var(--tf-border);
   padding: 44px;
   text-align: center;
@@ -373,7 +374,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 24px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--tf-border);
 }
 .back {
@@ -420,7 +421,7 @@
 }
 .transcript {
   overflow: auto;
-  padding: 24px 32px 64px;
+  padding: 24px 0 64px;
   min-width: 0;
 }
 .tHead {
