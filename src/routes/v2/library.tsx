@@ -81,8 +81,9 @@ import {
 import { LibraryRecentReel } from "@/components/V2/Library/LibraryRecentReel"
 import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
-  V2_PAGE_CONTENT,
+  V2_PAGE_BODY,
   V2_PAGE_FRAME,
+  V2_STICKY_HEADER_CLASS,
   V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -706,67 +707,75 @@ function TaskforceLibrary() {
           "-mb-6 bg-background font-sans text-foreground md:-mb-8",
         )}
       >
-        <div className={V2_PAGE_CONTENT}>
-          <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className={V2_TAB_EYEBROW_CLASS}>
-                Library · {totalDocumentCount} documents ·{" "}
-                {teamSharedDocumentCount} shared with team
+        <div className={V2_PAGE_BODY}>
+          <div
+            className={cn(
+              V2_STICKY_HEADER_CLASS,
+              "border-b-0 pb-0",
+              "flex flex-col gap-6",
+            )}
+          >
+            <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <div className={V2_TAB_EYEBROW_CLASS}>
+                  Library · {totalDocumentCount} documents ·{" "}
+                  {teamSharedDocumentCount} shared with team
+                </div>
+                <h1 className="mt-1 text-2xl font-semibold">Library</h1>
               </div>
-              <h1 className="mt-1 text-2xl font-semibold">Library</h1>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div
-                role="tablist"
-                aria-label="Library view"
-                className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
-              >
-                <LibraryViewToggle
-                  label="Files"
-                  active={libraryView === "files"}
-                  onClick={() => setLibraryView("files")}
-                />
-                <LibraryViewToggle
-                  label="Folders"
-                  active={libraryView === "folders"}
-                  onClick={() => setLibraryView("folders")}
-                />
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  role="tablist"
+                  aria-label="Library view"
+                  className="inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"
+                >
+                  <LibraryViewToggle
+                    label="Files"
+                    active={libraryView === "files"}
+                    onClick={() => setLibraryView("files")}
+                  />
+                  <LibraryViewToggle
+                    label="Folders"
+                    active={libraryView === "folders"}
+                    onClick={() => setLibraryView("folders")}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="w-fit"
+                  onClick={() => setCreateFolderOpen(true)}
+                >
+                  + Folder
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => setCreateDocumentOpen(true)}
+                >
+                  + Document
+                </Button>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="w-fit"
-                onClick={() => setCreateFolderOpen(true)}
-              >
-                + Folder
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="w-fit"
-                onClick={() => setCreateDocumentOpen(true)}
-              >
-                + Document
-              </Button>
-            </div>
-          </header>
-          <ScopeFilterBar
-            items={LIBRARY_SCOPES.map((scope) => ({
-              key: scope.key,
-              label: scope.label,
-              count: scopeDocumentCounts[scope.key],
-            }))}
-            active={scopeFilter}
-            onChange={(key) => {
-              setScopeFilter(key)
-              setSelectedFolderId("all")
-            }}
-            sortLabel={`recent ${sortDir === "desc" ? "↓" : "↑"}`}
-            onSortToggle={() =>
-              setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
-            }
-          />
+            </header>
+            <ScopeFilterBar
+              items={LIBRARY_SCOPES.map((scope) => ({
+                key: scope.key,
+                label: scope.label,
+                count: scopeDocumentCounts[scope.key],
+              }))}
+              active={scopeFilter}
+              onChange={(key) => {
+                setScopeFilter(key)
+                setSelectedFolderId("all")
+              }}
+              sortLabel={`recent ${sortDir === "desc" ? "↓" : "↑"}`}
+              onSortToggle={() =>
+                setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
+              }
+            />
+          </div>
 
           <FolderCreateDialog
             open={createFolderOpen}

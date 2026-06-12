@@ -24,7 +24,11 @@ import {
 } from "@/components/V2/Agents/agentsTypography"
 import { CreateProfileDialog } from "@/components/V2/Agents/CreateProfileDialog"
 import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
-import { V2_PAGE_CONTENT, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
+import {
+  V2_PAGE_BODY,
+  V2_PAGE_FRAME,
+  V2_STICKY_HEADER_CLASS,
+} from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 
@@ -137,47 +141,54 @@ function AgentsIndex() {
         "-mb-6 bg-background font-sans text-foreground md:-mb-8",
       )}
     >
-      <div className={V2_PAGE_CONTENT}>
-        <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className={AGENT_EYEBROW_CLASS}>
-              Profiles · {activeCount} active across team
+      <div className={V2_PAGE_BODY}>
+        <div
+          className={cn(
+            V2_STICKY_HEADER_CLASS,
+            "border-b-0 pb-0",
+            "flex flex-col gap-6",
+          )}
+        >
+          <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className={AGENT_EYEBROW_CLASS}>
+                Profiles · {activeCount} active across team
+              </div>
+              <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
             </div>
-            <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            className="w-fit"
-            onClick={() => setCreateProfileOpen(true)}
-          >
-            + Profile
-          </Button>
-        </header>
+            <Button
+              type="button"
+              size="sm"
+              className="w-fit"
+              onClick={() => setCreateProfileOpen(true)}
+            >
+              + Profile
+            </Button>
+          </header>
+          <ScopeFilterBar
+            items={AGENT_SCOPES.map((agentScope) => ({
+              key: agentScope.key,
+              label: agentScope.label,
+              count:
+                agentScope.key === "all"
+                  ? agents.length
+                  : agents.filter((agent) => agent.status === agentScope.key)
+                      .length,
+            }))}
+            active={scope}
+            onChange={setScope}
+            sortLabel={`tokens saved ${sortDir === "desc" ? "↓" : "↑"}`}
+            onSortToggle={() =>
+              setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
+            }
+          />
+        </div>
 
         <CreateProfileDialog
           open={createProfileOpen}
           onOpenChange={setCreateProfileOpen}
           isCreating={createProfileMutation.isPending}
           onSubmit={(values) => createProfileMutation.mutate(values)}
-        />
-
-        <ScopeFilterBar
-          items={AGENT_SCOPES.map((agentScope) => ({
-            key: agentScope.key,
-            label: agentScope.label,
-            count:
-              agentScope.key === "all"
-                ? agents.length
-                : agents.filter((agent) => agent.status === agentScope.key)
-                    .length,
-          }))}
-          active={scope}
-          onChange={setScope}
-          sortLabel={`tokens saved ${sortDir === "desc" ? "↓" : "↑"}`}
-          onSortToggle={() =>
-            setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
-          }
         />
 
         {agentsQuery.isLoading ? (

@@ -22,6 +22,7 @@ import {
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { formatCompactNumber } from "@/components/V2/Agents/formatters"
 import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
+import { V2_PAGE_CONTENT_FIXED, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
 
 import styles from "./LedgerPage.module.css"
@@ -353,7 +354,14 @@ export function LedgerPage({
   }
 
   return (
-    <div className={cn(styles.app, "-mb-6 md:-mb-8")}>
+    <section
+      className={cn(
+        V2_PAGE_FRAME,
+        "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+      )}
+    >
+      <div className={V2_PAGE_CONTENT_FIXED}>
+        <div className={styles.app}>
       {selectedSessionId ? (
         <LedgerDetail
           detail={detailQuery.data}
@@ -391,7 +399,7 @@ export function LedgerPage({
             </header>
 
             <ScopeFilterBar
-              className="mx-6 mb-6"
+              className="mb-6"
               items={HARNESS_OPTIONS.map((option) => ({
                 key: option.value,
                 label: option.label,
@@ -432,7 +440,9 @@ export function LedgerPage({
           />
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
