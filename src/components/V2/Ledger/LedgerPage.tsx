@@ -22,7 +22,11 @@ import {
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { formatCompactNumber } from "@/components/V2/Agents/formatters"
 import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
-import { V2_PAGE_CONTENT_FIXED, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
+import {
+  V2_PAGE_BODY,
+  V2_PAGE_FRAME,
+  V2_STICKY_HEADER_CLASS,
+} from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
 
 import styles from "./LedgerPage.module.css"
@@ -360,87 +364,92 @@ export function LedgerPage({
         "-mb-6 bg-background font-sans text-foreground md:-mb-8",
       )}
     >
-      <div className={V2_PAGE_CONTENT_FIXED}>
-        <div className={styles.app}>
-      {selectedSessionId ? (
-        <LedgerDetail
-          detail={detailQuery.data}
-          isError={detailQuery.isError}
-          isLoading={detailQuery.isLoading}
-          onBack={() => setLedgerSearch({ session_id: undefined })}
-        />
-      ) : (
-        <div
-          className={styles.scroll}
-          style={{ "--grid": GRID } as CSSProperties}
-        >
-          <div className={styles.stickyHead}>
-            <header className={styles.head}>
-              <div>
-                <div className={styles.crumb}>
-                  Ledger
-                  {typeof ledgerQuery.data?.total === "number"
-                    ? ` · ${ledgerQuery.data.total} sessions archived`
-                    : ""}
+      <div className={V2_PAGE_BODY}>
+        {selectedSessionId ? (
+          <div className={styles.app}>
+            <LedgerDetail
+              detail={detailQuery.data}
+              isError={detailQuery.isError}
+              isLoading={detailQuery.isLoading}
+              onBack={() => setLedgerSearch({ session_id: undefined })}
+            />
+          </div>
+        ) : (
+          <div
+            className={styles.app}
+            style={{ "--grid": GRID } as CSSProperties}
+          >
+            <div
+              className={cn(
+                V2_STICKY_HEADER_CLASS,
+                "border-b-0 pb-0",
+                "flex flex-col gap-6",
+              )}
+            >
+              <header className={styles.head}>
+                <div>
+                  <div className={styles.crumb}>
+                    Ledger
+                    {typeof ledgerQuery.data?.total === "number"
+                      ? ` · ${ledgerQuery.data.total} sessions archived`
+                      : ""}
+                  </div>
+                  <h1 className={styles.h1}>Ledger</h1>
                 </div>
-                <h1 className={styles.h1}>Ledger</h1>
-              </div>
-              <div className={styles.tools}>
-                <form className={styles.search} onSubmit={onSearchSubmit}>
-                  <input
-                    className={styles.searchInput}
-                    placeholder="/ Search transcripts, commands, files…"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    aria-label="Search the ledger"
-                  />
-                </form>
-              </div>
-            </header>
+                <div className={styles.tools}>
+                  <form className={styles.search} onSubmit={onSearchSubmit}>
+                    <input
+                      className={styles.searchInput}
+                      placeholder="/ Search transcripts, commands, files…"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      aria-label="Search the ledger"
+                    />
+                  </form>
+                </div>
+              </header>
 
-            <ScopeFilterBar
-              className="mb-6"
-              items={HARNESS_OPTIONS.map((option) => ({
-                key: option.value,
-                label: option.label,
-              }))}
-              active={client ?? "all"}
-              onChange={(value) =>
-                setLedgerSearch({
-                  client: value === "all" ? undefined : value,
-                  session_id: undefined,
-                })
-              }
-              sortLabel={`recent ${sort === "newest" ? "↓" : "↑"}`}
-              onSortToggle={() =>
-                setLedgerSearch({
-                  session_id: undefined,
-                  sort: sort === "newest" ? "oldest" : undefined,
-                })
+              <ScopeFilterBar
+                items={HARNESS_OPTIONS.map((option) => ({
+                  key: option.value,
+                  label: option.label,
+                }))}
+                active={client ?? "all"}
+                onChange={(value) =>
+                  setLedgerSearch({
+                    client: value === "all" ? undefined : value,
+                    session_id: undefined,
+                  })
+                }
+                sortLabel={`recent ${sort === "newest" ? "↓" : "↑"}`}
+                onSortToggle={() =>
+                  setLedgerSearch({
+                    session_id: undefined,
+                    sort: sort === "newest" ? "oldest" : undefined,
+                  })
+                }
+              />
+            </div>
+
+            <div className={styles.cols}>
+              <div>Time</div>
+              <div>Session</div>
+              <div>Harness · agent</div>
+              <div>Activity</div>
+              <div>Referenced by</div>
+              <div />
+            </div>
+
+            <LedgerList
+              groups={groups}
+              isError={ledgerQuery.isError}
+              isLoading={ledgerQuery.isLoading}
+              onOpenSession={(sessionId) =>
+                setLedgerSearch({ session_id: sessionId })
               }
             />
           </div>
-
-          <div className={styles.cols}>
-            <div>Time</div>
-            <div>Session</div>
-            <div>Harness · agent</div>
-            <div>Activity</div>
-            <div>Referenced by</div>
-            <div />
-          </div>
-
-          <LedgerList
-            groups={groups}
-            isError={ledgerQuery.isError}
-            isLoading={ledgerQuery.isLoading}
-            onOpenSession={(sessionId) =>
-              setLedgerSearch({ session_id: sessionId })
-            }
-          />
-        </div>
-      )}
-        </div>
+        )}
       </div>
     </section>
   )

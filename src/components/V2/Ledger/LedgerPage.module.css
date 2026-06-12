@@ -60,25 +60,9 @@
 }
 
 /* ============ INDEX ============ */
-.scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-
-/* Pin the eyebrow, title, and filter bar to the top while the list scrolls.
-   flow-root keeps the filter bar's bottom margin inside the opaque background. */
-.stickyHead {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flow-root;
-  background: var(--tf-bg);
-}
 
 .head {
-  /* 24px bottom matches the Profiles gap-6 between the title block and the bar. */
-  padding: 0 0 24px;
+  padding: 0;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 14px;
@@ -162,9 +146,6 @@
 
 /* Column header */
 .cols {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   background: var(--tf-bg);
   display: grid;
   grid-template-columns: var(--grid);
