@@ -1,19 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router"
-
-import { SearchPage } from "@/components/V2/Search/SearchPage"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/v2/search")({
-  component: TaskforceSearch,
-  head: () => ({
-    meta: [
-      {
-        title: "Taskforce | Search",
-      },
-    ],
-  }),
+  beforeLoad: () => {
+    throw redirect({ to: "/v2/library" })
+  },
 })
-
-function TaskforceSearch() {
-  const { currentUser } = Route.useRouteContext()
-  return <SearchPage currentUser={currentUser} />
-}

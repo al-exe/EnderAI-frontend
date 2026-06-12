@@ -57,9 +57,22 @@ for (const path of ["/", "/home", "/topics", "/cases", "/skills", "/v2/home"]) {
     await expect(page.getByRole("link", { name: "Topics" })).toHaveCount(0)
     await expect(page.getByRole("link", { name: "Cases" })).toHaveCount(0)
     await expect(page.getByRole("link", { name: "Skills" })).toHaveCount(0)
+    await expect(page.getByRole("link", { name: "Search" })).toHaveCount(0)
     await expect(page.getByTestId("v2-mode-switch")).toHaveCount(0)
   })
 }
+
+test("disabled Search route redirects to Library and stays out of the sidebar", async ({
+  page,
+}) => {
+  await mockAuth(page)
+
+  await page.goto("/v2/search")
+
+  await expect(page).toHaveURL(/\/v2\/library$/)
+  await expect(page.getByRole("heading", { name: "Library" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Search" })).toHaveCount(0)
+})
 
 test("legacy settings route redirects into the Taskforce shell", async ({
   page,
