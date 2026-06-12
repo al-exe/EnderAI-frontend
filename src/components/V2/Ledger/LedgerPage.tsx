@@ -40,10 +40,11 @@ const CLIENT_LABELS: Record<string, string> = {
 }
 
 const HARNESS_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "all", label: "All harnesses" },
+  { value: "all", label: "All" },
   { value: "claude-code", label: "Claude Code" },
   { value: "codex", label: "Codex" },
   { value: "cursor", label: "Cursor" },
+  { value: "other", label: "Other" },
 ]
 
 type LedgerSort = "newest" | "oldest"
@@ -66,7 +67,7 @@ type DayGroup = {
 
 function clientLabel(value: string | null | undefined): string {
   if (!value) return "Unknown"
-  return CLIENT_LABELS[value] ?? value
+  return CLIENT_LABELS[value] ?? "Other"
 }
 
 function cleanLedgerSearch(filters: LedgerSearchFilters): LedgerSearchFilters {
