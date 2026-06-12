@@ -61,9 +61,9 @@
 
 /* ============ INDEX ============ */
 
-/* Full-bleed list bands with padded cell text — matches sticky header -mx-6 px-6. */
+/* Extra inset for table text inside the shared v2 page padding. */
 .listShell {
-  margin-inline: -1.5rem;
+  --ledger-row-padding-inline: 1rem;
 }
 
 .head {
@@ -155,7 +155,7 @@
   display: grid;
   grid-template-columns: var(--grid);
   gap: 16px;
-  padding: 11px 1.5rem;
+  padding: 11px var(--ledger-row-padding-inline, 1rem);
   border-top: 1px solid var(--tf-border);
   border-bottom: 1px solid var(--tf-border);
   font-family: var(--font-mono);
@@ -169,7 +169,7 @@
   display: flex;
   align-items: baseline;
   gap: 12px;
-  padding: 10px 1.5rem;
+  padding: 10px var(--ledger-row-padding-inline, 1rem);
   background: var(--tf-card);
   border-bottom: 1px solid var(--tf-hairline);
 }
@@ -196,7 +196,7 @@
   grid-template-columns: var(--grid);
   gap: 16px;
   align-items: center;
-  padding: 14px 1.5rem;
+  padding: 14px var(--ledger-row-padding-inline, 1rem);
   border: 0;
   border-bottom: 1px solid var(--tf-hairline);
   width: 100%;
@@ -334,13 +334,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 24px 1.5rem;
+  padding: 24px var(--ledger-row-padding-inline, 1rem);
   font-family: var(--font-mono);
   font-size: 14px;
   color: var(--tf-muted-fg);
 }
 .empty {
-  margin: 24px 1.5rem;
+  margin: 24px var(--ledger-row-padding-inline, 1rem);
   border: 1px dashed var(--tf-border);
   padding: 44px;
   text-align: center;
