@@ -32,7 +32,7 @@ export interface TaskforceSessionLogResponse {
 
 export interface TaskforceFleetAgent {
   session_id: string
-  fleet_session_id: string | null
+  fleet_session_id: string
   cwd: string | null
   branch: string | null
   repo: string | null
@@ -56,7 +56,6 @@ export interface TaskforceFleetSession {
 
 export interface TaskforceFleetResponse {
   fleet_sessions: TaskforceFleetSession[]
-  unassigned: TaskforceFleetAgent[]
 }
 
 export interface ReadTaskforceSessionSavingsArgs {
@@ -102,13 +101,11 @@ export function readTaskforceFleet(): CancelablePromise<TaskforceFleetResponse> 
   })
 }
 
-export function createTaskforceFleetSession(
-  name: string,
-): CancelablePromise<TaskforceFleetSession> {
+export function createTaskforceFleetSession(): CancelablePromise<TaskforceFleetSession> {
   return request(OpenAPI, {
     method: "POST",
     url: "/api/v1/v2/taskforce/fleet",
-    body: { name },
+    body: {},
   })
 }
 
@@ -140,7 +137,7 @@ export function deleteTaskforceFleetSession(
 
 export function assignTaskforceFleetSession(
   sessionId: string,
-  fleetSessionId: string | null,
+  fleetSessionId: string,
 ): CancelablePromise<TaskforceFleetAgent> {
   return request(OpenAPI, {
     method: "PATCH",
