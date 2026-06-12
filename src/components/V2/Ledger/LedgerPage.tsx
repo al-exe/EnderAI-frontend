@@ -431,23 +431,25 @@ export function LedgerPage({
               />
             </div>
 
-            <div className={styles.cols}>
-              <div>Time</div>
-              <div>Session</div>
-              <div>Harness · agent</div>
-              <div>Activity</div>
-              <div>Referenced by</div>
-              <div />
-            </div>
+            <div className={styles.listShell}>
+              <div className={styles.cols}>
+                <div>Time</div>
+                <div>Session</div>
+                <div>Harness · agent</div>
+                <div>Activity</div>
+                <div>Referenced by</div>
+                <div />
+              </div>
 
-            <LedgerList
-              groups={groups}
-              isError={ledgerQuery.isError}
-              isLoading={ledgerQuery.isLoading}
-              onOpenSession={(sessionId) =>
-                setLedgerSearch({ session_id: sessionId })
-              }
-            />
+              <LedgerList
+                groups={groups}
+                isError={ledgerQuery.isError}
+                isLoading={ledgerQuery.isLoading}
+                onOpenSession={(sessionId) =>
+                  setLedgerSearch({ session_id: sessionId })
+                }
+              />
+            </div>
           </div>
         )}
       </div>

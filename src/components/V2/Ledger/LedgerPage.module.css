@@ -61,6 +61,11 @@
 
 /* ============ INDEX ============ */
 
+/* Full-bleed list bands with padded cell text — matches sticky header -mx-6 px-6. */
+.listShell {
+  margin-inline: -1.5rem;
+}
+
 .head {
   padding: 0;
   display: grid;
@@ -150,7 +155,7 @@
   display: grid;
   grid-template-columns: var(--grid);
   gap: 16px;
-  padding: 11px 0;
+  padding: 11px 1.5rem;
   border-top: 1px solid var(--tf-border);
   border-bottom: 1px solid var(--tf-border);
   font-family: var(--font-mono);
@@ -164,7 +169,7 @@
   display: flex;
   align-items: baseline;
   gap: 12px;
-  padding: 10px 0;
+  padding: 10px 1.5rem;
   background: var(--tf-card);
   border-bottom: 1px solid var(--tf-hairline);
 }
@@ -191,7 +196,7 @@
   grid-template-columns: var(--grid);
   gap: 16px;
   align-items: center;
-  padding: 14px 0;
+  padding: 14px 1.5rem;
   border: 0;
   border-bottom: 1px solid var(--tf-hairline);
   width: 100%;
@@ -329,13 +334,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 24px 0;
+  padding: 24px 1.5rem;
   font-family: var(--font-mono);
   font-size: 14px;
   color: var(--tf-muted-fg);
 }
 .empty {
-  margin: 24px 0;
+  margin: 24px 1.5rem;
   border: 1px dashed var(--tf-border);
   padding: 44px;
   text-align: center;
