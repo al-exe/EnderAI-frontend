@@ -18,7 +18,6 @@ import {
   revokeAgentCredential,
   rotateAgentCredential,
 } from "@/api/agentCredentials"
-import recordUsageScript from "@/assets/taskforce-record-usage.sh?raw"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -49,36 +48,6 @@ function formatTimestamp(value: string | null): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value))
-}
-
-// Single self-contained install for the Claude Code metrics hook: saves the
-// token, writes the hook script inline (nothing is downloaded), and registers
-// it as a Stop hook via an idempotent jq merge. The script body is the real
-// asset file imported above, so what runs is exactly what the user can read.
-function buildMetricsHookInstallSnippet(mcpToken: string): string {
-  const stopHookMerge =
-    ".hooks.Stop = ((.hooks.Stop // []) | " +
-    'if any(.[]?.hooks[]?; .command | test("taskforce-record-usage")) then . ' +
-    'else . + [{matcher:"*",hooks:[{type:"command",' +
-    'command:"$HOME/.claude/hooks/taskforce-record-usage.sh",timeout:10}]}] end)'
-
-  return [
-    "# 1 · Save your Taskforce token (stays on this machine)",
-    `printf '%s\\n' '${mcpToken}' > ~/.taskforce_mcp_token && chmod 600 ~/.taskforce_mcp_token`,
-    "",
-    "# 2 · Write the metrics hook locally — nothing is downloaded",
-    "mkdir -p ~/.claude/hooks",
-    "cat > ~/.claude/hooks/taskforce-record-usage.sh <<'TF_RECORD_USAGE_EOF'",
-    recordUsageScript.trimEnd(),
-    "TF_RECORD_USAGE_EOF",
-    "chmod +x ~/.claude/hooks/taskforce-record-usage.sh",
-    "",
-    "# 3 · Register it as a Stop hook (idempotent; requires jq)",
-    "[ -f ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json",
-    `tmp="$(mktemp)" && jq '${stopHookMerge}' ~/.claude/settings.json > "$tmp" && mv "$tmp" ~/.claude/settings.json`,
-    "",
-    'echo "✓ Taskforce metrics hook installed — restart Claude Code to activate."',
-  ].join("\n")
 }
 
 function buildPersistentShellSnippet(mcpToken: string): string {
@@ -559,7 +528,9 @@ const ConnectAgent = () => {
                 <h3 className={styles.sectionTitle}>2. Connect Claude Code</h3>
                 <p className={styles.mutedText}>
                   Run this once in every terminal or VM you want Taskforce to
-                  remember. The installer is idempotent, preserves existing
+                  remember. This single command saves your token and installs
+                  prior-work discovery, automatic capture, and Claude Code cost
+                  tracking. The installer is idempotent, preserves existing
                   Claude Code settings, and takes effect after restart.
                 </p>
               </div>
@@ -575,7 +546,7 @@ const ConnectAgent = () => {
 
               <SnippetBlock
                 title="Connect Claude Code"
-                description="Persists the credential and installs Taskforce discovery and capture hooks."
+                description="Persists the credential and installs Taskforce discovery, capture, and cost-tracking hooks."
                 snippet={claudeCodeConnectSnippet ?? ""}
                 copiedText={copiedText}
                 onCopy={(value) => {
@@ -676,41 +647,6 @@ const ConnectAgent = () => {
               <AlertDescription>
                 Create a credential, then connect each Claude Code terminal or
                 VM with one command.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Claude Code cost tracking</CardTitle>
-        </CardHeader>
-        <CardContent className={styles.cardContent}>
-          <p className={styles.mutedText}>
-            Optional — Claude Code only. Records each turn's token usage to your
-            Taskforce Metrics page, so cost charts populate on their own. One
-            command: it saves your token, writes the hook locally (nothing is
-            downloaded), and registers it. Requires <code>jq</code>.
-          </p>
-          {hasFreshToken && mcpToken ? (
-            <SnippetBlock
-              title="Install the metrics hook"
-              description="Paste into a terminal, then restart Claude Code to activate."
-              snippet={buildMetricsHookInstallSnippet(mcpToken)}
-              copiedText={copiedText}
-              onCopy={(value) => {
-                void copy(value)
-              }}
-              testId="connect-agent-stop-hook-install"
-            />
-          ) : (
-            <Alert>
-              <KeyRound className={styles.icon} />
-              <AlertTitle>Token needed</AlertTitle>
-              <AlertDescription>
-                Create or rotate a credential above to reveal your one-command
-                metrics-hook install.
               </AlertDescription>
             </Alert>
           )}
