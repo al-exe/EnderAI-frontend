@@ -676,7 +676,7 @@ function ExperimentalMetricsPage({
         className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}
         data-testid="metrics-experimental-page"
       >
-        <div className={cn(V2_STICKY_HEADER_CLASS, "border-b-0 pb-0")}>
+        <div className={V2_STICKY_HEADER_CLASS}>
           <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
@@ -852,7 +852,7 @@ function ExperimentalSessionMetrics({
         className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}
         data-testid="metrics-experimental-session-page"
       >
-        <div className={cn(V2_STICKY_HEADER_CLASS, "border-b-0 pb-0")}>
+        <div className={V2_STICKY_HEADER_CLASS}>
           <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
