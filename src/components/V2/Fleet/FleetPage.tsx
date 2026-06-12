@@ -88,6 +88,24 @@ function repoLabel(agent: TaskforceFleetAgent) {
   return agent.repo || cwdParts[cwdParts.length - 1] || "Unknown repo"
 }
 
+// Turn a raw harness model id into a human label, e.g.
+// "claude-opus-4-8" -> "Opus 4.8", "claude-fable-5" -> "Fable 5".
+function modelLabel(modelId: string | null): string | null {
+  if (!modelId) return null
+  const [family, ...rest] = modelId.replace(/^claude-/, "").split("-")
+  if (!family) return null
+  const name = family.charAt(0).toUpperCase() + family.slice(1)
+  const version = rest.join(".")
+  return version ? `${name} ${version}` : name
+}
+
+// Heading shown for an agent. Once Taskforce has captured a document the
+// document title wins; until then a brand-new session shows the model it's
+// running (e.g. "Opus 4.8") rather than the bare working-directory name.
+function agentDisplayName(agent: TaskforceFleetAgent) {
+  return agent.title || modelLabel(agent.model_id) || repoLabel(agent)
+}
+
 function AgentCard({
   agent,
   fleetSessions,
@@ -124,7 +142,7 @@ function AgentCard({
               title={presenceLabel(agent)}
             />
             <h3 className="truncate text-sm font-semibold">
-              {agent.title || repoLabel(agent)}
+              {agentDisplayName(agent)}
             </h3>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
@@ -328,7 +346,7 @@ function AgentDetail({ agent }: { agent: TaskforceFleetAgent }) {
   return (
     <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
       <SheetHeader className="border-b">
-        <SheetTitle>{agent.title || repoLabel(agent)}</SheetTitle>
+        <SheetTitle>{agentDisplayName(agent)}</SheetTitle>
         <SheetDescription>{presenceLabel(agent)}</SheetDescription>
       </SheetHeader>
       <div className="space-y-6 px-4 pb-6">
@@ -451,7 +469,7 @@ function FleetDetail({ fleet }: { fleet: TaskforceFleetSession }) {
                 >
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Bot className="size-4 text-muted-foreground" />
-                    {agent.title || repoLabel(agent)}
+                    {agentDisplayName(agent)}
                   </div>
                   <p className="mt-1 font-mono text-[10px] text-muted-foreground">
                     {repoLabel(agent)}
@@ -692,125 +710,128 @@ export function FleetPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-        {Boolean(mutationError) && (
-          <div className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-            {errorMessage(mutationError)}
-          </div>
-        )}
-
-        {fleetQuery.isLoading ? (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {[0, 1, 2].map((item) => (
-              <div
-                key={item}
-                className="h-64 animate-pulse border bg-muted/30"
-              />
-            ))}
-          </div>
-        ) : fleetQuery.error ? (
-          <div className="border border-destructive/30 bg-destructive/5 p-6">
-            <h2 className="font-medium text-destructive">
-              Fleet could not load
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {errorMessage(fleetQuery.error)}
-            </p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => fleetQuery.refetch()}
-            >
-              Try again
-            </Button>
-          </div>
-        ) : activeAgentCount === 0 ? (
-          <div className="flex flex-col items-start gap-4 border bg-card p-6">
-            <div>
-              <h2 className="font-medium text-foreground">
-                Connect a terminal to start capturing work
-              </h2>
-              <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-                Taskforce creates documents automatically as your connected
-                coding agents work, so context carries across terminals and VMs.
-              </p>
+          {Boolean(mutationError) && (
+            <div className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              {errorMessage(mutationError)}
             </div>
-            <Button asChild>
-              <Link to="/v2/settings" search={{ tab: "connect-agent" }}>
-                Connect agent
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="grid items-start gap-4 lg:grid-cols-2">
-            <section className="flex min-h-[220px] flex-col border border-dashed border-border bg-muted/20">
-              <div className="flex min-h-14 items-center gap-2 border-b border-border px-4 py-3">
-                <Bot className="size-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold">Unassigned</h2>
-                <Badge variant="secondary" className="text-[10px]">
-                  {unassigned.length}
-                </Badge>
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-3">
-                {unassigned.length ? (
-                  unassigned.map((agent) => (
-                    <AgentCard
-                      key={agent.session_id}
-                      agent={agent}
-                      fleetSessions={fleetSessions}
-                      isMoving={assignMutation.isPending}
-                      onMove={moveAgent}
-                      onCreateSession={(selectedAgent) => {
-                        setMutationError(null)
-                        setCreateRequest({
-                          agentSessionId: selectedAgent.session_id,
-                        })
-                      }}
-                      onOpen={(selectedAgent) =>
-                        setDetail({ kind: "agent", agent: selectedAgent })
-                      }
-                    />
-                  ))
-                ) : (
-                  <div className="grid min-h-28 flex-1 place-items-center px-4 text-center text-xs text-muted-foreground">
-                    All active agents are assigned.
-                  </div>
-                )}
-              </div>
-            </section>
+          )}
 
-            {fleetSessions.map((fleet) => (
-              <FleetBox
-                key={fleet.id}
-                fleet={fleet}
-                allFleetSessions={fleetSessions}
-                isMoving={assignMutation.isPending}
-                onMove={moveAgent}
-                onCreateSession={(selectedAgent) => {
-                  setMutationError(null)
-                  setCreateRequest({ agentSessionId: selectedAgent.session_id })
-                }}
-                onOpenAgent={(agent) => setDetail({ kind: "agent", agent })}
-                onOpenFleet={(selectedFleet) =>
-                  setDetail({ kind: "fleet", fleet: selectedFleet })
-                }
-                onRename={(selectedFleet, name) => {
-                  setMutationError(null)
-                  renameMutation.mutate({ fleet: selectedFleet, name })
-                }}
-                onDelete={(selectedFleet) => {
-                  if (
-                    window.confirm(
-                      `Delete "${selectedFleet.name}"? Its agents will move to Unassigned.`,
-                    )
-                  ) {
+          {fleetQuery.isLoading ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {[0, 1, 2].map((item) => (
+                <div
+                  key={item}
+                  className="h-64 animate-pulse border bg-muted/30"
+                />
+              ))}
+            </div>
+          ) : fleetQuery.error ? (
+            <div className="border border-destructive/30 bg-destructive/5 p-6">
+              <h2 className="font-medium text-destructive">
+                Fleet could not load
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {errorMessage(fleetQuery.error)}
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => fleetQuery.refetch()}
+              >
+                Try again
+              </Button>
+            </div>
+          ) : activeAgentCount === 0 ? (
+            <div className="flex flex-col items-start gap-4 border bg-card p-6">
+              <div>
+                <h2 className="font-medium text-foreground">
+                  Connect a terminal to start capturing work
+                </h2>
+                <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
+                  Taskforce creates documents automatically as your connected
+                  coding agents work, so context carries across terminals and
+                  VMs.
+                </p>
+              </div>
+              <Button asChild>
+                <Link to="/v2/settings" search={{ tab: "connect-agent" }}>
+                  Connect agent
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid items-start gap-4 lg:grid-cols-2">
+              <section className="flex min-h-[220px] flex-col border border-dashed border-border bg-muted/20">
+                <div className="flex min-h-14 items-center gap-2 border-b border-border px-4 py-3">
+                  <Bot className="size-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold">Unassigned</h2>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {unassigned.length}
+                  </Badge>
+                </div>
+                <div className="flex flex-1 flex-col gap-2 p-3">
+                  {unassigned.length ? (
+                    unassigned.map((agent) => (
+                      <AgentCard
+                        key={agent.session_id}
+                        agent={agent}
+                        fleetSessions={fleetSessions}
+                        isMoving={assignMutation.isPending}
+                        onMove={moveAgent}
+                        onCreateSession={(selectedAgent) => {
+                          setMutationError(null)
+                          setCreateRequest({
+                            agentSessionId: selectedAgent.session_id,
+                          })
+                        }}
+                        onOpen={(selectedAgent) =>
+                          setDetail({ kind: "agent", agent: selectedAgent })
+                        }
+                      />
+                    ))
+                  ) : (
+                    <div className="grid min-h-28 flex-1 place-items-center px-4 text-center text-xs text-muted-foreground">
+                      All active agents are assigned.
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {fleetSessions.map((fleet) => (
+                <FleetBox
+                  key={fleet.id}
+                  fleet={fleet}
+                  allFleetSessions={fleetSessions}
+                  isMoving={assignMutation.isPending}
+                  onMove={moveAgent}
+                  onCreateSession={(selectedAgent) => {
                     setMutationError(null)
-                    deleteMutation.mutate(selectedFleet.id)
+                    setCreateRequest({
+                      agentSessionId: selectedAgent.session_id,
+                    })
+                  }}
+                  onOpenAgent={(agent) => setDetail({ kind: "agent", agent })}
+                  onOpenFleet={(selectedFleet) =>
+                    setDetail({ kind: "fleet", fleet: selectedFleet })
                   }
-                }}
-              />
-            ))}
-          </div>
-        )}
+                  onRename={(selectedFleet, name) => {
+                    setMutationError(null)
+                    renameMutation.mutate({ fleet: selectedFleet, name })
+                  }}
+                  onDelete={(selectedFleet) => {
+                    if (
+                      window.confirm(
+                        `Delete "${selectedFleet.name}"? Its agents will move to Unassigned.`,
+                      )
+                    ) {
+                      setMutationError(null)
+                      deleteMutation.mutate(selectedFleet.id)
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

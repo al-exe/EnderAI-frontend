@@ -43,6 +43,7 @@ export interface TaskforceFleetAgent {
   last_seen_at: string
   minutes_ago: number
   specialist_slug: string | null
+  model_id: string | null
 }
 
 export interface TaskforceFleetSession {
