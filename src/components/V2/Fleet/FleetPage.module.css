@@ -1,0 +1,341 @@
+.pageBody {
+  --fleet-grid: 176px minmax(0, 1.05fr) minmax(0, 1.1fr) 48px;
+  --fleet-hairline: color-mix(
+    in srgb,
+    var(--foreground) 10%,
+    var(--background)
+  );
+  --fleet-faint: color-mix(
+    in srgb,
+    var(--muted-foreground) 66%,
+    var(--background)
+  );
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0 12px;
+}
+
+.overviewSummary {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.overviewSummary strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.liveLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--fleet-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.liveLabel::before {
+  width: 6px;
+  height: 6px;
+  /* biome-ignore lint/complexity/noImportantStyles: global square-corner rule should not flatten live indicators. */
+  border-radius: 999px !important;
+  background: var(--primary);
+  content: "";
+  animation: fleet-ping 2s ease-out infinite;
+}
+
+.sessionList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 24px;
+}
+
+.session {
+  border: 1px solid var(--border);
+  background: var(--background);
+  padding: 20px 22px;
+}
+
+.unassignedSession {
+  border-style: dashed;
+}
+
+.sessionHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sessionOpen {
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.sessionOpen:focus-visible,
+.instanceOpen:focus-visible,
+.workingOn:focus-visible,
+.document:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.sessionTitle {
+  overflow: hidden;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionMenu,
+.instanceMenu {
+  color: var(--fleet-faint);
+}
+
+.renameForm {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  gap: 8px;
+}
+
+.sessionSummary {
+  margin: 5px 0 0;
+  color: var(--fleet-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.instances {
+  margin-top: 16px;
+}
+
+.columns,
+.instance {
+  display: grid;
+  grid-template-columns: var(--fleet-grid);
+  gap: 18px;
+}
+
+.columns {
+  padding-bottom: 9px;
+  color: var(--fleet-faint);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.alignRight {
+  text-align: right;
+}
+
+.instance {
+  align-items: baseline;
+  padding: 13px 0;
+  border-top: 1px solid var(--fleet-hairline);
+}
+
+.identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+}
+
+.instanceOpen {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: baseline;
+  gap: 9px;
+  text-align: left;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  transform: translateY(-1px);
+  /* biome-ignore lint/complexity/noImportantStyles: global square-corner rule should not flatten status indicators. */
+  border-radius: 999px !important;
+  background: var(--fleet-faint);
+}
+
+.runningDot {
+  background: var(--primary);
+  animation: fleet-ping 2s ease-out infinite;
+}
+
+.modelBlock,
+.workingOn,
+.documents {
+  min-width: 0;
+}
+
+.model {
+  overflow: hidden;
+  margin: 0;
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  margin-top: 4px;
+  color: var(--fleet-faint);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.idleStatus {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.workingOn {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 12.5px;
+  line-height: 1.45;
+  text-align: left;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.muted {
+  color: var(--fleet-faint);
+}
+
+.documents {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.document {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+  color: inherit;
+  text-align: left;
+}
+
+.documentTitle {
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.documentMode {
+  flex-shrink: 0;
+  color: var(--fleet-faint);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.noDocuments,
+.emptySession {
+  color: var(--fleet-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.elapsed {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.emptySession {
+  padding: 22px 0 8px;
+  border-top: 1px solid var(--fleet-hairline);
+}
+
+@keyframes fleet-ping {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (max-width: 960px) {
+  .pageBody {
+    --fleet-grid: 155px minmax(0, 1fr) minmax(0, 0.9fr) 40px;
+  }
+}
+
+@media (max-width: 760px) {
+  .liveLabel,
+  .columns {
+    display: none;
+  }
+
+  .session {
+    padding: 18px;
+  }
+
+  .instance {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 16px;
+    padding: 16px 0;
+  }
+
+  .identity {
+    grid-column: 1;
+  }
+
+  .elapsed {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .workingOn,
+  .documents {
+    grid-column: 1 / -1;
+    padding-left: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveLabel::before,
+  .runningDot {
+    animation: none;
+  }
+}

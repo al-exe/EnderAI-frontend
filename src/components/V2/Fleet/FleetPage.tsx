@@ -62,6 +62,7 @@ import {
   V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
+import styles from "./FleetPage.module.css"
 
 const FLEET_QUERY_KEY = ["v2-taskforce-fleet"] as const
 
@@ -107,6 +108,28 @@ function agentDisplayName(agent: TaskforceFleetAgent) {
   return agent.title || modelLabel(agent.model_id) || repoLabel(agent)
 }
 
+function agentModelName(agent: TaskforceFleetAgent) {
+  return modelLabel(agent.model_id) || "Connected agent"
+}
+
+function compactPresence(agent: TaskforceFleetAgent) {
+  if (agent.minutes_ago < 1) return "now"
+  return `${agent.minutes_ago}m`
+}
+
+function fleetSummary(agents: TaskforceFleetAgent[]) {
+  const running = agents.filter((agent) => agent.minutes_ago < 5).length
+  const idle = agents.length - running
+  const details = [
+    running > 0 ? `${running} running` : "",
+    idle > 0 ? `${idle} idle` : "",
+  ].filter(Boolean)
+
+  return `${agents.length} ${agents.length === 1 ? "instance" : "instances"}${
+    details.length ? ` · ${details.join(" · ")}` : ""
+  }`
+}
+
 function AgentCard({
   agent,
   fleetSessions,
@@ -125,49 +148,22 @@ function AgentCard({
   const isLive = agent.minutes_ago < 5
 
   return (
-    <article className="border border-border bg-background p-3 shadow-xs">
-      <div className="flex items-start gap-3">
+    <article className={styles.instance}>
+      <div className={styles.identity}>
         <button
           type="button"
-          className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={styles.instanceOpen}
           onClick={() => onOpen(agent)}
         >
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "size-2 shrink-0 rounded-full",
-                isLive
-                  ? "animate-pulse bg-emerald-500"
-                  : "bg-muted-foreground/50",
-              )}
-              title={presenceLabel(agent)}
-            />
-            <h3 className="truncate text-sm font-semibold">
-              {agentDisplayName(agent)}
-            </h3>
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
-            <span>{repoLabel(agent)}</span>
-            {agent.branch && (
-              <>
-                <span aria-hidden>·</span>
-                <span className="max-w-[190px] truncate">{agent.branch}</span>
-              </>
-            )}
-          </div>
-          <p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">
-            {agent.summary_markdown ||
-              "This session has just started capturing work."}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {agent.specialist_slug && (
-              <Badge variant="outline" className="font-mono text-[9px]">
-                {agent.specialist_slug}
-              </Badge>
-            )}
-            <span className="text-[10px] text-muted-foreground">
-              {presenceLabel(agent)}
-            </span>
+          <span
+            className={cn(styles.statusDot, isLive && styles.runningDot)}
+            title={presenceLabel(agent)}
+          />
+          <div className={styles.modelBlock}>
+            <h3 className={styles.model}>{agentModelName(agent)}</h3>
+            <div className={cn(styles.status, !isLive && styles.idleStatus)}>
+              {isLive ? "Running" : "Idle"}
+            </div>
           </div>
         </button>
 
@@ -179,6 +175,7 @@ function AgentCard({
               size="icon-sm"
               disabled={isMoving}
               aria-label={`Move ${agent.title || agent.session_id}`}
+              className={styles.instanceMenu}
             >
               <ChevronDown />
             </Button>
@@ -210,6 +207,51 @@ function AgentCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <button
+        type="button"
+        className={cn(styles.workingOn, !isLive && styles.muted)}
+        onClick={() => onOpen(agent)}
+      >
+        {agent.summary_markdown ||
+          `Connected in ${repoLabel(agent)}${
+            agent.branch ? ` on ${agent.branch}` : ""
+          }`}
+      </button>
+
+      <div className={styles.documents}>
+        {agent.active_document_id ? (
+          <Link
+            to="/v2/library/$documentId"
+            params={{ documentId: agent.active_document_id }}
+            className={styles.document}
+          >
+            <span className={styles.documentTitle}>
+              {agent.title || "Active Taskforce document"}
+            </span>
+            <span className={styles.documentMode}>writing</span>
+          </Link>
+        ) : (
+          <span className={styles.noDocuments}>No active document</span>
+        )}
+        {agent.referenced_document_ids.length > 0 && (
+          <button
+            type="button"
+            className={styles.document}
+            onClick={() => onOpen(agent)}
+          >
+            <span className={styles.documentTitle}>
+              {agent.referenced_document_ids.length} referenced{" "}
+              {agent.referenced_document_ids.length === 1
+                ? "document"
+                : "documents"}
+            </span>
+            <span className={styles.documentMode}>reading</span>
+          </button>
+        )}
+      </div>
+
+      <div className={styles.elapsed}>{compactPresence(agent)}</div>
     </article>
   )
 }
@@ -251,10 +293,10 @@ function FleetBox({
   }
 
   return (
-    <section className="flex min-h-[220px] flex-col border border-border bg-card">
-      <div className="flex min-h-14 items-center gap-2 border-b border-border px-4 py-3">
+    <section className={styles.session}>
+      <div className={styles.sessionHeader}>
         {renaming ? (
-          <form onSubmit={submitRename} className="flex min-w-0 flex-1 gap-2">
+          <form onSubmit={submitRename} className={styles.renameForm}>
             <Input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -269,16 +311,10 @@ function FleetBox({
         ) : (
           <button
             type="button"
-            className="min-w-0 flex-1 text-left"
+            className={styles.sessionOpen}
             onClick={() => onOpenFleet(fleet)}
           >
-            <div className="flex items-center gap-2">
-              <FolderKanban className="size-4 text-muted-foreground" />
-              <h2 className="truncate text-sm font-semibold">{fleet.name}</h2>
-              <Badge variant="secondary" className="text-[10px]">
-                {fleet.agents.length}
-              </Badge>
-            </div>
+            <h2 className={styles.sessionTitle}>{fleet.name}</h2>
           </button>
         )}
 
@@ -289,6 +325,7 @@ function FleetBox({
                 variant="ghost"
                 size="icon-sm"
                 aria-label="Fleet session actions"
+                className={styles.sessionMenu}
               >
                 <MoreHorizontal />
               </Button>
@@ -314,10 +351,17 @@ function FleetBox({
           </DropdownMenu>
         )}
       </div>
+      <p className={styles.sessionSummary}>{fleetSummary(fleet.agents)}</p>
 
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className={styles.instances}>
+        <div className={styles.columns} aria-hidden="true">
+          <div>Instance</div>
+          <div>Working on</div>
+          <div>Documents</div>
+          <div className={styles.alignRight}>Time</div>
+        </div>
         {fleet.agents.length === 0 ? (
-          <div className="grid min-h-28 flex-1 place-items-center border border-dashed border-border px-4 text-center text-xs text-muted-foreground">
+          <div className={styles.emptySession}>
             Move an active agent here to group its work.
           </div>
         ) : (
@@ -675,6 +719,13 @@ export function FleetPage() {
   const activeAgentCount =
     unassigned.length +
     fleetSessions.reduce((total, fleet) => total + fleet.agents.length, 0)
+  const runningAgentCount =
+    unassigned.filter((agent) => agent.minutes_ago < 5).length +
+    fleetSessions.reduce(
+      (total, fleet) =>
+        total + fleet.agents.filter((agent) => agent.minutes_ago < 5).length,
+      0,
+    )
 
   const moveAgent = (
     agent: TaskforceFleetAgent,
@@ -717,7 +768,18 @@ export function FleetPage() {
           </header>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className={styles.pageBody}>
+          <div className={styles.overview}>
+            <div className={styles.overviewSummary}>
+              <strong>{activeSessionCount}</strong>{" "}
+              {activeSessionCount === 1 ? "session" : "sessions"} ·{" "}
+              <strong>{activeAgentCount}</strong>{" "}
+              {activeAgentCount === 1 ? "instance" : "instances"} ·{" "}
+              <strong>{runningAgentCount}</strong> running
+            </div>
+            <div className={styles.liveLabel}>Live activity</div>
+          </div>
+
           {Boolean(mutationError) && (
             <div className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {errorMessage(mutationError)}
@@ -725,11 +787,11 @@ export function FleetPage() {
           )}
 
           {fleetQuery.isLoading ? (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className={styles.sessionList}>
               {[0, 1, 2].map((item) => (
                 <div
                   key={item}
-                  className="h-64 animate-pulse border bg-muted/30"
+                  className="h-48 animate-pulse border bg-muted/30"
                 />
               ))}
             </div>
@@ -768,16 +830,21 @@ export function FleetPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid items-start gap-4 lg:grid-cols-2">
-              <section className="flex min-h-[220px] flex-col border border-dashed border-border bg-muted/20">
-                <div className="flex min-h-14 items-center gap-2 border-b border-border px-4 py-3">
-                  <Bot className="size-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold">Unassigned</h2>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {unassigned.length}
-                  </Badge>
+            <div className={styles.sessionList}>
+              <section className={cn(styles.session, styles.unassignedSession)}>
+                <div className={styles.sessionHeader}>
+                  <h2 className={styles.sessionTitle}>Unassigned</h2>
                 </div>
-                <div className="flex flex-1 flex-col gap-2 p-3">
+                <p className={styles.sessionSummary}>
+                  {fleetSummary(unassigned)}
+                </p>
+                <div className={styles.instances}>
+                  <div className={styles.columns} aria-hidden="true">
+                    <div>Instance</div>
+                    <div>Working on</div>
+                    <div>Documents</div>
+                    <div className={styles.alignRight}>Time</div>
+                  </div>
                   {unassigned.length ? (
                     unassigned.map((agent) => (
                       <AgentCard
@@ -798,7 +865,7 @@ export function FleetPage() {
                       />
                     ))
                   ) : (
-                    <div className="grid min-h-28 flex-1 place-items-center px-4 text-center text-xs text-muted-foreground">
+                    <div className={styles.emptySession}>
                       All active agents are assigned.
                     </div>
                   )}
