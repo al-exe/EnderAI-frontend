@@ -29,8 +29,9 @@ import {
 } from "@/components/ui/table"
 import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
-  V2_PAGE_CONTENT,
+  V2_PAGE_BODY,
   V2_PAGE_FRAME,
+  V2_STICKY_HEADER_CLASS,
   V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 import { usePersistentState } from "@/hooks/usePersistentState"
@@ -448,17 +449,31 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
   }
 
   return (
-    <section className={V2_PAGE_FRAME}>
-      <div className={V2_PAGE_CONTENT}>
-        <div>
-          <h1 className="text-2xl font-semibold">Metrics</h1>
+    <section
+      className={cn(
+        V2_PAGE_FRAME,
+        "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+      )}
+    >
+      <div className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}>
+        <div
+          className={cn(
+            V2_STICKY_HEADER_CLASS,
+            "border-b-0 pb-0",
+            "flex flex-col gap-6",
+          )}
+        >
+          <header>
+            <h1 className="text-2xl font-semibold">Metrics</h1>
+          </header>
+          <ScopeFilterBar
+            items={METRICS_WINDOWS}
+            active={window}
+            onChange={setWindow}
+          />
         </div>
-        <ScopeFilterBar
-          items={METRICS_WINDOWS}
-          active={window}
-          onChange={setWindow}
-        />
 
+        <div className="flex flex-col gap-6">
         {scopedSessionId && (
           <div
             data-testid="metrics-session-filter-banner"
@@ -578,6 +593,7 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
             rows={tokensConsumed?.top_models ?? []}
           />
         </section>
+        </div>
       </div>
     </section>
   )
@@ -650,26 +666,35 @@ function ExperimentalMetricsPage({
   const windowCopy = WINDOW_COPY[window]
 
   return (
-    <div
-      data-testid="metrics-experimental-page"
-      className={`${V2_PAGE_CONTENT} bg-background font-sans text-foreground`}
+    <section
+      className={cn(
+        V2_PAGE_FRAME,
+        "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+      )}
     >
-      <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-        <div>
-          <div className={V2_TAB_EYEBROW_CLASS}>
-            Metrics · {windowCopy.label} · personal
-          </div>
-          <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
-            You saved{" "}
-            <span className="text-primary">
-              {formatMetricValue(savedTokens, "compact-int")} tokens
-            </span>{" "}
-            {windowCopy.title}.
-          </h1>
+      <div
+        className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}
+        data-testid="metrics-experimental-page"
+      >
+        <div className={cn(V2_STICKY_HEADER_CLASS, "border-b-0 pb-0")}>
+          <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <div>
+              <div className={V2_TAB_EYEBROW_CLASS}>
+                Metrics · {windowCopy.label} · personal
+              </div>
+              <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
+                You saved{" "}
+                <span className="text-primary">
+                  {formatMetricValue(savedTokens, "compact-int")} tokens
+                </span>{" "}
+                {windowCopy.title}.
+              </h1>
+            </div>
+            <MetricsTimeRange value={window} onChange={onWindowChange} />
+          </header>
         </div>
-        <MetricsTimeRange value={window} onChange={onWindowChange} />
-      </header>
 
+        <div className="flex flex-col gap-6">
       {metricsQueryIsError && (
         <div className="border border-destructive bg-destructive/10 p-3 text-sm">
           Failed to load metrics. Try again in a moment.
@@ -787,7 +812,9 @@ function ExperimentalMetricsPage({
       />
 
       <MethodologyLink />
-    </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -815,46 +842,55 @@ function ExperimentalSessionMetrics({
   const lastSeen = sessionSavings?.occurred_at_last
 
   return (
-    <div
-      data-testid="metrics-experimental-session-page"
-      className={`${V2_PAGE_CONTENT} bg-background font-sans text-foreground`}
+    <section
+      className={cn(
+        V2_PAGE_FRAME,
+        "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+      )}
     >
-      <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-        <div>
-          <div className={V2_TAB_EYEBROW_CLASS}>
-            Metrics · session · {sessionShortId}
-          </div>
-          <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
-            This session saved{" "}
-            <span className="text-primary">
-              {formatMetricValue(tokensSaved?.total, "compact-int")} tokens
-            </span>
-            .
-          </h1>
-          {sessionSavings?.specialist_slug ? (
+      <div
+        className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}
+        data-testid="metrics-experimental-session-page"
+      >
+        <div className={cn(V2_STICKY_HEADER_CLASS, "border-b-0 pb-0")}>
+          <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <div>
+              <div className={V2_TAB_EYEBROW_CLASS}>
+                Metrics · session · {sessionShortId}
+              </div>
+              <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
+                This session saved{" "}
+                <span className="text-primary">
+                  {formatMetricValue(tokensSaved?.total, "compact-int")} tokens
+                </span>
+                .
+              </h1>
+              {sessionSavings?.specialist_slug ? (
+                <Link
+                  to="/v2/agents/$slug"
+                  params={{ slug: sessionSavings.specialist_slug }}
+                  className="mt-3 inline-flex items-center gap-1.5 border border-border px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-foreground hover:bg-muted"
+                >
+                  Selected profile:{" "}
+                  <span className="font-semibold normal-case tracking-normal">
+                    {sessionSavings.specialist_name ??
+                      sessionSavings.specialist_slug}
+                  </span>
+                  <span aria-hidden>→</span>
+                </Link>
+              ) : null}
+            </div>
             <Link
-              to="/v2/agents/$slug"
-              params={{ slug: sessionSavings.specialist_slug }}
-              className="mt-3 inline-flex items-center gap-1.5 border border-border px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-foreground hover:bg-muted"
+              to="/v2/metrics"
+              search={{}}
+              className="border border-border px-3 py-2 text-sm font-medium text-foreground underline-offset-4 hover:bg-muted"
             >
-              Selected profile:{" "}
-              <span className="font-semibold normal-case tracking-normal">
-                {sessionSavings.specialist_name ??
-                  sessionSavings.specialist_slug}
-              </span>
-              <span aria-hidden>→</span>
+              View all metrics →
             </Link>
-          ) : null}
+          </header>
         </div>
-        <Link
-          to="/v2/metrics"
-          search={{}}
-          className="border border-border px-3 py-2 text-sm font-medium text-foreground underline-offset-4 hover:bg-muted"
-        >
-          View all metrics →
-        </Link>
-      </header>
 
+        <div className="flex flex-col gap-6">
       <section className="grid border border-border bg-background text-foreground lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
         <div className="px-5 py-6 md:px-7">
           <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
@@ -933,7 +969,9 @@ function ExperimentalSessionMetrics({
       />
 
       <MethodologyLink />
-    </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
