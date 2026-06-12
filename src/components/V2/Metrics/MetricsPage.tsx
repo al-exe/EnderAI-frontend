@@ -680,7 +680,7 @@ function ExperimentalMetricsPage({
           <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
-                Metrics · {windowCopy.label} · personal
+                {windowCopy.label} · personal
               </div>
               <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
                 You saved{" "}
@@ -856,7 +856,7 @@ function ExperimentalSessionMetrics({
           <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
-                Metrics · session · {sessionShortId}
+                session · {sessionShortId}
               </div>
               <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
                 This session saved{" "}

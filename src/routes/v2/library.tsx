@@ -718,8 +718,8 @@ function TaskforceLibrary() {
             <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <div className={V2_TAB_EYEBROW_CLASS}>
-                  Library · {totalDocumentCount} documents ·{" "}
-                  {teamSharedDocumentCount} shared with team
+                  {totalDocumentCount} documents · {teamSharedDocumentCount}{" "}
+                  shared with team
                 </div>
                 <h1 className="mt-1 text-2xl font-semibold">Library</h1>
               </div>
