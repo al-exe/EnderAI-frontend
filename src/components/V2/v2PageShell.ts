@@ -29,7 +29,7 @@ export const V2_PAGE_CONTENT_FIXED = cn(
   V2_PAGE_PADDING,
 )
 
-/** Tab page meta line (e.g. "Metrics · 7d · personal"). */
+/** Tab page meta line (e.g. "7d · personal") — page title lives in the h1 below. */
 export const V2_TAB_EYEBROW_CLASS =
   "font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground"
 

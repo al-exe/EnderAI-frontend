@@ -743,11 +743,16 @@ export function FleetPage() {
       )}
     >
       <div className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}>
-        <div className={V2_STICKY_HEADER_CLASS}>
+        <div
+          className={cn(
+            V2_STICKY_HEADER_CLASS,
+            "flex flex-col gap-6 border-b-0 pb-0",
+          )}
+        >
           <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className={V2_TAB_EYEBROW_CLASS}>
-                Fleet · {activeSessionCount} active session
+                {activeSessionCount} active session
                 {activeSessionCount === 1 ? "" : "s"} · {activeAgentCount}{" "}
                 active agent{activeAgentCount === 1 ? "" : "s"}
               </p>
@@ -766,10 +771,7 @@ export function FleetPage() {
               New fleet
             </Button>
           </header>
-        </div>
-
-        <div className={styles.pageBody}>
-          <div className={styles.overview}>
+          <div className={cn(styles.overview, "border-y border-border")}>
             <div className={styles.overviewSummary}>
               <strong>{activeSessionCount}</strong>{" "}
               {activeSessionCount === 1 ? "session" : "sessions"} ·{" "}
@@ -779,7 +781,9 @@ export function FleetPage() {
             </div>
             <div className={styles.liveLabel}>Live activity</div>
           </div>
+        </div>
 
+        <div className={styles.pageBody}>
           {Boolean(mutationError) && (
             <div className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {errorMessage(mutationError)}

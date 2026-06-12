@@ -399,10 +399,9 @@ export function LedgerPage({
               <header className={styles.head}>
                 <div>
                   <div className={styles.crumb}>
-                    Ledger
                     {typeof ledgerQuery.data?.total === "number"
-                      ? ` · ${ledgerQuery.data.total} sessions archived`
-                      : ""}
+                      ? `${ledgerQuery.data.total} sessions archived`
+                      : null}
                   </div>
                   <h1 className={styles.h1}>Ledger</h1>
                 </div>
