@@ -634,13 +634,6 @@
   border-top: 1px solid var(--tf-hairline);
   text-decoration: none;
 }
-.docMk {
-  width: 3px;
-  height: 36px;
-  background: var(--tf-primary);
-  flex-shrink: 0;
-  margin-top: 1px;
-}
 .docDt {
   min-width: 0;
 }

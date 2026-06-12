@@ -843,7 +843,6 @@ function RailDoc({ doc }: { doc: LedgerDocRef }) {
       params={{ documentId: doc.document_id }}
       to="/v2/library/$documentId"
     >
-      <span className={styles.docMk} />
       <span className={styles.docDt}>
         <span className={styles.docLink}>{doc.title}</span>
         {doc.state === "stale" ? (
