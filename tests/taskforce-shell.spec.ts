@@ -334,23 +334,41 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(page.getByText("Latest Stale Network Bridge Issue")).toHaveCount(
     0,
   )
-  await expect(page.getByText("No documents yet.")).toBeVisible()
+  await expect(
+    page.getByRole("heading", {
+      name: "Connect a terminal to start capturing work",
+    }),
+  ).toBeVisible()
+  const connectAgentLink = page.getByRole("link", { name: "Connect agent" })
+  await expect(connectAgentLink).toHaveAttribute(
+    "href",
+    /\/v2\/settings\?tab=connect-agent$/,
+  )
+  await connectAgentLink.click()
+  await expect(page).toHaveURL(/\/v2\/settings\?tab=connect-agent$/)
+  await expect(
+    page.getByRole("tab", { name: "Connect agent" }),
+  ).toHaveAttribute("aria-selected", "true")
+
+  await page.goto("/v2/library")
 
   await page.getByTestId("demo-mode-toggle").click()
 
   await expect(
-    page.getByText("Latest Stale Network Bridge Issue"),
+    page.getByText("Latest Stale Network Bridge Issue").first(),
   ).toBeVisible()
-  await expect(page.getByText("V2 Document Evidence Contract")).toBeVisible()
   await expect(
-    page.getByText("Hosted MCP Credential Setup Refresh"),
+    page.getByText("V2 Document Evidence Contract").first(),
+  ).toBeVisible()
+  await expect(
+    page.getByText("Hosted MCP Credential Setup Refresh").first(),
   ).toBeVisible()
   await expect(page.getByText("AI detail seed")).toHaveCount(0)
   await expect(page.getByText("Resolved", { exact: true })).toHaveCount(0)
   await expect(page.getByText("Ready", { exact: true })).toHaveCount(0)
   await expect(page.getByText("Draft", { exact: true })).toHaveCount(0)
 
-  await page.getByText("Latest Stale Network Bridge Issue").click()
+  await page.getByText("Latest Stale Network Bridge Issue").first().click()
   await expect(page).toHaveURL(
     /\/v2\/library\/8c9b0f48-2f3f-4e8d-9f7d-b4f0607d6a32$/,
   )

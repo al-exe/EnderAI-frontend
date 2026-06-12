@@ -800,11 +800,30 @@ function TaskforceLibrary() {
 
           {isLoading && <LibraryLoadingSkeleton view={libraryView} />}
 
-          {isEmpty && (
-            <div className="border bg-card p-6 text-sm text-muted-foreground">
-              No documents yet.
-            </div>
-          )}
+          {isEmpty &&
+            (isDemoMode ? (
+              <div className="border bg-card p-6 text-sm text-muted-foreground">
+                No documents yet.
+              </div>
+            ) : (
+              <div className="flex flex-col items-start gap-4 border bg-card p-6">
+                <div>
+                  <h2 className="font-medium text-foreground">
+                    Connect a terminal to start capturing work
+                  </h2>
+                  <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
+                    Taskforce creates documents automatically as your connected
+                    coding agents work, so context carries across terminals and
+                    VMs.
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link to="/v2/settings" search={{ tab: "connect-agent" }}>
+                    Connect agent
+                  </Link>
+                </Button>
+              </div>
+            ))}
 
           {!isLoading && documents.length > 0 && (
             <LibraryRecentReel
