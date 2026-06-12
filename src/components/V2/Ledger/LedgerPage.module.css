@@ -407,7 +407,7 @@
 }
 .transcript {
   overflow: auto;
-  padding: 24px 0 64px;
+  padding: 24px 1.5rem 0;
   min-width: 0;
 }
 .tHead {
@@ -593,7 +593,7 @@
   border-left: 1px solid var(--tf-border);
   background: var(--tf-card);
   overflow: auto;
-  padding: 22px 20px 44px;
+  padding: 22px 20px 0;
 }
 .grp {
   font-family: var(--font-mono);

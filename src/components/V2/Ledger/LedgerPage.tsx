@@ -364,7 +364,7 @@ export function LedgerPage({
         "-mb-6 bg-background font-sans text-foreground md:-mb-8",
       )}
     >
-      <div className={V2_PAGE_BODY}>
+      <div className={cn(V2_PAGE_BODY, selectedSessionId && "pb-0")}>
         {selectedSessionId ? (
           <div className={styles.app}>
             <LedgerDetail
