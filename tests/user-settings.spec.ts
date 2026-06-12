@@ -675,7 +675,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(
     page
       .locator('[data-slot="card-title"]')
-      .filter({ hasText: "Connect agent" }),
+      .filter({ hasText: "Connect your coding agent" }),
   ).toBeVisible()
   await expect(page.getByLabel("Credential label")).toBeVisible()
   await expect(page.getByLabel("Credential label")).toHaveValue(
@@ -683,7 +683,9 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   )
   await expect(page.getByText("Revoked install")).toHaveCount(0)
   await expect(
-    page.getByText("Token and config snippets for local MCP testing."),
+    page.getByText(
+      "Connect your coding agent to Taskforce so work captured in one terminal is available in the next.",
+    ),
   ).toBeVisible()
   await expect(page.getByText("Hosted MCP URL")).toHaveCount(0)
   await expect(
@@ -702,17 +704,29 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(
     page.getByText("Optional: persist the token across new terminals"),
   ).toHaveCount(0)
+  await expect(page.getByText("2. Connect Claude Code")).toBeVisible()
+  const claudeCodeSetup = page.getByTestId("connect-agent-claude-code")
+  await expect(claudeCodeSetup).toContainText(
+    "printf '%s\\n' 'mcp-token-abc' > ~/.taskforce_mcp_token",
+  )
+  await expect(claudeCodeSetup).toContainText(
+    "chmod 600 ~/.taskforce_mcp_token",
+  )
+  await expect(claudeCodeSetup).toContainText(
+    "scripts/taskforce-hooks/install.sh | bash",
+  )
+  await expect(page.getByText("3. Advanced MCP setup")).toBeVisible()
   await expect(
-    page.getByRole("tab", { name: "AI assisted setup" }),
+    page.getByRole("tab", { name: "AI-assisted MCP" }),
   ).toHaveAttribute("aria-selected", "true")
-  await expect(page.getByRole("tab", { name: "Manual setup" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Manual MCP" })).toBeVisible()
   await expect(page.getByText("Ask an agent to wire it up")).toBeVisible()
   await expect(
     page.getByText("Paste this into the agent doing setup."),
   ).toBeVisible()
   await expect(
     page.getByText(
-      "After saving the shell config, start from a fresh terminal",
+      "Run this once in every terminal or VM you want Taskforce to remember.",
     ),
   ).toBeVisible()
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
@@ -728,13 +742,13 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     "# Set up MCP config",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
-    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
+    'bearer_token_env_var = "TASKFORCE_MCP_TOKEN"',
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
     "# Add agent instruction",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
-    "enderai_begin_case",
+    "taskforce_begin_case",
   )
   await expect(page.getByTestId("connect-agent-ai-setup")).toContainText(
     "# Reconnect the AI client",
@@ -746,7 +760,16 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     "token environment",
   )
 
-  await page.getByRole("tab", { name: "Manual setup" }).click()
+  const primarySetupTop = await page
+    .getByText("Connect Claude Code", { exact: true })
+    .first()
+    .boundingBox()
+  const advancedSetupTop = await page
+    .getByText("3. Advanced MCP setup")
+    .boundingBox()
+  expect(primarySetupTop?.y).toBeLessThan(advancedSetupTop?.y ?? 0)
+
+  await page.getByRole("tab", { name: "Manual MCP" }).click()
   await expect(page.getByText("Persist token")).toBeVisible()
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
@@ -765,12 +788,12 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   ).toContainText("awk -v start=")
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
-  ).toContainText('export ENDERAI_MCP_TOKEN="$(tr -d')
+  ).toContainText('export TASKFORCE_MCP_TOKEN="$(tr -d')
   await expect(
     page.getByTestId("connect-agent-persistent-shell"),
-  ).not.toContainText("ENDERAI_BACKEND_TOKEN")
+  ).not.toContainText("ENDERAI_MCP_TOKEN")
   await expect(page.getByTestId("connect-agent-config")).toContainText(
-    'bearer_token_env_var = "ENDERAI_MCP_TOKEN"',
+    'bearer_token_env_var = "TASKFORCE_MCP_TOKEN"',
   )
   await expect(
     page.getByText("Add this block to your AI client's MCP config."),
@@ -797,7 +820,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     ),
   ).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
-    "enderai_begin_case",
+    "taskforce_begin_case",
   )
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
     "creating or rotating a Taskforce MCP credential",
@@ -809,10 +832,10 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     "auto-hydrate relevant prior context",
   )
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
-    "enderai_finish_case",
+    "taskforce_finish_case",
   )
   await expect(page.getByTestId("connect-agent-instructions")).toContainText(
-    "Prefer the guided case tools over raw `enderai_request` calls.",
+    "Prefer the guided case tools over raw `taskforce_request` calls.",
   )
   const instructionStepTop = await page
     .getByText("Minimal agent instruction")
@@ -831,16 +854,17 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
 
   await expect(page.getByText("Persist token")).toHaveCount(0)
   await expect(
-    page.getByText('export ENDERAI_MCP_TOKEN="PASTE_MCP_TOKEN_HERE"'),
+    page.getByText('export TASKFORCE_MCP_TOKEN="PASTE_MCP_TOKEN_HERE"'),
   ).toHaveCount(0)
+  await expect(page.getByTestId("connect-agent-claude-code")).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-persistent-shell")).toHaveCount(
     0,
   )
   await expect(page.getByTestId("connect-agent-config")).toHaveCount(0)
-  await expect(
-    page.getByRole("tab", { name: "AI assisted setup" }),
-  ).toHaveCount(0)
-  await expect(page.getByRole("tab", { name: "Manual setup" })).toHaveCount(0)
+  await expect(page.getByRole("tab", { name: "AI-assisted MCP" })).toHaveCount(
+    0,
+  )
+  await expect(page.getByRole("tab", { name: "Manual MCP" })).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-ai-setup")).toHaveCount(0)
   await expect(page.getByText("Reconnect AI client")).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-reconnect-client")).toHaveCount(
@@ -849,8 +873,8 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(page.getByTestId("connect-agent-instructions")).toHaveCount(0)
   await expect(page.getByText("Minimal agent instruction")).toHaveCount(0)
   await expect(page.getByText("Ask an agent to wire it up")).toHaveCount(0)
-  await expect(page.getByText("enderai_finish_case")).toHaveCount(0)
-  await expect(page.getByText("enderai_begin_case")).toHaveCount(0)
+  await expect(page.getByText("taskforce_finish_case")).toHaveCount(0)
+  await expect(page.getByText("taskforce_begin_case")).toHaveCount(0)
   await expect(page.getByText("# Add agent instruction")).toHaveCount(0)
   await expect(page.getByText("# Reconnect the AI client")).toHaveCount(0)
   await expect(page.getByText("# Set up MCP config")).toHaveCount(0)
@@ -947,10 +971,13 @@ test("Connect agent shows V2 document instructions for V2-enabled users", async 
   await expect(aiSetup).toContainText("Details view")
   await expect(aiSetup).toContainText("evidence anchors")
   await expect(aiSetup).toContainText("Prefer Taskforce V2 document tools")
-  await expect(aiSetup).not.toContainText("enderai_begin_case")
+  await expect(aiSetup).toContainText("taskforce_begin_document")
+  await expect(aiSetup).not.toContainText("taskforce_begin_case")
+  await expect(aiSetup).not.toContainText("enderai_")
 
-  await page.getByRole("tab", { name: "Manual setup" }).click()
+  await page.getByRole("tab", { name: "Manual MCP" }).click()
   const instructions = page.getByTestId("connect-agent-instructions")
   await expect(instructions).toContainText("Taskforce V2 MCP tools")
-  await expect(instructions).not.toContainText("enderai_finish_case")
+  await expect(instructions).toContainText("taskforce_finish_document")
+  await expect(instructions).not.toContainText("enderai_")
 })
