@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   GripHorizontal,
+  LayoutGrid,
   LineChart,
   MessageCircle,
   ReceiptText,
@@ -69,6 +70,7 @@ type TaskforceNavItem = {
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
   { icon: BookOpen, title: "Library", path: "/v2/library" },
+  { icon: LayoutGrid, title: "Fleet", path: "/v2/fleet" },
   { icon: ReceiptText, title: "Ledger", path: "/v2/ledger" },
   { icon: LineChart, title: "Metrics", path: "/v2/metrics" },
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },
