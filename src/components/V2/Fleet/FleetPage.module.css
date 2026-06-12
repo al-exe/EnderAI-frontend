@@ -70,10 +70,6 @@
   padding: 20px 22px;
 }
 
-.unassignedSession {
-  border-style: dashed;
-}
-
 .sessionHeader {
   display: flex;
   align-items: baseline;

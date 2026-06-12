@@ -17,7 +17,7 @@ import {
   ScrollText,
   Trash2,
 } from "lucide-react"
-import { type FormEvent, useEffect, useMemo, useState } from "react"
+import { type FormEvent, useMemo, useState } from "react"
 import { readV2Document } from "@/api/v2Documents"
 import {
   assignTaskforceFleetSession,
@@ -32,19 +32,10 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -70,10 +61,6 @@ type DetailSelection =
   | { kind: "agent"; agent: TaskforceFleetAgent }
   | { kind: "fleet"; fleet: TaskforceFleetSession }
   | null
-
-type CreateSessionRequest = {
-  agentSessionId?: string
-}
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong."
@@ -141,7 +128,7 @@ function AgentCard({
   agent: TaskforceFleetAgent
   fleetSessions: TaskforceFleetSession[]
   isMoving: boolean
-  onMove: (agent: TaskforceFleetAgent, fleetSessionId: string | null) => void
+  onMove: (agent: TaskforceFleetAgent, fleetSessionId: string) => void
   onCreateSession: (agent: TaskforceFleetAgent) => void
   onOpen: (agent: TaskforceFleetAgent) => void
 }) {
@@ -194,16 +181,8 @@ function AgentCard({
             ))}
             <DropdownMenuItem onSelect={() => onCreateSession(agent)}>
               <Plus />
-              New fleet
+              New session
             </DropdownMenuItem>
-            {agent.fleet_session_id && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => onMove(agent, null)}>
-                  Unassign
-                </DropdownMenuItem>
-              </>
-            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -270,7 +249,7 @@ function FleetBox({
   fleet: TaskforceFleetSession
   allFleetSessions: TaskforceFleetSession[]
   isMoving: boolean
-  onMove: (agent: TaskforceFleetAgent, fleetSessionId: string | null) => void
+  onMove: (agent: TaskforceFleetAgent, fleetSessionId: string) => void
   onCreateSession: (agent: TaskforceFleetAgent) => void
   onOpenAgent: (agent: TaskforceFleetAgent) => void
   onOpenFleet: (fleet: TaskforceFleetSession) => void
@@ -542,7 +521,7 @@ function FleetDetail({ fleet }: { fleet: TaskforceFleetSession }) {
           <div className="mt-3 space-y-2">
             {documentIds.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No documents have been captured for this Fleet session yet.
+                No documents have been captured for this session yet.
               </p>
             ) : (
               documentQueries.map((query, index) => {
@@ -570,81 +549,9 @@ function FleetDetail({ fleet }: { fleet: TaskforceFleetSession }) {
   )
 }
 
-function CreateFleetDialog({
-  request,
-  isCreating,
-  error,
-  onClose,
-  onSubmit,
-}: {
-  request: CreateSessionRequest | null
-  isCreating: boolean
-  error: unknown
-  onClose: () => void
-  onSubmit: (name: string) => void
-}) {
-  const [name, setName] = useState("")
-
-  useEffect(() => {
-    if (request === null) setName("")
-  }, [request])
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault()
-    const nextName = name.trim()
-    if (nextName) onSubmit(nextName)
-  }
-
-  return (
-    <Dialog
-      open={request !== null}
-      onOpenChange={(open) => {
-        if (!open) {
-          setName("")
-          onClose()
-        }
-      }}
-    >
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>New Fleet session</DialogTitle>
-            <DialogDescription>
-              Create a named group for active coding agents.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Checkout redesign sprint"
-            maxLength={120}
-            autoFocus
-            className="mt-5"
-          />
-          {Boolean(error) && (
-            <p className="mt-2 text-sm text-destructive">
-              {errorMessage(error)}
-            </p>
-          )}
-          <DialogFooter className="mt-5">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!name.trim() || isCreating}>
-              {isCreating ? "Creating…" : "Create session"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 export function FleetPage() {
   const queryClient = useQueryClient()
   const [detail, setDetail] = useState<DetailSelection>(null)
-  const [createRequest, setCreateRequest] =
-    useState<CreateSessionRequest | null>(null)
   const [mutationError, setMutationError] = useState<unknown>(null)
 
   const fleetQuery = useQuery({
@@ -662,20 +569,14 @@ export function FleetPage() {
       fleetSessionId,
     }: {
       sessionId: string
-      fleetSessionId: string | null
+      fleetSessionId: string
     }) => assignTaskforceFleetSession(sessionId, fleetSessionId),
     onSuccess: refreshFleet,
     onError: setMutationError,
   })
   const createMutation = useMutation({
-    mutationFn: ({
-      name,
-      agentSessionId,
-    }: {
-      name: string
-      agentSessionId?: string
-    }) =>
-      createTaskforceFleetSession(name).then(async (fleetSession) => {
+    mutationFn: ({ agentSessionId }: { agentSessionId?: string }) =>
+      createTaskforceFleetSession().then(async (fleetSession) => {
         if (agentSessionId) {
           try {
             await assignTaskforceFleetSession(agentSessionId, fleetSession.id)
@@ -687,7 +588,6 @@ export function FleetPage() {
         return fleetSession
       }),
     onSuccess: () => {
-      setCreateRequest(null)
       setMutationError(null)
       refreshFleet()
     },
@@ -714,23 +614,18 @@ export function FleetPage() {
   })
 
   const fleetSessions = fleetQuery.data?.fleet_sessions ?? []
-  const unassigned = fleetQuery.data?.unassigned ?? []
   const activeSessionCount = fleetSessions.length
-  const activeAgentCount =
-    unassigned.length +
-    fleetSessions.reduce((total, fleet) => total + fleet.agents.length, 0)
-  const runningAgentCount =
-    unassigned.filter((agent) => agent.minutes_ago < 5).length +
-    fleetSessions.reduce(
-      (total, fleet) =>
-        total + fleet.agents.filter((agent) => agent.minutes_ago < 5).length,
-      0,
-    )
+  const activeAgentCount = fleetSessions.reduce(
+    (total, fleet) => total + fleet.agents.length,
+    0,
+  )
+  const runningAgentCount = fleetSessions.reduce(
+    (total, fleet) =>
+      total + fleet.agents.filter((agent) => agent.minutes_ago < 5).length,
+    0,
+  )
 
-  const moveAgent = (
-    agent: TaskforceFleetAgent,
-    fleetSessionId: string | null,
-  ) => {
+  const moveAgent = (agent: TaskforceFleetAgent, fleetSessionId: string) => {
     setMutationError(null)
     assignMutation.mutate({ sessionId: agent.session_id, fleetSessionId })
   }
@@ -759,11 +654,12 @@ export function FleetPage() {
               className="w-fit"
               onClick={() => {
                 setMutationError(null)
-                setCreateRequest({})
+                createMutation.mutate({})
               }}
+              disabled={createMutation.isPending}
             >
               <Plus />
-              New fleet
+              {createMutation.isPending ? "Creating…" : "New session"}
             </Button>
           </header>
         </div>
@@ -811,7 +707,7 @@ export function FleetPage() {
                 Try again
               </Button>
             </div>
-          ) : activeAgentCount === 0 ? (
+          ) : fleetSessions.length === 0 ? (
             <div className="flex flex-col items-start gap-4 border bg-card p-6">
               <div>
                 <h2 className="font-medium text-foreground">
@@ -831,47 +727,6 @@ export function FleetPage() {
             </div>
           ) : (
             <div className={styles.sessionList}>
-              <section className={cn(styles.session, styles.unassignedSession)}>
-                <div className={styles.sessionHeader}>
-                  <h2 className={styles.sessionTitle}>Unassigned</h2>
-                </div>
-                <p className={styles.sessionSummary}>
-                  {fleetSummary(unassigned)}
-                </p>
-                <div className={styles.instances}>
-                  <div className={styles.columns} aria-hidden="true">
-                    <div>Instance</div>
-                    <div>Working on</div>
-                    <div>Documents</div>
-                    <div className={styles.alignRight}>Time</div>
-                  </div>
-                  {unassigned.length ? (
-                    unassigned.map((agent) => (
-                      <AgentCard
-                        key={agent.session_id}
-                        agent={agent}
-                        fleetSessions={fleetSessions}
-                        isMoving={assignMutation.isPending}
-                        onMove={moveAgent}
-                        onCreateSession={(selectedAgent) => {
-                          setMutationError(null)
-                          setCreateRequest({
-                            agentSessionId: selectedAgent.session_id,
-                          })
-                        }}
-                        onOpen={(selectedAgent) =>
-                          setDetail({ kind: "agent", agent: selectedAgent })
-                        }
-                      />
-                    ))
-                  ) : (
-                    <div className={styles.emptySession}>
-                      All active agents are assigned.
-                    </div>
-                  )}
-                </div>
-              </section>
-
               {fleetSessions.map((fleet) => (
                 <FleetBox
                   key={fleet.id}
@@ -881,7 +736,7 @@ export function FleetPage() {
                   onMove={moveAgent}
                   onCreateSession={(selectedAgent) => {
                     setMutationError(null)
-                    setCreateRequest({
+                    createMutation.mutate({
                       agentSessionId: selectedAgent.session_id,
                     })
                   }}
@@ -896,7 +751,7 @@ export function FleetPage() {
                   onDelete={(selectedFleet) => {
                     if (
                       window.confirm(
-                        `Delete "${selectedFleet.name}"? Its agents will move to Unassigned.`,
+                        `Delete "${selectedFleet.name}"? Its agents will move to the default session.`,
                       )
                     ) {
                       setMutationError(null)
@@ -909,22 +764,6 @@ export function FleetPage() {
           )}
         </div>
       </div>
-
-      <CreateFleetDialog
-        request={createRequest}
-        isCreating={createMutation.isPending}
-        error={createMutation.error}
-        onClose={() => {
-          setCreateRequest(null)
-          setMutationError(null)
-        }}
-        onSubmit={(name) =>
-          createMutation.mutate({
-            name,
-            agentSessionId: createRequest?.agentSessionId,
-          })
-        }
-      />
 
       <Sheet
         open={detail !== null}

@@ -33,8 +33,17 @@ async function mockFleet(page: Page) {
   })
 
   await page.route("**/api/v1/v2/taskforce/fleet", async (route) => {
-    if (route.request().method() !== "GET") {
-      await route.continue()
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 201,
+        json: {
+          id: "fleet-2",
+          name: "Session 2",
+          created_at: "2026-06-12T10:30:00Z",
+          updated_at: "2026-06-12T10:30:00Z",
+          agents: [],
+        },
+      })
       return
     }
 
@@ -43,7 +52,7 @@ async function mockFleet(page: Page) {
         fleet_sessions: [
           {
             id: "fleet-1",
-            name: "Stripe tax rollout",
+            name: "Session 1",
             created_at: "2026-06-12T10:00:00Z",
             updated_at: "2026-06-12T10:20:00Z",
             agents: [
@@ -66,7 +75,6 @@ async function mockFleet(page: Page) {
             ],
           },
         ],
-        unassigned: [],
       },
     })
   })
@@ -79,9 +87,7 @@ test("Fleet renders live API data in the clean session layout", async ({
   await page.goto("/v2/fleet")
 
   await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
-  await expect(
-    page.getByRole("heading", { name: "Stripe tax rollout" }),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Session 1" })).toBeVisible()
   await expect(page.getByText("Opus 4.8")).toBeVisible()
   await expect(
     page.getByText("Wiring automatic tax onto the subscription create path"),
@@ -91,8 +97,11 @@ test("Fleet renders live API data in the clean session layout", async ({
     page.getByText("1 session · 1 instance · 1 running"),
   ).toBeVisible()
 
-  await page.getByRole("button", { name: "New fleet" }).click()
-  await expect(
-    page.getByRole("heading", { name: "New Fleet session" }),
-  ).toBeVisible()
+  const createRequest = page.waitForRequest(
+    (request) =>
+      request.url().endsWith("/api/v1/v2/taskforce/fleet") &&
+      request.method() === "POST",
+  )
+  await page.getByRole("button", { name: "New session" }).click()
+  expect((await createRequest).postDataJSON()).toEqual({})
 })
