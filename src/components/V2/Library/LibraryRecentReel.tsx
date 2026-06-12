@@ -147,12 +147,9 @@ export function LibraryRecentReel({
 
   return (
     <section aria-label="Recently accessed" className="shrink-0">
-      <div className="mb-3 flex items-baseline gap-2.5">
+      <div className="mb-3">
         <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground">
           Recently accessed
-        </span>
-        <span className="font-mono text-[9.5px] text-muted-foreground/70">
-          last opened across your library
         </span>
       </div>
       <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
