@@ -86,7 +86,7 @@ function RecentCard({
           {document.description}
         </p>
       )}
-      <div className="mt-[9px] font-mono text-[9.5px] text-muted-foreground/70">
+      <div className="mt-[9px] pb-2.5 font-mono text-[9.5px] text-muted-foreground/70">
         {sharedByOther ? "Shared" : "Updated"} ·{" "}
         <span className="font-medium text-foreground">
           {formatRelativeTime(document.updated_at ?? document.created_at)}
