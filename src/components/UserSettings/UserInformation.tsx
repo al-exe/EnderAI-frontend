@@ -19,6 +19,7 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
+import ChangePassword from "@/components/UserSettings/ChangePassword"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
@@ -78,13 +79,14 @@ const UserInformation = () => {
   }
 
   return (
-    <div className="max-w-md">
-      <h3 className="text-lg font-semibold py-4">User Information</h3>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
-        >
+    <div className="flex max-w-md flex-col gap-8">
+      <section>
+        <h3 className="py-4 text-lg font-semibold">Profile</h3>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
           <FormField
             control={form.control}
             name="full_name"
@@ -149,8 +151,12 @@ const UserInformation = () => {
               </Button>
             )}
           </div>
-        </form>
-      </Form>
+          </form>
+        </Form>
+      </section>
+      <section className="border-t">
+        <ChangePassword />
+      </section>
     </div>
   )
 }

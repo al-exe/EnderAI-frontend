@@ -1,10 +1,16 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { settingsTabValues } from "@/components/UserSettings/UserSettingsPage"
+import {
+  legacySettingsTabValues,
+  normalizeSettingsTab,
+  settingsTabValues,
+} from "@/components/UserSettings/UserSettingsPage"
 
 const searchSchema = z.object({
-  tab: z.enum(settingsTabValues).optional(),
+  tab: z
+    .enum([...settingsTabValues, ...legacySettingsTabValues])
+    .optional(),
 })
 
 export const Route = createFileRoute("/_layout/settings")({
@@ -12,7 +18,10 @@ export const Route = createFileRoute("/_layout/settings")({
   beforeLoad: ({ search }) => {
     throw redirect({
       to: "/v2/settings",
-      search: { tab: search.tab },
+      search:
+        search.tab !== undefined
+          ? { tab: normalizeSettingsTab(search.tab) }
+          : undefined,
     })
   },
   head: () => ({
