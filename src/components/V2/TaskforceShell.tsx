@@ -64,13 +64,10 @@ type TaskforceNavItem = {
   path: string
 }
 
-// Ordered by the pipeline's distillation altitude (TF-206): most-distilled
-// first (Profiles ← Library ← Ledger), then Metrics as the rollup. Upgrade
-// stays at the bottom.
 const taskforceItems: TaskforceNavItem[] = [
+  { icon: LayoutGrid, title: "Fleet", path: "/v2/fleet" },
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
   { icon: BookOpen, title: "Library", path: "/v2/library" },
-  { icon: LayoutGrid, title: "Fleet", path: "/v2/fleet" },
   { icon: ReceiptText, title: "Ledger", path: "/v2/ledger" },
   { icon: LineChart, title: "Metrics", path: "/v2/metrics" },
   { icon: Rocket, title: "Upgrade", path: "/v2/pricing" },

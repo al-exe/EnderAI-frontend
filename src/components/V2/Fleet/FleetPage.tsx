@@ -178,7 +178,7 @@ function AgentCard({
             ))}
             <DropdownMenuItem onSelect={() => onCreateSession(agent)}>
               <Plus />
-              New Fleet session
+              New fleet
             </DropdownMenuItem>
             {agent.fleet_session_id && (
               <>
@@ -645,7 +645,8 @@ export function FleetPage() {
 
   const fleetSessions = fleetQuery.data?.fleet_sessions ?? []
   const unassigned = fleetQuery.data?.unassigned ?? []
-  const totalAgents =
+  const activeSessionCount = fleetSessions.length
+  const activeAgentCount =
     unassigned.length +
     fleetSessions.reduce((total, fleet) => total + fleet.agents.length, 0)
 
@@ -658,32 +659,39 @@ export function FleetPage() {
   }
 
   return (
-    <div className={V2_PAGE_FRAME}>
-      <div className={V2_PAGE_BODY}>
-        <header className={V2_STICKY_HEADER_CLASS}>
-          <div className="flex flex-wrap items-start justify-between gap-4">
+    <section
+      className={cn(
+        V2_PAGE_FRAME,
+        "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+      )}
+    >
+      <div className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}>
+        <div className={V2_STICKY_HEADER_CLASS}>
+          <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className={V2_TAB_EYEBROW_CLASS}>Active agent control panel</p>
+              <p className={V2_TAB_EYEBROW_CLASS}>
+                Fleet · {activeSessionCount} active session
+                {activeSessionCount === 1 ? "" : "s"} · {activeAgentCount}{" "}
+                active agent{activeAgentCount === 1 ? "" : "s"}
+              </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">
                 Fleet
               </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Group active Claude Code sessions and inspect the Taskforce
-                documents each one contributed.
-              </p>
             </div>
             <Button
+              className="w-fit"
               onClick={() => {
                 setMutationError(null)
                 setCreateRequest({})
               }}
             >
               <Plus />
-              New Fleet session
+              New fleet
             </Button>
-          </div>
-        </header>
+          </header>
+        </div>
 
+        <div className="flex flex-col gap-6">
         {Boolean(mutationError) && (
           <div className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
             {errorMessage(mutationError)}
@@ -715,7 +723,7 @@ export function FleetPage() {
               Try again
             </Button>
           </div>
-        ) : totalAgents === 0 ? (
+        ) : activeAgentCount === 0 ? (
           <div className="flex flex-col items-start gap-4 border bg-card p-6">
             <div>
               <h2 className="font-medium text-foreground">
@@ -803,6 +811,7 @@ export function FleetPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       <CreateFleetDialog
@@ -828,6 +837,6 @@ export function FleetPage() {
         {detail?.kind === "agent" && <AgentDetail agent={detail.agent} />}
         {detail?.kind === "fleet" && <FleetDetail fleet={detail.fleet} />}
       </Sheet>
-    </div>
+    </section>
   )
 }
