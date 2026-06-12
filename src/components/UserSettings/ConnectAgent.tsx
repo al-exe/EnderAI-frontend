@@ -18,6 +18,7 @@ import {
   revokeAgentCredential,
   rotateAgentCredential,
 } from "@/api/agentCredentials"
+import recordUsageScript from "@/assets/taskforce-record-usage.sh?raw"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -50,35 +51,35 @@ function formatTimestamp(value: string | null): string {
   }).format(new Date(value))
 }
 
-// One-liner that drops the Claude Code Stop hook on disk + chmods it.
-// Pulls the canonical script straight from the Taskforce repository so users
-// always get the latest version (the script logs to ~/.claude/taskforce-record-usage.log
-// and fails silent — see the script's header comments for full env vars).
-const STOP_HOOK_INSTALL_COMMAND = [
-  "mkdir -p ~/.claude/hooks",
-  "curl -fsSL -o ~/.claude/hooks/taskforce-record-usage.sh \\",
-  "  https://raw.githubusercontent.com/al-exe/EnderAI/main/scripts/claude-code-record-usage.sh",
-  "chmod +x ~/.claude/hooks/taskforce-record-usage.sh",
-].join("\n")
+// Single self-contained install for the Claude Code metrics hook: saves the
+// token, writes the hook script inline (nothing is downloaded), and registers
+// it as a Stop hook via an idempotent jq merge. The script body is the real
+// asset file imported above, so what runs is exactly what the user can read.
+function buildMetricsHookInstallSnippet(mcpToken: string): string {
+  const stopHookMerge =
+    ".hooks.Stop = ((.hooks.Stop // []) | " +
+    'if any(.[]?.hooks[]?; .command | test("taskforce-record-usage")) then . ' +
+    'else . + [{matcher:"*",hooks:[{type:"command",' +
+    'command:"$HOME/.claude/hooks/taskforce-record-usage.sh",timeout:10}]}] end)'
 
-// JSON snippet the user merges into ~/.claude/settings.json so Claude
-// Code actually fires the hook after every assistant turn.
-const STOP_HOOK_SETTINGS_JSON = `{
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/taskforce-record-usage.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
-  }
-}`
+  return [
+    "# 1 · Save your Taskforce token (stays on this machine)",
+    `printf '%s\\n' '${mcpToken}' > ~/.taskforce_mcp_token && chmod 600 ~/.taskforce_mcp_token`,
+    "",
+    "# 2 · Write the metrics hook locally — nothing is downloaded",
+    "mkdir -p ~/.claude/hooks",
+    "cat > ~/.claude/hooks/taskforce-record-usage.sh <<'TF_RECORD_USAGE_EOF'",
+    recordUsageScript.trimEnd(),
+    "TF_RECORD_USAGE_EOF",
+    "chmod +x ~/.claude/hooks/taskforce-record-usage.sh",
+    "",
+    "# 3 · Register it as a Stop hook (idempotent; requires jq)",
+    "[ -f ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json",
+    `tmp="$(mktemp)" && jq '${stopHookMerge}' ~/.claude/settings.json > "$tmp" && mv "$tmp" ~/.claude/settings.json`,
+    "",
+    'echo "✓ Taskforce metrics hook installed — restart Claude Code to activate."',
+  ].join("\n")
+}
 
 function buildPersistentShellSnippet(mcpToken: string): string {
   const lines = [
@@ -682,32 +683,32 @@ const ConnectAgent = () => {
         </CardHeader>
         <CardContent className={styles.cardContent}>
           <p className={styles.mutedText}>
-            Optional — Claude Code only. Drop this Stop hook in to auto-record
-            every assistant turn's token usage to the Taskforce Metrics page, so
-            cost charts populate without the agent having to introspect itself.
-            Requires the MCP token above (already created when you generate a
-            credential).
+            Optional — Claude Code only. Records each turn's token usage to your
+            Taskforce Metrics page, so cost charts populate on their own. One
+            command: it saves your token, writes the hook locally (nothing is
+            downloaded), and registers it. Requires <code>jq</code>.
           </p>
-          <SnippetBlock
-            title="Install the hook"
-            description="Run once in a terminal. Pulls the canonical script from the Taskforce repository."
-            snippet={STOP_HOOK_INSTALL_COMMAND}
-            copiedText={copiedText}
-            onCopy={(value) => {
-              void copy(value)
-            }}
-            testId="connect-agent-stop-hook-install"
-          />
-          <SnippetBlock
-            title="~/.claude/settings.json"
-            description="Merge this `hooks` block into your existing settings.json. Restart Claude Code after editing so it picks up the hook."
-            snippet={STOP_HOOK_SETTINGS_JSON}
-            copiedText={copiedText}
-            onCopy={(value) => {
-              void copy(value)
-            }}
-            testId="connect-agent-stop-hook-settings"
-          />
+          {hasFreshToken && mcpToken ? (
+            <SnippetBlock
+              title="Install the metrics hook"
+              description="Paste into a terminal, then restart Claude Code to activate."
+              snippet={buildMetricsHookInstallSnippet(mcpToken)}
+              copiedText={copiedText}
+              onCopy={(value) => {
+                void copy(value)
+              }}
+              testId="connect-agent-stop-hook-install"
+            />
+          ) : (
+            <Alert>
+              <KeyRound className={styles.icon} />
+              <AlertTitle>Token needed</AlertTitle>
+              <AlertDescription>
+                Create or rotate a credential above to reveal your one-command
+                metrics-hook install.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
