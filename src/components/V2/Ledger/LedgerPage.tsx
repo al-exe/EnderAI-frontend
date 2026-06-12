@@ -211,6 +211,15 @@ function whoLabel(row: LedgerSessionRow): string {
   return row.actor_handle ?? row.actor_name ?? "Unknown"
 }
 
+function userDisplayLabel(row: LedgerSessionRow): string {
+  const handle = row.actor_handle?.trim()
+  const name = row.actor_name?.trim()
+  if (handle && name && handle !== name) {
+    return `${handle} · ${name}`
+  }
+  return whoLabel(row)
+}
+
 function eventWho(event: LedgerTranscriptEvent, row: LedgerSessionRow): string {
   return event.who ?? whoLabel(row)
 }
@@ -762,7 +771,7 @@ function SessionRail({ detail }: { detail: LedgerSessionDetail }) {
     <aside className={styles.rail}>
       <div className={cn(styles.grp, styles.grpFirst)}>Session</div>
       <Kv k="ID" mono value={detail.session_id} />
-      <Kv k="User" value={`${whoLabel(detail)} · ${detail.actor_name}`} />
+      <Kv k="User" value={userDisplayLabel(detail)} />
       <Kv k="Agent" mono value={agentLabel(detail)} />
       <Kv k="Harness" value={harnessWithVersion(detail)} />
       {detail.repo ? <Kv k="Repo" mono value={detail.repo} /> : null}
