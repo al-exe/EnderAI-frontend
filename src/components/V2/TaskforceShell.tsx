@@ -13,6 +13,7 @@ import {
   GripHorizontal,
   LineChart,
   MessageCircle,
+  RadioTower,
   ReceiptText,
   Rocket,
   Search,
@@ -69,6 +70,7 @@ type TaskforceNavItem = {
 // on top as the entry point; Upgrade stays at the bottom.
 const taskforceItems: TaskforceNavItem[] = [
   { icon: Search, title: "Search", path: "/v2/search" },
+  { icon: RadioTower, title: "Fleet", path: "/v2/fleet" },
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
   { icon: BookOpen, title: "Library", path: "/v2/library" },
   { icon: ReceiptText, title: "Ledger", path: "/v2/ledger" },
