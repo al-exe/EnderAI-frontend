@@ -14,6 +14,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  ScrollText,
   Trash2,
 } from "lucide-react"
 import { type FormEvent, useEffect, useMemo, useState } from "react"
@@ -357,6 +358,13 @@ function AgentDetail({ agent }: { agent: TaskforceFleetAgent }) {
           {agent.repo && <Badge variant="secondary">{agent.repo}</Badge>}
           {agent.branch && <Badge variant="secondary">{agent.branch}</Badge>}
         </div>
+
+        <Button asChild className="w-full">
+          <Link to="/v2/ledger" search={{ session_id: agent.session_id }}>
+            <ScrollText />
+            View session in Ledger
+          </Link>
+        </Button>
 
         <section>
           <h3 className="text-sm font-semibold">Current work</h3>
