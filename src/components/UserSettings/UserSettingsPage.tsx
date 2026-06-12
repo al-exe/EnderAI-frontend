@@ -5,7 +5,6 @@ import { readMyOrganizationInvitations } from "@/api/organizations"
 import { PendingInvitationBadge } from "@/components/Common/PendingInvitationBadge"
 import AppearanceSettings from "@/components/UserSettings/Appearance"
 import Billing from "@/components/UserSettings/Billing"
-import ChangePassword from "@/components/UserSettings/ChangePassword"
 import ConnectAgent from "@/components/UserSettings/ConnectAgent"
 import DeleteAccount from "@/components/UserSettings/DeleteAccount"
 import Organization from "@/components/UserSettings/Organization"
@@ -14,28 +13,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useAuth from "@/hooks/useAuth"
 
 export const settingsTabValues = [
-  "my-profile",
+  "account",
   "organization",
-  "appearance",
   "connect-agent",
   "billing",
-  "password",
+  "appearance",
   "danger-zone",
 ] as const
 
 export type SettingsTab = (typeof settingsTabValues)[number]
+
+/** @deprecated Old tab slugs kept for URL redirects. */
+export const legacySettingsTabValues = ["my-profile", "password"] as const
+
+export type LegacySettingsTab = (typeof legacySettingsTabValues)[number]
+
+export function normalizeSettingsTab(
+  tab: SettingsTab | LegacySettingsTab | undefined,
+): SettingsTab {
+  if (tab === "my-profile" || tab === "password") {
+    return "account"
+  }
+  return tab ?? "account"
+}
 
 const tabsConfig: Array<{
   value: SettingsTab
   title: string
   component: ComponentType
 }> = [
-  { value: "my-profile", title: "My profile", component: UserInformation },
+  { value: "account", title: "Account", component: UserInformation },
   { value: "organization", title: "Organization", component: Organization },
-  { value: "appearance", title: "Appearance", component: AppearanceSettings },
   { value: "connect-agent", title: "Connect agent", component: ConnectAgent },
   { value: "billing", title: "Billing", component: Billing },
-  { value: "password", title: "Password", component: ChangePassword },
+  { value: "appearance", title: "Appearance", component: AppearanceSettings },
   { value: "danger-zone", title: "Danger zone", component: DeleteAccount },
 ]
 
