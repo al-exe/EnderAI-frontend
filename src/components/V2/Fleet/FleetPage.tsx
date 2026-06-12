@@ -667,10 +667,6 @@ export function FleetPage() {
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">
                 Fleet
               </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Group active Claude Code sessions and inspect the Taskforce
-                documents each one contributed.
-              </p>
             </div>
             <Button
               onClick={() => {
