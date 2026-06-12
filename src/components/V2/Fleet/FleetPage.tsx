@@ -178,7 +178,7 @@ function AgentCard({
             ))}
             <DropdownMenuItem onSelect={() => onCreateSession(agent)}>
               <Plus />
-              New Fleet session
+              New fleet
             </DropdownMenuItem>
             {agent.fleet_session_id && (
               <>
@@ -645,7 +645,8 @@ export function FleetPage() {
 
   const fleetSessions = fleetQuery.data?.fleet_sessions ?? []
   const unassigned = fleetQuery.data?.unassigned ?? []
-  const totalAgents =
+  const activeSessionCount = fleetSessions.length
+  const activeAgentCount =
     unassigned.length +
     fleetSessions.reduce((total, fleet) => total + fleet.agents.length, 0)
 
@@ -668,7 +669,11 @@ export function FleetPage() {
         <div className={V2_STICKY_HEADER_CLASS}>
           <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className={V2_TAB_EYEBROW_CLASS}>Active agent control panel</p>
+              <p className={V2_TAB_EYEBROW_CLASS}>
+                Fleet · {activeSessionCount} active session
+                {activeSessionCount === 1 ? "" : "s"} · {activeAgentCount}{" "}
+                active agent{activeAgentCount === 1 ? "" : "s"}
+              </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">
                 Fleet
               </h1>
@@ -681,7 +686,7 @@ export function FleetPage() {
               }}
             >
               <Plus />
-              New Fleet session
+              New fleet
             </Button>
           </header>
         </div>
@@ -718,7 +723,7 @@ export function FleetPage() {
               Try again
             </Button>
           </div>
-        ) : totalAgents === 0 ? (
+        ) : activeAgentCount === 0 ? (
           <div className="flex flex-col items-start gap-4 border bg-card p-6">
             <div>
               <h2 className="font-medium text-foreground">
