@@ -56,7 +56,7 @@ test("Sidebar raises the Taskforce V2 workspace", async ({ page }) => {
 
   await page.waitForURL("/v2/library")
 
-  await expect(page.getByRole("link", { name: "Search" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Search" })).toHaveCount(0)
   await expect(page.getByRole("link", { name: "Library" })).toBeVisible()
   await expect(page.getByRole("link", { name: "Agents" })).toBeVisible()
   await expect(page.getByRole("link", { name: "Metrics" })).toBeVisible()

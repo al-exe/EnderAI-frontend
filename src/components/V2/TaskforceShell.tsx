@@ -64,10 +64,9 @@ type TaskforceNavItem = {
 }
 
 // Ordered by the pipeline's distillation altitude (TF-206): most-distilled
-// first (Profiles ← Library ← Ledger), then Metrics as the rollup. Search stays
-// on top as the entry point; Upgrade stays at the bottom.
+// first (Profiles ← Library ← Ledger), then Metrics as the rollup. Upgrade
+// stays at the bottom.
 const taskforceItems: TaskforceNavItem[] = [
-  { icon: Search, title: "Search", path: "/v2/search" },
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
   { icon: BookOpen, title: "Library", path: "/v2/library" },
   { icon: ReceiptText, title: "Ledger", path: "/v2/ledger" },
