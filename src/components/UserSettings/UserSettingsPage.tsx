@@ -64,7 +64,7 @@ export function UserSettingsPage({
     invitationsQuery.data?.count ?? invitationsQuery.data?.data.length ?? 0
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden -mb-6 md:-mb-8">
       <div className="shrink-0">
         <h1 className="text-2xl font-bold">Settings</h1>
       </div>
