@@ -114,11 +114,16 @@ function buildMcpConfigSnippet(hostedMcpUrl: string): string {
   ].join("\n")
 }
 
-function buildClaudeCodeConnectSnippet(mcpToken: string): string {
+function buildClaudeCodeConnectSnippet(
+  mcpToken: string,
+  backendUrl: string,
+): string {
+  const installerUrl = `${backendUrl.replace(/\/$/, "")}/api/v1/v2/taskforce/install.sh`
+
   return [
     `printf '%s\\n' '${mcpToken}' > ~/.taskforce_mcp_token && \\`,
     "chmod 600 ~/.taskforce_mcp_token && \\",
-    "curl -fsSL https://raw.githubusercontent.com/al-exe/EnderAI/main/scripts/taskforce-hooks/install.sh | bash",
+    `curl -fsSL '${installerUrl}' | bash`,
   ].join("\n")
 }
 
@@ -440,7 +445,7 @@ const ConnectAgent = () => {
     ? buildPersistentShellSnippet(mcpToken)
     : null
   const claudeCodeConnectSnippet = hasFreshToken
-    ? buildClaudeCodeConnectSnippet(mcpToken)
+    ? buildClaudeCodeConnectSnippet(mcpToken, import.meta.env.VITE_API_URL)
     : null
   const reconnectClientSnippet =
     "# Start a fresh terminal, then restart or reconnect your AI client after saving the MCP config."

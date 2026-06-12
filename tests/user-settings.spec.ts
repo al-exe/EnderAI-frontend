@@ -713,8 +713,10 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
     "chmod 600 ~/.taskforce_mcp_token",
   )
   await expect(claudeCodeSetup).toContainText(
-    "scripts/taskforce-hooks/install.sh | bash",
+    "https://enderai-backend.onrender.com/api/v1/v2/taskforce/install.sh",
   )
+  await expect(claudeCodeSetup).not.toContainText("github.com")
+  await expect(claudeCodeSetup).not.toContainText("raw.githubusercontent.com")
   await expect(page.getByText("3. Advanced MCP setup")).toBeVisible()
   await expect(
     page.getByRole("tab", { name: "AI-assisted MCP" }),
