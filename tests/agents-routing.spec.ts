@@ -213,6 +213,31 @@ test("v2 route transient session errors do not render membership no-access", asy
   )
 })
 
+test("v2 route invalid session redirects to login instead of membership no-access", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("access_token", "expired-token")
+  })
+
+  await page.route("**/api/v1/users/me", async (route) => {
+    await route.fulfill({
+      status: 403,
+      json: { detail: "Could not validate credentials" },
+    })
+  })
+
+  await page.goto("/v2/agents")
+
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(
+    page.getByRole("heading", { name: "No access", exact: true }),
+  ).toHaveCount(0)
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("access_token")))
+    .toBeNull()
+})
+
 test("agents grid links to specialist detail and session metrics", async ({
   page,
 }) => {

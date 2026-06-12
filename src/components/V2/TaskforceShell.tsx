@@ -37,7 +37,6 @@ import {
   ExperimentalModeToggle,
 } from "@/components/Sidebar/ModeSwitches"
 import { User } from "@/components/Sidebar/User"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Sidebar,
@@ -658,24 +657,5 @@ export function TaskforcePlaceholder({
         </p>
       </div>
     </section>
-  )
-}
-
-export function TaskforceNoAccess() {
-  return (
-    <main className="flex min-h-svh items-center justify-center bg-background p-6">
-      <section className="w-full max-w-lg border-l border-border pl-6">
-        <p className="mb-3 text-xs font-medium uppercase text-muted-foreground">
-          Taskforce
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight">No access</h1>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Taskforce is not available for this account.
-        </p>
-        <Button asChild className="mt-6">
-          <RouterLink to="/v2/pricing">View membership</RouterLink>
-        </Button>
-      </section>
-    </main>
   )
 }

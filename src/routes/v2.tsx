@@ -1,12 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
 import { ApiError } from "@/client"
-import {
-  TaskforceNoAccess,
-  TaskforceShell,
-} from "@/components/V2/TaskforceShell"
+import { TaskforceShell } from "@/components/V2/TaskforceShell"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
+  invalidateTaskforceSession,
   peekTaskforceSession,
   readTaskforceSession,
 } from "@/lib/taskforceSession"
@@ -24,11 +22,7 @@ function V2Pending() {
   return <TaskforceShell currentUser={currentUser} />
 }
 
-function V2RouteError({ error }: { error: unknown }) {
-  if (error instanceof ApiError && error.status === 403) {
-    return <TaskforceNoAccess />
-  }
-
+function V2RouteError() {
   const currentUser = peekTaskforceSession()
   if (currentUser) {
     return <TaskforceShell currentUser={currentUser} />
@@ -48,8 +42,12 @@ export const Route = createFileRoute("/v2")({
       const currentUser = await readTaskforceSession()
       return { currentUser }
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
+      if (
+        error instanceof ApiError &&
+        (error.status === 401 || error.status === 403)
+      ) {
         localStorage.removeItem("access_token")
+        invalidateTaskforceSession()
         throw redirect({ to: "/login" })
       }
 
