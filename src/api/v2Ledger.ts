@@ -89,6 +89,11 @@ export interface LedgerSessionDetail extends LedgerSessionRow {
   source_metadata: Record<string, unknown>
 }
 
+export interface LedgerRawTranscript {
+  session_id: string
+  events: Record<string, unknown>[]
+}
+
 export interface LedgerResponse {
   scope: "organization"
   organization_id: string | null
@@ -141,6 +146,22 @@ export function readLedgerSessionDetail(
   return request(OpenAPI, {
     method: "GET",
     url: "/api/v1/v2/taskforce/ledger/{session_id}",
+    path: {
+      session_id: sessionId,
+    },
+    query: {
+      demo: args.demo || undefined,
+    },
+  })
+}
+
+export function readLedgerRawTranscript(
+  sessionId: string,
+  args: Pick<ReadLedgerArgs, "demo"> = {},
+): CancelablePromise<LedgerRawTranscript> {
+  return request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/v2/taskforce/ledger/{session_id}/raw-transcript",
     path: {
       session_id: sessionId,
     },

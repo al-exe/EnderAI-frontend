@@ -58,6 +58,8 @@ export type UserPublic = {
     email: string;
     is_superuser?: boolean;
     full_name?: (string | null);
+    organization_id?: (string | null);
+    organization_role?: string;
     id: string;
     v2?: boolean;
     created_at?: (string | null);

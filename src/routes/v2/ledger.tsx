@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { LedgerPage } from "@/components/V2/Ledger/LedgerPage"
+import { V2_PAGE_BODY, V2_PAGE_FRAME } from "@/components/V2/v2PageShell"
 
 const searchSchema = z.object({
   actor_id: z.string().optional(),
@@ -34,5 +35,34 @@ export const Route = createFileRoute("/v2/ledger")({
 
 function TaskforceLedger() {
   const search = Route.useSearch()
+  const { currentUser } = Route.useRouteContext()
+
+  if (!currentUser.organization_id) {
+    return (
+      <section className={V2_PAGE_FRAME} data-testid="ledger-team-only">
+        <div className={V2_PAGE_BODY}>
+          <div className="max-w-2xl border-l border-border pl-5">
+            <p className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              Ledger for teams
+            </p>
+            <h1 className="text-2xl font-semibold">Create or join a team</h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+              Ledger keeps an organization-wide record of sessions across people
+              and coding tools. It becomes available after your account joins an
+              organization.
+            </p>
+            <Link
+              className="mt-6 inline-flex border border-border bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90"
+              search={{ tab: "organization" }}
+              to="/v2/settings"
+            >
+              Manage organization
+            </Link>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return <LedgerPage searchFilters={search} />
 }
