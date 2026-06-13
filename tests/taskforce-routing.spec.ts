@@ -44,7 +44,7 @@ async function mockAuth(page: Page) {
   await mockV2Documents(page)
 }
 
-for (const path of ["/", "/home", "/topics", "/cases", "/skills", "/v2/home"]) {
+for (const path of ["/", "/home", "/topics", "/cases", "/v2/home"]) {
   test(`${path} routes authenticated users to Taskforce Library`, async ({
     page,
   }) => {
@@ -61,6 +61,18 @@ for (const path of ["/", "/home", "/topics", "/cases", "/skills", "/v2/home"]) {
     await expect(page.getByTestId("v2-mode-switch")).toHaveCount(0)
   })
 }
+
+test("/skills routes authenticated users to Profiles", async ({ page }) => {
+  await mockAuth(page)
+
+  await page.goto("/skills")
+
+  await expect(page).toHaveURL(/\/v2\/agents$/)
+  await expect(
+    page.getByRole("heading", { name: "Profiles", level: 1 }),
+  ).toBeVisible()
+  await expect(page.getByRole("link", { name: "Skills" })).toHaveCount(0)
+})
 
 test("disabled Search route redirects to Library and stays out of the sidebar", async ({
   page,

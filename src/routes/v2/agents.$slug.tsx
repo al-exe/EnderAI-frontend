@@ -11,6 +11,7 @@ import {
   getAgent,
   updateAgent,
 } from "@/api/v2Agents"
+import { ApiError } from "@/client"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
 import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
@@ -36,6 +37,7 @@ import {
   formatCompactNumber,
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
+import { QueryErrorState } from "@/components/V2/QueryErrorState"
 import {
   V2_PAGE_BODY,
   V2_PAGE_CONTENT,
@@ -404,6 +406,7 @@ function AgentDetailPage() {
       const summary = findAgentSummaryInList(list, slug)
       return summary ? agentSummaryToDetailPlaceholder(summary) : undefined
     },
+    retry: false,
   })
   const agent = agentQuery.data
   const isAgentError = agentQuery.isError
@@ -412,10 +415,17 @@ function AgentDetailPage() {
   const isAgentPending = agentQuery.isPending
   const isAgentPlaceholderData = agentQuery.isPlaceholderData
   const hasMatchingAgent = agent?.slug === slug
+  const isAgentNotFound =
+    agentQuery.error instanceof ApiError && agentQuery.error.status === 404
   const showNotFound =
-    isAgentError || (isAgentFetched && !isAgentFetching && !hasMatchingAgent)
+    isAgentNotFound ||
+    (!isAgentError && isAgentFetched && !isAgentFetching && !hasMatchingAgent)
+  const showLoadError = isAgentError && !isAgentNotFound && !hasMatchingAgent
   const showFullSkeleton =
-    !showNotFound && !agent && (isAgentPending || isAgentFetching)
+    !showNotFound &&
+    !showLoadError &&
+    !agent &&
+    (isAgentPending || isAgentFetching)
   const isHydratingDetail =
     hasMatchingAgent && isAgentFetching && isAgentPlaceholderData
 
@@ -425,6 +435,24 @@ function AgentDetailPage() {
         className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
       >
         <AgentDetailSkeleton shellClassName={AGENTS_DETAIL_SHELL} />
+      </section>
+    )
+  }
+
+  if (showLoadError) {
+    return (
+      <section
+        className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
+      >
+        <div className={V2_PAGE_CONTENT}>
+          <QueryErrorState
+            title="Could not load this profile"
+            description="The profile service returned an unexpected error. Try again without reloading the page."
+            onRetry={() => void agentQuery.refetch()}
+            isRetrying={agentQuery.isFetching}
+            testId="profile-detail-load-error"
+          />
+        </div>
       </section>
     )
   }
@@ -454,6 +482,16 @@ function AgentDetailPage() {
       className={`${V2_PAGE_FRAME} bg-background font-sans text-foreground`}
     >
       <div className={AGENTS_DETAIL_SHELL}>
+        {isAgentError && (
+          <QueryErrorState
+            title="Profile details may be out of date"
+            description="The latest profile details could not be loaded. The last available version is still shown."
+            onRetry={() => void agentQuery.refetch()}
+            isRetrying={agentQuery.isFetching}
+            compact
+            testId="profile-detail-refresh-error"
+          />
+        )}
         <header
           data-testid="agent-detail-sticky-header"
           className={cn(

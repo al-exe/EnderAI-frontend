@@ -79,6 +79,7 @@ import {
   FolderPickerDropdown,
 } from "@/components/V2/Library/FolderControls"
 import { LibraryRecentReel } from "@/components/V2/Library/LibraryRecentReel"
+import { QueryErrorState } from "@/components/V2/QueryErrorState"
 import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
@@ -253,11 +254,13 @@ function TaskforceLibrary() {
   const documentsQuery = useQuery({
     queryKey: documentsQueryKey,
     queryFn: () => readV2Documents({ demo: isDemoMode }),
+    retry: false,
   })
 
   const foldersQuery = useQuery({
     queryKey: foldersQueryKey,
     queryFn: () => readV2DocumentFolders({ demo: isDemoMode }),
+    retry: false,
   })
 
   const moveDocumentMutation = useMutation({
@@ -563,8 +566,14 @@ function TaskforceLibrary() {
     return grouped
   }, [documents, folders])
   const isLoading = documentsQuery.isLoading || foldersQuery.isLoading
+  const hasInitialLoadError =
+    (documentsQuery.isError && documentsQuery.data === undefined) ||
+    (foldersQuery.isError && foldersQuery.data === undefined)
+  const hasRefreshError =
+    !hasInitialLoadError && (documentsQuery.isError || foldersQuery.isError)
   const isEmpty =
     !isLoading &&
+    !hasInitialLoadError &&
     documents.length === 0 &&
     (libraryView === "files" || folders.length === 0)
   const isFolderEmpty =
@@ -577,6 +586,10 @@ function TaskforceLibrary() {
     !moveDocumentMutation.isPending &&
     !moveFolderMutation.isPending &&
     !favoriteMutation.isPending
+  const retryLibrary = () => {
+    if (documentsQuery.isError) void documentsQuery.refetch()
+    if (foldersQuery.isError) void foldersQuery.refetch()
+  }
 
   // Only hand off to a child route when the URL actually has a document
   // segment after /v2/library/. A bare /v2/library/ (trailing slash, no id)
@@ -807,112 +820,139 @@ function TaskforceLibrary() {
             onConfirm={(document) => deleteDocumentMutation.mutate(document.id)}
           />
 
-          {isLoading && <LibraryLoadingSkeleton view={libraryView} />}
-
-          {isEmpty &&
-            (isDemoMode ? (
-              <div className="border bg-card p-6 text-sm text-muted-foreground">
-                No documents yet.
-              </div>
-            ) : (
-              <div className="flex flex-col items-start gap-4 border bg-card p-6">
-                <div>
-                  <h2 className="font-medium text-foreground">
-                    Connect a terminal to start capturing work
-                  </h2>
-                  <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-                    Taskforce creates documents automatically as your connected
-                    coding agents work, so context carries across terminals and
-                    VMs.
-                  </p>
-                </div>
-                <Button asChild>
-                  <Link to="/v2/settings" search={{ tab: "connect-agent" }}>
-                    Connect agent
-                  </Link>
-                </Button>
-              </div>
-            ))}
-
-          {!isLoading && documents.length > 0 && (
-            <LibraryRecentReel
-              documents={documents}
-              currentUser={currentUser}
+          {hasInitialLoadError ? (
+            <QueryErrorState
+              title="Could not load the library"
+              description="Taskforce could not load your documents and folders. Try again without leaving this page."
+              onRetry={retryLibrary}
+              isRetrying={documentsQuery.isFetching || foldersQuery.isFetching}
+              testId="library-load-error"
             />
-          )}
+          ) : (
+            <>
+              {hasRefreshError && (
+                <QueryErrorState
+                  title="Library results may be out of date"
+                  description="The latest documents or folders could not be loaded. The last available results are still shown."
+                  onRetry={retryLibrary}
+                  isRetrying={
+                    documentsQuery.isFetching || foldersQuery.isFetching
+                  }
+                  compact
+                  testId="library-refresh-error"
+                />
+              )}
 
-          {!isLoading && documents.length > 0 && libraryView === "files" && (
-            <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
-              <FolderNav
-                folderTree={folderTree}
-                selectedFolderId={selectedFolderId}
-                setSelectedFolderId={setSelectedFolderId}
-                allCount={documents.length}
-                favoritesCount={favoriteDocuments.length}
-                unfiledCount={folderCounts.unfiled}
-                folderCounts={folderCounts.counts}
-                loading={foldersQuery.isLoading}
-                currentUserId={currentUser.id}
-                demo={isDemoMode}
-                onFolderDeleted={handleFolderDeleted}
-              />
-              <div className="min-w-0 pr-1">
-                {isFolderEmpty && (
+              {isLoading && <LibraryLoadingSkeleton view={libraryView} />}
+
+              {isEmpty &&
+                (isDemoMode ? (
                   <div className="border bg-card p-6 text-sm text-muted-foreground">
-                    No documents in this folder.
+                    No documents yet.
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-start gap-4 border bg-card p-6">
+                    <div>
+                      <h2 className="font-medium text-foreground">
+                        Connect a terminal to start capturing work
+                      </h2>
+                      <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
+                        Taskforce creates documents automatically as your
+                        connected coding agents work, so context carries across
+                        terminals and VMs.
+                      </p>
+                    </div>
+                    <Button asChild>
+                      <Link to="/v2/settings" search={{ tab: "connect-agent" }}>
+                        Connect agent
+                      </Link>
+                    </Button>
+                  </div>
+                ))}
+
+              {!isLoading && documents.length > 0 && (
+                <LibraryRecentReel
+                  documents={documents}
+                  currentUser={currentUser}
+                />
+              )}
+
+              {!isLoading &&
+                documents.length > 0 &&
+                libraryView === "files" && (
+                  <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
+                    <FolderNav
+                      folderTree={folderTree}
+                      selectedFolderId={selectedFolderId}
+                      setSelectedFolderId={setSelectedFolderId}
+                      allCount={documents.length}
+                      favoritesCount={favoriteDocuments.length}
+                      unfiledCount={folderCounts.unfiled}
+                      folderCounts={folderCounts.counts}
+                      loading={foldersQuery.isLoading}
+                      currentUserId={currentUser.id}
+                      demo={isDemoMode}
+                      onFolderDeleted={handleFolderDeleted}
+                    />
+                    <div className="min-w-0 pr-1">
+                      {isFolderEmpty && (
+                        <div className="border bg-card p-6 text-sm text-muted-foreground">
+                          No documents in this folder.
+                        </div>
+                      )}
+                      {!isFolderEmpty && (
+                        <InfiniteDocumentGrid
+                          documents={visibleDocuments}
+                          canFavorite={!favoriteMutation.isPending}
+                          onToggleFavorite={toggleFavorite}
+                        />
+                      )}
+                    </div>
                   </div>
                 )}
-                {!isFolderEmpty && (
-                  <InfiniteDocumentGrid
-                    documents={visibleDocuments}
-                    canFavorite={!favoriteMutation.isPending}
-                    onToggleFavorite={toggleFavorite}
-                  />
-                )}
-              </div>
-            </div>
-          )}
 
-          {!isLoading &&
-            (documents.length > 0 || folders.length > 0) &&
-            libraryView === "folders" && (
-              <div className="pr-1">
-                <FolderDirectory
-                  folderTree={folderTree}
-                  documentsByFolder={documentsByFolder}
-                  openFolderIds={openFolderIds}
-                  dragOverFolderId={dragOverFolderId}
-                  canMoveItems={canMutateLibrary}
-                  canFavorite={!favoriteMutation.isPending}
-                  currentUserId={currentUser.id}
-                  demo={isDemoMode}
-                  onToggleFolder={toggleFolderOpen}
-                  onFolderDragStart={(event, folder) => {
-                    event.stopPropagation()
-                    event.dataTransfer.effectAllowed = "move"
-                    event.dataTransfer.setData(
-                      "application/x-v2-folder",
-                      folder.id,
-                    )
-                  }}
-                  onDocumentDragStart={(event, document) => {
-                    event.dataTransfer.effectAllowed = "move"
-                    event.dataTransfer.setData(
-                      "application/x-v2-document",
-                      document.id,
-                    )
-                  }}
-                  onDocumentDragEnd={() => setDragOverFolderId(null)}
-                  onToggleFavorite={toggleFavorite}
-                  onFolderDragOver={handleFolderDragOver}
-                  onFolderDrop={handleFolderDrop}
-                  onUnfiledDrop={handleUnfiledDrop}
-                  onRootFolderDrop={handleRootFolderDrop}
-                  onFolderDragLeave={() => setDragOverFolderId(null)}
-                  onFolderDeleted={handleFolderDeleted}
-                />
-              </div>
-            )}
+              {!isLoading &&
+                (documents.length > 0 || folders.length > 0) &&
+                libraryView === "folders" && (
+                  <div className="pr-1">
+                    <FolderDirectory
+                      folderTree={folderTree}
+                      documentsByFolder={documentsByFolder}
+                      openFolderIds={openFolderIds}
+                      dragOverFolderId={dragOverFolderId}
+                      canMoveItems={canMutateLibrary}
+                      canFavorite={!favoriteMutation.isPending}
+                      currentUserId={currentUser.id}
+                      demo={isDemoMode}
+                      onToggleFolder={toggleFolderOpen}
+                      onFolderDragStart={(event, folder) => {
+                        event.stopPropagation()
+                        event.dataTransfer.effectAllowed = "move"
+                        event.dataTransfer.setData(
+                          "application/x-v2-folder",
+                          folder.id,
+                        )
+                      }}
+                      onDocumentDragStart={(event, document) => {
+                        event.dataTransfer.effectAllowed = "move"
+                        event.dataTransfer.setData(
+                          "application/x-v2-document",
+                          document.id,
+                        )
+                      }}
+                      onDocumentDragEnd={() => setDragOverFolderId(null)}
+                      onToggleFavorite={toggleFavorite}
+                      onFolderDragOver={handleFolderDragOver}
+                      onFolderDrop={handleFolderDrop}
+                      onUnfiledDrop={handleUnfiledDrop}
+                      onRootFolderDrop={handleRootFolderDrop}
+                      onFolderDragLeave={() => setDragOverFolderId(null)}
+                      onFolderDeleted={handleFolderDeleted}
+                    />
+                  </div>
+                )}
+            </>
+          )}
         </div>
       </section>
     </DocumentDeleteContext.Provider>

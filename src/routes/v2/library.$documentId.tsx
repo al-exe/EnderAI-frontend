@@ -12,9 +12,9 @@ import {
   Heading3,
   Italic,
   Link as LinkIcon,
-  ReceiptText,
   Pencil,
   Pilcrow,
+  ReceiptText,
   Search,
   Share2,
   Star,
@@ -54,6 +54,7 @@ import {
   type LedgerSessionRow,
   readDocumentLedgerSessions,
 } from "@/api/v2Ledger"
+import { ApiError } from "@/client"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -72,6 +73,7 @@ import {
   FolderCreateDialog,
   FolderPickerDropdown,
 } from "@/components/V2/Library/FolderControls"
+import { QueryErrorState } from "@/components/V2/QueryErrorState"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -546,6 +548,7 @@ function TaskforceDocumentDetail() {
   const documentQuery = useQuery({
     queryKey: ["v2-document", documentId, { demo: isDemoMode }],
     queryFn: () => readV2Document(documentId, { demo: isDemoMode }),
+    retry: false,
   })
 
   const document = documentQuery.data
@@ -577,12 +580,14 @@ function TaskforceDocumentDetail() {
     queryKey: ["organization-me"],
     queryFn: readMyOrganization,
     enabled: canManageDocument,
+    retry: false,
   })
 
   const sharesQuery = useQuery({
     queryKey: ["v2-document-shares", documentId],
     queryFn: () => readV2DocumentShares(documentId),
     enabled: canManageDocument,
+    retry: false,
   })
 
   const updateMutation = useMutation({
@@ -830,6 +835,26 @@ function TaskforceDocumentDetail() {
     )
   }
 
+  const isDocumentNotFound =
+    documentQuery.error instanceof ApiError &&
+    documentQuery.error.status === 404
+
+  if (documentQuery.isError && !isDocumentNotFound && !document) {
+    return (
+      <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
+        <div className="w-full max-w-3xl">
+          <QueryErrorState
+            title="Could not load this document"
+            description="The document service returned an unexpected error. Try again without reloading the page."
+            onRetry={() => void documentQuery.refetch()}
+            isRetrying={documentQuery.isFetching}
+            testId="document-detail-load-error"
+          />
+        </div>
+      </section>
+    )
+  }
+
   if (!document) {
     return (
       <section className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
@@ -897,6 +922,16 @@ function TaskforceDocumentDetail() {
           isSplit && "md:min-h-0 md:flex-1 md:overflow-hidden",
         )}
       >
+        {documentQuery.isError && (
+          <QueryErrorState
+            title="Document details may be out of date"
+            description="The latest document could not be loaded. The last available version is still shown."
+            onRetry={() => void documentQuery.refetch()}
+            isRetrying={documentQuery.isFetching}
+            compact
+            testId="document-detail-refresh-error"
+          />
+        )}
         <div
           data-testid="v2-document-sticky-header"
           className={cn(
@@ -1019,6 +1054,14 @@ function TaskforceDocumentDetail() {
             isSavingAccess={shareMutation.isPending}
             isLoadingAccess={
               sharesQuery.isLoading || organizationQuery.isLoading
+            }
+            hasAccessError={sharesQuery.isError || organizationQuery.isError}
+            onRetryAccess={() => {
+              if (sharesQuery.isError) void sharesQuery.refetch()
+              if (organizationQuery.isError) void organizationQuery.refetch()
+            }}
+            isRetryingAccess={
+              sharesQuery.isFetching || organizationQuery.isFetching
             }
             onMoveFolder={moveDocumentToFolder}
             isMovingFolder={updateMutation.isPending}
@@ -1209,6 +1252,9 @@ function DocumentMetadata({
   onSaveAccess,
   isSavingAccess,
   isLoadingAccess,
+  hasAccessError,
+  onRetryAccess,
+  isRetryingAccess,
   onMoveFolder,
   isMovingFolder,
   onCreateFolder,
@@ -1233,6 +1279,9 @@ function DocumentMetadata({
   onSaveAccess: () => void
   isSavingAccess: boolean
   isLoadingAccess: boolean
+  hasAccessError: boolean
+  onRetryAccess: () => void
+  isRetryingAccess: boolean
   onMoveFolder: (folderId: string | null) => void
   isMovingFolder: boolean
   onCreateFolder: () => void
@@ -1290,6 +1339,9 @@ function DocumentMetadata({
           onSave={onSaveAccess}
           isSaving={isSavingAccess}
           isLoading={isLoadingAccess}
+          hasError={hasAccessError}
+          onRetry={onRetryAccess}
+          isRetrying={isRetryingAccess}
         />
       ) : (
         <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -1397,6 +1449,9 @@ function DocumentAccessDropdown({
   onSave,
   isSaving,
   isLoading,
+  hasError,
+  onRetry,
+  isRetrying,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -1408,6 +1463,9 @@ function DocumentAccessDropdown({
   onSave: () => void
   isSaving: boolean
   isLoading: boolean
+  hasError: boolean
+  onRetry: () => void
+  isRetrying: boolean
 }) {
   const [query, setQuery] = useState("")
   const shareableMembers = members.filter((member) => member.id !== ownerId)
@@ -1457,17 +1515,28 @@ function DocumentAccessDropdown({
           />
         </div>
         <div className="max-h-72 space-y-1 overflow-y-auto">
+          {hasError && (
+            <QueryErrorState
+              title="Could not load sharing access"
+              description="Existing document access is unchanged. Try loading organization members again."
+              onRetry={onRetry}
+              isRetrying={isRetrying}
+              compact
+              testId="document-access-load-error"
+            />
+          )}
           {isLoading && (
             <div className="px-2 py-3 text-sm text-muted-foreground">
               Loading access…
             </div>
           )}
-          {!isLoading && shareableMembers.length === 0 && (
+          {!isLoading && !hasError && shareableMembers.length === 0 && (
             <div className="px-2 py-3 text-sm text-muted-foreground">
               No organization members available.
             </div>
           )}
           {!isLoading &&
+            !hasError &&
             filteredMembers.length === 0 &&
             shareableMembers.length > 0 && (
               <div className="px-2 py-3 text-sm text-muted-foreground">
@@ -1475,6 +1544,7 @@ function DocumentAccessDropdown({
               </div>
             )}
           {!isLoading &&
+            !hasError &&
             filteredMembers.map((member) => {
               const permission = shareDraft[member.id]
               const checked = Boolean(permission)
@@ -1536,7 +1606,12 @@ function DocumentAccessDropdown({
           <span className="text-xs text-muted-foreground">
             {assignedCount} selected
           </span>
-          <Button type="button" size="sm" onClick={onSave} disabled={isSaving}>
+          <Button
+            type="button"
+            size="sm"
+            onClick={onSave}
+            disabled={isSaving || hasError}
+          >
             {isSaving ? "Saving" : "Save access"}
           </Button>
         </div>

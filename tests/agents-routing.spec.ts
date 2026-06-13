@@ -343,3 +343,78 @@ test("profiles grid shows empty state before profiles are seeded", async ({
     ),
   ).toBeVisible()
 })
+
+test("profiles list exposes a retry state instead of an empty state", async ({
+  page,
+}) => {
+  await mockAgentsShell(page)
+  let attempts = 0
+
+  await page.route("**/api/v1/v2/agents**", async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname !== "/api/v1/v2/agents") {
+      await route.fallback()
+      return
+    }
+
+    attempts += 1
+    if (attempts === 1) {
+      await route.fulfill({
+        status: 500,
+        json: { detail: "Profiles temporarily unavailable" },
+      })
+      return
+    }
+
+    await route.fulfill({ json: { items: agents } })
+  })
+
+  await page.goto("/v2/agents")
+
+  await expect(page.getByTestId("profiles-load-error")).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "No profiles yet" }),
+  ).toHaveCount(0)
+
+  await page.getByTestId("profiles-load-error").getByRole("button").click()
+
+  await expect(page.getByTestId("agents-card-grid")).toBeVisible()
+  expect(attempts).toBe(2)
+})
+
+test("profile detail exposes a retry state instead of not found", async ({
+  page,
+}) => {
+  await mockAgentsShell(page)
+  let attempts = 0
+
+  await page.route("**/api/v1/v2/agents/jensen", async (route) => {
+    attempts += 1
+    if (attempts === 1) {
+      await route.fulfill({
+        status: 500,
+        json: { detail: "Profile temporarily unavailable" },
+      })
+      return
+    }
+
+    await route.fulfill({ json: jensenDetail })
+  })
+
+  await page.goto("/v2/agents/jensen")
+
+  await expect(page.getByTestId("profile-detail-load-error")).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Profile not found" }),
+  ).toHaveCount(0)
+
+  await page
+    .getByTestId("profile-detail-load-error")
+    .getByRole("button")
+    .click()
+
+  await expect(
+    page.getByRole("heading", { name: "Jensen", level: 1 }),
+  ).toBeVisible()
+  expect(attempts).toBe(2)
+})
