@@ -4,6 +4,7 @@ import { ReceiptText } from "lucide-react"
 import { useMemo, useState } from "react"
 import {
   type MetricDefinitionPublic,
+  type MetricsScope,
   type MetricsWindow,
   type MetricValuePublic,
   readMetricDefinitions,
@@ -40,6 +41,7 @@ import { formatDelta, formatMetricValue } from "./formatters"
 import { MethodologyLink } from "./MethodologyLink"
 import { MetricBreakdown } from "./MetricBreakdown"
 import { MetricCard } from "./MetricCard"
+import { MetricsScopeToggle } from "./MetricsScopeToggle"
 import { MetricsTimeRange } from "./MetricsTimeRange"
 import { MetricTrendChart } from "./MetricTrendChart"
 
@@ -330,17 +332,17 @@ function CrossBoundaryReusePanel({
   )
 }
 
-// Org-scope toggle is intentionally deferred. The backend supports
-// scope=organization on /v2/metrics (admin-gated), but the generated
-// OpenAPI client doesn't yet expose organization_id / organization_role
-// on UserPublic in this repo. When the client is regenerated, restore
-// the MetricsScopeToggle import and the `scope` state below.
-export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
+export function MetricsPage({ currentUser, sessionId }: Props) {
   const { isDemoMode } = useDemoMode()
   const { isExperimentalMode } = useExperimentalMode()
   const [window, setWindow] = useState<MetricsWindow>("7d")
+  const [scope, setScope] = useState<MetricsScope>("personal")
   const scopedSessionId = sessionId?.trim() || undefined
   const sessionShortId = scopedSessionId?.slice(0, 8)
+  const canViewOrganizationMetrics =
+    Boolean(currentUser.organization_id) &&
+    currentUser.organization_role === "admin"
+  const effectiveScope = scopedSessionId ? "personal" : scope
   // TF-177 / Phase 3 feature flag. When enabled, surface the
   // Avoided Rediscovery card driven by document.consulted events.
   // Toggle by setting `localStorage["taskforce.flags.savings_v2"] = "true"`
@@ -354,8 +356,12 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
   })
 
   const metricsQuery = useQuery({
-    queryKey: ["v2-metrics", { window, demo: isDemoMode }],
-    queryFn: () => readMetrics({ window, scope: "personal", demo: isDemoMode }),
+    queryKey: [
+      "v2-metrics",
+      { window, scope: effectiveScope, demo: isDemoMode },
+    ],
+    queryFn: () =>
+      readMetrics({ window, scope: effectiveScope, demo: isDemoMode }),
     staleTime: 30 * 1000,
   })
 
@@ -443,7 +449,10 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
         tokensSaved={tokensSaved}
         usdNetSaved={usdNetSaved}
         window={window}
+        scope={effectiveScope}
+        showScopeToggle={canViewOrganizationMetrics}
         onWindowChange={setWindow}
+        onScopeChange={setScope}
       />
     )
   }
@@ -463,8 +472,11 @@ export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
             "flex flex-col gap-6",
           )}
         >
-          <header>
+          <header className="flex flex-wrap items-end justify-between gap-4">
             <h1 className="text-2xl font-semibold">Metrics</h1>
+            {!scopedSessionId && canViewOrganizationMetrics && (
+              <MetricsScopeToggle value={scope} onChange={setScope} />
+            )}
           </header>
           <ScopeFilterBar
             items={METRICS_WINDOWS}
@@ -616,7 +628,10 @@ type ExperimentalMetricsPageProps = {
   tokensSaved: MetricValuePublic | undefined
   usdNetSaved: MetricValuePublic
   window: MetricsWindow
+  scope: MetricsScope
+  showScopeToggle: boolean
   onWindowChange: (window: MetricsWindow) => void
+  onScopeChange: (scope: MetricsScope) => void
 }
 
 function ExperimentalMetricsPage({
@@ -636,7 +651,10 @@ function ExperimentalMetricsPage({
   tokensSaved,
   usdNetSaved,
   window,
+  scope,
+  showScopeToggle,
   onWindowChange,
+  onScopeChange,
 }: ExperimentalMetricsPageProps) {
   if (scopedSessionId) {
     return (
@@ -680,7 +698,7 @@ function ExperimentalMetricsPage({
           <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
-                {windowCopy.label} · personal
+                {windowCopy.label} · {scope}
               </div>
               <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
                 You saved{" "}
@@ -690,7 +708,12 @@ function ExperimentalMetricsPage({
                 {windowCopy.title}.
               </h1>
             </div>
-            <MetricsTimeRange value={window} onChange={onWindowChange} />
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {showScopeToggle && (
+                <MetricsScopeToggle value={scope} onChange={onScopeChange} />
+              )}
+              <MetricsTimeRange value={window} onChange={onWindowChange} />
+            </div>
           </header>
         </div>
 
