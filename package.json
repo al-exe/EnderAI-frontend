@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "generate-client": "openapi-ts",
     "test": "bunx playwright test",
+    "test:mocked": "playwright test --config=playwright.mocked.config.ts",
     "test:ui": "bunx playwright test --ui"
   },
   "dependencies": {

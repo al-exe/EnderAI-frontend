@@ -23,6 +23,7 @@ import {
   AGENT_PAGE_TITLE_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
 import { CreateProfileDialog } from "@/components/V2/Agents/CreateProfileDialog"
+import { QueryErrorState } from "@/components/V2/QueryErrorState"
 import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
@@ -107,8 +108,10 @@ function AgentsIndex() {
   const agentsQuery = useQuery({
     queryKey: ["v2-agents", isDemoMode],
     queryFn: () => listAgents({ demo: isDemoMode }),
+    retry: false,
   })
   const agents = agentsQuery.data?.items ?? []
+  const hasAgentsData = agentsQuery.data !== undefined
   const activeCount = agents.filter((agent) => agent.status === "active").length
 
   const createProfileMutation = useMutation({
@@ -191,23 +194,45 @@ function AgentsIndex() {
           onSubmit={(values) => createProfileMutation.mutate(values)}
         />
 
-        {agentsQuery.isLoading ? (
+        {agentsQuery.isError && !hasAgentsData ? (
+          <QueryErrorState
+            title="Could not load profiles"
+            description="Taskforce could not reach the profiles service. Try again without leaving this page."
+            onRetry={() => void agentsQuery.refetch()}
+            isRetrying={agentsQuery.isFetching}
+            testId="profiles-load-error"
+          />
+        ) : agentsQuery.isLoading ? (
           <AgentsLoading />
-        ) : agents.length === 0 ? (
-          <EmptyAgents isDemoMode={isDemoMode} />
-        ) : visible.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No profiles match this filter.
-          </p>
         ) : (
-          <div
-            data-testid="agents-card-grid"
-            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-          >
-            {visible.map((agent) => (
-              <AgentProfileCard key={agent.id} agent={agent} />
-            ))}
-          </div>
+          <>
+            {agentsQuery.isError && (
+              <QueryErrorState
+                title="Profiles may be out of date"
+                description="The latest profiles could not be loaded. The last available results are still shown."
+                onRetry={() => void agentsQuery.refetch()}
+                isRetrying={agentsQuery.isFetching}
+                compact
+                testId="profiles-refresh-error"
+              />
+            )}
+            {agents.length === 0 ? (
+              <EmptyAgents isDemoMode={isDemoMode} />
+            ) : visible.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No profiles match this filter.
+              </p>
+            ) : (
+              <div
+                data-testid="agents-card-grid"
+                className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+              >
+                {visible.map((agent) => (
+                  <AgentProfileCard key={agent.id} agent={agent} />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {agentsQuery.isFetching && !agentsQuery.isLoading && (
