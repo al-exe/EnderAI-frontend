@@ -23,6 +23,13 @@ test("/landing renders the expressive Taskforce demo page", async ({
       name: /stop re-explaining your codebase/i,
     }),
   ).toBeVisible()
+  for (const testId of [
+    "landing-eyebrow",
+    "landing-summary-label",
+    "landing-terminal-summary-label",
+  ]) {
+    await expect(page.getByTestId(testId)).toHaveCSS("text-transform", "none")
+  }
   await expect(
     page.getByText("/tf Stripe is double-charging users on plan upgrades", {
       exact: false,
@@ -40,4 +47,17 @@ test("/landing renders the expressive Taskforce demo page", async ({
     "href",
     "/login",
   )
+})
+
+test("/pricing uses sentence-case calmer mono eyebrows", async ({ page }) => {
+  await page.goto("/pricing")
+
+  await expect(page.getByTestId("public-pricing")).toBeVisible()
+  await expect(page.getByTestId("public-pricing-eyebrow")).toHaveCSS(
+    "text-transform",
+    "none",
+  )
+  for (const eyebrow of await page.getByTestId("public-plan-eyebrow").all()) {
+    await expect(eyebrow).toHaveCSS("text-transform", "none")
+  }
 })

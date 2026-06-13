@@ -68,7 +68,10 @@ function LandingExpressive() {
       <section className="grid min-h-[calc(100svh-5.46875rem)] md:grid-cols-2">
         <div className="relative flex flex-col justify-start border-b border-zinc-200 px-5 py-8 dark:border-white/10 md:border-r md:border-b-0 md:px-8 md:py-10">
           <div className="max-w-2xl">
-            <div className="font-mono text-[0.85rem] font-medium uppercase tracking-[0.22em] text-[#8447ff]">
+            <div
+              data-testid="landing-eyebrow"
+              className="font-mono text-[0.72rem] font-medium tracking-[0.01em] text-[#8447ff]"
+            >
               AI work memory for engineering teams
             </div>
             <h1 className="mt-4 max-w-[14ch] text-5xl font-semibold leading-[0.96] tracking-[-0.035em] text-balance md:text-6xl lg:text-7xl">
@@ -111,19 +114,28 @@ function LandingExpressive() {
           </div>
           <dl className="mt-3 grid font-mono text-[0.85rem] text-zinc-500 dark:text-zinc-400 sm:grid-cols-3">
             <div className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10">
-              <dt className="uppercase tracking-[0.16em]">Example outcome</dt>
+              <dt
+                data-testid="landing-summary-label"
+                className="text-[0.72rem] font-medium tracking-[0.01em]"
+              >
+                Example outcome
+              </dt>
               <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
                 Prior work reused
               </dd>
             </div>
             <div className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10">
-              <dt className="uppercase tracking-[0.16em]">Example context</dt>
+              <dt className="text-[0.72rem] font-medium tracking-[0.01em]">
+                Example context
+              </dt>
               <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
                 Profile + docs restored
               </dd>
             </div>
             <div className="border-b border-zinc-200 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:px-4 sm:first:pl-0 sm:last:border-r-0 dark:border-white/10">
-              <dt className="uppercase tracking-[0.16em]">Metrics</dt>
+              <dt className="text-[0.72rem] font-medium tracking-[0.01em]">
+                Metrics
+              </dt>
               <dd className="mt-1 font-sans text-[1.09375rem] font-semibold leading-snug text-zinc-950 dark:text-white">
                 Illustrative only
               </dd>

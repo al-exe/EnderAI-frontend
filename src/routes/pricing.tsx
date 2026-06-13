@@ -63,7 +63,10 @@ function PublicPricing() {
 
       <section className="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
         <div className="max-w-3xl space-y-3">
-          <div className="font-mono text-[0.85rem] font-medium uppercase tracking-[0.22em] text-[#8447ff]">
+          <div
+            data-testid="public-pricing-eyebrow"
+            className="font-mono text-[0.72rem] font-medium tracking-[0.01em] text-[#8447ff]"
+          >
             Pricing
           </div>
           <h1 className="text-2xl font-semibold leading-tight tracking-[-0.025em] md:whitespace-nowrap md:text-4xl">
@@ -82,7 +85,10 @@ function PublicPricing() {
                 plan.highlighted && "bg-zinc-50 dark:bg-zinc-900/40",
               )}
             >
-              <p className="font-mono text-[0.7rem] font-medium uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">
+              <p
+                data-testid="public-plan-eyebrow"
+                className="font-mono text-[0.7rem] font-medium tracking-[0.01em] text-zinc-500 dark:text-zinc-400"
+              >
                 {plan.eyebrow}
               </p>
               <h2 className="mt-2 text-2xl font-semibold">{plan.name}</h2>
