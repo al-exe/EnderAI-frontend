@@ -34,6 +34,7 @@ export interface AgentSpecialistUpdate {
   role?: string
   short_description?: string
   domain_tags?: string[]
+  status?: AgentSpecialistStatus
 }
 
 export interface AgentSpecialistLinkedDoc {
@@ -69,6 +70,7 @@ export interface AgentSpecialistDetail {
   slug: string
   name: string
   role: string
+  status: AgentSpecialistStatus
   short_description: string
   description: string
   created_from: string

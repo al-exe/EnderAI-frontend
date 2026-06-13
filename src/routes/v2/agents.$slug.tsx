@@ -14,6 +14,7 @@ import {
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
 import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
+import { AgentStatusBadge } from "@/components/V2/Agents/AgentStatusBadge"
 import {
   agentSummaryToDetailPlaceholder,
   findAgentSummaryInList,
@@ -463,7 +464,7 @@ function AgentDetailPage() {
           <div>
             <div className={AGENT_BREADCRUMB_CLASS}>
               <Link to="/v2/agents" className="hover:text-foreground">
-                Agents
+                Profiles
               </Link>
               <span className="px-2 text-muted-foreground/50">/</span>
               <span className="text-foreground">{agent.slug}</span>
@@ -484,10 +485,7 @@ function AgentDetailPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-emerald-600 dark:border-white/12 dark:text-emerald-400">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
-              Active
-            </span>
+            <AgentStatusBadge status={agent.status} className="h-8 px-3" />
             <button
               type="button"
               onClick={() => setEditOpen(true)}

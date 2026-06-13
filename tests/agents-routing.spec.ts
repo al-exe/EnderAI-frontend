@@ -37,7 +37,7 @@ const agents = [
     short_description:
       "Indexer drift, pgvector retrieval, and citation anchors.",
     domain_tags: ["Search", "Retrieval", "Citations"],
-    status: "active",
+    status: "archived",
     created_from: "seeded",
     linked_docs_count: 2,
     invocations_count: 4,
@@ -51,6 +51,9 @@ const jensenDetail = {
   slug: "jensen",
   name: "Jensen",
   role: "Billing Reliability Specialist",
+  status: "active",
+  short_description:
+    "Stripe webhooks, subscriptions, and double-charge prevention.",
   created_from: "earned",
   description:
     "Helps debug Stripe billing, subscription upgrades, webhook retries, idempotency, duplicate invoices, and customer double-charge incidents.",
@@ -100,6 +103,9 @@ test.use({
 })
 
 async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
+  let agentItems = agents.map((agent) => ({ ...agent }))
+  let detail = { ...jensenDetail }
+
   await page.addInitScript(() => {
     window.localStorage.setItem("access_token", "test-token")
   })
@@ -125,12 +131,19 @@ async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
     const url = new URL(route.request().url())
     if (url.pathname === "/api/v1/v2/agents") {
       await route.fulfill({
-        json: { items: options.empty ? [] : agents },
+        json: { items: options.empty ? [] : agentItems },
       })
       return
     }
     if (url.pathname === "/api/v1/v2/agents/jensen") {
-      await route.fulfill({ json: jensenDetail })
+      if (route.request().method() === "PATCH") {
+        const body = route.request().postDataJSON()
+        detail = { ...detail, ...body }
+        agentItems = agentItems.map((agent) =>
+          agent.slug === "jensen" ? { ...agent, ...body } : agent,
+        )
+      }
+      await route.fulfill({ json: detail })
       return
     }
     await route.fulfill({ status: 404, json: { detail: "Not found" } })
@@ -155,10 +168,9 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
-  await expect(page.getByText("Earned from")).toBeVisible()
-  await expect(page.getByText("Earned profile")).toBeVisible()
+  await expect(page.getByTestId("agent-status-active")).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Agents", level: 1 }),
+    page.getByRole("heading", { name: "Profiles", level: 1 }),
   ).toHaveCount(0)
 })
 
@@ -173,7 +185,7 @@ test("agent detail navigation does not flash no-access or not-found", async ({
   })
 
   await page.goto("/v2/agents")
-  await page.getByRole("link", { name: /open specialist jensen/i }).click()
+  await page.getByRole("link", { name: /open profile jensen/i }).click()
 
   await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
   await expect(
@@ -238,34 +250,31 @@ test("v2 route invalid session redirects to login instead of membership no-acces
     .toBeNull()
 })
 
-test("agents grid links to specialist detail and session metrics", async ({
-  page,
-}) => {
+test("profiles grid links to detail and session metrics", async ({ page }) => {
   await mockAgentsShell(page)
 
   await page.goto("/v2/agents")
 
   await expect(
-    page.getByRole("heading", { name: "Agents", level: 1 }),
+    page.getByRole("heading", { name: "Profiles", level: 1 }),
   ).toBeVisible()
-  await expect(page.getByTestId("agents-grid")).toBeVisible()
-  await expect(
-    page.getByRole("heading", { name: "Jensen", level: 3 }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole("heading", { name: "Mira", level: 3 }),
-  ).toBeVisible()
+  await expect(page.getByTestId("agents-card-grid")).toBeVisible()
+  await expect(page.getByText("Jensen", { exact: true })).toBeVisible()
+  await expect(page.getByText("Mira", { exact: true })).toBeVisible()
+  await expect(page.getByTestId("agent-status-active")).toBeVisible()
+  await expect(page.getByTestId("agent-status-archived")).toBeVisible()
 
-  await page.getByRole("link", { name: /open specialist jensen/i }).click()
+  await page.getByRole("link", { name: /open profile jensen/i }).click()
   await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
   await expect(
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
-  await expect(page.getByRole("link", { name: /^Sessions$/ })).toHaveAttribute(
-    "href",
-    "/v2/ledger?specialist=jensen",
-  )
+  await expect(
+    page.getByRole("link", {
+      name: /open session "stripe is double-charging some users/i,
+    }),
+  ).toHaveAttribute("href", "/v2/ledger?session_id=session-1")
 
   const linkedKnowledge = page.getByRole("link", {
     name: /Stripe webhook idempotency strategy/,
@@ -277,13 +286,48 @@ test("agents grid links to specialist detail and session metrics", async ({
 
   await page
     .getByRole("link", {
-      name: /Stripe is double-charging some users on plan upgrades/,
+      name: /open metrics for "stripe is double-charging some users/i,
     })
     .click()
   await expect(page).toHaveURL(/\/v2\/metrics\?session_id=session-1$/)
 })
 
-test("agents grid shows empty state before specialists are seeded", async ({
+test("profile lifecycle updates detail and list filters", async ({ page }) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/agents/jensen")
+  await expect(page.getByTestId("agent-status-active")).toBeVisible()
+
+  await page.getByRole("button", { name: "Edit" }).click()
+  await page.getByLabel("Status").click()
+  await page.getByRole("option", { name: "Archived" }).click()
+
+  const updateResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/v2/agents/jensen") &&
+      response.request().method() === "PATCH",
+  )
+  await page.getByRole("button", { name: "Save" }).click()
+  expect(
+    await updateResponse.then((response) => response.request().postDataJSON()),
+  ).toMatchObject({ status: "archived" })
+  await expect(page.getByTestId("agent-status-archived")).toBeVisible()
+
+  await page
+    .getByTestId("agent-detail-sticky-header")
+    .getByRole("link", { name: "Profiles" })
+    .click()
+  await page.getByRole("button", { name: /^Archived/ }).click()
+  await expect(
+    page.getByRole("link", { name: /open profile jensen/i }),
+  ).toBeVisible()
+  await page.getByRole("button", { name: /^Active/ }).click()
+  await expect(
+    page.getByRole("link", { name: /open profile jensen/i }),
+  ).toHaveCount(0)
+})
+
+test("profiles grid shows empty state before profiles are seeded", async ({
   page,
 }) => {
   await mockAgentsShell(page, { empty: true })
@@ -291,11 +335,11 @@ test("agents grid shows empty state before specialists are seeded", async ({
   await page.goto("/v2/agents")
 
   await expect(
-    page.getByRole("heading", { name: "No specialists yet" }),
+    page.getByRole("heading", { name: "No profiles yet" }),
   ).toBeVisible()
   await expect(
     page.getByText(
-      "Agents will appear here after Taskforce packages reusable specialist knowledge",
+      "Agents will appear here after Taskforce packages reusable profile knowledge",
     ),
   ).toBeVisible()
 })
