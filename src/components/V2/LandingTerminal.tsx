@@ -463,19 +463,24 @@ export function LandingTerminal({
         aria-hidden={!summaryVisible || !bodyVisible}
       >
         <div>
-          <div className="uppercase tracking-[0.16em] text-zinc-500">
+          <div
+            data-testid="landing-terminal-summary-label"
+            className="font-medium tracking-[0.01em] text-zinc-500"
+          >
             recorded
           </div>
           <div className="mt-1 text-zinc-200">{scenario.summary.profile}</div>
         </div>
         <div>
-          <div className="uppercase tracking-[0.16em] text-zinc-500">saved</div>
+          <div className="font-medium tracking-[0.01em] text-zinc-500">
+            saved
+          </div>
           <div className="mt-1 text-sm font-semibold text-[#c9a8ff] tabular-nums">
             {scenario.summary.saved}
           </div>
         </div>
         <div>
-          <div className="uppercase tracking-[0.16em] text-zinc-500">
+          <div className="font-medium tracking-[0.01em] text-zinc-500">
             metrics
           </div>
           <div className="mt-1 text-zinc-200">session link ready →</div>
