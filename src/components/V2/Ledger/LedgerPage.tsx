@@ -17,6 +17,7 @@ import {
   type LedgerSessionRow,
   type LedgerTranscriptEvent,
   readLedger,
+  readLedgerRawTranscript,
   readLedgerSessionDetail,
 } from "@/api/v2Ledger"
 import { useDemoMode } from "@/components/demo-mode-provider"
@@ -379,6 +380,7 @@ export function LedgerPage({
           <div className={styles.app}>
             <LedgerDetail
               detail={detailQuery.data}
+              demo={isDemoMode}
               isError={detailQuery.isError}
               isLoading={detailQuery.isLoading}
               onBack={() => setLedgerSearch({ session_id: undefined })}
@@ -582,11 +584,13 @@ function LedgerRow({
 
 function LedgerDetail({
   detail,
+  demo,
   isError,
   isLoading,
   onBack,
 }: {
   detail?: LedgerSessionDetail
+  demo: boolean
   isError: boolean
   isLoading: boolean
   onBack: () => void
@@ -655,7 +659,7 @@ function LedgerDetail({
             </div>
           )}
         </div>
-        <SessionRail detail={detail} />
+        <SessionRail demo={demo} detail={detail} />
       </div>
     </div>
   )
@@ -762,10 +766,45 @@ function EventShell({
   )
 }
 
-function SessionRail({ detail }: { detail: LedgerSessionDetail }) {
+function SessionRail({
+  demo,
+  detail,
+}: {
+  demo: boolean
+  detail: LedgerSessionDetail
+}) {
+  const [downloadError, setDownloadError] = useState("")
+  const [isDownloading, setIsDownloading] = useState(false)
+
   const copyMarkdown = () => {
     void navigator.clipboard?.writeText(buildMarkdown(detail))
   }
+
+  const downloadRawTranscript = async () => {
+    setDownloadError("")
+    setIsDownloading(true)
+    try {
+      const transcript = await readLedgerRawTranscript(detail.session_id, {
+        demo,
+      })
+      const blob = new Blob([JSON.stringify(transcript.events, null, 2)], {
+        type: "application/json",
+      })
+      const href = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = href
+      anchor.download = `${detail.session_id.replace(/[^a-zA-Z0-9._-]/g, "_")}-transcript.json`
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(href)
+    } catch {
+      setDownloadError("Could not download the raw transcript.")
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   const messages = detail.message_count || detail.event_count
 
   return (
@@ -813,17 +852,25 @@ function SessionRail({ detail }: { detail: LedgerSessionDetail }) {
       )}
 
       <div className={styles.actRow}>
-        <button
-          className={cn(styles.btn, styles.btnSolid)}
-          disabled={!detail.raw_transcript_available}
-          type="button"
-        >
-          Open raw transcript
-        </button>
+        {detail.raw_transcript_available ? (
+          <button
+            className={cn(styles.btn, styles.btnSolid)}
+            disabled={isDownloading}
+            onClick={() => void downloadRawTranscript()}
+            type="button"
+          >
+            {isDownloading ? "Preparing download…" : "Download raw transcript"}
+          </button>
+        ) : null}
         <button className={styles.btn} onClick={copyMarkdown} type="button">
           Copy as Markdown
         </button>
       </div>
+      {downloadError ? (
+        <p className="mt-2 text-xs text-destructive" role="alert">
+          {downloadError}
+        </p>
+      ) : null}
     </aside>
   )
 }

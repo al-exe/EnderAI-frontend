@@ -134,7 +134,9 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
   const router = useRouterState()
   const currentPath = router.location.pathname
   const items = [
-    ...taskforceItems,
+    ...taskforceItems.filter(
+      (item) => item.path !== "/v2/ledger" || currentUser.organization_id,
+    ),
     ...(currentUser.is_superuser
       ? [{ icon: Shield, title: "Admin", path: "/v2/admin" }]
       : []),
