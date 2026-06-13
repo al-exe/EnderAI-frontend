@@ -1,10 +1,9 @@
 import { Link as RouterLink } from "@tanstack/react-router"
-import { ArrowRight, BarChart3, BookOpenText, Bot, Search } from "lucide-react"
+import { ArrowRight, BarChart3, BookOpenText, Bot } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
 const navItems = [
-  { icon: Search, label: "Search" },
   { icon: BookOpenText, label: "Library" },
   { icon: Bot, label: "Profiles" },
   { icon: BarChart3, label: "Metrics" },
