@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useState } from "react"
 
 import type {
   AgentSpecialistDetail,
+  AgentSpecialistStatus,
   AgentSpecialistUpdate,
 } from "@/api/v2Agents"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
 function parseTags(raw: string): string[] {
@@ -50,6 +58,7 @@ export function EditProfileDialog({
   const [role, setRole] = useState(agent.role)
   const [description, setDescription] = useState(agent.short_description)
   const [tags, setTags] = useState(agent.domain_tags.join(", "))
+  const [status, setStatus] = useState<AgentSpecialistStatus>(agent.status)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   // Re-seed the form from the current profile each time the dialog opens.
@@ -59,6 +68,7 @@ export function EditProfileDialog({
       setRole(agent.role)
       setDescription(agent.short_description)
       setTags(agent.domain_tags.join(", "))
+      setStatus(agent.status)
       setConfirmingDelete(false)
     }
   }, [open, agent])
@@ -74,6 +84,7 @@ export function EditProfileDialog({
       role: role.trim(),
       short_description: description.trim(),
       domain_tags: parseTags(tags),
+      status,
     })
   }
 
@@ -115,6 +126,28 @@ export function EditProfileDialog({
               placeholder="One line on what this profile owns."
               rows={3}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-profile-status">Status</Label>
+            <Select
+              value={status}
+              onValueChange={(value) =>
+                setStatus(value as AgentSpecialistStatus)
+              }
+              disabled={busy}
+            >
+              <SelectTrigger id="edit-profile-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Only active profiles can be selected for Taskforce routing.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-profile-tags">Domain tags</Label>

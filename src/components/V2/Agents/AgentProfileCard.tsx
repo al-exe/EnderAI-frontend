@@ -3,6 +3,7 @@ import { Hash } from "lucide-react"
 
 import type { AgentSpecialistSummary } from "@/api/v2Agents"
 import { cn } from "@/lib/utils"
+import { AgentStatusBadge } from "./AgentStatusBadge"
 import { formatCompactNumber, formatRelativeTime } from "./formatters"
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
@@ -81,8 +82,11 @@ export function AgentProfileCard({ agent }: { agent: AgentSpecialistSummary }) {
           {initialsOf(agent.name)}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold tracking-[-0.01em]">
-            {agent.name}
+          <div className="flex items-center justify-between gap-2">
+            <div className="truncate text-sm font-semibold tracking-[-0.01em]">
+              {agent.name}
+            </div>
+            <AgentStatusBadge status={agent.status} className="h-6 shrink-0" />
           </div>
           <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/70">
             {agent.role}
