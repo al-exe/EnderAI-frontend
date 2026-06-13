@@ -52,6 +52,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { normalizeTaskforceDiscordUrl } from "@/lib/taskforceExternalLinks"
 import { cn } from "@/lib/utils"
 
 type TaskforceShellProps = {
@@ -75,7 +76,9 @@ const taskforceItems: TaskforceNavItem[] = [
 
 const SIDEBAR_TAB_LABEL_CLASS = "text-[calc(18px*0.85)]"
 
-const TASKFORCE_DISCORD_URL = ""
+const TASKFORCE_DISCORD_URL = normalizeTaskforceDiscordUrl(
+  import.meta.env.VITE_TASKFORCE_DISCORD_URL,
+)
 const EXTRAS_DRAWER_COLLAPSED_STORAGE_KEY = "taskforce.sidebar.extras.collapsed"
 
 function readStoredExtrasDrawerCollapsed() {
@@ -168,6 +171,8 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
 }
 
 function DiscordButton() {
+  if (!TASKFORCE_DISCORD_URL) return null
+
   const content = (
     <>
       <MessageCircle className="size-[18px] text-muted-foreground transition-colors" />
@@ -175,33 +180,17 @@ function DiscordButton() {
     </>
   )
 
-  if (TASKFORCE_DISCORD_URL) {
-    return (
-      <SidebarMenuItem>
-        <SidebarMenuButton tooltip="Join Discord" asChild>
-          <a
-            href={TASKFORCE_DISCORD_URL}
-            target="_blank"
-            rel="noreferrer"
-            data-testid="taskforce-discord-link"
-          >
-            {content}
-          </a>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    )
-  }
-
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton
-        type="button"
-        tooltip="Discord link coming soon"
-        data-testid="taskforce-discord-placeholder"
-        aria-disabled="true"
-        className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
-      >
-        {content}
+      <SidebarMenuButton tooltip="Join Discord" asChild>
+        <a
+          href={TASKFORCE_DISCORD_URL}
+          target="_blank"
+          rel="noreferrer"
+          data-testid="taskforce-discord-link"
+        >
+          {content}
+        </a>
       </SidebarMenuButton>
     </SidebarMenuItem>
   )

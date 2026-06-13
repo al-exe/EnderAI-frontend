@@ -111,6 +111,8 @@ test("Taskforce v2 sidebar includes drag collapse and Extras controls", async ({
   await expect(sidebarRail).toBeVisible()
   await expect(extrasHandle).toHaveAttribute("aria-label", "Sidebar utilities")
   await expect(extrasDrawer).toContainText("Demo mode")
+  await expect(page.getByTestId("taskforce-discord-link")).toHaveCount(0)
+  await expect(page.getByText("Discord", { exact: true })).toHaveCount(0)
   await expect(documentLookup).toBeVisible()
   await expect(documentLookup).toHaveAttribute(
     "placeholder",
