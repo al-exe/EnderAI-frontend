@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "files": {
     "includes": [
@@ -7,6 +7,7 @@
       "!**/dist/**/*",
       "!**/node_modules/**/*",
       "!**/src/routeTree.gen.ts",
+      "!**/src/components/Docs/docs-content.generated.ts",
       "!**/src/client/**/*",
       "!**/src/components/ui/**/*",
       "!**/playwright-report",
