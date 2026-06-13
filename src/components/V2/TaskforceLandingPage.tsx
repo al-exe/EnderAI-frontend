@@ -75,6 +75,13 @@ export function TaskforceLandingPage() {
         </div>
 
         <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+          <div
+            data-testid="taskforce-landing-demo-disclosure"
+            className="border-b bg-muted/60 px-5 py-3 text-sm text-muted-foreground"
+          >
+            Illustrative product preview. Documents and activity below are
+            example data.
+          </div>
           <div className="grid border-b bg-muted/35 md:grid-cols-[220px_1fr]">
             <div className="border-b p-5 md:border-b-0 md:border-r">
               <div className="text-lg font-semibold">Taskforce</div>
@@ -99,7 +106,7 @@ export function TaskforceLandingPage() {
                   <h2 className="text-2xl font-semibold">Recent work</h2>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  73% rediscovery avoided this week
+                  Example workspace data
                 </div>
               </div>
 

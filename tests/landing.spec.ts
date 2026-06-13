@@ -14,6 +14,10 @@ test("/landing renders the expressive Taskforce demo page", async ({
   await page.goto("/landing")
 
   await expect(page.getByTestId("landing-expressive")).toBeVisible()
+  await expect(page.getByTestId("landing-demo-disclosure")).toContainText(
+    "Names, events, and savings shown are example data.",
+  )
+  await expect(page.getByText("82.4M tokens")).toHaveCount(0)
   await expect(
     page.getByRole("heading", {
       name: /stop re-explaining your codebase/i,

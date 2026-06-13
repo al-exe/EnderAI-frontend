@@ -54,9 +54,13 @@ test("Landing page presents Taskforce V2 as the public product", async ({
     page.getByRole("heading", { name: "Taskforce", exact: true }),
   ).toBeVisible()
   await expect(page.getByText("AI work memory for builders")).toBeVisible()
+  await expect(
+    page.getByTestId("taskforce-landing-demo-disclosure"),
+  ).toContainText("Documents and activity below are example data.")
   await expect(page.getByText("Library").first()).toBeVisible()
-  await expect(page.getByText("Agents").first()).toBeVisible()
+  await expect(page.getByText("Profiles").first()).toBeVisible()
   await expect(page.getByText("Metrics").first()).toBeVisible()
+  await expect(page.getByText(/rediscovery avoided/i)).toHaveCount(0)
   await expect(
     page.getByRole("link", { name: "Log in", exact: true }),
   ).toBeVisible()
