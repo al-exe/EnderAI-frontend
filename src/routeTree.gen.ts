@@ -16,9 +16,11 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LandingRouteImport } from './routes/landing'
+import { Route as DocsRouteImport } from './routes/docs'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V2IndexRouteImport } from './routes/v2/index'
+import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as V2SettingsRouteImport } from './routes/v2/settings'
 import { Route as V2SearchRouteImport } from './routes/v2/search'
 import { Route as V2PricingRouteImport } from './routes/v2/pricing'
@@ -29,6 +31,7 @@ import { Route as V2HomeRouteImport } from './routes/v2/home'
 import { Route as V2FleetRouteImport } from './routes/v2/fleet'
 import { Route as V2AgentsRouteImport } from './routes/v2/agents'
 import { Route as V2AdminRouteImport } from './routes/v2/admin'
+import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
 import { Route as LayoutTopicsRouteImport } from './routes/_layout/topics'
 import { Route as LayoutSkillsRouteImport } from './routes/_layout/skills'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
@@ -74,6 +77,11 @@ const LandingRoute = LandingRouteImport.update({
   path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
   getParentRoute: () => rootRouteImport,
@@ -87,6 +95,11 @@ const V2IndexRoute = V2IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => V2Route,
+} as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DocsRoute,
 } as any)
 const V2SettingsRoute = V2SettingsRouteImport.update({
   id: '/settings',
@@ -138,6 +151,11 @@ const V2AdminRoute = V2AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => V2Route,
 } as any)
+const DocsSlugRoute = DocsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => DocsRoute,
+} as any)
 const LayoutTopicsRoute = LayoutTopicsRouteImport.update({
   id: '/topics',
   path: '/topics',
@@ -186,6 +204,7 @@ const V2AgentsSlugRoute = V2AgentsSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/docs': typeof DocsRouteWithChildren
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
@@ -199,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof LayoutSettingsRoute
   '/skills': typeof LayoutSkillsRoute
   '/topics': typeof LayoutTopicsRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
   '/v2/fleet': typeof V2FleetRoute
@@ -209,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/v2/pricing': typeof V2PricingRoute
   '/v2/search': typeof V2SearchRoute
   '/v2/settings': typeof V2SettingsRoute
+  '/docs/': typeof DocsIndexRoute
   '/v2/': typeof V2IndexRoute
   '/v2/agents/$slug': typeof V2AgentsSlugRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
@@ -228,6 +249,7 @@ export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsRoute
   '/skills': typeof LayoutSkillsRoute
   '/topics': typeof LayoutTopicsRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
   '/v2/fleet': typeof V2FleetRoute
@@ -238,6 +260,7 @@ export interface FileRoutesByTo {
   '/v2/pricing': typeof V2PricingRoute
   '/v2/search': typeof V2SearchRoute
   '/v2/settings': typeof V2SettingsRoute
+  '/docs': typeof DocsIndexRoute
   '/v2': typeof V2IndexRoute
   '/v2/agents/$slug': typeof V2AgentsSlugRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
@@ -247,6 +270,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_layout': typeof LayoutRouteWithChildren
+  '/docs': typeof DocsRouteWithChildren
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
@@ -260,6 +284,7 @@ export interface FileRoutesById {
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/skills': typeof LayoutSkillsRoute
   '/_layout/topics': typeof LayoutTopicsRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
   '/v2/fleet': typeof V2FleetRoute
@@ -270,6 +295,7 @@ export interface FileRoutesById {
   '/v2/pricing': typeof V2PricingRoute
   '/v2/search': typeof V2SearchRoute
   '/v2/settings': typeof V2SettingsRoute
+  '/docs/': typeof DocsIndexRoute
   '/v2/': typeof V2IndexRoute
   '/v2/agents/$slug': typeof V2AgentsSlugRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
@@ -279,6 +305,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/docs'
     | '/landing'
     | '/login'
     | '/pricing'
@@ -292,6 +319,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/topics'
+    | '/docs/$slug'
     | '/v2/admin'
     | '/v2/agents'
     | '/v2/fleet'
@@ -302,6 +330,7 @@ export interface FileRouteTypes {
     | '/v2/pricing'
     | '/v2/search'
     | '/v2/settings'
+    | '/docs/'
     | '/v2/'
     | '/v2/agents/$slug'
     | '/v2/library/$documentId'
@@ -321,6 +350,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/topics'
+    | '/docs/$slug'
     | '/v2/admin'
     | '/v2/agents'
     | '/v2/fleet'
@@ -331,6 +361,7 @@ export interface FileRouteTypes {
     | '/v2/pricing'
     | '/v2/search'
     | '/v2/settings'
+    | '/docs'
     | '/v2'
     | '/v2/agents/$slug'
     | '/v2/library/$documentId'
@@ -339,6 +370,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_layout'
+    | '/docs'
     | '/landing'
     | '/login'
     | '/pricing'
@@ -352,6 +384,7 @@ export interface FileRouteTypes {
     | '/_layout/settings'
     | '/_layout/skills'
     | '/_layout/topics'
+    | '/docs/$slug'
     | '/v2/admin'
     | '/v2/agents'
     | '/v2/fleet'
@@ -362,6 +395,7 @@ export interface FileRouteTypes {
     | '/v2/pricing'
     | '/v2/search'
     | '/v2/settings'
+    | '/docs/'
     | '/v2/'
     | '/v2/agents/$slug'
     | '/v2/library/$documentId'
@@ -371,6 +405,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LayoutRoute: typeof LayoutRouteWithChildren
+  DocsRoute: typeof DocsRouteWithChildren
   LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
@@ -431,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_layout': {
       id: '/_layout'
       path: ''
@@ -451,6 +493,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/v2/'
       preLoaderRoute: typeof V2IndexRouteImport
       parentRoute: typeof V2Route
+    }
+    '/docs/': {
+      id: '/docs/'
+      path: '/'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/v2/settings': {
       id: '/v2/settings'
@@ -521,6 +570,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/v2/admin'
       preLoaderRoute: typeof V2AdminRouteImport
       parentRoute: typeof V2Route
+    }
+    '/docs/$slug': {
+      id: '/docs/$slug'
+      path: '/$slug'
+      fullPath: '/docs/$slug'
+      preLoaderRoute: typeof DocsSlugRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/_layout/topics': {
       id: '/_layout/topics'
@@ -609,6 +665,18 @@ const LayoutRouteChildren: LayoutRouteChildren = {
 const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
+interface DocsRouteChildren {
+  DocsSlugRoute: typeof DocsSlugRoute
+  DocsIndexRoute: typeof DocsIndexRoute
+}
+
+const DocsRouteChildren: DocsRouteChildren = {
+  DocsSlugRoute: DocsSlugRoute,
+  DocsIndexRoute: DocsIndexRoute,
+}
+
+const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
+
 interface V2AgentsRouteChildren {
   V2AgentsSlugRoute: typeof V2AgentsSlugRoute
 }
@@ -678,6 +746,7 @@ const V2RouteWithChildren = V2Route._addFileChildren(V2RouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LayoutRoute: LayoutRouteWithChildren,
+  DocsRoute: DocsRouteWithChildren,
   LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,

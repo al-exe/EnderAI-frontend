@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test"
 
 const mockedSpecs = [
   "agents-routing",
+  "docs",
   "fleet",
   "home-docs",
   "landing",
