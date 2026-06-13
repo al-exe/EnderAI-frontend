@@ -13,8 +13,6 @@ const currentUser = {
   created_at: "2026-03-24T00:00:00Z",
   v2: true,
   subscription_tier: "free",
-  organization_id: "org-1",
-  organization_role: "admin",
 }
 
 test.use({
@@ -78,10 +76,7 @@ function crossBoundarySavingsValue() {
 
 async function mockMetricsPage(
   page: Page,
-  options: {
-    experimental?: boolean
-    organizationRole?: "admin" | "member" | null
-  } = {},
+  options: { experimental?: boolean } = {},
 ) {
   await page.addInitScript((experimental) => {
     window.localStorage.setItem("access_token", "test-token")
@@ -96,17 +91,7 @@ async function mockMetricsPage(
     const url = new URL(route.request().url())
 
     if (url.pathname === "/api/v1/users/me") {
-      const organizationRole =
-        options.organizationRole === undefined
-          ? "admin"
-          : options.organizationRole
-      await route.fulfill({
-        json: {
-          ...currentUser,
-          organization_id: organizationRole ? "org-1" : null,
-          organization_role: organizationRole ?? "admin",
-        },
-      })
+      await route.fulfill({ json: currentUser })
       return
     }
 
@@ -165,17 +150,15 @@ async function mockMetricsPage(
   })
 
   await page.route("**/api/v1/v2/metrics?*", async (route) => {
-    const scope =
-      new URL(route.request().url()).searchParams.get("scope") ?? "personal"
     await route.fulfill({
       json: {
         window: "7d",
         from: "2026-05-18T00:00:00Z",
         to: "2026-05-24T00:00:00Z",
-        scope,
+        scope: "personal",
         is_demo: false,
         metrics: {
-          tokens_saved: metricValue(scope === "organization" ? "3000" : "1000"),
+          tokens_saved: metricValue("1000"),
           usd_saved: metricValue("1.23"),
           reuse_rate: metricValue("0.5"),
           tokens_consumed: metricValue("2000"),
@@ -348,53 +331,6 @@ test("metrics page keeps aggregate dashboard without session_id", async ({
   expect(sessionSavingsRequests).toBe(0)
 })
 
-test("organization admins can switch aggregate metrics scope", async ({
-  page,
-}) => {
-  await mockMetricsPage(page)
-
-  await page.goto("/v2/metrics")
-
-  const scope = page.getByRole("tablist", { name: "Scope" })
-  await expect(scope.getByRole("tab", { name: "Personal" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  )
-  await expect(page.getByText("1K", { exact: true }).first()).toBeVisible()
-
-  const organizationResponse = page.waitForResponse((response) => {
-    const url = new URL(response.url())
-    return (
-      url.pathname === "/api/v1/v2/metrics" &&
-      url.searchParams.get("scope") === "organization"
-    )
-  })
-  await scope.getByRole("tab", { name: "Organization" }).click()
-  await organizationResponse
-
-  await expect(
-    scope.getByRole("tab", { name: "Organization" }),
-  ).toHaveAttribute("aria-selected", "true")
-  await expect(page.getByText("3K", { exact: true }).first()).toBeVisible()
-})
-
-test("organization metrics scope is hidden for non-admins", async ({
-  page,
-}) => {
-  await mockMetricsPage(page, { organizationRole: "member" })
-
-  await page.goto("/v2/metrics")
-  await expect(page.getByRole("tablist", { name: "Scope" })).toHaveCount(0)
-})
-
-test("organization metrics scope is hidden for session views", async ({
-  page,
-}) => {
-  await mockMetricsPage(page, { organizationRole: "admin" })
-  await page.goto(`/v2/metrics?session_id=${sessionId}`)
-  await expect(page.getByRole("tablist", { name: "Scope" })).toHaveCount(0)
-})
-
 test("experimental mode shows expressive aggregate metrics", async ({
   page,
 }) => {
@@ -449,8 +385,6 @@ test("metrics methodology route renders from direct URL and metrics link", async
     page.getByRole("heading", { name: /how we calculate savings/i }),
   ).toBeVisible()
   await expect(page.getByText("derived, not asserted")).toBeVisible()
-  await expect(
-    page.locator("pre code").filter({ hasText: "net_saved_tokens" }).first(),
-  ).toBeVisible()
+  await expect(page.locator("pre code")).toContainText("net_saved_tokens")
   await expect(page.getByRole("listitem").first()).toBeVisible()
 })

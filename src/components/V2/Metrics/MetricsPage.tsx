@@ -4,7 +4,6 @@ import { ReceiptText } from "lucide-react"
 import { useMemo, useState } from "react"
 import {
   type MetricDefinitionPublic,
-  type MetricsScope,
   type MetricsWindow,
   type MetricValuePublic,
   readMetricDefinitions,
@@ -41,7 +40,6 @@ import { formatDelta, formatMetricValue } from "./formatters"
 import { MethodologyLink } from "./MethodologyLink"
 import { MetricBreakdown } from "./MetricBreakdown"
 import { MetricCard } from "./MetricCard"
-import { MetricsScopeToggle } from "./MetricsScopeToggle"
 import { MetricsTimeRange } from "./MetricsTimeRange"
 import { MetricTrendChart } from "./MetricTrendChart"
 
@@ -332,17 +330,17 @@ function CrossBoundaryReusePanel({
   )
 }
 
-export function MetricsPage({ currentUser, sessionId }: Props) {
+// Org-scope toggle is intentionally deferred. The backend supports
+// scope=organization on /v2/metrics (admin-gated), but the generated
+// OpenAPI client doesn't yet expose organization_id / organization_role
+// on UserPublic in this repo. When the client is regenerated, restore
+// the MetricsScopeToggle import and the `scope` state below.
+export function MetricsPage({ currentUser: _currentUser, sessionId }: Props) {
   const { isDemoMode } = useDemoMode()
   const { isExperimentalMode } = useExperimentalMode()
   const [window, setWindow] = useState<MetricsWindow>("7d")
-  const [scope, setScope] = useState<MetricsScope>("personal")
   const scopedSessionId = sessionId?.trim() || undefined
   const sessionShortId = scopedSessionId?.slice(0, 8)
-  const canViewOrganizationMetrics =
-    Boolean(currentUser.organization_id) &&
-    currentUser.organization_role === "admin"
-  const effectiveScope = scopedSessionId ? "personal" : scope
   // TF-177 / Phase 3 feature flag. When enabled, surface the
   // Avoided Rediscovery card driven by document.consulted events.
   // Toggle by setting `localStorage["taskforce.flags.savings_v2"] = "true"`
@@ -356,12 +354,8 @@ export function MetricsPage({ currentUser, sessionId }: Props) {
   })
 
   const metricsQuery = useQuery({
-    queryKey: [
-      "v2-metrics",
-      { window, scope: effectiveScope, demo: isDemoMode },
-    ],
-    queryFn: () =>
-      readMetrics({ window, scope: effectiveScope, demo: isDemoMode }),
+    queryKey: ["v2-metrics", { window, demo: isDemoMode }],
+    queryFn: () => readMetrics({ window, scope: "personal", demo: isDemoMode }),
     staleTime: 30 * 1000,
   })
 
@@ -449,10 +443,7 @@ export function MetricsPage({ currentUser, sessionId }: Props) {
         tokensSaved={tokensSaved}
         usdNetSaved={usdNetSaved}
         window={window}
-        scope={effectiveScope}
-        showScopeToggle={canViewOrganizationMetrics}
         onWindowChange={setWindow}
-        onScopeChange={setScope}
       />
     )
   }
@@ -472,11 +463,8 @@ export function MetricsPage({ currentUser, sessionId }: Props) {
             "flex flex-col gap-6",
           )}
         >
-          <header className="flex flex-wrap items-end justify-between gap-4">
+          <header>
             <h1 className="text-2xl font-semibold">Metrics</h1>
-            {!scopedSessionId && canViewOrganizationMetrics && (
-              <MetricsScopeToggle value={scope} onChange={setScope} />
-            )}
           </header>
           <ScopeFilterBar
             items={METRICS_WINDOWS}
@@ -486,127 +474,125 @@ export function MetricsPage({ currentUser, sessionId }: Props) {
         </div>
 
         <div className="flex flex-col gap-6">
-          {scopedSessionId && (
-            <div
-              data-testid="metrics-session-filter-banner"
-              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-100"
+        {scopedSessionId && (
+          <div
+            data-testid="metrics-session-filter-banner"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-100"
+          >
+            <span>
+              Showing savings for session{" "}
+              <code className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-xs dark:bg-white/10">
+                {sessionShortId}
+              </code>
+            </span>
+            <Link
+              to="/v2/metrics"
+              search={{}}
+              className="font-medium underline-offset-4 hover:underline"
             >
-              <span>
-                Showing savings for session{" "}
-                <code className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-xs dark:bg-white/10">
-                  {sessionShortId}
-                </code>
-              </span>
-              <Link
-                to="/v2/metrics"
-                search={{}}
-                className="font-medium underline-offset-4 hover:underline"
-              >
-                View all metrics →
-              </Link>
-            </div>
-          )}
+              View all metrics →
+            </Link>
+          </div>
+        )}
 
-          {metricsQuery.isError && (
-            <div className="rounded border border-destructive bg-destructive/10 p-3 text-sm">
-              Failed to load metrics. Try again in a moment.
-            </div>
-          )}
+        {metricsQuery.isError && (
+          <div className="rounded border border-destructive bg-destructive/10 p-3 text-sm">
+            Failed to load metrics. Try again in a moment.
+          </div>
+        )}
 
-          {isEmpty && (
-            <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-              No metrics yet. Connect your MCP and start using Taskforce —
-              events show up here within a minute of the agent's first call.
-            </div>
-          )}
+        {isEmpty && (
+          <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
+            No metrics yet. Connect your MCP and start using Taskforce — events
+            show up here within a minute of the agent's first call.
+          </div>
+        )}
 
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {(scopedSessionId ? SESSION_PRIMARY_METRICS : PRIMARY_METRICS).map(
-              (name) => {
-                const def = scopedSessionId
-                  ? SESSION_METRIC_DEFINITIONS[name]
-                  : definitionsByName[name]
-                const value = scopedSessionId
-                  ? sessionMetricValues[name]
-                  : metrics[name]
-                if (!def) return null
-                return <MetricCard key={name} definition={def} value={value} />
-              },
-            )}
-          </section>
-
-          {!scopedSessionId && (
-            <CrossBoundaryReusePanel
-              rateDefinition={definitionsByName[CROSS_BOUNDARY_RATE_METRIC]}
-              rateValue={crossBoundaryRate}
-              savingsDefinition={
-                definitionsByName[CROSS_BOUNDARY_SAVINGS_METRIC]
-              }
-              savingsValue={crossBoundarySavings}
-            />
-          )}
-
-          {scopedSessionId && (
-            <SessionLogTable
-              entries={sessionLogEntries}
-              isError={sessionLogQuery.isError}
-              isLoading={sessionLogQuery.isLoading}
-            />
-          )}
-
-          <MethodologyLink />
-
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <MetricTrendChart
-              title="Tokens saved per day"
-              series={tokensSaved?.series ?? []}
-            />
-            <MetricBreakdown
-              title="Savings by source"
-              rows={tokensSaved?.breakdown_by_source ?? []}
-              info="Shows where Taskforce avoided rework: cache reuse, reading summaries instead of full details, and reconnecting to existing documents."
-            />
-          </section>
-
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {detailMetricEntries(savingsV2Flag).map((entry) => {
-              if (entry.kind === "usd_net_saved") {
-                return (
-                  <MetricCard
-                    key="usd_net_saved"
-                    definition={USD_NET_SAVED_DEFINITION}
-                    value={usdNetSaved}
-                  />
-                )
-              }
-              const def = definitionsByName[entry.name]
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {(scopedSessionId ? SESSION_PRIMARY_METRICS : PRIMARY_METRICS).map(
+            (name) => {
+              const def = scopedSessionId
+                ? SESSION_METRIC_DEFINITIONS[name]
+                : definitionsByName[name]
+              const value = scopedSessionId
+                ? sessionMetricValues[name]
+                : metrics[name]
               if (!def) return null
+              return <MetricCard key={name} definition={def} value={value} />
+            },
+          )}
+        </section>
+
+        {!scopedSessionId && (
+          <CrossBoundaryReusePanel
+            rateDefinition={definitionsByName[CROSS_BOUNDARY_RATE_METRIC]}
+            rateValue={crossBoundaryRate}
+            savingsDefinition={definitionsByName[CROSS_BOUNDARY_SAVINGS_METRIC]}
+            savingsValue={crossBoundarySavings}
+          />
+        )}
+
+        {scopedSessionId && (
+          <SessionLogTable
+            entries={sessionLogEntries}
+            isError={sessionLogQuery.isError}
+            isLoading={sessionLogQuery.isLoading}
+          />
+        )}
+
+        <MethodologyLink />
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <MetricTrendChart
+            title="Tokens saved per day"
+            series={tokensSaved?.series ?? []}
+          />
+          <MetricBreakdown
+            title="Savings by source"
+            rows={tokensSaved?.breakdown_by_source ?? []}
+            info="Shows where Taskforce avoided rework: cache reuse, reading summaries instead of full details, and reconnecting to existing documents."
+          />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {detailMetricEntries(savingsV2Flag).map((entry) => {
+            if (entry.kind === "usd_net_saved") {
               return (
                 <MetricCard
-                  key={entry.name}
-                  definition={def}
-                  value={metrics[entry.name]}
+                  key="usd_net_saved"
+                  definition={USD_NET_SAVED_DEFINITION}
+                  value={usdNetSaved}
                 />
               )
-            })}
-          </section>
+            }
+            const def = definitionsByName[entry.name]
+            if (!def) return null
+            return (
+              <MetricCard
+                key={entry.name}
+                definition={def}
+                value={metrics[entry.name]}
+              />
+            )
+          })}
+        </section>
 
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {SECONDARY_METRICS.map((name) => {
-              const def = definitionsByName[name]
-              if (!def) return null
-              return (
-                <MetricCard key={name} definition={def} value={metrics[name]} />
-              )
-            })}
-          </section>
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {SECONDARY_METRICS.map((name) => {
+            const def = definitionsByName[name]
+            if (!def) return null
+            return (
+              <MetricCard key={name} definition={def} value={metrics[name]} />
+            )
+          })}
+        </section>
 
-          <section>
-            <MetricBreakdown
-              title="Top models by tokens used"
-              rows={tokensConsumed?.top_models ?? []}
-            />
-          </section>
+        <section>
+          <MetricBreakdown
+            title="Top models by tokens used"
+            rows={tokensConsumed?.top_models ?? []}
+          />
+        </section>
         </div>
       </div>
     </section>
@@ -630,10 +616,7 @@ type ExperimentalMetricsPageProps = {
   tokensSaved: MetricValuePublic | undefined
   usdNetSaved: MetricValuePublic
   window: MetricsWindow
-  scope: MetricsScope
-  showScopeToggle: boolean
   onWindowChange: (window: MetricsWindow) => void
-  onScopeChange: (scope: MetricsScope) => void
 }
 
 function ExperimentalMetricsPage({
@@ -653,10 +636,7 @@ function ExperimentalMetricsPage({
   tokensSaved,
   usdNetSaved,
   window,
-  scope,
-  showScopeToggle,
   onWindowChange,
-  onScopeChange,
 }: ExperimentalMetricsPageProps) {
   if (scopedSessionId) {
     return (
@@ -700,7 +680,7 @@ function ExperimentalMetricsPage({
           <header className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
-                {windowCopy.label} · {scope}
+                {windowCopy.label} · personal
               </div>
               <h1 className="mt-2 text-3xl font-semibold leading-none tracking-tight md:text-4xl">
                 You saved{" "}
@@ -710,133 +690,128 @@ function ExperimentalMetricsPage({
                 {windowCopy.title}.
               </h1>
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              {showScopeToggle && (
-                <MetricsScopeToggle value={scope} onChange={onScopeChange} />
-              )}
-              <MetricsTimeRange value={window} onChange={onWindowChange} />
-            </div>
+            <MetricsTimeRange value={window} onChange={onWindowChange} />
           </header>
         </div>
 
         <div className="flex flex-col gap-6">
-          {metricsQueryIsError && (
-            <div className="border border-destructive bg-destructive/10 p-3 text-sm">
-              Failed to load metrics. Try again in a moment.
-            </div>
-          )}
+      {metricsQueryIsError && (
+        <div className="border border-destructive bg-destructive/10 p-3 text-sm">
+          Failed to load metrics. Try again in a moment.
+        </div>
+      )}
 
-          {isEmpty && (
-            <div className="border border-dashed border-border p-6 text-sm text-muted-foreground">
-              No metrics yet. Connect your MCP and start using Taskforce. Events
-              show up here within a minute of the agent's first call.
-            </div>
-          )}
+      {isEmpty && (
+        <div className="border border-dashed border-border p-6 text-sm text-muted-foreground">
+          No metrics yet. Connect your MCP and start using Taskforce. Events
+          show up here within a minute of the agent's first call.
+        </div>
+      )}
 
-          <section className="border border-border bg-background text-foreground">
-            <div className="px-5 py-6 md:px-7">
-              <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
-                Tokens saved · {windowCopy.label}
-              </div>
-              <div className="mt-3 text-6xl font-semibold leading-[0.9] tracking-tight tabular-nums md:text-7xl">
-                {formatMetricValue(savedTokens, "compact-int")}
-              </div>
-              <div className="mt-4 font-mono text-xs tracking-wide text-emerald-300">
-                {formatHeroDelta(tokensSaved, "compact-int")}
-              </div>
-              <div className="mt-2 text-sm opacity-70">
-                {formatMetricValue(savedUsd, "usd")} offset ·{" "}
-                {formatMetricValue(usdNetSaved.total, "usd")} net saved
-              </div>
-            </div>
-            <div className="grid border-t border-border sm:grid-cols-2">
-              <ExperimentalRatioCell
-                label="Reuse rate"
-                value={formatMetricValue(reuseRate, "ratio")}
-              />
-              <ExperimentalRatioCell
-                label="Saved / used"
-                value={`${formatRatioValue(savingsRatio)}x`}
-                className="border-t border-border sm:border-t-0 sm:border-l"
-              />
-            </div>
-          </section>
-
-          <section className="grid border border-border md:grid-cols-[10rem_minmax(0,1fr)]">
-            <div className="border-b border-border bg-muted/40 p-4 md:border-r md:border-b-0">
-              <div className="text-sm font-semibold text-primary">Insights</div>
-            </div>
-            <p className="w-full p-4 text-sm leading-6 text-justify text-foreground">
-              Taskforce avoided{" "}
-              <b>{formatMetricValue(savedTokens, "compact-int")} tokens</b> and
-              offset <b>{formatMetricValue(savedUsd, "usd")}</b> while using{" "}
-              <b>{formatMetricValue(consumedTokens, "compact-int")} tokens</b>.
-              The current reuse rate is{" "}
-              <span className="font-mono text-primary">
-                {formatMetricValue(reuseRate, "ratio")}
-              </span>
-              , with net savings of{" "}
-              <b>{formatMetricValue(usdNetSaved.total, "usd")}</b> after model
-              spend.
-            </p>
-          </section>
-
-          <CrossBoundaryReusePanel
-            experimental
-            rateDefinition={definitionsByName[CROSS_BOUNDARY_RATE_METRIC]}
-            rateValue={crossBoundaryRate}
-            savingsDefinition={definitionsByName[CROSS_BOUNDARY_SAVINGS_METRIC]}
-            savingsValue={crossBoundarySavings}
+      <section className="border border-border bg-background text-foreground">
+        <div className="px-5 py-6 md:px-7">
+          <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
+            Tokens saved · {windowCopy.label}
+          </div>
+          <div className="mt-3 text-6xl font-semibold leading-[0.9] tracking-tight tabular-nums md:text-7xl">
+            {formatMetricValue(savedTokens, "compact-int")}
+          </div>
+          <div className="mt-4 font-mono text-xs tracking-wide text-emerald-300">
+            {formatHeroDelta(tokensSaved, "compact-int")}
+          </div>
+          <div className="mt-2 text-sm opacity-70">
+            {formatMetricValue(savedUsd, "usd")} offset ·{" "}
+            {formatMetricValue(usdNetSaved.total, "usd")} net saved
+          </div>
+        </div>
+        <div className="grid border-t border-border sm:grid-cols-2">
+          <ExperimentalRatioCell
+            label="Reuse rate"
+            value={formatMetricValue(reuseRate, "ratio")}
           />
+          <ExperimentalRatioCell
+            label="Saved / used"
+            value={`${formatRatioValue(savingsRatio)}x`}
+            className="border-t border-border sm:border-t-0 sm:border-l"
+          />
+        </div>
+      </section>
 
-          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
-            <div className="min-w-0">
-              <MetricTrendChart
-                title="Tokens saved · daily"
-                series={tokensSaved?.series ?? []}
+      <section className="grid border border-border md:grid-cols-[10rem_minmax(0,1fr)]">
+        <div className="border-b border-border bg-muted/40 p-4 md:border-r md:border-b-0">
+          <div className="text-sm font-semibold text-primary">Insights</div>
+        </div>
+        <p className="w-full p-4 text-sm leading-6 text-justify text-foreground">
+          Taskforce avoided{" "}
+          <b>{formatMetricValue(savedTokens, "compact-int")} tokens</b> and
+          offset <b>{formatMetricValue(savedUsd, "usd")}</b> while using{" "}
+          <b>{formatMetricValue(consumedTokens, "compact-int")} tokens</b>. The
+          current reuse rate is{" "}
+          <span className="font-mono text-primary">
+            {formatMetricValue(reuseRate, "ratio")}
+          </span>
+          , with net savings of{" "}
+          <b>{formatMetricValue(usdNetSaved.total, "usd")}</b> after model
+          spend.
+        </p>
+      </section>
+
+      <CrossBoundaryReusePanel
+        experimental
+        rateDefinition={definitionsByName[CROSS_BOUNDARY_RATE_METRIC]}
+        rateValue={crossBoundaryRate}
+        savingsDefinition={definitionsByName[CROSS_BOUNDARY_SAVINGS_METRIC]}
+        savingsValue={crossBoundarySavings}
+      />
+
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
+        <div className="min-w-0">
+          <MetricTrendChart
+            title="Tokens saved · daily"
+            series={tokensSaved?.series ?? []}
+          />
+        </div>
+        <ExperimentalBreakdownPanel
+          title="Where savings came from"
+          kicker="Savings by source"
+          rows={tokensSaved?.breakdown_by_source ?? []}
+        />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        {detailMetricEntries(savingsV2Flag).map((entry) => {
+          if (entry.kind === "usd_net_saved") {
+            return (
+              <ExperimentalMetricTile
+                key="usd_net_saved"
+                definition={USD_NET_SAVED_DEFINITION}
+                value={usdNetSaved}
               />
-            </div>
-            <ExperimentalBreakdownPanel
-              title="Where savings came from"
-              kicker="Savings by source"
-              rows={tokensSaved?.breakdown_by_source ?? []}
+            )
+          }
+          const def = definitionsByName[entry.name]
+          const value =
+            entry.name === "documents_touched"
+              ? documentsTouched
+              : metrics[entry.name]
+          if (!def) return null
+          return (
+            <ExperimentalMetricTile
+              key={entry.name}
+              definition={def}
+              value={value}
             />
-          </section>
+          )
+        })}
+      </section>
 
-          <section className="grid gap-4 md:grid-cols-3">
-            {detailMetricEntries(savingsV2Flag).map((entry) => {
-              if (entry.kind === "usd_net_saved") {
-                return (
-                  <ExperimentalMetricTile
-                    key="usd_net_saved"
-                    definition={USD_NET_SAVED_DEFINITION}
-                    value={usdNetSaved}
-                  />
-                )
-              }
-              const def = definitionsByName[entry.name]
-              const value =
-                entry.name === "documents_touched"
-                  ? documentsTouched
-                  : metrics[entry.name]
-              if (!def) return null
-              return (
-                <ExperimentalMetricTile
-                  key={entry.name}
-                  definition={def}
-                  value={value}
-                />
-              )
-            })}
-          </section>
+      <ExperimentalBreakdownPanel
+        title="Top models by tokens used"
+        kicker="Model usage"
+        rows={tokensConsumed?.top_models ?? []}
+      />
 
-          <ExperimentalBreakdownPanel
-            title="Top models by tokens used"
-            kicker="Model usage"
-            rows={tokensConsumed?.top_models ?? []}
-          />
-
-          <MethodologyLink />
+      <MethodologyLink />
         </div>
       </div>
     </section>
@@ -916,89 +891,84 @@ function ExperimentalSessionMetrics({
         </div>
 
         <div className="flex flex-col gap-6">
-          <section className="grid border border-border bg-background text-foreground lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
-            <div className="px-5 py-6 md:px-7">
-              <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
-                Session tokens saved
-              </div>
-              <div className="mt-3 text-6xl font-semibold leading-[0.9] tracking-tight tabular-nums md:text-7xl">
-                {formatMetricValue(tokensSaved?.total, "compact-int")}
-              </div>
-              <div className="mt-4 text-sm opacity-70">
-                {formatPreciseSessionUsd(usdSaved?.total)} estimated savings ·{" "}
-                {formatMetricValue(documentsConsulted?.total, "count")}{" "}
-                documents consulted
-              </div>
-            </div>
-            <div className="grid border-t border-border sm:grid-cols-2 lg:border-t-0 lg:border-l">
-              <ExperimentalRatioCell
-                label="Documents"
-                value={formatMetricValue(documentsConsulted?.total, "count")}
-              />
-              <ExperimentalRatioCell
-                label="Pricing model"
-                value={
-                  sessionSavings?.pricing_model_id ?? SESSION_PRICING_MODEL_ID
-                }
-                className="border-t border-border sm:border-t-0 sm:border-l lg:border-l-0 xl:border-l"
-              />
-              <ExperimentalRatioCell
-                label="First event"
-                value={firstSeen ? formatSessionDate(firstSeen) : "No event"}
-                className="border-t border-border"
-              />
-              <ExperimentalRatioCell
-                label="Last event"
-                value={lastSeen ? formatSessionDate(lastSeen) : "No event"}
-                className="border-t border-border sm:border-l"
-              />
-            </div>
-          </section>
-
-          <section className="grid border border-border md:grid-cols-[10rem_minmax(0,1fr)]">
-            <div className="border-b border-border bg-muted/40 p-4 md:border-r md:border-b-0">
-              <div className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
-                Session insights
-              </div>
-            </div>
-            <p className="max-w-4xl p-4 text-sm leading-6 text-foreground">
-              Session{" "}
-              <code className="bg-muted px-1.5 py-0.5 font-mono text-xs">
-                {scopedSessionId}
-              </code>{" "}
-              consulted{" "}
-              <b>{formatMetricValue(documentsConsulted?.total, "count")}</b>{" "}
-              documents and avoided{" "}
-              <b>
-                {formatMetricValue(tokensSaved?.total, "compact-int")} tokens
-              </b>
-              , worth about <b>{formatPreciseSessionUsd(usdSaved?.total)}</b>{" "}
-              under{" "}
-              {sessionSavings?.pricing_model_id ?? SESSION_PRICING_MODEL_ID}{" "}
-              pricing.
-            </p>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            {SESSION_PRIMARY_METRICS.map((name) => (
-              <ExperimentalMetricTile
-                key={name}
-                definition={SESSION_METRIC_DEFINITIONS[name]}
-                value={sessionMetricValues[name]}
-                valueFormatter={
-                  name === "usd_saved" ? formatPreciseSessionUsd : undefined
-                }
-              />
-            ))}
-          </section>
-
-          <ExperimentalSessionLog
-            entries={entries}
-            isError={isError}
-            isLoading={isLoading}
+      <section className="grid border border-border bg-background text-foreground lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
+        <div className="px-5 py-6 md:px-7">
+          <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
+            Session tokens saved
+          </div>
+          <div className="mt-3 text-6xl font-semibold leading-[0.9] tracking-tight tabular-nums md:text-7xl">
+            {formatMetricValue(tokensSaved?.total, "compact-int")}
+          </div>
+          <div className="mt-4 text-sm opacity-70">
+            {formatPreciseSessionUsd(usdSaved?.total)} estimated savings ·{" "}
+            {formatMetricValue(documentsConsulted?.total, "count")} documents
+            consulted
+          </div>
+        </div>
+        <div className="grid border-t border-border sm:grid-cols-2 lg:border-t-0 lg:border-l">
+          <ExperimentalRatioCell
+            label="Documents"
+            value={formatMetricValue(documentsConsulted?.total, "count")}
           />
+          <ExperimentalRatioCell
+            label="Pricing model"
+            value={sessionSavings?.pricing_model_id ?? SESSION_PRICING_MODEL_ID}
+            className="border-t border-border sm:border-t-0 sm:border-l lg:border-l-0 xl:border-l"
+          />
+          <ExperimentalRatioCell
+            label="First event"
+            value={firstSeen ? formatSessionDate(firstSeen) : "No event"}
+            className="border-t border-border"
+          />
+          <ExperimentalRatioCell
+            label="Last event"
+            value={lastSeen ? formatSessionDate(lastSeen) : "No event"}
+            className="border-t border-border sm:border-l"
+          />
+        </div>
+      </section>
 
-          <MethodologyLink />
+      <section className="grid border border-border md:grid-cols-[10rem_minmax(0,1fr)]">
+        <div className="border-b border-border bg-muted/40 p-4 md:border-r md:border-b-0">
+          <div className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
+            Session insights
+          </div>
+        </div>
+        <p className="max-w-4xl p-4 text-sm leading-6 text-foreground">
+          Session{" "}
+          <code className="bg-muted px-1.5 py-0.5 font-mono text-xs">
+            {scopedSessionId}
+          </code>{" "}
+          consulted{" "}
+          <b>{formatMetricValue(documentsConsulted?.total, "count")}</b>{" "}
+          documents and avoided{" "}
+          <b>{formatMetricValue(tokensSaved?.total, "compact-int")} tokens</b>,
+          worth about <b>{formatPreciseSessionUsd(usdSaved?.total)}</b> under{" "}
+          {sessionSavings?.pricing_model_id ?? SESSION_PRICING_MODEL_ID}{" "}
+          pricing.
+        </p>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        {SESSION_PRIMARY_METRICS.map((name) => (
+          <ExperimentalMetricTile
+            key={name}
+            definition={SESSION_METRIC_DEFINITIONS[name]}
+            value={sessionMetricValues[name]}
+            valueFormatter={
+              name === "usd_saved" ? formatPreciseSessionUsd : undefined
+            }
+          />
+        ))}
+      </section>
+
+      <ExperimentalSessionLog
+        entries={entries}
+        isError={isError}
+        isLoading={isLoading}
+      />
+
+      <MethodologyLink />
         </div>
       </div>
     </section>
