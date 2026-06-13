@@ -50,7 +50,6 @@ export const membershipPlans: MembershipPlan[] = [
       "Up to 1,000 agent profiles",
       "1 TB of library storage",
       "Organizations up to 1,000 members",
-      "Access to Enterprise Search in Taskforce",
     ],
     cta: "Select this tier",
   },

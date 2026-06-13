@@ -387,12 +387,13 @@ function DocumentSearch() {
   const documentsQuery = useQuery({
     queryKey: ["v2-documents", { demo: isDemoMode }],
     queryFn: () => readV2Documents({ demo: isDemoMode }),
-    enabled: isDemoMode,
+    enabled: isOpen && trimmedQuery.length > 0,
+    retry: false,
   })
   const documents = documentsQuery.data?.data ?? []
 
   const results = useMemo<DocumentSearchMatch[]>(() => {
-    if (!isDemoMode || !trimmedQuery) return []
+    if (!trimmedQuery) return []
     const needle = trimmedQuery.toLowerCase()
     const matches: DocumentSearchMatch[] = []
     for (const document of documents) {
@@ -403,7 +404,7 @@ function DocumentSearch() {
       }
     }
     return matches
-  }, [isDemoMode, trimmedQuery, documents])
+  }, [trimmedQuery, documents])
 
   useEffect(() => {
     if (lastQueryRef.current === trimmedQuery) return
@@ -426,9 +427,13 @@ function DocumentSearch() {
     }
   }, [])
 
-  const showHint = isOpen && trimmedQuery.length > 0 && !isDemoMode
-  const showResults = isOpen && isDemoMode && trimmedQuery.length > 0
-  const dropdownOpen = showHint || showResults
+  const dropdownOpen = isOpen && trimmedQuery.length > 0
+  const showLoading = dropdownOpen && documentsQuery.isPending
+  const showError = dropdownOpen && documentsQuery.isError
+  const showEmpty =
+    dropdownOpen && !showLoading && !showError && results.length === 0
+  const showResults =
+    dropdownOpen && !showLoading && !showError && results.length > 0
   const activeResult = showResults ? results[activeIndex] : undefined
 
   const openDocument = (documentId: string) => {
@@ -513,15 +518,33 @@ function DocumentSearch() {
           data-testid="v2-document-lookup-results"
           className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg"
         >
-          {showHint && (
+          {showLoading && (
             <p
-              data-testid="v2-document-lookup-hint"
+              data-testid="v2-document-lookup-loading"
               className="px-4 py-3 text-sm text-muted-foreground"
             >
-              Turn on demo mode to search documents.
+              Searching documents...
             </p>
           )}
-          {showResults && results.length === 0 && (
+          {showError && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <p
+                data-testid="v2-document-lookup-error"
+                className="text-sm text-destructive"
+              >
+                Could not search documents.
+              </p>
+              <button
+                type="button"
+                className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => documentsQuery.refetch()}
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          {showEmpty && (
             <p
               data-testid="v2-document-lookup-empty"
               className="px-4 py-3 text-sm text-muted-foreground"

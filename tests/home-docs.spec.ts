@@ -50,6 +50,7 @@ test("Landing page presents Taskforce V2 as the public product", async ({
   await page.goto("/")
 
   await expect(page.getByTestId("taskforce-landing")).toBeVisible()
+  await expect(page.getByText("Search", { exact: true })).toHaveCount(0)
   await expect(
     page.getByRole("heading", { name: "Taskforce", exact: true }),
   ).toBeVisible()

@@ -227,6 +227,7 @@ test("Upgrade link opens membership tiers with current and selected indicators",
   )
   await expect(page.getByTestId("membership-plan-pro")).toContainText("$4.99")
   await expect(page.getByTestId("membership-plan-max")).toContainText("$49.99")
+  await expect(page.getByText("Enterprise Search")).toHaveCount(0)
 
   let checkoutBody: unknown
   await page.route("**/api/v1/billing/checkout-session", async (route) => {
@@ -253,37 +254,85 @@ test("Taskforce v2 wordmark links to Taskforce Library", async ({ page }) => {
   await expect(page).toHaveURL(/\/v2\/library$/)
 })
 
-test("Taskforce v2 document search filters demo documents and opens results", async ({
+test("Taskforce v2 document search isolates live and demo results and opens documents", async ({
   page,
 }) => {
   await mockTaskforceAuth(page)
   await mockV2Documents(page)
+
+  let releaseLiveDocuments: (() => void) | undefined
+  const liveDocumentsReady = new Promise<void>((resolve) => {
+    releaseLiveDocuments = resolve
+  })
+  await page.route("**/api/v1/v2/documents/**", async (route) => {
+    const url = new URL(route.request().url())
+    if (
+      url.pathname !== "/api/v1/v2/documents/" ||
+      url.searchParams.get("demo") === "true"
+    ) {
+      await route.fallback()
+      return
+    }
+
+    await liveDocumentsReady
+    await route.fulfill({
+      json: {
+        data: [
+          {
+            id: "live-document-1",
+            owner_id: "user-1",
+            organization_id: null,
+            folder_id: null,
+            folder_name: null,
+            visibility: "private",
+            user_access: "owner",
+            is_favorite: false,
+            title: "Live Architecture Decision",
+            description: "Production library context for the current user.",
+            human_summary: "Live-only searchable content.",
+            ai_generated_summary: "",
+            collaborators: ["Alex Lee"],
+            shared_with: [],
+            main_body: [{ segments: [{ text: "Live architecture details." }] }],
+            details_file_name: "live-architecture-decision.details.md",
+            details_markdown_sections: [],
+            is_demo: false,
+            created_at: "2026-06-01T00:00:00Z",
+            updated_at: "2026-06-01T00:00:00Z",
+          },
+        ],
+        count: 1,
+      },
+    })
+  })
 
   await page.goto("/v2/library")
 
   const search = page.getByTestId("v2-document-lookup-input")
   await expect(search).toBeVisible()
 
-  // Without demo mode, typing prompts the user to enable it.
-  await search.fill("bridge")
-  await expect(page.getByTestId("v2-document-lookup-hint")).toBeVisible()
-  await expect(page.getByTestId("v2-document-lookup-results")).toContainText(
-    "demo mode",
+  await search.fill("live architecture")
+  await expect(page.getByTestId("v2-document-lookup-loading")).toBeVisible()
+  releaseLiveDocuments?.()
+  await expect(
+    page.getByTestId("v2-document-lookup-result-live-document-1"),
+  ).toBeVisible()
+  await expect(page.getByText("Latest Stale Network Bridge Issue")).toHaveCount(
+    0,
   )
 
-  // Enabling demo mode replaces the hint with matching documents.
+  // Demo mode uses its separate query cache and only returns demo documents.
   await search.fill("")
   await page.getByTestId("demo-mode-toggle").click()
   await search.fill("bridge")
-  const lookupResults = page.getByTestId("v2-document-lookup-results")
   await expect(
-    lookupResults
+    page.getByTestId("v2-document-lookup-result-live-document-1"),
+  ).toHaveCount(0)
+  await expect(
+    page
       .getByText("Latest Stale Network Bridge Issue", { exact: true })
       .first(),
   ).toBeVisible()
-  await expect(
-    lookupResults.getByText("Hosted MCP Credential Setup Refresh"),
-  ).toHaveCount(0)
 
   // Unrelated query produces an empty-state message.
   await search.fill("zzzzznomatch")
@@ -300,6 +349,7 @@ test("Taskforce v2 document search filters demo documents and opens results", as
   await expect(page).toHaveURL(
     /\/v2\/library\/5b7462e9-6b0e-4d48-81a2-07f052534a12$/,
   )
+
   await expect(
     page.getByRole("heading", { name: "V2 Document Evidence Contract" }),
   ).toBeVisible()
@@ -323,6 +373,37 @@ test("Taskforce v2 document search filters demo documents and opens results", as
   await expect(page.getByTestId("v2-document-lookup-results")).toBeVisible()
   await search.press("Escape")
   await expect(page.getByTestId("v2-document-lookup-results")).toHaveCount(0)
+})
+
+test("Taskforce v2 document search retries live API failures", async ({
+  page,
+}) => {
+  await mockTaskforceAuth(page)
+
+  let requestCount = 0
+  await page.route("**/api/v1/v2/documents/**", async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname !== "/api/v1/v2/documents/") {
+      await route.fulfill({ status: 404, json: { detail: "Not found" } })
+      return
+    }
+
+    requestCount += 1
+    if (requestCount === 1) {
+      await route.fulfill({ status: 503, json: { detail: "Unavailable" } })
+      return
+    }
+    await route.fulfill({ json: { data: [], count: 0 } })
+  })
+
+  await page.goto("/v2/pricing")
+  const search = page.getByTestId("v2-document-lookup-input")
+  await search.fill("retry me")
+
+  await expect(page.getByTestId("v2-document-lookup-error")).toBeVisible()
+  await page.getByRole("button", { name: "Try again" }).click()
+  await expect(page.getByTestId("v2-document-lookup-empty")).toBeVisible()
+  expect(requestCount).toBe(2)
 })
 
 test("Taskforce v2 library shows document demo data only in demo mode", async ({
