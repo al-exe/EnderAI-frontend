@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { BookOpen, ChevronLeft, ScrollText } from "lucide-react"
 import {
   readTaskforceFleet,
+  readTaskforceSessionLog,
   type TaskforceFleetAgent,
   type TaskforceFleetResponse,
 } from "@/api/v2Taskforce"
@@ -10,11 +11,13 @@ import { Button } from "@/components/ui/button"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
 import {
   agentDisplayName,
+  agentQuestion,
   agentSpecialistName,
   agentStatus,
   compactPresence,
   type FleetStatus,
   fleetTitle,
+  formatClockTime,
   hostLabel,
   modelLabel,
   presenceLabel,
@@ -70,6 +73,10 @@ function FleetAgentDetailRoute() {
     queryFn: readTaskforceFleet,
     refetchInterval: 30_000,
   })
+  const logQuery = useQuery({
+    queryKey: ["v2-taskforce-session-log", { sessionId }],
+    queryFn: () => readTaskforceSessionLog({ sessionId }),
+  })
 
   const located = locateAgent(fleetQuery.data, sessionId)
 
@@ -103,8 +110,19 @@ function FleetAgentDetailRoute() {
   const host = hostLabel(agent)
   const specialist = agentSpecialistName(agent) ?? agent.specialist_slug
   const referencedCount = agent.referenced_document_ids.length
+  const question = agentQuestion(agent)
 
   const dmetaBits = [model, host, agent.branch].filter(Boolean)
+
+  // Activity timeline — newest-first. The live "now" step sits on top, with
+  // each captured document descending below it (from the session log).
+  const captures = [...(logQuery.data?.entries ?? [])]
+    .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
+    .map((entry) => ({
+      key: `${entry.query_id}-${entry.document_id}`,
+      time: formatClockTime(entry.occurred_at),
+      text: `Captured update to ${entry.title}`,
+    }))
 
   return (
     <div className={styles.detail}>
@@ -170,14 +188,33 @@ function FleetAgentDetailRoute() {
 
       <div className={styles.dbody}>
         <div className={styles.dmain}>
-          {/* Working on */}
-          <div className={styles.section}>
-            <div className={styles.seclabel}>Working on</div>
-            <div className={styles.nowtask}>
-              {agent.summary_markdown ||
-                "No summary has been captured for this session yet."}
+          {/* Working on — a waiting agent surfaces its question + reply box. */}
+          {status === "waiting" && question ? (
+            <div className={styles.section}>
+              <div className={styles.seclabel}>Waiting for input</div>
+              <div className={styles.question}>
+                <div className={styles.questionText}>{question}</div>
+                <div className={styles.reply}>
+                  <input
+                    placeholder={`Reply to ${agentDisplayName(agent)}…`}
+                    aria-label="Reply to agent"
+                    disabled
+                  />
+                  <button type="button" disabled>
+                    Send
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className={styles.section}>
+              <div className={styles.seclabel}>Working on</div>
+              <div className={styles.nowtask}>
+                {agent.summary_markdown ||
+                  "No summary has been captured for this session yet."}
+              </div>
+            </div>
+          )}
 
           {/* Document */}
           {agent.active_document_id && (
@@ -197,7 +234,7 @@ function FleetAgentDetailRoute() {
             </div>
           )}
 
-          {/* Activity timeline — full session-log derivation is TF-242. */}
+          {/* Activity — newest-first, derived from the session log. */}
           <div className={styles.section}>
             <div className={styles.seclabel}>Activity</div>
             <div className={styles.timeline}>
@@ -208,6 +245,19 @@ function FleetAgentDetailRoute() {
                   {agent.summary_markdown || "Active in this session"}
                 </div>
               </div>
+              {captures.map((event) => (
+                <div className={styles.tev} key={event.key}>
+                  <span className={styles.tdot} />
+                  <div className={styles.tt}>{event.time}</div>
+                  <div className={styles.tx}>{event.text}</div>
+                </div>
+              ))}
+              {logQuery.isLoading && (
+                <div className={styles.tev}>
+                  <span className={styles.tdot} />
+                  <div className={styles.tx}>Loading session activity…</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
