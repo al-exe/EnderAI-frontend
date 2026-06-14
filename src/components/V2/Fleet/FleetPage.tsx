@@ -1,263 +1,126 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link, useNavigate } from "@tanstack/react-router"
+import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import { type FormEvent, useState } from "react"
 import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
-import {
-  BookOpen,
-  Bot,
-  ChevronDown,
-  FileText,
-  FolderKanban,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  ScrollText,
-  Trash2,
-} from "lucide-react"
-import { type FormEvent, useMemo, useState } from "react"
-import { readV2Document } from "@/api/v2Documents"
-import {
-  assignTaskforceFleetSession,
   createTaskforceFleetSession,
   deleteTaskforceFleetSession,
   readTaskforceFleet,
-  readTaskforceSessionLog,
   type TaskforceFleetAgent,
   type TaskforceFleetSession,
   updateTaskforceFleetSession,
 } from "@/api/v2Taskforce"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
-import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
-  V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
 import styles from "./FleetPage.module.css"
+import {
+  agentDisplayName,
+  agentMeta,
+  agentStatus,
+  compactPresence,
+  type FleetStatus,
+  fleetRepo,
+  fleetTitle,
+  runningCount,
+  STATE_LABEL,
+  waitingCount,
+} from "./fleetStatus"
 
 const FLEET_QUERY_KEY = ["v2-taskforce-fleet"] as const
-
-type DetailSelection =
-  | { kind: "agent"; agent: TaskforceFleetAgent }
-  | { kind: "fleet"; fleet: TaskforceFleetSession }
-  | null
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong."
 }
 
-function presenceLabel(agent: TaskforceFleetAgent) {
-  if (agent.minutes_ago < 1) return "Active now"
-  if (agent.minutes_ago === 1) return "Active 1 minute ago"
-  return `Active ${agent.minutes_ago} minutes ago`
+const STATE_CLASS: Record<FleetStatus, string | undefined> = {
+  run: undefined,
+  waiting: styles.stateWaiting,
+  paused: styles.statePaused,
+  idle: styles.stateIdle,
 }
 
-function repoLabel(agent: TaskforceFleetAgent) {
-  const cwdParts = agent.cwd?.split("/").filter(Boolean) ?? []
-  return agent.repo || cwdParts[cwdParts.length - 1] || "Unknown repo"
-}
-
-// Turn a raw harness model id into a human label, e.g.
-// "claude-opus-4-8" -> "Opus 4.8", "claude-fable-5" -> "Fable 5".
-function modelLabel(modelId: string | null): string | null {
-  if (!modelId) return null
-  const [family, ...rest] = modelId.replace(/^claude-/, "").split("-")
-  if (!family) return null
-  const name = family.charAt(0).toUpperCase() + family.slice(1)
-  const version = rest.join(".")
-  return version ? `${name} ${version}` : name
-}
-
-// Heading shown for an agent. Once Taskforce has captured a document the
-// document title wins; until then a brand-new session shows the model it's
-// running (e.g. "Opus 4.8") rather than the bare working-directory name.
-function agentDisplayName(agent: TaskforceFleetAgent) {
-  return agent.title || modelLabel(agent.model_id) || repoLabel(agent)
-}
-
-function agentModelName(agent: TaskforceFleetAgent) {
-  return modelLabel(agent.model_id) || "Connected agent"
-}
-
-function compactPresence(agent: TaskforceFleetAgent) {
-  if (agent.minutes_ago < 1) return "now"
-  return `${agent.minutes_ago}m`
-}
-
-function fleetSummary(agents: TaskforceFleetAgent[]) {
-  const running = agents.filter((agent) => agent.minutes_ago < 5).length
-  const idle = agents.length - running
-  const details = [
-    running > 0 ? `${running} running` : "",
-    idle > 0 ? `${idle} idle` : "",
-  ].filter(Boolean)
-
-  return `${agents.length} ${agents.length === 1 ? "instance" : "instances"}${
-    details.length ? ` · ${details.join(" · ")}` : ""
-  }`
-}
-
-function AgentCard({
-  agent,
-  fleetSessions,
-  isMoving,
-  onMove,
-  onCreateSession,
-  onOpen,
-}: {
-  agent: TaskforceFleetAgent
-  fleetSessions: TaskforceFleetSession[]
-  isMoving: boolean
-  onMove: (agent: TaskforceFleetAgent, fleetSessionId: string) => void
-  onCreateSession: (agent: TaskforceFleetAgent) => void
-  onOpen: (agent: TaskforceFleetAgent) => void
-}) {
-  const isLive = agent.minutes_ago < 5
-
+function StatusDot({ status }: { status: FleetStatus }) {
   return (
-    <article className={styles.instance}>
-      <div className={styles.identity}>
-        <button
-          type="button"
-          className={styles.instanceOpen}
-          onClick={() => onOpen(agent)}
-        >
-          <span
-            className={cn(styles.statusDot, isLive && styles.runningDot)}
-            title={presenceLabel(agent)}
-          />
-          <div className={styles.modelBlock}>
-            <h3 className={styles.model}>{agentModelName(agent)}</h3>
-            <div className={cn(styles.status, !isLive && styles.idleStatus)}>
-              {isLive ? "Running" : "Idle"}
-            </div>
-          </div>
-        </button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              disabled={isMoving}
-              aria-label={`Move ${agent.title || agent.session_id}`}
-              className={styles.instanceMenu}
-            >
-              <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Move to</DropdownMenuLabel>
-            {fleetSessions.map((fleetSession) => (
-              <DropdownMenuItem
-                key={fleetSession.id}
-                disabled={agent.fleet_session_id === fleetSession.id}
-                onSelect={() => onMove(agent, fleetSession.id)}
-              >
-                <FolderKanban />
-                {fleetSession.name}
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuItem onSelect={() => onCreateSession(agent)}>
-              <Plus />
-              New session
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <button
-        type="button"
-        className={cn(styles.workingOn, !isLive && styles.muted)}
-        onClick={() => onOpen(agent)}
-      >
-        {agent.summary_markdown ||
-          `Connected in ${repoLabel(agent)}${
-            agent.branch ? ` on ${agent.branch}` : ""
-          }`}
-      </button>
-
-      <div className={styles.documents}>
-        {agent.active_document_id ? (
-          <Link
-            to="/v2/library/$documentId"
-            params={{ documentId: agent.active_document_id }}
-            className={styles.document}
-          >
-            <span className={styles.documentTitle}>
-              {agent.title || "Active Taskforce document"}
-            </span>
-            <span className={styles.documentMode}>writing</span>
-          </Link>
-        ) : (
-          <span className={styles.noDocuments}>No active document</span>
-        )}
-        {agent.referenced_document_ids.length > 0 && (
-          <button
-            type="button"
-            className={styles.document}
-            onClick={() => onOpen(agent)}
-          >
-            <span className={styles.documentTitle}>
-              {agent.referenced_document_ids.length} referenced{" "}
-              {agent.referenced_document_ids.length === 1
-                ? "document"
-                : "documents"}
-            </span>
-            <span className={styles.documentMode}>reading</span>
-          </button>
-        )}
-      </div>
-
-      <div className={styles.elapsed}>{compactPresence(agent)}</div>
-    </article>
+    <span
+      className={cn(
+        styles.sdot,
+        styles[status],
+        status === "run" && styles.pulse,
+      )}
+    />
   )
 }
 
-function FleetBox({
+function AgentRow({
+  agent,
+  onOpen,
+}: {
+  agent: TaskforceFleetAgent
+  onOpen: (agent: TaskforceFleetAgent) => void
+}) {
+  const status = agentStatus(agent)
+  const age = compactPresence(agent)
+  const showAgeInState = status === "waiting" || status === "idle"
+  const docTitle = agent.active_document_id ? agent.title : null
+
+  return (
+    <button type="button" className={styles.arow} onClick={() => onOpen(agent)}>
+      <StatusDot status={status} />
+      <div className={styles.who}>
+        <div className={styles.nm}>{agentDisplayName(agent)}</div>
+        <div className={styles.meta}>{agentMeta(agent)}</div>
+        {status !== "run" && (
+          <div className={cn(styles.state, STATE_CLASS[status])}>
+            {STATE_LABEL[status]}
+            {showAgeInState ? ` · ${age}` : ""}
+          </div>
+        )}
+      </div>
+      <div className={styles.work}>
+        <div className={styles.workSummary}>
+          {agent.summary_markdown || "Connected — no summary captured yet"}
+        </div>
+        {docTitle && (
+          <div className={styles.detailLine}>
+            <span className={styles.docInline}>{docTitle}</span>
+          </div>
+        )}
+      </div>
+      <div className={styles.age}>{status === "run" ? age : ""}</div>
+    </button>
+  )
+}
+
+function FleetCard({
   fleet,
-  allFleetSessions,
-  isMoving,
-  onMove,
-  onCreateSession,
   onOpenAgent,
-  onOpenFleet,
   onRename,
   onDelete,
 }: {
   fleet: TaskforceFleetSession
-  allFleetSessions: TaskforceFleetSession[]
-  isMoving: boolean
-  onMove: (agent: TaskforceFleetAgent, fleetSessionId: string) => void
-  onCreateSession: (agent: TaskforceFleetAgent) => void
   onOpenAgent: (agent: TaskforceFleetAgent) => void
-  onOpenFleet: (fleet: TaskforceFleetSession) => void
   onRename: (fleet: TaskforceFleetSession, name: string) => void
   onDelete: (fleet: TaskforceFleetSession) => void
 }) {
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(fleet.name)
+
+  const repo = fleetRepo(fleet)
+  const running = runningCount(fleet.agents)
+  const total = fleet.agents.length
 
   const submitRename = (event: FormEvent) => {
     event.preventDefault()
@@ -272,29 +135,44 @@ function FleetBox({
   }
 
   return (
-    <section className={styles.session}>
-      <div className={styles.sessionHeader}>
+    <section className={styles.fleet}>
+      <div className={styles.fhead}>
         {renaming ? (
-          <form onSubmit={submitRename} className={styles.renameForm}>
+          <form onSubmit={submitRename} className="flex-1">
             <Input
               value={name}
               onChange={(event) => setName(event.target.value)}
               maxLength={120}
               autoFocus
-              aria-label="Fleet session name"
+              aria-label="Fleet name"
+              className="h-7"
             />
-            <Button type="submit" size="sm">
-              Save
-            </Button>
           </form>
         ) : (
-          <button
-            type="button"
-            className={styles.sessionOpen}
-            onClick={() => onOpenFleet(fleet)}
-          >
-            <h2 className={styles.sessionTitle}>{fleet.name}</h2>
-          </button>
+          <span className={styles.fname}>{fleetTitle(fleet)}</span>
+        )}
+
+        {!renaming &&
+          (repo ? (
+            <span className={styles.frepo}>
+              <b>{repo.repo}</b>
+              {repo.branch ? ` · ${repo.branch}` : ""}
+            </span>
+          ) : (
+            <span className={styles.frepo}>no repo bound</span>
+          ))}
+
+        {!renaming && (
+          <span className={styles.fcount}>
+            {running > 0 ? (
+              <>
+                <span className={styles.pin} />
+                {running} active · {total}
+              </>
+            ) : (
+              `${total} ${total === 1 ? "agent" : "agents"}`
+            )}
+          </span>
         )}
 
         {!renaming && (
@@ -303,8 +181,8 @@ function FleetBox({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label="Fleet session actions"
-                className={styles.sessionMenu}
+                aria-label={`${fleetTitle(fleet)} actions`}
+                className={styles.fmenu}
               >
                 <MoreHorizontal />
               </Button>
@@ -319,6 +197,7 @@ function FleetBox({
                 <Pencil />
                 Rename
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
                 onSelect={() => onDelete(fleet)}
@@ -330,228 +209,38 @@ function FleetBox({
           </DropdownMenu>
         )}
       </div>
-      <p className={styles.sessionSummary}>{fleetSummary(fleet.agents)}</p>
 
-      <div className={styles.instances}>
-        <div className={styles.columns} aria-hidden="true">
-          <div>Instance</div>
-          <div>Working on</div>
-          <div>Documents</div>
-          <div className={styles.alignRight}>Time</div>
-        </div>
+      <div>
         {fleet.agents.length === 0 ? (
-          <div className={styles.emptySession}>
-            Move an active agent here to group its work.
+          <div className={styles.emptyRows}>
+            No active agents in this fleet yet.
           </div>
         ) : (
           fleet.agents.map((agent) => (
-            <AgentCard
+            <AgentRow
               key={agent.session_id}
               agent={agent}
-              fleetSessions={allFleetSessions}
-              isMoving={isMoving}
-              onMove={onMove}
-              onCreateSession={onCreateSession}
               onOpen={onOpenAgent}
             />
           ))
         )}
       </div>
+
+      <Link
+        to="/v2/settings"
+        search={{ tab: "connect-agent" }}
+        className={styles.newagent}
+      >
+        <Plus />
+        New agent in {fleetTitle(fleet)}
+      </Link>
     </section>
-  )
-}
-
-function AgentDetail({ agent }: { agent: TaskforceFleetAgent }) {
-  const logQuery = useQuery({
-    queryKey: ["v2-taskforce-session-log", { sessionId: agent.session_id }],
-    queryFn: () => readTaskforceSessionLog({ sessionId: agent.session_id }),
-  })
-
-  return (
-    <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-      <SheetHeader className="border-b">
-        <SheetTitle>{agentDisplayName(agent)}</SheetTitle>
-        <SheetDescription>{presenceLabel(agent)}</SheetDescription>
-      </SheetHeader>
-      <div className="space-y-6 px-4 pb-6">
-        <div className="flex flex-wrap gap-2">
-          {agent.specialist_slug && (
-            <Badge variant="outline">{agent.specialist_slug}</Badge>
-          )}
-          {agent.repo && <Badge variant="secondary">{agent.repo}</Badge>}
-          {agent.branch && <Badge variant="secondary">{agent.branch}</Badge>}
-        </div>
-
-        <Button asChild className="w-full">
-          <Link to="/v2/ledger" search={{ session_id: agent.session_id }}>
-            <ScrollText />
-            View session in Ledger
-          </Link>
-        </Button>
-
-        <section>
-          <h3 className="text-sm font-semibold">Current work</h3>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-            {agent.summary_markdown || "No summary has been captured yet."}
-          </p>
-        </section>
-
-        {agent.cwd && (
-          <section>
-            <h3 className="text-sm font-semibold">Working directory</h3>
-            <code className="mt-2 block overflow-x-auto bg-muted p-3 text-xs">
-              {agent.cwd}
-            </code>
-          </section>
-        )}
-
-        {agent.active_document_id && (
-          <Button asChild variant="outline">
-            <Link
-              to="/v2/library/$documentId"
-              params={{ documentId: agent.active_document_id }}
-            >
-              <BookOpen />
-              Open active document
-            </Link>
-          </Button>
-        )}
-
-        <section>
-          <h3 className="text-sm font-semibold">
-            Contributed Taskforce documents
-          </h3>
-          {logQuery.isLoading ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Loading session log…
-            </p>
-          ) : logQuery.error ? (
-            <p className="mt-2 text-sm text-destructive">
-              {errorMessage(logQuery.error)}
-            </p>
-          ) : logQuery.data?.entries.length ? (
-            <div className="mt-3 space-y-2">
-              {logQuery.data.entries.map((entry) => (
-                <Link
-                  key={`${entry.query_id}-${entry.document_id}`}
-                  to="/v2/library/$documentId"
-                  params={{ documentId: entry.document_id }}
-                  className="block border border-border p-3 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{entry.title}</span>
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                    {entry.summary_markdown}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-muted-foreground">
-              No consulted documents are recorded for this session yet.
-            </p>
-          )}
-        </section>
-      </div>
-    </SheetContent>
-  )
-}
-
-function FleetDetail({ fleet }: { fleet: TaskforceFleetSession }) {
-  const documentIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          fleet.agents.flatMap((agent) => [
-            ...(agent.active_document_id ? [agent.active_document_id] : []),
-            ...agent.referenced_document_ids,
-          ]),
-        ),
-      ),
-    [fleet.agents],
-  )
-  const documentQueries = useQueries({
-    queries: documentIds.map((documentId) => ({
-      queryKey: ["v2-document", { documentId }],
-      queryFn: () => readV2Document(documentId),
-    })),
-  })
-
-  return (
-    <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-      <SheetHeader className="border-b">
-        <SheetTitle>{fleet.name}</SheetTitle>
-        <SheetDescription>
-          {fleet.agents.length} active agent
-          {fleet.agents.length === 1 ? "" : "s"}
-        </SheetDescription>
-      </SheetHeader>
-      <div className="space-y-6 px-4 pb-6">
-        <section>
-          <h3 className="text-sm font-semibold">Members</h3>
-          <div className="mt-3 space-y-2">
-            {fleet.agents.length ? (
-              fleet.agents.map((agent) => (
-                <div
-                  key={agent.session_id}
-                  className="border border-border p-3"
-                >
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Bot className="size-4 text-muted-foreground" />
-                    {agentDisplayName(agent)}
-                  </div>
-                  <p className="mt-1 font-mono text-[10px] text-muted-foreground">
-                    {repoLabel(agent)}
-                    {agent.branch ? ` · ${agent.branch}` : ""}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No active members.
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section>
-          <h3 className="text-sm font-semibold">Contributed documents</h3>
-          <div className="mt-3 space-y-2">
-            {documentIds.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No documents have been captured for this session yet.
-              </p>
-            ) : (
-              documentQueries.map((query, index) => {
-                const documentId = documentIds[index]
-                return (
-                  <Link
-                    key={documentId}
-                    to="/v2/library/$documentId"
-                    params={{ documentId }}
-                    className="flex items-center gap-3 border border-border p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <FileText className="size-4 text-muted-foreground" />
-                    <span className="min-w-0 truncate text-sm font-medium">
-                      {query.data?.title ||
-                        (query.isLoading ? "Loading…" : documentId)}
-                    </span>
-                  </Link>
-                )
-              })
-            )}
-          </div>
-        </section>
-      </div>
-    </SheetContent>
   )
 }
 
 export function FleetPage() {
   const queryClient = useQueryClient()
-  const [detail, setDetail] = useState<DetailSelection>(null)
+  const navigate = useNavigate()
   const [mutationError, setMutationError] = useState<unknown>(null)
 
   const fleetQuery = useQuery({
@@ -563,30 +252,8 @@ export function FleetPage() {
   const refreshFleet = () =>
     queryClient.invalidateQueries({ queryKey: FLEET_QUERY_KEY })
 
-  const assignMutation = useMutation({
-    mutationFn: ({
-      sessionId,
-      fleetSessionId,
-    }: {
-      sessionId: string
-      fleetSessionId: string
-    }) => assignTaskforceFleetSession(sessionId, fleetSessionId),
-    onSuccess: refreshFleet,
-    onError: setMutationError,
-  })
   const createMutation = useMutation({
-    mutationFn: ({ agentSessionId }: { agentSessionId?: string }) =>
-      createTaskforceFleetSession().then(async (fleetSession) => {
-        if (agentSessionId) {
-          try {
-            await assignTaskforceFleetSession(agentSessionId, fleetSession.id)
-          } catch (error) {
-            await deleteTaskforceFleetSession(fleetSession.id)
-            throw error
-          }
-        }
-        return fleetSession
-      }),
+    mutationFn: () => createTaskforceFleetSession(),
     onSuccess: () => {
       setMutationError(null)
       refreshFleet()
@@ -606,34 +273,42 @@ export function FleetPage() {
   })
   const deleteMutation = useMutation({
     mutationFn: deleteTaskforceFleetSession,
-    onSuccess: () => {
-      setDetail(null)
-      refreshFleet()
-    },
+    onSuccess: refreshFleet,
     onError: setMutationError,
   })
 
   const fleetSessions = fleetQuery.data?.fleet_sessions ?? []
-  const activeSessionCount = fleetSessions.length
-  const activeAgentCount = fleetSessions.reduce(
-    (total, fleet) => total + fleet.agents.length,
-    0,
-  )
-  const runningAgentCount = fleetSessions.reduce(
-    (total, fleet) =>
-      total + fleet.agents.filter((agent) => agent.minutes_ago < 5).length,
-    0,
-  )
+  const allAgents = fleetSessions.flatMap((fleet) => fleet.agents)
+  const running = runningCount(allAgents)
+  const waiting = waitingCount(allAgents)
 
-  const moveAgent = (agent: TaskforceFleetAgent, fleetSessionId: string) => {
+  const summaryBits = [`${running} running`]
+  if (waiting) summaryBits.push(`${waiting} waiting for input`)
+
+  const openAgent = (agent: TaskforceFleetAgent) =>
+    navigate({
+      to: "/v2/fleet/$sessionId",
+      params: { sessionId: agent.session_id },
+    })
+
+  const renameFleet = (fleet: TaskforceFleetSession, name: string) => {
     setMutationError(null)
-    assignMutation.mutate({ sessionId: agent.session_id, fleetSessionId })
+    renameMutation.mutate({ fleet, name })
+  }
+  const deleteFleet = (fleet: TaskforceFleetSession) => {
+    if (
+      window.confirm(`Delete "${fleetTitle(fleet)}"? Its agents will detach.`)
+    ) {
+      setMutationError(null)
+      deleteMutation.mutate(fleet.id)
+    }
   }
 
   return (
     <section
       className={cn(
         V2_PAGE_FRAME,
+        styles.page,
         "-mb-6 bg-background font-sans text-foreground md:-mb-8",
       )}
     >
@@ -641,57 +316,49 @@ export function FleetPage() {
         <div
           className={cn(
             V2_STICKY_HEADER_CLASS,
-            "flex flex-col gap-6 border-b-0 pb-0",
+            "flex flex-col gap-1 border-b-0 pb-4",
           )}
         >
-          <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <header className="flex items-start justify-between gap-4">
             <div>
-              <p className={V2_TAB_EYEBROW_CLASS}>
-                {activeSessionCount} active session
-                {activeSessionCount === 1 ? "" : "s"} · {activeAgentCount}{" "}
-                active agent{activeAgentCount === 1 ? "" : "s"}
+              <h1 className="text-2xl font-semibold tracking-tight">Fleet</h1>
+              <p className={styles.summaryLine}>
+                <span className={styles.lead}>
+                  {allAgents.length}{" "}
+                  {allAgents.length === 1 ? "agent" : "agents"}
+                </span>{" "}
+                · {summaryBits.join(" · ")} · {fleetSessions.length}{" "}
+                {fleetSessions.length === 1 ? "fleet" : "fleets"}
               </p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-                Fleet
-              </h1>
             </div>
             <Button
-              className="w-fit"
+              variant="outline"
+              className="w-fit shrink-0"
+              disabled={createMutation.isPending}
               onClick={() => {
                 setMutationError(null)
-                createMutation.mutate({})
+                createMutation.mutate()
               }}
-              disabled={createMutation.isPending}
             >
               <Plus />
-              {createMutation.isPending ? "Creating…" : "New session"}
+              New fleet
             </Button>
           </header>
-          <div className={cn(styles.overview, "border-y border-border")}>
-            <div className={styles.overviewSummary}>
-              <strong>{activeSessionCount}</strong>{" "}
-              {activeSessionCount === 1 ? "session" : "sessions"} ·{" "}
-              <strong>{activeAgentCount}</strong>{" "}
-              {activeAgentCount === 1 ? "instance" : "instances"} ·{" "}
-              <strong>{runningAgentCount}</strong> running
-            </div>
-            <div className={styles.liveLabel}>Live activity</div>
-          </div>
         </div>
 
-        <div className={styles.pageBody}>
+        <div className="flex min-h-0 flex-col pt-6">
           {Boolean(mutationError) && (
-            <div className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            <div className="mb-4 border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {errorMessage(mutationError)}
             </div>
           )}
 
           {fleetQuery.isLoading ? (
-            <div className={styles.sessionList}>
+            <div className={styles.fleetList}>
               {[0, 1, 2].map((item) => (
                 <div
                   key={item}
-                  className="h-48 animate-pulse border bg-muted/30"
+                  className="h-40 animate-pulse border border-border bg-muted/20"
                 />
               ))}
             </div>
@@ -712,7 +379,7 @@ export function FleetPage() {
               </Button>
             </div>
           ) : fleetSessions.length === 0 ? (
-            <div className="flex flex-col items-start gap-4 border bg-card p-6">
+            <div className="flex flex-col items-start gap-4 border border-border bg-card p-6">
               <div>
                 <h2 className="font-medium text-foreground">
                   Connect a terminal to start capturing work
@@ -730,52 +397,20 @@ export function FleetPage() {
               </Button>
             </div>
           ) : (
-            <div className={styles.sessionList}>
+            <div className={styles.fleetList}>
               {fleetSessions.map((fleet) => (
-                <FleetBox
+                <FleetCard
                   key={fleet.id}
                   fleet={fleet}
-                  allFleetSessions={fleetSessions}
-                  isMoving={assignMutation.isPending}
-                  onMove={moveAgent}
-                  onCreateSession={(selectedAgent) => {
-                    setMutationError(null)
-                    createMutation.mutate({
-                      agentSessionId: selectedAgent.session_id,
-                    })
-                  }}
-                  onOpenAgent={(agent) => setDetail({ kind: "agent", agent })}
-                  onOpenFleet={(selectedFleet) =>
-                    setDetail({ kind: "fleet", fleet: selectedFleet })
-                  }
-                  onRename={(selectedFleet, name) => {
-                    setMutationError(null)
-                    renameMutation.mutate({ fleet: selectedFleet, name })
-                  }}
-                  onDelete={(selectedFleet) => {
-                    if (
-                      window.confirm(
-                        `Delete "${selectedFleet.name}"? Its agents will move to the default session.`,
-                      )
-                    ) {
-                      setMutationError(null)
-                      deleteMutation.mutate(selectedFleet.id)
-                    }
-                  }}
+                  onOpenAgent={openAgent}
+                  onRename={renameFleet}
+                  onDelete={deleteFleet}
                 />
               ))}
             </div>
           )}
         </div>
       </div>
-
-      <Sheet
-        open={detail !== null}
-        onOpenChange={(open) => !open && setDetail(null)}
-      >
-        {detail?.kind === "agent" && <AgentDetail agent={detail.agent} />}
-        {detail?.kind === "fleet" && <FleetDetail fleet={detail.fleet} />}
-      </Sheet>
     </section>
   )
 }

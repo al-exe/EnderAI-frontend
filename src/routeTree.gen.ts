@@ -40,6 +40,7 @@ import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as V2MetricsMethodologyRouteImport } from './routes/v2/metrics.methodology'
 import { Route as V2LibraryDocumentIdRouteImport } from './routes/v2/library.$documentId'
+import { Route as V2FleetSessionIdRouteImport } from './routes/v2/fleet.$sessionId'
 import { Route as V2AgentsSlugRouteImport } from './routes/v2/agents.$slug'
 
 const V2Route = V2RouteImport.update({
@@ -196,6 +197,11 @@ const V2LibraryDocumentIdRoute = V2LibraryDocumentIdRouteImport.update({
   path: '/$documentId',
   getParentRoute: () => V2LibraryRoute,
 } as any)
+const V2FleetSessionIdRoute = V2FleetSessionIdRouteImport.update({
+  id: '/$sessionId',
+  path: '/$sessionId',
+  getParentRoute: () => V2FleetRoute,
+} as any)
 const V2AgentsSlugRoute = V2AgentsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -221,7 +227,7 @@ export interface FileRoutesByFullPath {
   '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
-  '/v2/fleet': typeof V2FleetRoute
+  '/v2/fleet': typeof V2FleetRouteWithChildren
   '/v2/home': typeof V2HomeRoute
   '/v2/ledger': typeof V2LedgerRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/docs/': typeof DocsIndexRoute
   '/v2/': typeof V2IndexRoute
   '/v2/agents/$slug': typeof V2AgentsSlugRoute
+  '/v2/fleet/$sessionId': typeof V2FleetSessionIdRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
 }
@@ -252,7 +259,7 @@ export interface FileRoutesByTo {
   '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
-  '/v2/fleet': typeof V2FleetRoute
+  '/v2/fleet': typeof V2FleetRouteWithChildren
   '/v2/home': typeof V2HomeRoute
   '/v2/ledger': typeof V2LedgerRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsIndexRoute
   '/v2': typeof V2IndexRoute
   '/v2/agents/$slug': typeof V2AgentsSlugRoute
+  '/v2/fleet/$sessionId': typeof V2FleetSessionIdRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
 }
@@ -287,7 +295,7 @@ export interface FileRoutesById {
   '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
-  '/v2/fleet': typeof V2FleetRoute
+  '/v2/fleet': typeof V2FleetRouteWithChildren
   '/v2/home': typeof V2HomeRoute
   '/v2/ledger': typeof V2LedgerRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/docs/': typeof DocsIndexRoute
   '/v2/': typeof V2IndexRoute
   '/v2/agents/$slug': typeof V2AgentsSlugRoute
+  '/v2/fleet/$sessionId': typeof V2FleetSessionIdRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
 }
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/docs/'
     | '/v2/'
     | '/v2/agents/$slug'
+    | '/v2/fleet/$sessionId'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
   fileRoutesByTo: FileRoutesByTo
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/v2'
     | '/v2/agents/$slug'
+    | '/v2/fleet/$sessionId'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
   id:
@@ -398,6 +409,7 @@ export interface FileRouteTypes {
     | '/docs/'
     | '/v2/'
     | '/v2/agents/$slug'
+    | '/v2/fleet/$sessionId'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
   fileRoutesById: FileRoutesById
@@ -634,6 +646,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof V2LibraryDocumentIdRouteImport
       parentRoute: typeof V2LibraryRoute
     }
+    '/v2/fleet/$sessionId': {
+      id: '/v2/fleet/$sessionId'
+      path: '/$sessionId'
+      fullPath: '/v2/fleet/$sessionId'
+      preLoaderRoute: typeof V2FleetSessionIdRouteImport
+      parentRoute: typeof V2FleetRoute
+    }
     '/v2/agents/$slug': {
       id: '/v2/agents/$slug'
       path: '/$slug'
@@ -689,6 +708,17 @@ const V2AgentsRouteWithChildren = V2AgentsRoute._addFileChildren(
   V2AgentsRouteChildren,
 )
 
+interface V2FleetRouteChildren {
+  V2FleetSessionIdRoute: typeof V2FleetSessionIdRoute
+}
+
+const V2FleetRouteChildren: V2FleetRouteChildren = {
+  V2FleetSessionIdRoute: V2FleetSessionIdRoute,
+}
+
+const V2FleetRouteWithChildren =
+  V2FleetRoute._addFileChildren(V2FleetRouteChildren)
+
 interface V2LibraryRouteChildren {
   V2LibraryDocumentIdRoute: typeof V2LibraryDocumentIdRoute
 }
@@ -716,7 +746,7 @@ const V2MetricsRouteWithChildren = V2MetricsRoute._addFileChildren(
 interface V2RouteChildren {
   V2AdminRoute: typeof V2AdminRoute
   V2AgentsRoute: typeof V2AgentsRouteWithChildren
-  V2FleetRoute: typeof V2FleetRoute
+  V2FleetRoute: typeof V2FleetRouteWithChildren
   V2HomeRoute: typeof V2HomeRoute
   V2LedgerRoute: typeof V2LedgerRoute
   V2LibraryRoute: typeof V2LibraryRouteWithChildren
@@ -730,7 +760,7 @@ interface V2RouteChildren {
 const V2RouteChildren: V2RouteChildren = {
   V2AdminRoute: V2AdminRoute,
   V2AgentsRoute: V2AgentsRouteWithChildren,
-  V2FleetRoute: V2FleetRoute,
+  V2FleetRoute: V2FleetRouteWithChildren,
   V2HomeRoute: V2HomeRoute,
   V2LedgerRoute: V2LedgerRoute,
   V2LibraryRoute: V2LibraryRouteWithChildren,
