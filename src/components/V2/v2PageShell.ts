@@ -31,7 +31,7 @@ export const V2_PAGE_CONTENT_FIXED = cn(
 
 /** Tab page meta line (e.g. "7d · personal") — page title lives in the h1 below. */
 export const V2_TAB_EYEBROW_CLASS =
-  "font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground"
+  "font-mono text-xs tracking-[0.01em] text-muted-foreground"
 
 /** Sticky page header inside a padded scroll area (offsets `p-6` padding). */
 export const V2_STICKY_HEADER_CLASS = cn(

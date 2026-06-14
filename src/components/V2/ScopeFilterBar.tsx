@@ -34,7 +34,7 @@ export function ScopeFilterBar<TKey extends string>({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-stretch border-y border-border font-mono text-[11px] uppercase tracking-[0.1em]",
+        "flex flex-wrap items-stretch border-y border-border font-mono text-[11px] tracking-[0.01em]",
         className,
       )}
     >

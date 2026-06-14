@@ -34,7 +34,7 @@ export const AGENT_ROUTE_CHIP_CLASS =
 export const AGENT_DESCRIPTION_CLASS = "text-sm leading-5 text-muted-foreground"
 
 export const AGENT_STAT_LABEL_CLASS =
-  "text-xs uppercase tracking-wide text-muted-foreground"
+  "text-xs tracking-[0.01em] text-muted-foreground"
 
 export const AGENT_STAT_VALUE_CLASS =
   "text-sm font-semibold tabular-nums text-foreground"
@@ -44,7 +44,7 @@ export const AGENT_SECTION_TITLE_CLASS = "text-sm font-semibold text-foreground"
 export const AGENT_SECTION_META_CLASS = "text-xs text-muted-foreground"
 
 export const AGENT_TABLE_HEADER_CLASS =
-  "text-xs uppercase tracking-wide text-muted-foreground"
+  "text-xs tracking-[0.01em] text-muted-foreground"
 
 export const AGENT_FEATURE_STRIP_VALUE_CLASS =
   "text-2xl font-semibold tabular-nums text-foreground"

@@ -660,7 +660,7 @@ export function TaskforcePlaceholder({
   return (
     <section className="flex min-h-0 flex-1 items-start">
       <div className="w-full max-w-3xl border-l border-border pl-5">
-        <p className="mb-3 text-xs font-medium uppercase text-muted-foreground">
+        <p className="mb-3 text-xs font-medium text-muted-foreground">
           {eyebrow}
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>

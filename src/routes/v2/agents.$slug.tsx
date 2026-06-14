@@ -164,7 +164,7 @@ function Instructions({ instructions }: { instructions: string[] }) {
         meta={`${instructions.length} rules`}
       />
       <div className="mt-3 border border-black/10 bg-zinc-50 dark:border-white/12 dark:bg-white/5">
-        <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 text-xs uppercase tracking-wide text-zinc-400 dark:border-white/12 dark:text-zinc-500">
+        <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 text-xs tracking-[0.01em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
           <span>system prompt</span>
           <span className="text-[#8447ff]">live</span>
         </div>
@@ -182,7 +182,7 @@ function Instructions({ instructions }: { instructions: string[] }) {
           type="button"
           onClick={() => setExpanded((value) => !value)}
           aria-expanded={expanded}
-          className="flex w-full items-center justify-between border-t border-black/10 px-3 py-2 text-xs uppercase tracking-wide text-[#8447ff] transition-colors hover:bg-[#8447ff]/5 dark:border-white/12"
+          className="flex w-full items-center justify-between border-t border-black/10 px-3 py-2 text-xs tracking-[0.01em] text-[#8447ff] transition-colors hover:bg-[#8447ff]/5 dark:border-white/12"
         >
           <span>{expanded ? "Collapse" : "Expand"}</span>
           {expanded ? (
@@ -207,7 +207,7 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
       <div className="mt-2 overflow-x-auto">
         <table className="w-full min-w-[42rem] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-xs uppercase tracking-wide text-zinc-400 dark:border-white/12 dark:text-zinc-500">
+            <tr className="border-b border-black/10 text-xs tracking-[0.01em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
               <th className="py-2 pr-3 text-left font-medium">Session</th>
               <th className="px-3 text-left font-medium">Repo</th>
               <th className="px-3 text-right font-medium">Saved</th>
@@ -260,7 +260,7 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
       <div className="mt-2 overflow-x-auto">
         <table className="w-full min-w-[42rem] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-xs uppercase tracking-wide text-zinc-400 dark:border-white/12 dark:text-zinc-500">
+            <tr className="border-b border-black/10 text-xs tracking-[0.01em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
               <th className="py-2 pr-3 text-left font-medium">Document</th>
               <th className="px-3 text-left font-medium">Anchor</th>
               <th className="py-2 px-3 text-right font-medium">Reason</th>
@@ -311,7 +311,7 @@ function RecentInvocations({ agent }: { agent: AgentSpecialistDetail }) {
       <div className="mt-2 overflow-x-auto">
         <table className="w-full min-w-[38rem] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-xs uppercase tracking-wide text-zinc-400 dark:border-white/12 dark:text-zinc-500">
+            <tr className="border-b border-black/10 text-xs tracking-[0.01em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
               <th className="py-2 pr-3 text-left font-medium">Query</th>
               <th className="px-3 text-left font-medium">Repo</th>
               <th className="px-3 text-right font-medium">Saved</th>
