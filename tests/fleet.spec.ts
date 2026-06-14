@@ -38,7 +38,7 @@ async function mockFleet(page: Page) {
         status: 201,
         json: {
           id: "fleet-2",
-          name: "Session 2",
+          name: "",
           created_at: "2026-06-12T10:30:00Z",
           updated_at: "2026-06-12T10:30:00Z",
           agents: [],
@@ -52,7 +52,7 @@ async function mockFleet(page: Page) {
         fleet_sessions: [
           {
             id: "fleet-1",
-            name: "Session 1",
+            name: "stripe-checkout",
             created_at: "2026-06-12T10:00:00Z",
             updated_at: "2026-06-12T10:20:00Z",
             agents: [
@@ -78,30 +78,84 @@ async function mockFleet(page: Page) {
       },
     })
   })
+
+  await page.route("**/api/v1/v2/taskforce/session-log**", async (route) => {
+    await route.fulfill({
+      json: {
+        session_id: "session-1",
+        entries: [
+          {
+            document_id: "doc-1",
+            title: "Stripe checkout wiring",
+            score: 0.9,
+            confidence_band: "high",
+            match_reasons: [],
+            summary_markdown: "Automatic tax wiring",
+            occurred_at: "2026-06-12T10:18:00Z",
+            query_id: "q-1",
+            net_saved_tokens: 1200,
+          },
+        ],
+      },
+    })
+  })
+
+  await page.route("**/api/v1/v2/documents/**", async (route) => {
+    await route.fulfill({
+      json: {
+        id: "doc-2",
+        title: "Payments — error taxonomy",
+        content_markdown: "",
+      },
+    })
+  })
 }
 
-test("Fleet renders live API data in the clean session layout", async ({
-  page,
-}) => {
+test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await mockFleet(page)
   await page.goto("/v2/fleet")
 
   await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
-  await expect(page.getByRole("heading", { name: "Session 1" })).toBeVisible()
+  await expect(page.getByText("stripe-checkout")).toBeVisible()
   await expect(page.getByText("Opus 4.8")).toBeVisible()
   await expect(
     page.getByText("Wiring automatic tax onto the subscription create path"),
   ).toBeVisible()
-  await expect(page.getByText("Stripe checkout wiring")).toBeVisible()
-  await expect(
-    page.getByText("1 session · 1 instance · 1 running"),
-  ).toBeVisible()
+  // Calm summary line — agents · running · fleets, no spend/token metrics.
+  await expect(page.getByText("1 agent · 1 running · 1 fleet")).toBeVisible()
 
+  // The rejected metrics direction must not reappear.
+  await expect(page.getByText(/tokens/i)).toHaveCount(0)
+  await expect(page.getByText(/saved by reuse/i)).toHaveCount(0)
+
+  // New fleet creates a nameless fleet (no request body).
   const createRequest = page.waitForRequest(
     (request) =>
       request.url().endsWith("/api/v1/v2/taskforce/fleet") &&
       request.method() === "POST",
   )
-  await page.getByRole("button", { name: "New session" }).click()
+  await page.getByRole("button", { name: "New fleet" }).click()
   expect((await createRequest).postDataJSON()).toEqual({})
+})
+
+test("clicking an agent row opens the session detail and back returns", async ({
+  page,
+}) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+
+  await page.getByText("Stripe checkout wiring").first().click()
+
+  await expect(page).toHaveURL(/\/v2\/fleet\/session-1$/)
+  await expect(
+    page.getByRole("heading", { name: "Stripe checkout wiring" }),
+  ).toBeVisible()
+  await expect(page.getByText("Working on")).toBeVisible()
+  await expect(page.getByText("Activity")).toBeVisible()
+  await expect(page.getByText("Session", { exact: true })).toBeVisible()
+
+  // Breadcrumb returns to the roster.
+  await page.getByRole("link", { name: "Fleet" }).first().click()
+  await expect(page).toHaveURL(/\/v2\/fleet$/)
+  await expect(page.getByText("stripe-checkout")).toBeVisible()
 })
