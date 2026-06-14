@@ -5,15 +5,10 @@ import type {
 
 /**
  * Calm-roster status model from the Claude Design "Fleet Mission Control"
- * handoff. The design surfaces four states; today the backend only lets us
- * distinguish `run` vs `idle` from `minutes_ago`, so `waiting`/`paused` are
- * typed-but-degraded until TF-245 (backend enrichment) lands an explicit
- * status/capture field on the agent payload.
+ * handoff. The API spells the active state `running`; this presentation model
+ * keeps the shorter `run` key used by the CSS module.
  */
 export type FleetStatus = "run" | "waiting" | "paused" | "idle"
-
-/** Minutes within which an agent counts as actively running. */
-const RUNNING_WINDOW_MINUTES = 5
 
 /** Quiet word shown next to a non-running status dot. */
 export const STATE_LABEL: Record<FleetStatus, string> = {
@@ -23,61 +18,56 @@ export const STATE_LABEL: Record<FleetStatus, string> = {
   idle: "idle",
 }
 
-// Optional richer fields the backend does not expose yet (TF-245). Read
-// defensively so the UI lights up automatically once the contract grows.
-type EnrichedAgent = TaskforceFleetAgent & {
-  status?: FleetStatus
+// Ingestion does not capture these fields yet. Keep the accessors defensive so
+// the detail route can adopt them without fabricating data in the API.
+type FutureAgentFields = TaskforceFleetAgent & {
   question?: string | null
   capture?: "on" | "paused"
   pause_reason?: string | null
   host?: string | null
-  started_at?: string | null
   files?: { name: string; state: "new" | "modified" }[]
   specialist_name?: string | null
-  specialist_rule_count?: number | null
 }
 
 export function agentStatus(agent: TaskforceFleetAgent): FleetStatus {
-  const explicit = (agent as EnrichedAgent).status
-  if (explicit) return explicit
-  return agent.minutes_ago < RUNNING_WINDOW_MINUTES ? "run" : "idle"
+  return agent.status === "running" ? "run" : agent.status
 }
 
 export function isRunning(agent: TaskforceFleetAgent): boolean {
   return agentStatus(agent) === "run"
 }
 
-/** Backend-enrichment accessors — return undefined/null while degraded. */
+/** Future enrichment accessors return empty values while ingestion is absent. */
 export function agentQuestion(agent: TaskforceFleetAgent): string | null {
-  return (agent as EnrichedAgent).question ?? null
+  return (agent as FutureAgentFields).question ?? null
 }
 
 export function agentCapturePaused(agent: TaskforceFleetAgent): boolean {
-  return (agent as EnrichedAgent).capture === "paused"
+  return (agent as FutureAgentFields).capture === "paused"
 }
 
 export function agentPauseReason(agent: TaskforceFleetAgent): string | null {
-  return (agent as EnrichedAgent).pause_reason ?? null
+  return (agent as FutureAgentFields).pause_reason ?? null
 }
 
 export function agentStartedAt(agent: TaskforceFleetAgent): string | null {
-  return (agent as EnrichedAgent).started_at ?? null
+  return agent.started_at
 }
 
 export function agentFiles(
   agent: TaskforceFleetAgent,
 ): { name: string; state: "new" | "modified" }[] {
-  return (agent as EnrichedAgent).files ?? []
+  return (agent as FutureAgentFields).files ?? []
 }
 
 export function agentSpecialistName(agent: TaskforceFleetAgent): string | null {
-  return (agent as EnrichedAgent).specialist_name ?? null
+  return (agent as FutureAgentFields).specialist_name ?? null
 }
 
 export function agentSpecialistRuleCount(
   agent: TaskforceFleetAgent,
 ): number | null {
-  return (agent as EnrichedAgent).specialist_rule_count ?? null
+  return agent.specialist_rule_count
 }
 
 // Turn a raw harness model id into a human label, e.g.
@@ -96,9 +86,9 @@ export function repoLabel(agent: TaskforceFleetAgent): string {
   return agent.repo || cwdParts[cwdParts.length - 1] || "Unknown repo"
 }
 
-/** Machine label, e.g. "mbp-16". Degrades to null until TF-245. */
+/** Machine label, e.g. "mbp-16". Not captured by ingestion yet. */
 export function hostLabel(agent: TaskforceFleetAgent): string | null {
-  return (agent as EnrichedAgent).host ?? null
+  return (agent as FutureAgentFields).host ?? null
 }
 
 // Heading shown for an agent. Once Taskforce has captured a document the
@@ -112,7 +102,7 @@ export function agentModelName(agent: TaskforceFleetAgent): string {
   return modelLabel(agent.model_id) || "Connected agent"
 }
 
-/** Mono identity meta — "Opus 4.8 · mbp-16", host omitted while degraded. */
+/** Mono identity meta — "Opus 4.8 · mbp-16", host omitted when unavailable. */
 export function agentMeta(agent: TaskforceFleetAgent): string {
   return [agentModelName(agent), hostLabel(agent)].filter(Boolean).join(" · ")
 }

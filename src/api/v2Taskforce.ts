@@ -42,7 +42,10 @@ export interface TaskforceFleetAgent {
   summary_markdown: string
   last_seen_at: string
   minutes_ago: number
+  status: "running" | "waiting" | "paused" | "idle"
+  started_at: string | null
   specialist_slug: string | null
+  specialist_rule_count: number | null
   model_id: string | null
 }
 

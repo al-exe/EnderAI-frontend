@@ -68,8 +68,11 @@ async function mockFleet(page: Page) {
                 summary_markdown:
                   "Wiring automatic tax onto the subscription create path",
                 last_seen_at: "2026-06-12T10:20:00Z",
-                minutes_ago: 1,
+                minutes_ago: 10,
+                status: "running",
+                started_at: "2026-06-12T09:42:00Z",
                 specialist_slug: "billing",
+                specialist_rule_count: 4,
                 model_id: "claude-opus-4-8",
               },
             ],
@@ -116,8 +119,9 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await page.goto("/v2/fleet")
 
   await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
-  await expect(page.getByText("stripe-checkout")).toBeVisible()
+  await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
   await expect(page.getByText("Opus 4.8")).toBeVisible()
+  await expect(page.getByText("10m")).toBeVisible()
   await expect(
     page.getByText("Wiring automatic tax onto the subscription create path"),
   ).toBeVisible()
@@ -152,10 +156,12 @@ test("clicking an agent row opens the session detail and back returns", async ({
   ).toBeVisible()
   await expect(page.getByText("Working on")).toBeVisible()
   await expect(page.getByText("Activity")).toBeVisible()
-  await expect(page.getByText("Session", { exact: true })).toBeVisible()
+  await expect(page.getByText("Session", { exact: true }).first()).toBeVisible()
+  await expect(page.getByText("4 conventions applied")).toBeVisible()
+  await expect(page.getByText("Started")).toBeVisible()
 
   // Breadcrumb returns to the roster.
   await page.getByRole("link", { name: "Fleet" }).first().click()
   await expect(page).toHaveURL(/\/v2\/fleet$/)
-  await expect(page.getByText("stripe-checkout")).toBeVisible()
+  await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
