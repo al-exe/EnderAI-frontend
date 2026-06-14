@@ -5,16 +5,20 @@
 
 .page,
 .detail {
-  --fl-surface: var(--card);
+  --fl-surface: color-mix(in srgb, var(--card) 94%, var(--muted));
   --fl-faint: color-mix(
     in srgb,
-    var(--muted-foreground) 70%,
-    var(--background)
+    var(--muted-foreground) 88%,
+    var(--foreground)
   );
-  --fl-hair: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  --fl-hair: color-mix(in srgb, var(--foreground) 12%, var(--background));
   --fl-primary-soft: color-mix(in srgb, var(--primary) 14%, var(--background));
   --fl-primary-line: color-mix(in srgb, var(--primary) 40%, var(--border));
-  --fl-attention: oklch(0.72 0.09 62);
+  --fl-attention: color-mix(
+    in oklab,
+    oklch(0.68 0.12 62) 72%,
+    var(--foreground)
+  );
 }
 
 /* ===== Roster header ===== */
@@ -22,7 +26,7 @@
   margin: 2px 0 0;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11.5px;
   letter-spacing: 0.01em;
 }
 
@@ -56,9 +60,12 @@
 }
 
 .fname {
+  overflow: hidden;
+  min-width: 0;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -94,8 +101,8 @@
   gap: 6px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
@@ -297,6 +304,13 @@
 .newagent svg {
   width: 13px;
   height: 13px;
+  flex-shrink: 0;
+}
+
+.newagent span {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 
 .newagent:hover {
@@ -336,6 +350,7 @@
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.02em;
+  min-width: 0;
 }
 
 .back {
@@ -362,6 +377,11 @@
   white-space: nowrap;
 }
 
+.crumb > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .dhead {
   display: flex;
   align-items: flex-start;
@@ -385,11 +405,14 @@
 }
 
 .dmeta {
+  overflow: hidden;
   margin-top: 7px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
   font-size: 11.5px;
   letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dmeta b {
@@ -602,9 +625,11 @@
 }
 
 .mv {
+  overflow: hidden;
   color: var(--muted-foreground);
   text-align: left;
-  word-break: break-word;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .capPaused {
@@ -837,9 +862,15 @@
 
 /* ===== responsive ===== */
 @media (max-width: 880px) {
+  .detail {
+    overflow-y: auto;
+  }
+
   .dbody {
     display: block;
+    flex: none;
     grid-template-columns: 1fr;
+    min-height: auto;
   }
 
   .dmain,
@@ -851,26 +882,61 @@
   .drail {
     border-top: 1px solid var(--fl-hair);
   }
+
+  .dhead {
+    flex-wrap: wrap;
+  }
+
+  .dactions {
+    width: 100%;
+    margin-left: 21px;
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 760px) {
-  .arow {
-    grid-template-columns: 14px 1fr;
-    gap: 12px;
+  .fhead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 7px 10px;
   }
 
-  .arow .work,
-  .arow .age {
-    grid-column: 2;
+  .frepo {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .fcount,
+  .fmenu {
+    margin-left: 0;
+  }
+
+  .arow {
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .arow .work {
+    grid-row: 2;
+    grid-column: 2 / -1;
     text-align: left;
   }
 
   .arow .age {
-    margin-top: 8px;
+    grid-row: 1;
+    grid-column: 3;
+    margin-top: 0;
   }
 
-  .dhead {
-    flex-wrap: wrap;
+  .dmain,
+  .drail {
+    padding: 24px 0 48px;
+  }
+
+  .dactions {
+    margin-left: 0;
   }
 }
 

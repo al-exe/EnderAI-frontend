@@ -55,6 +55,7 @@ const STATE_CLASS: Record<FleetStatus, string | undefined> = {
 function StatusDot({ status }: { status: FleetStatus }) {
   return (
     <span
+      data-testid="fleet-status-dot"
       className={cn(
         styles.sdot,
         styles[status],
@@ -77,7 +78,12 @@ function AgentRow({
   const docTitle = agent.active_document_id ? agent.title : null
 
   return (
-    <button type="button" className={styles.arow} onClick={() => onOpen(agent)}>
+    <button
+      type="button"
+      data-testid="fleet-agent-row"
+      className={styles.arow}
+      onClick={() => onOpen(agent)}
+    >
       <StatusDot status={status} />
       <div className={styles.who}>
         <div className={styles.nm}>{agentDisplayName(agent)}</div>
@@ -232,7 +238,7 @@ function FleetCard({
         className={styles.newagent}
       >
         <Plus />
-        New agent in {fleetTitle(fleet)}
+        <span>New agent in {fleetTitle(fleet)}</span>
       </Link>
     </section>
   )

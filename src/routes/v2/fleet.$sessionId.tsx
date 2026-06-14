@@ -67,7 +67,9 @@ function metaRow(key: string, value: string, valueClass?: string) {
   return (
     <div className={styles.metarow} key={key}>
       <span className={styles.mk}>{key}</span>
-      <span className={cn(styles.mv, valueClass)}>{value}</span>
+      <span className={cn(styles.mv, valueClass)} title={value}>
+        {value}
+      </span>
     </div>
   )
 }
@@ -139,7 +141,9 @@ function FleetAgentDetailRoute() {
     }
   })
 
-  const dmetaBits = [model, host, agent.branch].filter(Boolean)
+  const dmetaBits = [model, host, agent.branch].filter((bit): bit is string =>
+    Boolean(bit),
+  )
 
   // Activity timeline — newest-first. The live "now" step sits on top, with
   // each captured document descending below it (from the session log).
@@ -152,7 +156,7 @@ function FleetAgentDetailRoute() {
     }))
 
   return (
-    <div className={styles.detail}>
+    <div className={styles.detail} data-testid="fleet-agent-detail">
       <div className={styles.dtop}>
         <div className={styles.crumb}>
           <Link to="/v2/fleet" className={styles.back}>
@@ -165,6 +169,7 @@ function FleetAgentDetailRoute() {
 
         <div className={styles.dhead}>
           <span
+            data-testid="fleet-status-dot"
             className={cn(
               styles.sdot,
               styles[status],
@@ -175,9 +180,12 @@ function FleetAgentDetailRoute() {
             <h1>{agentDisplayName(agent)}</h1>
             {dmetaBits.length > 0 && (
               <div className={styles.dmeta}>
-                <b>{dmetaBits[0]}</b>
+                <b title={dmetaBits[0]}>{dmetaBits[0]}</b>
                 {dmetaBits.slice(1).map((bit) => (
-                  <span key={bit}> · {bit}</span>
+                  <span key={bit} title={bit}>
+                    {" "}
+                    · {bit}
+                  </span>
                 ))}
               </div>
             )}
@@ -213,7 +221,7 @@ function FleetAgentDetailRoute() {
         </div>
       </div>
 
-      <div className={styles.dbody}>
+      <div className={styles.dbody} data-testid="fleet-detail-body">
         <div className={styles.dmain}>
           {/* Working on — a waiting agent surfaces its question + reply box. */}
           {status === "waiting" && question ? (
@@ -289,7 +297,7 @@ function FleetAgentDetailRoute() {
           </div>
         </div>
 
-        <div className={styles.drail}>
+        <div className={styles.drail} data-testid="fleet-detail-rail">
           {/* Pause note — surfaces above everything when capture is paused. */}
           {capturePaused && pauseReason && (
             <div className={styles.block}>
