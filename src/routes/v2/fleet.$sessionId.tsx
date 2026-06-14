@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQueries, useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { BookOpen, ChevronLeft, ScrollText } from "lucide-react"
+import { readV2Document } from "@/api/v2Documents"
 import {
   readTaskforceFleet,
   readTaskforceSessionLog,
@@ -10,9 +11,14 @@ import {
 import { Button } from "@/components/ui/button"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
 import {
+  agentCapturePaused,
   agentDisplayName,
+  agentFiles,
+  agentPauseReason,
   agentQuestion,
   agentSpecialistName,
+  agentSpecialistRuleCount,
+  agentStartedAt,
   agentStatus,
   compactPresence,
   type FleetStatus,
@@ -80,6 +86,15 @@ function FleetAgentDetailRoute() {
 
   const located = locateAgent(fleetQuery.data, sessionId)
 
+  // Resolve referenced-document titles for the "Context in use" rail block.
+  const referencedIds = located?.agent.referenced_document_ids ?? []
+  const contextQueries = useQueries({
+    queries: referencedIds.map((documentId) => ({
+      queryKey: ["v2-document", { documentId }],
+      queryFn: () => readV2Document(documentId),
+    })),
+  })
+
   if (fleetQuery.isLoading) {
     return (
       <div className={cn(styles.detail, "items-center justify-center")}>
@@ -109,8 +124,20 @@ function FleetAgentDetailRoute() {
   const model = modelLabel(agent.model_id)
   const host = hostLabel(agent)
   const specialist = agentSpecialistName(agent) ?? agent.specialist_slug
-  const referencedCount = agent.referenced_document_ids.length
+  const ruleCount = agentSpecialistRuleCount(agent)
   const question = agentQuestion(agent)
+  const capturePaused = agentCapturePaused(agent)
+  const pauseReason = agentPauseReason(agent)
+  const startedAt = agentStartedAt(agent)
+  const files = agentFiles(agent)
+
+  const contextItems = referencedIds.map((id, index) => {
+    const query = contextQueries[index]
+    return {
+      id,
+      label: query?.data?.title || (query?.isLoading ? "Loading…" : id),
+    }
+  })
 
   const dmetaBits = [model, host, agent.branch].filter(Boolean)
 
@@ -263,6 +290,17 @@ function FleetAgentDetailRoute() {
         </div>
 
         <div className={styles.drail}>
+          {/* Pause note — surfaces above everything when capture is paused. */}
+          {capturePaused && pauseReason && (
+            <div className={styles.block}>
+              <div className={styles.pauserail}>
+                <div className={styles.prH}>Capture paused</div>
+                <div className={styles.prB}>{pauseReason}</div>
+                <span className={styles.prAct}>Resume capture</span>
+              </div>
+            </div>
+          )}
+
           {/* Profile in use — degrades to specialist slug until TF-245. */}
           {specialist && (
             <div className={styles.block}>
@@ -277,6 +315,11 @@ function FleetAgentDetailRoute() {
                     <div className={styles.pfSub}>specialist</div>
                   </div>
                 </div>
+                {ruleCount != null && ruleCount > 0 && (
+                  <div className={styles.pfMeta}>
+                    {ruleCount} conventions applied
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -289,24 +332,47 @@ function FleetAgentDetailRoute() {
             {(host || agent.repo) &&
               metaRow("Host", host ?? (agent.repo as string))}
             {model && metaRow("Model", model)}
+            {startedAt && metaRow("Started", formatClockTime(startedAt))}
+            {metaRow(
+              "Capture",
+              capturePaused ? "paused" : "on",
+              capturePaused ? styles.capPaused : undefined,
+            )}
             {metaRow("Session", agent.session_id)}
           </div>
 
-          {/* Context in use — title resolution is TF-243. */}
-          {referencedCount > 0 && (
+          {/* Context in use — resolved referenced-document titles. */}
+          {contextItems.length > 0 && (
             <div className={styles.block}>
               <div className={styles.seclabel}>Context in use</div>
-              <div className={styles.ctxitem}>
-                {referencedCount} referenced{" "}
-                {referencedCount === 1 ? "document" : "documents"}
-              </div>
+              {contextItems.map((item) => (
+                <div className={styles.ctxitem} key={item.id}>
+                  {item.label}
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Files — backend exposes no files-touched list yet (TF-245). */}
+          {/* Files touched — degrades to empty until TF-245 supplies the list. */}
           <div className={styles.block}>
             <div className={styles.seclabel}>Files</div>
-            <div className={styles.empty}>No files touched yet</div>
+            {files.length > 0 ? (
+              files.map((file) => (
+                <div className={styles.fileitem} key={file.name}>
+                  <span className={styles.fn}>{file.name}</span>
+                  <span
+                    className={cn(
+                      styles.fs,
+                      file.state === "new" && styles.fsNew,
+                    )}
+                  >
+                    {file.state}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className={styles.empty}>No files touched yet</div>
+            )}
           </div>
         </div>
       </div>
