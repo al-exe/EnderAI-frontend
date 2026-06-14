@@ -39,12 +39,6 @@ function LandingExpressive() {
         </Link>
         <div className="flex items-center gap-5 font-mono text-[0.796875rem] text-zinc-500 dark:text-zinc-400">
           <Link
-            to="/docs"
-            className="hidden hover:text-zinc-950 dark:hover:text-white sm:inline"
-          >
-            Documentation
-          </Link>
-          <Link
             to="/pricing"
             className="hidden hover:text-zinc-950 dark:hover:text-white sm:inline"
           >
