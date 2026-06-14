@@ -62,7 +62,7 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
     <section className="flex min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 py-8">
         <div className="space-y-3">
-          <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-sm font-medium tracking-[0.01em] text-muted-foreground">
             Taskforce Membership
           </p>
           <h1 className="text-2xl font-semibold tracking-tight md:whitespace-nowrap md:text-3xl">
@@ -90,7 +90,7 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
                 <CardHeader className="gap-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <p className="text-xs font-medium tracking-[0.01em] text-muted-foreground">
                         {plan.eyebrow}
                       </p>
                       <CardTitle className="text-2xl">{plan.name}</CardTitle>

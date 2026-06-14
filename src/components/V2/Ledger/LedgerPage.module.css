@@ -79,8 +79,8 @@
   font-size: 12px;
   /* Match Tailwind text-xs (16px) so the title stacks identically to Profiles. */
   line-height: 1rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--tf-muted-fg);
 }
 .h1 {
@@ -160,8 +160,8 @@
   border-bottom: 1px solid var(--tf-border);
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--tf-faint-fg);
 }
 
@@ -176,8 +176,8 @@
 .dayLbl {
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--tf-fg);
   font-weight: 500;
 }
@@ -416,8 +416,8 @@
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--tf-muted-fg);
 }
 .tHead h2 {
@@ -465,7 +465,7 @@
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--tf-faint-fg);
   padding-top: 14px;
   display: flex;
@@ -598,8 +598,8 @@
 .grp {
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--tf-faint-fg);
   margin: 20px 0 9px;
 }
@@ -652,7 +652,7 @@
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .flagStale {
   color: var(--tf-warn);
@@ -671,7 +671,7 @@
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: none;
   padding: 8px 11px;
   border: 1px solid var(--tf-border);
   color: var(--tf-muted-fg);

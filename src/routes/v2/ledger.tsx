@@ -42,7 +42,7 @@ function TaskforceLedger() {
       <section className={V2_PAGE_FRAME} data-testid="ledger-team-only">
         <div className={V2_PAGE_BODY}>
           <div className="max-w-2xl border-l border-border pl-5">
-            <p className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="mb-3 font-mono text-xs tracking-[0.01em] text-muted-foreground">
               Ledger for teams
             </p>
             <h1 className="text-2xl font-semibold">Create or join a team</h1>

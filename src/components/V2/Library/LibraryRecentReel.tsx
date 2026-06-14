@@ -72,7 +72,7 @@ function RecentCard({
     >
       <div
         className={cn(
-          "mb-1.5 font-mono text-[9px] uppercase tracking-[0.14em]",
+          "mb-1.5 font-mono text-[9px] tracking-[0.01em]",
           DOCUMENT_SCOPE_TEXT[scope],
         )}
       >
@@ -148,7 +148,7 @@ export function LibraryRecentReel({
   return (
     <section aria-label="Recently accessed" className="shrink-0">
       <div className="mb-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground">
+        <span className="font-mono text-[10px] tracking-[0.01em] text-foreground">
           Recently accessed
         </span>
       </div>

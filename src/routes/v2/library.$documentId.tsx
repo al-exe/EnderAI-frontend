@@ -339,7 +339,7 @@ function MarkdownBlocks({
                 variant === "report" && level === 1 && "text-xl font-semibold",
                 variant === "report" &&
                   level === 2 &&
-                  "border-t border-border pt-5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground",
+                  "border-t border-border pt-5 font-mono text-[0.68rem] font-semibold tracking-[0.01em] text-muted-foreground",
                 variant === "report" &&
                   level === 3 &&
                   "text-base font-semibold",
@@ -939,7 +939,7 @@ function TaskforceDocumentDetail() {
             isSplit && "md:shrink-0",
           )}
         >
-          <div className="flex items-center justify-between gap-3 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="flex items-center justify-between gap-3 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground">
             <div className="flex min-w-0 items-center gap-2">
               <Link
                 to="/v2/library"
@@ -1168,7 +1168,7 @@ function DocumentProvenanceStrip({
     <section className="border-b border-border py-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="font-mono text-[0.66rem] uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground">
             Sessions / Reused by
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
@@ -1294,7 +1294,7 @@ function DocumentMetadata({
   const sharedCount = shares.length
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] text-muted-foreground">
+    <div className="mt-4 flex flex-wrap items-center gap-3 py-2 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground">
       <DocumentDateField
         label="Created"
         value={document.created_at}
@@ -1318,7 +1318,7 @@ function DocumentMetadata({
           onSelect={onMoveFolder}
           onCreateFolder={onCreateFolder}
           triggerLabel={document.folder_name ?? "Unfiled"}
-          triggerClassName="h-7 px-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] [&_svg]:size-3"
+          triggerClassName="h-7 px-2 font-mono text-[0.66rem] tracking-[0.01em] [&_svg]:size-3"
         />
       ) : (
         <span className="inline-flex min-w-0 items-center gap-1.5 text-muted-foreground">
@@ -1361,7 +1361,7 @@ function DocumentMetadata({
         aria-pressed={document.is_favorite}
         onClick={onToggleFavorite}
         data-testid="document-favorite"
-        className="h-7 px-2 font-mono text-[0.66rem] uppercase tracking-[0.08em]"
+        className="h-7 px-2 font-mono text-[0.66rem] tracking-[0.01em]"
       >
         <Star
           className={cn(
@@ -1495,7 +1495,7 @@ function DocumentAccessDropdown({
           variant="outline"
           size="sm"
           data-testid="document-access"
-          className="h-7 px-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] [&_svg]:size-3"
+          className="h-7 px-2 font-mono text-[0.66rem] tracking-[0.01em] [&_svg]:size-3"
         >
           <Share2 className="size-4" />
           {persistedCount > 0
@@ -1636,7 +1636,7 @@ function ViewToggle({
       aria-selected={active}
       data-state={active ? "active" : "inactive"}
       onClick={onClick}
-      className="inline-flex items-center justify-center gap-1.5 border-r border-border px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground transition-colors last:border-r-0 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:bg-muted data-[state=active]:text-foreground"
+      className="inline-flex items-center justify-center gap-1.5 border-r border-border px-3 py-1 font-mono text-[0.62rem] tracking-[0.01em] text-muted-foreground transition-colors last:border-r-0 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:bg-muted data-[state=active]:text-foreground"
     >
       {label}
     </button>
@@ -1949,7 +1949,7 @@ function DetailsPane({
     >
       <div
         className={cn(
-          "flex items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-2 font-mono text-[0.66rem] uppercase tracking-[0.12em] text-muted-foreground",
+          "flex items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-2 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground",
           isSplit && "md:shrink-0",
         )}
       >

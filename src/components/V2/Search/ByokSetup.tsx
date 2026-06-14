@@ -49,7 +49,7 @@ export function ByokSetup({ onSaved }: { onSaved: () => void }) {
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="sm:w-40">
-            <div className="mb-1 text-xs uppercase text-muted-foreground">
+            <div className="mb-1 text-xs text-muted-foreground">
               Provider
             </div>
             <Select
@@ -68,7 +68,7 @@ export function ByokSetup({ onSaved }: { onSaved: () => void }) {
           <div className="flex-1">
             <label
               htmlFor="taskforce-byok-api-key"
-              className="mb-1 block text-xs uppercase text-muted-foreground"
+              className="mb-1 block text-xs text-muted-foreground"
             >
               API key
             </label>

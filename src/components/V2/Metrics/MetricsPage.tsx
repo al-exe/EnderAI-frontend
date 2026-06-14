@@ -733,7 +733,7 @@ function ExperimentalMetricsPage({
 
       <section className="border border-border bg-background text-foreground">
         <div className="px-5 py-6 md:px-7">
-          <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
+          <div className="font-mono text-xs tracking-[0.01em] opacity-70">
             Tokens saved · {windowCopy.label}
           </div>
           <div className="mt-3 text-6xl font-semibold leading-[0.9] tracking-tight tabular-nums md:text-7xl">
@@ -892,7 +892,7 @@ function ExperimentalSessionMetrics({
                 <Link
                   to="/v2/agents/$slug"
                   params={{ slug: sessionSavings.specialist_slug }}
-                  className="mt-3 inline-flex items-center gap-1.5 border border-border px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-foreground hover:bg-muted"
+                  className="mt-3 inline-flex items-center gap-1.5 border border-border px-2.5 py-1 font-mono text-xs tracking-[0.01em] text-foreground hover:bg-muted"
                 >
                   Selected profile:{" "}
                   <span className="font-semibold normal-case tracking-normal">
@@ -916,7 +916,7 @@ function ExperimentalSessionMetrics({
         <div className="flex flex-col gap-6">
       <section className="grid border border-border bg-background text-foreground lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
         <div className="px-5 py-6 md:px-7">
-          <div className="font-mono text-xs uppercase tracking-[0.18em] opacity-70">
+          <div className="font-mono text-xs tracking-[0.01em] opacity-70">
             Session tokens saved
           </div>
           <div className="mt-3 text-6xl font-semibold leading-[0.9] tracking-tight tabular-nums md:text-7xl">
@@ -953,7 +953,7 @@ function ExperimentalSessionMetrics({
 
       <section className="grid border border-border md:grid-cols-[10rem_minmax(0,1fr)]">
         <div className="border-b border-border bg-muted/40 p-4 md:border-r md:border-b-0">
-          <div className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
+          <div className="font-mono text-xs tracking-[0.01em] text-primary">
             Session insights
           </div>
         </div>
@@ -1017,7 +1017,7 @@ function ExperimentalMetricTile({
 
   return (
     <div className="border border-border bg-background p-4">
-      <div className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
+      <div className="font-mono text-xs tracking-[0.01em] text-muted-foreground">
         {definition.display_name}
       </div>
       <div className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
@@ -1058,7 +1058,7 @@ function ExperimentalRatioCell({
       <div className="truncate text-lg font-semibold tracking-tight tabular-nums">
         {value}
       </div>
-      <div className="mt-1 font-mono text-xs uppercase tracking-[0.12em] opacity-70">
+      <div className="mt-1 font-mono text-xs tracking-[0.01em] opacity-70">
         {label}
       </div>
     </div>
@@ -1078,7 +1078,7 @@ function ExperimentalBreakdownPanel({
 
   return (
     <section className="border border-border bg-background p-4">
-      <div className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
+      <div className="font-mono text-xs tracking-[0.01em] text-muted-foreground">
         {kicker}
       </div>
       <h2 className="mt-1 text-sm font-semibold">{title}</h2>
@@ -1130,7 +1130,7 @@ function ExperimentalSessionLog({
 }) {
   return (
     <section className="border border-border bg-background p-4">
-      <div className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
+      <div className="font-mono text-xs tracking-[0.01em] text-muted-foreground">
         Consult log
       </div>
       <h2 className="mt-1 text-sm font-semibold">Documents consulted</h2>
@@ -1149,7 +1149,7 @@ function ExperimentalSessionLog({
         </p>
       ) : (
         <div className="mt-3 divide-y divide-border/70">
-          <div className="grid grid-cols-[minmax(0,1.4fr)_4rem_5rem_7rem] gap-4 px-1 py-2 font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground max-md:hidden">
+          <div className="grid grid-cols-[minmax(0,1.4fr)_4rem_5rem_7rem] gap-4 px-1 py-2 font-mono text-xs tracking-[0.01em] text-muted-foreground max-md:hidden">
             <div>Document</div>
             <div>Score</div>
             <div>Band</div>

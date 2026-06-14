@@ -48,7 +48,7 @@ function AgentStats({ stats }: { stats: Stat[] }) {
           >
             {stat.value}
           </div>
-          <div className="mt-[3px] font-mono text-[9.5px] uppercase tracking-[0.12em] text-foreground/70">
+          <div className="mt-[3px] font-mono text-[9.5px] tracking-[0.01em] text-foreground/70">
             {stat.label}
           </div>
         </div>
@@ -88,7 +88,7 @@ export function AgentProfileCard({ agent }: { agent: AgentSpecialistSummary }) {
             </div>
             <AgentStatusBadge status={agent.status} className="h-6 shrink-0" />
           </div>
-          <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/70">
+          <div className="mt-[3px] font-mono text-[10px] tracking-[0.01em] text-foreground/70">
             {agent.role}
           </div>
         </div>
