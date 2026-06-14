@@ -165,3 +165,99 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await expect(page).toHaveURL(/\/v2\/fleet$/)
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
+
+for (const theme of ["light", "dark"] as const) {
+  test(`Fleet stays responsive in ${theme} theme`, async ({ page }) => {
+    await mockFleet(page)
+    await page.addInitScript((selectedTheme) => {
+      window.localStorage.setItem("vite-ui-theme", selectedTheme)
+    }, theme)
+
+    for (const width of [360, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto("/v2/fleet")
+      await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
+      await expect(page.locator("html")).toHaveClass(new RegExp(theme))
+
+      const rosterOverflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      )
+      expect(rosterOverflow).toBeLessThanOrEqual(0)
+
+      const shellTrigger = page.locator('[data-slot="sidebar-trigger"]')
+      if (width === 360) {
+        await expect(shellTrigger).toBeVisible()
+        await expect(
+          page.getByRole("link", { name: "Profiles" }),
+        ).not.toBeVisible()
+      } else {
+        await expect(shellTrigger).not.toBeVisible()
+        await expect(page.getByRole("link", { name: "Profiles" })).toBeVisible()
+      }
+
+      const rosterColumns = await page
+        .getByTestId("fleet-agent-row")
+        .evaluate((row) => getComputedStyle(row).gridTemplateColumns)
+      expect(rosterColumns.trim().split(/\s+/)).toHaveLength(
+        width === 360 ? 3 : 4,
+      )
+
+      await page.goto("/v2/fleet/session-1")
+      await expect(
+        page.getByRole("heading", { name: "Stripe checkout wiring" }),
+      ).toBeVisible()
+
+      const detailLayout = await page.evaluate(() => {
+        const detail = document.querySelector<HTMLElement>(
+          '[data-testid="fleet-agent-detail"]',
+        )
+        const body = document.querySelector<HTMLElement>(
+          '[data-testid="fleet-detail-body"]',
+        )
+        const rail = document.querySelector<HTMLElement>(
+          '[data-testid="fleet-detail-rail"]',
+        )
+        if (!detail || !body || !rail) throw new Error("Fleet detail missing")
+
+        return {
+          overflow:
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+          detailOverflowY: getComputedStyle(detail).overflowY,
+          bodyDisplay: getComputedStyle(body).display,
+          railBorderTop: getComputedStyle(rail).borderTopWidth,
+          railBorderLeft: getComputedStyle(rail).borderLeftWidth,
+        }
+      })
+
+      expect(detailLayout.overflow).toBeLessThanOrEqual(0)
+      if (width <= 880) {
+        expect(detailLayout.detailOverflowY).toBe("auto")
+        expect(detailLayout.bodyDisplay).toBe("block")
+        expect(detailLayout.railBorderTop).toBe("1px")
+        expect(detailLayout.railBorderLeft).toBe("0px")
+        await page.getByText("Files", { exact: true }).scrollIntoViewIfNeeded()
+        await expect(page.getByText("Files", { exact: true })).toBeVisible()
+      } else {
+        expect(detailLayout.bodyDisplay).toBe("grid")
+        expect(detailLayout.railBorderTop).toBe("0px")
+        expect(detailLayout.railBorderLeft).toBe("1px")
+      }
+
+      await expect(page.getByText(/\b(?:tokens?|spend|roi)\b/i)).toHaveCount(0)
+    }
+  })
+}
+
+test("Fleet running pulse respects reduced motion", async ({ page }) => {
+  await mockFleet(page)
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.goto("/v2/fleet")
+
+  const animationName = await page
+    .getByTestId("fleet-status-dot")
+    .evaluate((dot) => getComputedStyle(dot).animationName)
+  expect(animationName).toBe("none")
+})
