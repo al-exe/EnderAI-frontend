@@ -31,6 +31,7 @@ async function mockFleet(
     repo: "billing",
     active_document_id: "doc-1",
     referenced_document_ids: ["doc-2"],
+    display_name: "Wiring automatic tax on Stripe checkout",
     title: "Stripe checkout wiring",
     summary_markdown: "Wiring automatic tax onto the subscription create path",
     last_seen_at: "2026-06-12T10:20:00Z",
@@ -117,9 +118,15 @@ async function mockFleet(
     "**/api/v1/v2/taskforce/session/session-1",
     async (route) => {
       const body = route.request().postDataJSON() as {
-        fleet_session_id: string
+        fleet_session_id?: string
+        display_name?: string
       }
-      agentFleetId = body.fleet_session_id
+      if (body.fleet_session_id) {
+        agentFleetId = body.fleet_session_id
+      }
+      if (body.display_name) {
+        agent.display_name = body.display_name
+      }
       await route.fulfill({
         json: { ...agent, fleet_session_id: agentFleetId },
       })
@@ -220,11 +227,13 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await mockFleet(page)
   await page.goto("/v2/fleet")
 
-  await page.getByText("Stripe checkout wiring").first().click()
+  await page.getByText("Wiring automatic tax on Stripe checkout").first().click()
 
   await expect(page).toHaveURL(/\/v2\/fleet\/session-1$/)
   await expect(
-    page.getByRole("heading", { name: "Stripe checkout wiring" }),
+    page.getByRole("heading", {
+      name: "Wiring automatic tax on Stripe checkout",
+    }),
   ).toBeVisible()
   await expect(page.getByText("Working on")).toBeVisible()
   await expect(page.getByText("Activity")).toBeVisible()
@@ -236,6 +245,29 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await page.getByRole("link", { name: "Fleet" }).first().click()
   await expect(page).toHaveURL(/\/v2\/fleet$/)
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
+})
+
+test("agent session can be renamed from the row menu", async ({ page }) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+
+  await page
+    .getByRole("button", {
+      name: "Wiring automatic tax on Stripe checkout actions",
+    })
+    .click()
+  await page.getByRole("menuitem", { name: "Rename" }).click()
+  await page.getByLabel("Session name").fill("Checkout tax rollout")
+  const renameRequest = page.waitForRequest(
+    (request) =>
+      request.url().endsWith("/api/v1/v2/taskforce/session/session-1") &&
+      request.method() === "PATCH",
+  )
+  await page.getByRole("button", { name: "Save" }).click()
+  expect((await renameRequest).postDataJSON()).toEqual({
+    display_name: "Checkout tax rollout",
+  })
+  await expect(page.getByText("Checkout tax rollout")).toBeVisible()
 })
 
 test("activity timeline shows per-turn entries newest-first and links to the Ledger", async ({
@@ -292,7 +324,7 @@ test("dragging an agent moves it to another fleet", async ({ page }) => {
   ).toHaveCount(0)
   await expect(
     page.getByTestId("fleet-card-fleet-2").getByTestId("fleet-agent-row"),
-  ).toContainText("Stripe checkout wiring")
+  ).toContainText("Wiring automatic tax on Stripe checkout")
 })
 
 for (const theme of ["light", "dark"] as const) {

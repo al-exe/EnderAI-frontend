@@ -94,11 +94,10 @@ export function hostLabel(agent: TaskforceFleetAgent): string | null {
   return (agent as FutureAgentFields).host ?? null
 }
 
-// Heading shown for an agent. Once Taskforce has captured a document the
-// document title wins; until then a brand-new session shows the model it's
-// running (e.g. "Opus 4.8") rather than the bare working-directory name.
+// Heading shown for an agent session in Fleet. The backend captures a stable
+// one-line summary at conversation start; users can rename it from the roster.
 export function agentDisplayName(agent: TaskforceFleetAgent): string {
-  return agent.title || modelLabel(agent.model_id) || repoLabel(agent)
+  return agent.display_name || modelLabel(agent.model_id) || repoLabel(agent)
 }
 
 export function agentModelName(agent: TaskforceFleetAgent): string {

@@ -51,6 +51,7 @@ export interface TaskforceFleetAgent {
   repo: string | null
   active_document_id: string | null
   referenced_document_ids: string[]
+  display_name: string
   title: string | null
   summary_markdown: string
   last_seen_at: string
@@ -182,6 +183,22 @@ export function assignTaskforceFleetSession(
     },
     body: {
       fleet_session_id: fleetSessionId,
+    },
+  })
+}
+
+export function renameTaskforceSession(
+  sessionId: string,
+  displayName: string,
+): CancelablePromise<TaskforceFleetAgent> {
+  return request(OpenAPI, {
+    method: "PATCH",
+    url: "/api/v1/v2/taskforce/session/{session_id}",
+    path: {
+      session_id: sessionId,
+    },
+    body: {
+      display_name: displayName,
     },
   })
 }

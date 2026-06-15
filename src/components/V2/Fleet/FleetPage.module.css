@@ -141,14 +141,29 @@
 /* rows */
 .arow {
   display: grid;
-  grid-template-columns: 26px minmax(180px, 250px) minmax(0, 1fr) 64px;
+  grid-template-columns: 26px minmax(180px, 250px) minmax(0, 1fr) auto 64px;
   gap: 18px;
   align-items: baseline;
   width: 100%;
   padding: 16px 18px;
   border-bottom: 1px solid var(--fl-hair);
   text-align: left;
+}
+
+.arowMain {
+  display: contents;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
   cursor: pointer;
+}
+
+.arowMenu {
+  align-self: center;
+  color: var(--fl-faint);
 }
 
 .arowDragging {
@@ -167,7 +182,11 @@
   background: var(--fl-hair);
 }
 
-.arow:focus-visible {
+.arow:focus-within {
+  background: var(--fl-hair);
+}
+
+.arowMain:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: -2px;
 }
@@ -979,18 +998,24 @@
   }
 
   .arow {
-    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-columns: 26px minmax(0, 1fr) auto auto;
     gap: 12px;
     align-items: start;
   }
 
   .arow .work {
     grid-row: 2;
-    grid-column: 2 / -1;
+    grid-column: 2 / 4;
     text-align: left;
   }
 
   .arow .age {
+    grid-row: 1;
+    grid-column: 4;
+    margin-top: 0;
+  }
+
+  .arowMenu {
     grid-row: 1;
     grid-column: 3;
     margin-top: 0;
