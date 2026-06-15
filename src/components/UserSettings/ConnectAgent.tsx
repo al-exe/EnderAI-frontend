@@ -96,6 +96,19 @@ function buildClaudeCodeConnectSnippet(
   ].join("\n")
 }
 
+function buildCodexConnectSnippet(
+  mcpToken: string,
+  backendUrl: string,
+): string {
+  const installerUrl = `${backendUrl.replace(/\/$/, "")}/api/v1/v2/taskforce/install-codex.sh`
+
+  return [
+    `printf '%s\\n' '${mcpToken}' > ~/.taskforce_mcp_token && \\`,
+    "chmod 600 ~/.taskforce_mcp_token && \\",
+    `curl -fsSL '${installerUrl}' | bash`,
+  ].join("\n")
+}
+
 function buildAgentInstructionSnippet({
   v2Enabled,
 }: {
@@ -416,6 +429,9 @@ const ConnectAgent = () => {
   const claudeCodeConnectSnippet = hasFreshToken
     ? buildClaudeCodeConnectSnippet(mcpToken, import.meta.env.VITE_API_URL)
     : null
+  const codexConnectSnippet = hasFreshToken
+    ? buildCodexConnectSnippet(mcpToken, import.meta.env.VITE_API_URL)
+    : null
   const reconnectClientSnippet =
     "# Start a fresh terminal, then restart or reconnect your AI client after saving the MCP config."
   const aiAssistedSetupSnippet =
@@ -525,13 +541,14 @@ const ConnectAgent = () => {
           {clientSnippet && persistentShellSnippet ? (
             <div className={styles.tokenSection}>
               <div>
-                <h3 className={styles.sectionTitle}>2. Connect Claude Code</h3>
+                <h3 className={styles.sectionTitle}>
+                  2. Connect Claude Code or Codex
+                </h3>
                 <p className={styles.mutedText}>
                   Run this once in every terminal or VM you want Taskforce to
-                  remember. This single command saves your token and installs
-                  prior-work discovery, automatic capture, and Claude Code cost
-                  tracking. The installer is idempotent, preserves existing
-                  Claude Code settings, and takes effect after restart.
+                  remember. Choose the installer for the coding agent you use.
+                  Both preserve existing hook settings and take effect after
+                  restart.
                 </p>
               </div>
 
@@ -555,6 +572,28 @@ const ConnectAgent = () => {
                 testId="connect-agent-claude-code"
                 featured
               />
+
+              <SnippetBlock
+                title="Connect Codex"
+                description="Persists the credential and installs Fleet registration plus prior-work discovery hooks."
+                snippet={codexConnectSnippet ?? ""}
+                copiedText={copiedText}
+                onCopy={(value) => {
+                  void copy(value)
+                }}
+                testId="connect-agent-codex"
+                featured
+              />
+
+              <Alert>
+                <Shield className={styles.icon} />
+                <AlertTitle>Trust Codex hooks once</AlertTitle>
+                <AlertDescription>
+                  After installing, restart Codex, run `/hooks`, trust the
+                  Taskforce hooks, then start a new Codex session. New sessions
+                  will appear in Fleet immediately.
+                </AlertDescription>
+              </Alert>
 
               <div>
                 <h3 className={styles.sectionTitle}>3. Advanced MCP setup</h3>
@@ -645,8 +684,8 @@ const ConnectAgent = () => {
               <KeyRound className={styles.icon} />
               <AlertTitle>Create your first agent credential</AlertTitle>
               <AlertDescription>
-                Create a credential, then connect each Claude Code terminal or
-                VM with one command.
+                Create a credential, then connect each Claude Code or Codex
+                terminal or VM with one command.
               </AlertDescription>
             </Alert>
           )}
