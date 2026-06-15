@@ -80,6 +80,7 @@ function AgentRow({
   onDragEnd,
   isDragging,
   isMoving,
+  draggable = true,
 }: {
   agent: TaskforceFleetAgent
   onOpen: (agent: TaskforceFleetAgent) => void
@@ -90,6 +91,7 @@ function AgentRow({
   onDragEnd: () => void
   isDragging: boolean
   isMoving: boolean
+  draggable?: boolean
 }) {
   const suppressClick = useRef(false)
   const status = agentStatus(agent)
@@ -106,8 +108,12 @@ function AgentRow({
         isDragging && styles.arowDragging,
         isMoving && styles.arowMoving,
       )}
-      draggable={!isMoving}
-      title="Drag to move this agent to another fleet"
+      draggable={draggable && !isMoving}
+      title={
+        draggable
+          ? "Drag to move this agent to another fleet"
+          : "View this agent session"
+      }
       onClick={() => {
         if (suppressClick.current) return
         onOpen(agent)
@@ -191,8 +197,11 @@ function FleetCard({
   const repo = fleetRepo(fleet)
   const running = runningCount(fleet.agents)
   const total = fleet.agents.length
+  const isHistory = fleet.is_history
   const isDropCandidate =
-    draggingAgent !== null && draggingAgent.fleet_session_id !== fleet.id
+    !isHistory &&
+    draggingAgent !== null &&
+    draggingAgent.fleet_session_id !== fleet.id
   const isDropTarget = isDropCandidate && dropTargetId === fleet.id
   const hasPendingMove =
     movingSessionId !== null &&
@@ -216,6 +225,7 @@ function FleetCard({
       data-testid={`fleet-card-${fleet.id}`}
       className={cn(
         styles.fleet,
+        isHistory && styles.history,
         isDropTarget && styles.fleetDropTarget,
         hasPendingMove && styles.fleetDropPending,
       )}
@@ -270,7 +280,7 @@ function FleetCard({
           </span>
         )}
 
-        {!renaming && (
+        {!renaming && !isHistory && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -308,7 +318,9 @@ function FleetCard({
       <div>
         {fleet.agents.length === 0 ? (
           <div className={styles.emptyRows}>
-            No active agents in this fleet yet.
+            {isHistory
+              ? "Inactive agent sessions appear here."
+              : "No active agents in this fleet yet."}
           </div>
         ) : (
           fleet.agents.map((agent) => (
@@ -320,6 +332,7 @@ function FleetCard({
               onDragEnd={onAgentDragEnd}
               isDragging={draggingAgent?.session_id === agent.session_id}
               isMoving={movingSessionId === agent.session_id}
+              draggable={!isHistory}
             />
           ))
         )}
@@ -432,9 +445,11 @@ export function FleetPage() {
   })
 
   const fleetSessions = fleetQuery.data?.fleet_sessions ?? []
+  const workFleets = fleetSessions.filter((fleet) => !fleet.is_history)
   const allAgents = fleetSessions.flatMap((fleet) => fleet.agents)
-  const running = runningCount(allAgents)
-  const waiting = waitingCount(allAgents)
+  const activeAgents = workFleets.flatMap((fleet) => fleet.agents)
+  const running = runningCount(activeAgents)
+  const waiting = waitingCount(activeAgents)
 
   const summaryBits = [`${running} running`]
   if (waiting) summaryBits.push(`${waiting} waiting for input`)
@@ -495,11 +510,11 @@ export function FleetPage() {
               <h1 className="text-2xl font-semibold tracking-tight">Fleet</h1>
               <p className={styles.summaryLine}>
                 <span className={styles.lead}>
-                  {allAgents.length}{" "}
-                  {allAgents.length === 1 ? "agent" : "agents"}
+                  {activeAgents.length}{" "}
+                  {activeAgents.length === 1 ? "agent" : "agents"}
                 </span>{" "}
-                · {summaryBits.join(" · ")} · {fleetSessions.length}{" "}
-                {fleetSessions.length === 1 ? "fleet" : "fleets"}
+                · {summaryBits.join(" · ")} · {workFleets.length}{" "}
+                {workFleets.length === 1 ? "fleet" : "fleets"}
               </p>
             </div>
             <Button
@@ -549,7 +564,7 @@ export function FleetPage() {
                 Try again
               </Button>
             </div>
-          ) : fleetSessions.length === 0 ? (
+          ) : allAgents.length === 0 ? (
             <div className="flex flex-col items-start gap-4 border border-border bg-card p-6">
               <div>
                 <h2 className="font-medium text-foreground">

@@ -65,6 +65,7 @@ export interface TaskforceFleetAgent {
 export interface TaskforceFleetSession {
   id: string
   name: string
+  is_history: boolean
   created_at: string
   updated_at: string
   agents: TaskforceFleetAgent[]
