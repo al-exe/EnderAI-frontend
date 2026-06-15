@@ -76,7 +76,10 @@ export function modelLabel(modelId: string | null): string | null {
   if (!modelId) return null
   const [family, ...rest] = modelId.replace(/^claude-/, "").split("-")
   if (!family) return null
-  const name = family.charAt(0).toUpperCase() + family.slice(1)
+  const name =
+    family.toLowerCase() === "gpt"
+      ? "GPT"
+      : family.charAt(0).toUpperCase() + family.slice(1)
   const version = rest.join(".")
   return version ? `${name} ${version}` : name
 }
