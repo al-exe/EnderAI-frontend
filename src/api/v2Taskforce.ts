@@ -1,5 +1,6 @@
 import { type CancelablePromise, OpenAPI } from "@/client"
 import { request } from "@/client/core/request"
+import type { LedgerTranscriptEvent } from "./v2Ledger"
 
 export interface TaskforceSessionSavingsResponse {
   session_id: string
@@ -30,11 +31,8 @@ export interface TaskforceSessionLogResponse {
   entries: TaskforceSessionLogEntry[]
 }
 
-export interface TaskforceSessionActivityEntry {
-  id: string
+export interface TaskforceSessionActivityEntry extends LedgerTranscriptEvent {
   occurred_at: string
-  prompt: string
-  response_summary: string | null
   ledger_href: string | null
 }
 

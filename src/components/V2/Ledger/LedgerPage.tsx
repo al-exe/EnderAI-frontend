@@ -56,11 +56,11 @@ type LedgerSearchFilters = {
   actor_id?: string
   client?: string
   cross_boundary?: boolean
+  event_id?: string
   q?: string
   session_id?: string
   specialist?: string
   sort?: LedgerSort
-  at?: string
 }
 
 type DayGroup = {
@@ -79,6 +79,7 @@ function cleanLedgerSearch(filters: LedgerSearchFilters): LedgerSearchFilters {
     actor_id: filters.actor_id || undefined,
     client: filters.client || undefined,
     cross_boundary: filters.cross_boundary || undefined,
+    event_id: filters.session_id ? filters.event_id || undefined : undefined,
     q: filters.q || undefined,
     session_id: filters.session_id || undefined,
     specialist: filters.specialist || undefined,
@@ -357,7 +358,9 @@ export function LedgerPage({
   useEffect(() => {
     if (!selectedSessionId) return
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setLedgerSearch({ session_id: undefined })
+      if (event.key === "Escape") {
+        setLedgerSearch({ event_id: undefined, session_id: undefined })
+      }
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
@@ -368,7 +371,11 @@ export function LedgerPage({
 
   const onSearchSubmit = (event: FormEvent) => {
     event.preventDefault()
-    setLedgerSearch({ q: search.trim() || undefined, session_id: undefined })
+    setLedgerSearch({
+      event_id: undefined,
+      q: search.trim() || undefined,
+      session_id: undefined,
+    })
   }
 
   return (
@@ -382,12 +389,14 @@ export function LedgerPage({
         {selectedSessionId ? (
           <div className={styles.app}>
             <LedgerDetail
-              anchorAt={searchFilters.at}
+              anchorEventId={searchFilters.event_id}
               detail={detailQuery.data}
               demo={isDemoMode}
               isError={detailQuery.isError}
               isLoading={detailQuery.isLoading}
-              onBack={() => setLedgerSearch({ session_id: undefined })}
+              onBack={() =>
+                setLedgerSearch({ event_id: undefined, session_id: undefined })
+              }
             />
           </div>
         ) : (
@@ -462,7 +471,10 @@ export function LedgerPage({
                 isError={ledgerQuery.isError}
                 isLoading={ledgerQuery.isLoading}
                 onOpenSession={(sessionId) =>
-                  setLedgerSearch({ session_id: sessionId })
+                  setLedgerSearch({
+                    event_id: undefined,
+                    session_id: sessionId,
+                  })
                 }
               />
             </div>
@@ -586,45 +598,23 @@ function LedgerRow({
   )
 }
 
-/**
- * Index of the transcript line whose timestamp is closest to `at`, or -1.
- *
- * Best-effort anchor for a Fleet activity deep-link: transcript lines have no
- * stable id, and the activity timestamp (recorded at /discover) and the
- * transcript timestamp (recorded at /observe) come from different writes, so
- * this lands the reader near — not exactly on — the backing turn (TF-247).
- */
-function closestEventIndex(
+function eventIndex(
   events: LedgerTranscriptEvent[],
-  at: string | undefined,
+  eventId: string | undefined,
 ): number {
-  if (!at || events.length === 0) return -1
-  const target = new Date(at).getTime()
-  if (Number.isNaN(target)) return -1
-  let best = -1
-  let bestDelta = Number.POSITIVE_INFINITY
-  events.forEach((event, index) => {
-    if (!event.occurred_at) return
-    const stamp = new Date(event.occurred_at).getTime()
-    if (Number.isNaN(stamp)) return
-    const delta = Math.abs(stamp - target)
-    if (delta < bestDelta) {
-      bestDelta = delta
-      best = index
-    }
-  })
-  return best
+  if (!eventId) return -1
+  return events.findIndex((event) => event.id === eventId)
 }
 
 function LedgerDetail({
-  anchorAt,
+  anchorEventId,
   detail,
   demo,
   isError,
   isLoading,
   onBack,
 }: {
-  anchorAt?: string
+  anchorEventId?: string
   detail?: LedgerSessionDetail
   demo: boolean
   isError: boolean
@@ -632,8 +622,8 @@ function LedgerDetail({
   onBack: () => void
 }) {
   const anchorIndex = useMemo(
-    () => closestEventIndex(detail?.transcript_events ?? [], anchorAt),
-    [detail?.transcript_events, anchorAt],
+    () => eventIndex(detail?.transcript_events ?? [], anchorEventId),
+    [detail?.transcript_events, anchorEventId],
   )
   const anchorRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
@@ -699,7 +689,7 @@ function LedgerDetail({
                 detail={detail}
                 event={event}
                 highlighted={index === anchorIndex}
-                key={`${event.kind}-${event.occurred_at ?? index}-${index}`}
+                key={event.id}
               />
             ))
           ) : (
@@ -819,6 +809,7 @@ function EventShell({
   return (
     <div
       className={cn(styles.ev, modifier, highlighted && styles.evHighlight)}
+      data-highlighted={highlighted ? "true" : undefined}
       ref={rootRef}
     >
       <div className={styles.evT}>{time}</div>
@@ -860,7 +851,7 @@ function SessionRail({
       anchor.remove()
       URL.revokeObjectURL(href)
     } catch {
-      setDownloadError("Could not download the raw transcript.")
+      setDownloadError("Could not download the transcript.")
     } finally {
       setIsDownloading(false)
     }
@@ -920,7 +911,7 @@ function SessionRail({
             onClick={() => void downloadRawTranscript()}
             type="button"
           >
-            {isDownloading ? "Preparing download…" : "Download raw transcript"}
+            {isDownloading ? "Preparing download…" : "Download transcript"}
           </button>
         ) : null}
         <button className={styles.btn} onClick={copyMarkdown} type="button">

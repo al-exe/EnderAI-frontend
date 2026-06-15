@@ -86,6 +86,7 @@ function ledgerDetail(rawTranscriptAvailable: boolean) {
     transcript_available: true,
     transcript_events: [
       {
+        id: "event-prompt",
         kind: "prompt",
         occurred_at: "2026-06-12T20:00:00Z",
         role: "user",
@@ -165,7 +166,7 @@ test("solo users see the team Ledger state without calling Ledger APIs", async (
   expect(ledgerRequests).toBe(0)
 })
 
-test("organization users can download an available raw transcript", async ({
+test("organization users can download an available transcript", async ({
   page,
 }) => {
   await mockTaskforceAuth(page, "org-1")
@@ -175,7 +176,7 @@ test("organization users can download an available raw transcript", async ({
 
   await expect(page.getByRole("link", { name: "Ledger" })).toBeVisible()
   const downloadPromise = page.waitForEvent("download")
-  await page.getByRole("button", { name: "Download raw transcript" }).click()
+  await page.getByRole("button", { name: "Download transcript" }).click()
   const download = await downloadPromise
 
   expect(download.suggestedFilename()).toBe("session-raw-transcript.json")
@@ -190,7 +191,20 @@ test("organization users can download an available raw transcript", async ({
   ])
 })
 
-test("sessions without a raw archive show no transcript download control", async ({
+test("event deep links highlight the exact canonical Ledger event", async ({
+  page,
+}) => {
+  await mockTaskforceAuth(page, "org-1")
+  await mockLedger(page, { rawTranscriptAvailable: true })
+
+  await page.goto("/v2/ledger?session_id=session-raw&event_id=event-prompt")
+
+  await expect(page.locator('[data-highlighted="true"]')).toContainText(
+    "Polish the Ledger.",
+  )
+})
+
+test("sessions without canonical events show no transcript download control", async ({
   page,
 }) => {
   await mockTaskforceAuth(page, "org-1")
@@ -200,6 +214,6 @@ test("sessions without a raw archive show no transcript download control", async
 
   await expect(page.getByText("Ledger transcript polish")).toBeVisible()
   await expect(
-    page.getByRole("button", { name: /raw transcript/i }),
+    page.getByRole("button", { name: /download transcript/i }),
   ).toHaveCount(0)
 })

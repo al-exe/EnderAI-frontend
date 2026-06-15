@@ -651,6 +651,12 @@
   letter-spacing: 0.02em;
 }
 
+.tkind {
+  margin-left: 8px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+
 .tx {
   margin-top: 3px;
   color: var(--muted-foreground);

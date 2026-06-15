@@ -28,6 +28,7 @@ export type LedgerTranscriptEventKind =
   | "note"
 
 export interface LedgerTranscriptEvent {
+  id: string
   kind: LedgerTranscriptEventKind
   occurred_at: string | null
   role: string | null
