@@ -13,12 +13,20 @@ import {
   createTaskforceFleetSession,
   deleteTaskforceFleetSession,
   readTaskforceFleet,
+  renameTaskforceSession,
   type TaskforceFleetAgent,
   type TaskforceFleetResponse,
   type TaskforceFleetSession,
   updateTaskforceFleetSession,
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,6 +84,7 @@ function StatusDot({ status }: { status: FleetStatus }) {
 function AgentRow({
   agent,
   onOpen,
+  onRename,
   onDragStart,
   onDragEnd,
   isDragging,
@@ -84,6 +93,7 @@ function AgentRow({
 }: {
   agent: TaskforceFleetAgent
   onOpen: (agent: TaskforceFleetAgent) => void
+  onRename: (agent: TaskforceFleetAgent, displayName: string) => void
   onDragStart: (
     agent: TaskforceFleetAgent,
     event: DragEvent<HTMLButtonElement>,
@@ -94,75 +104,165 @@ function AgentRow({
   draggable?: boolean
 }) {
   const suppressClick = useRef(false)
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [renameValue, setRenameValue] = useState(agent.display_name)
   const status = agentStatus(agent)
   const age = compactPresence(agent)
   const showAgeInState = status === "waiting" || status === "idle"
   const docTitle = agent.active_document_id ? agent.title : null
+  const sessionLabel = agentDisplayName(agent)
+
+  const submitRename = (event: FormEvent) => {
+    event.preventDefault()
+    const nextName = renameValue.trim()
+    if (!nextName || nextName === agent.display_name) {
+      setRenameValue(agent.display_name)
+      setRenameOpen(false)
+      return
+    }
+    onRename(agent, nextName)
+    setRenameOpen(false)
+  }
 
   return (
-    <button
-      type="button"
+    <div
       data-testid="fleet-agent-row"
       className={cn(
         styles.arow,
         isDragging && styles.arowDragging,
         isMoving && styles.arowMoving,
       )}
-      draggable={draggable && !isMoving}
-      title={
-        draggable
-          ? "Drag to move this agent to another fleet"
-          : "View this agent session"
-      }
-      onClick={() => {
-        if (suppressClick.current) return
-        onOpen(agent)
-      }}
-      onDragStart={(event) => {
-        suppressClick.current = true
-        event.dataTransfer.effectAllowed = "move"
-        event.dataTransfer.setData("text/plain", agent.session_id)
-        onDragStart(agent, event)
-      }}
-      onDragEnd={() => {
-        onDragEnd()
-        window.setTimeout(() => {
-          suppressClick.current = false
-        }, 0)
-      }}
     >
-      <span className={styles.dragCell} aria-hidden="true">
-        <GripVertical className={styles.dragGrip} />
-        <StatusDot status={status} />
-      </span>
-      <div className={styles.who}>
-        <div className={styles.nm}>{agentDisplayName(agent)}</div>
-        <div className={styles.meta}>{agentMeta(agent)}</div>
-        {status !== "run" && (
-          <div className={cn(styles.state, STATE_CLASS[status])}>
-            {STATE_LABEL[status]}
-            {showAgeInState ? ` · ${age}` : ""}
-          </div>
-        )}
-      </div>
-      <div className={styles.work}>
-        <div className={styles.workSummary}>
-          {agent.summary_markdown || "Connected — no summary captured yet"}
+      <button
+        type="button"
+        className={styles.arowMain}
+        draggable={draggable && !isMoving}
+        title={
+          draggable
+            ? "Drag to move this agent to another fleet"
+            : "View this agent session"
+        }
+        onClick={() => {
+          if (suppressClick.current) return
+          onOpen(agent)
+        }}
+        onDragStart={(event) => {
+          suppressClick.current = true
+          event.dataTransfer.effectAllowed = "move"
+          event.dataTransfer.setData("text/plain", agent.session_id)
+          onDragStart(agent, event)
+        }}
+        onDragEnd={() => {
+          onDragEnd()
+          window.setTimeout(() => {
+            suppressClick.current = false
+          }, 0)
+        }}
+      >
+        <span className={styles.dragCell} aria-hidden="true">
+          <GripVertical className={styles.dragGrip} />
+          <StatusDot status={status} />
+        </span>
+        <div className={styles.who}>
+          <div className={styles.nm}>{sessionLabel}</div>
+          <div className={styles.meta}>{agentMeta(agent)}</div>
+          {status !== "run" && (
+            <div className={cn(styles.state, STATE_CLASS[status])}>
+              {STATE_LABEL[status]}
+              {showAgeInState ? ` · ${age}` : ""}
+            </div>
+          )}
         </div>
-        {docTitle && (
-          <div className={styles.detailLine}>
-            <span className={styles.docInline}>{docTitle}</span>
+        <div className={styles.work}>
+          <div className={styles.workSummary}>
+            {agent.summary_markdown || "No current work captured yet"}
           </div>
-        )}
-      </div>
+          {docTitle && (
+            <div className={styles.detailLine}>
+              <span className={styles.docInline}>{docTitle}</span>
+            </div>
+          )}
+        </div>
+      </button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`${sessionLabel} actions`}
+            className={styles.arowMenu}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <MoreHorizontal />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onSelect={() => {
+              setRenameValue(agent.display_name)
+              setRenameOpen(true)
+            }}
+          >
+            <Pencil />
+            Rename
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <div className={styles.age}>{status === "run" ? age : ""}</div>
-    </button>
+
+      <Dialog
+        open={renameOpen}
+        onOpenChange={(open) => {
+          setRenameOpen(open)
+          if (!open) setRenameValue(agent.display_name)
+        }}
+      >
+        <DialogContent>
+          <form onSubmit={submitRename}>
+            <DialogHeader>
+              <DialogTitle>Rename session</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Input
+                value={renameValue}
+                onChange={(event) => setRenameValue(event.target.value)}
+                maxLength={120}
+                autoFocus
+                aria-label="Session name"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRenameOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  !renameValue.trim() ||
+                  renameValue.trim() === agent.display_name
+                }
+              >
+                Save
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
 
 function FleetCard({
   fleet,
   onOpenAgent,
+  onRenameAgent,
   onRename,
   onDelete,
   draggingAgent,
@@ -175,6 +275,7 @@ function FleetCard({
 }: {
   fleet: TaskforceFleetSession
   onOpenAgent: (agent: TaskforceFleetAgent) => void
+  onRenameAgent: (agent: TaskforceFleetAgent, displayName: string) => void
   onRename: (fleet: TaskforceFleetSession, name: string) => void
   onDelete: (fleet: TaskforceFleetSession) => void
   draggingAgent: TaskforceFleetAgent | null
@@ -328,6 +429,7 @@ function FleetCard({
               key={agent.session_id}
               agent={agent}
               onOpen={onOpenAgent}
+              onRename={onRenameAgent}
               onDragStart={onAgentDragStart}
               onDragEnd={onAgentDragEnd}
               isDragging={draggingAgent?.session_id === agent.session_id}
@@ -383,6 +485,17 @@ export function FleetPage() {
       fleet: TaskforceFleetSession
       name: string
     }) => updateTaskforceFleetSession(fleet.id, name),
+    onSuccess: refreshFleet,
+    onError: setMutationError,
+  })
+  const renameAgentMutation = useMutation({
+    mutationFn: ({
+      agent,
+      displayName,
+    }: {
+      agent: TaskforceFleetAgent
+      displayName: string
+    }) => renameTaskforceSession(agent.session_id, displayName),
     onSuccess: refreshFleet,
     onError: setMutationError,
   })
@@ -463,6 +576,10 @@ export function FleetPage() {
   const renameFleet = (fleet: TaskforceFleetSession, name: string) => {
     setMutationError(null)
     renameMutation.mutate({ fleet, name })
+  }
+  const renameAgent = (agent: TaskforceFleetAgent, displayName: string) => {
+    setMutationError(null)
+    renameAgentMutation.mutate({ agent, displayName })
   }
   const deleteFleet = (fleet: TaskforceFleetSession) => {
     if (
@@ -589,6 +706,7 @@ export function FleetPage() {
                   key={fleet.id}
                   fleet={fleet}
                   onOpenAgent={openAgent}
+                  onRenameAgent={renameAgent}
                   onRename={renameFleet}
                   onDelete={deleteFleet}
                   draggingAgent={draggingAgent}
