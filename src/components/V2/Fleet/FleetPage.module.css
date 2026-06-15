@@ -61,6 +61,11 @@
   opacity: 0.72;
 }
 
+.history {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--fl-surface) 82%, var(--muted));
+}
+
 .unassigned {
   border-style: dashed;
 }

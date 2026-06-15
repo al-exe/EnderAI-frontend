@@ -62,6 +62,7 @@ async function mockFleet(
         json: {
           id: "fleet-2",
           name: "",
+          is_history: false,
           created_at: "2026-06-12T10:30:00Z",
           updated_at: "2026-06-12T10:30:00Z",
           agents: [],
@@ -76,6 +77,7 @@ async function mockFleet(
           {
             id: "fleet-1",
             name: "stripe-checkout",
+            is_history: false,
             created_at: "2026-06-12T10:00:00Z",
             updated_at: "2026-06-12T10:20:00Z",
             agents:
@@ -88,6 +90,7 @@ async function mockFleet(
                 {
                   id: "fleet-2",
                   name: "checkout-review",
+                  is_history: false,
                   created_at: "2026-06-12T10:30:00Z",
                   updated_at: "2026-06-12T10:30:00Z",
                   agents:
@@ -97,6 +100,14 @@ async function mockFleet(
                 },
               ]
             : []),
+          {
+            id: "fleet-history",
+            name: "History",
+            is_history: true,
+            created_at: "2026-06-12T09:00:00Z",
+            updated_at: "2026-06-12T09:00:00Z",
+            agents: [],
+          },
         ],
       },
     })
