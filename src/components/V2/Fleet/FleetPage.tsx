@@ -105,7 +105,7 @@ function AgentRow({
 }) {
   const suppressClick = useRef(false)
   const [renameOpen, setRenameOpen] = useState(false)
-  const [renameValue, setRenameValue] = useState(agent.display_name)
+  const [renameValue, setRenameValue] = useState(agent.display_name ?? "")
   const status = agentStatus(agent)
   const age = compactPresence(agent)
   const showAgeInState = status === "waiting" || status === "idle"
@@ -116,7 +116,7 @@ function AgentRow({
     event.preventDefault()
     const nextName = renameValue.trim()
     if (!nextName || nextName === agent.display_name) {
-      setRenameValue(agent.display_name)
+      setRenameValue(agent.display_name ?? "")
       setRenameOpen(false)
       return
     }
@@ -293,7 +293,7 @@ function FleetCard({
   ) => void
 }) {
   const [renaming, setRenaming] = useState(false)
-  const [name, setName] = useState(fleet.name)
+  const [name, setName] = useState(fleet.name ?? "")
 
   const repo = fleetRepo(fleet)
   const running = runningCount(fleet.agents)
@@ -312,7 +312,7 @@ function FleetCard({
     event.preventDefault()
     const nextName = name.trim()
     if (!nextName || nextName === fleet.name) {
-      setName(fleet.name)
+      setName(fleet.name ?? "")
       setRenaming(false)
       return
     }
