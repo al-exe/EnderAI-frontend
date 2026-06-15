@@ -18,7 +18,30 @@ test.use({
   },
 })
 
-async function mockFleet(page: Page) {
+async function mockFleet(
+  page: Page,
+  options: { includeDestination?: boolean } = {},
+) {
+  let agentFleetId = "fleet-1"
+  const agent = {
+    session_id: "session-1",
+    fleet_session_id: agentFleetId,
+    cwd: "/workspace/billing",
+    branch: "feature/automatic-tax",
+    repo: "billing",
+    active_document_id: "doc-1",
+    referenced_document_ids: ["doc-2"],
+    title: "Stripe checkout wiring",
+    summary_markdown: "Wiring automatic tax onto the subscription create path",
+    last_seen_at: "2026-06-12T10:20:00Z",
+    minutes_ago: 10,
+    status: "running",
+    started_at: "2026-06-12T09:42:00Z",
+    specialist_slug: "billing",
+    specialist_rule_count: 4,
+    model_id: "claude-opus-4-8",
+  }
+
   await page.addInitScript(() => {
     window.localStorage.setItem("access_token", "test-token")
   })
@@ -55,32 +78,42 @@ async function mockFleet(page: Page) {
             name: "stripe-checkout",
             created_at: "2026-06-12T10:00:00Z",
             updated_at: "2026-06-12T10:20:00Z",
-            agents: [
-              {
-                session_id: "session-1",
-                fleet_session_id: "fleet-1",
-                cwd: "/workspace/billing",
-                branch: "feature/automatic-tax",
-                repo: "billing",
-                active_document_id: "doc-1",
-                referenced_document_ids: ["doc-2"],
-                title: "Stripe checkout wiring",
-                summary_markdown:
-                  "Wiring automatic tax onto the subscription create path",
-                last_seen_at: "2026-06-12T10:20:00Z",
-                minutes_ago: 10,
-                status: "running",
-                started_at: "2026-06-12T09:42:00Z",
-                specialist_slug: "billing",
-                specialist_rule_count: 4,
-                model_id: "claude-opus-4-8",
-              },
-            ],
+            agents:
+              agentFleetId === "fleet-1"
+                ? [{ ...agent, fleet_session_id: agentFleetId }]
+                : [],
           },
+          ...(options.includeDestination
+            ? [
+                {
+                  id: "fleet-2",
+                  name: "checkout-review",
+                  created_at: "2026-06-12T10:30:00Z",
+                  updated_at: "2026-06-12T10:30:00Z",
+                  agents:
+                    agentFleetId === "fleet-2"
+                      ? [{ ...agent, fleet_session_id: agentFleetId }]
+                      : [],
+                },
+              ]
+            : []),
         ],
       },
     })
   })
+
+  await page.route(
+    "**/api/v1/v2/taskforce/session/session-1",
+    async (route) => {
+      const body = route.request().postDataJSON() as {
+        fleet_session_id: string
+      }
+      agentFleetId = body.fleet_session_id
+      await route.fulfill({
+        json: { ...agent, fleet_session_id: agentFleetId },
+      })
+    },
+  )
 
   await page.route("**/api/v1/v2/taskforce/session-log**", async (route) => {
     await route.fulfill({
@@ -164,6 +197,30 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await page.getByRole("link", { name: "Fleet" }).first().click()
   await expect(page).toHaveURL(/\/v2\/fleet$/)
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
+})
+
+test("dragging an agent moves it to another fleet", async ({ page }) => {
+  await mockFleet(page, { includeDestination: true })
+  await page.goto("/v2/fleet")
+
+  const moveRequest = page.waitForRequest(
+    (request) =>
+      request.url().endsWith("/api/v1/v2/taskforce/session/session-1") &&
+      request.method() === "PATCH",
+  )
+  await page
+    .getByTestId("fleet-agent-row")
+    .dragTo(page.getByTestId("fleet-card-fleet-2"))
+
+  expect((await moveRequest).postDataJSON()).toEqual({
+    fleet_session_id: "fleet-2",
+  })
+  await expect(
+    page.getByTestId("fleet-card-fleet-1").getByTestId("fleet-agent-row"),
+  ).toHaveCount(0)
+  await expect(
+    page.getByTestId("fleet-card-fleet-2").getByTestId("fleet-agent-row"),
+  ).toContainText("Stripe checkout wiring")
 })
 
 for (const theme of ["light", "dark"] as const) {
