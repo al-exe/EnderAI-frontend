@@ -19,6 +19,10 @@ const searchSchema = z.object({
   session_id: z.string().optional(),
   specialist: z.string().optional(),
   sort: z.enum(["newest", "oldest"]).optional(),
+  // Timestamp anchor (ISO) used to highlight the transcript line a Fleet
+  // activity entry deep-links to. Transcript lines have no stable id, so the
+  // detail view highlights the line whose occurred_at is closest (TF-247).
+  at: z.string().optional(),
 })
 
 export const Route = createFileRoute("/v2/ledger")({

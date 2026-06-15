@@ -4,7 +4,7 @@ import { BookOpen, ChevronLeft, ScrollText } from "lucide-react"
 import { readV2Document } from "@/api/v2Documents"
 import {
   readTaskforceFleet,
-  readTaskforceSessionLog,
+  readTaskforceSessionActivity,
   type TaskforceFleetAgent,
   type TaskforceFleetResponse,
 } from "@/api/v2Taskforce"
@@ -81,9 +81,10 @@ function FleetAgentDetailRoute() {
     queryFn: readTaskforceFleet,
     refetchInterval: 30_000,
   })
-  const logQuery = useQuery({
-    queryKey: ["v2-taskforce-session-log", { sessionId }],
-    queryFn: () => readTaskforceSessionLog({ sessionId }),
+  const activityQuery = useQuery({
+    queryKey: ["v2-taskforce-session-activity", { sessionId }],
+    queryFn: () => readTaskforceSessionActivity({ sessionId }),
+    refetchInterval: 30_000,
   })
 
   const located = locateAgent(fleetQuery.data, sessionId)
@@ -145,15 +146,12 @@ function FleetAgentDetailRoute() {
     Boolean(bit),
   )
 
-  // Activity timeline — newest-first. The live "now" step sits on top, with
-  // each captured document descending below it (from the session log).
-  const captures = [...(logQuery.data?.entries ?? [])]
-    .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
-    .map((entry) => ({
-      key: `${entry.query_id}-${entry.document_id}`,
-      time: formatClockTime(entry.occurred_at),
-      text: `Captured update to ${entry.title}`,
-    }))
+  // Activity timeline — newest-first. The live "now" step sits on top; below it
+  // each captured turn (user prompt + a summary of the agent's response),
+  // deep-linking to the Ledger line that backs it (TF-247).
+  const activityEntries = [...(activityQuery.data?.entries ?? [])].sort(
+    (a, b) => b.occurred_at.localeCompare(a.occurred_at),
+  )
 
   return (
     <div className={styles.detail} data-testid="fleet-agent-detail">
@@ -269,7 +267,7 @@ function FleetAgentDetailRoute() {
             </div>
           )}
 
-          {/* Activity — newest-first, derived from the session log. */}
+          {/* Activity — durable per-turn timeline, newest-first (TF-247). */}
           <div className={styles.section}>
             <div className={styles.seclabel}>Activity</div>
             <div className={styles.timeline}>
@@ -280,17 +278,50 @@ function FleetAgentDetailRoute() {
                   {agent.summary_markdown || "Active in this session"}
                 </div>
               </div>
-              {captures.map((event) => (
-                <div className={styles.tev} key={event.key}>
-                  <span className={styles.tdot} />
-                  <div className={styles.tt}>{event.time}</div>
-                  <div className={styles.tx}>{event.text}</div>
-                </div>
-              ))}
-              {logQuery.isLoading && (
+              {activityEntries.map((entry) => {
+                const body = (
+                  <>
+                    <span className={styles.tdot} />
+                    <div className={styles.tt}>
+                      {formatClockTime(entry.occurred_at)}
+                    </div>
+                    <div className={styles.tx}>{entry.prompt}</div>
+                    {entry.response_summary && (
+                      <div className={styles.tsub}>
+                        {entry.response_summary}
+                      </div>
+                    )}
+                  </>
+                )
+                // The Ledger is org-only; ledger_href is null otherwise, so the
+                // row renders plain. When present we navigate to the session and
+                // anchor at this turn's timestamp (transcript lines have no id).
+                return entry.ledger_href ? (
+                  <Link
+                    key={entry.id}
+                    to="/v2/ledger"
+                    search={{ session_id: sessionId, at: entry.occurred_at }}
+                    className={cn(styles.tev, styles.tevLink)}
+                    title="Open the backing Ledger line"
+                  >
+                    {body}
+                  </Link>
+                ) : (
+                  <div className={styles.tev} key={entry.id}>
+                    {body}
+                  </div>
+                )
+              })}
+              {activityQuery.isLoading && (
                 <div className={styles.tev}>
                   <span className={styles.tdot} />
                   <div className={styles.tx}>Loading session activity…</div>
+                </div>
+              )}
+              {!activityQuery.isLoading && activityEntries.length === 0 && (
+                <div className={styles.tev}>
+                  <span className={styles.tdot} />
+                  <div className={styles.tx}>No activity captured yet.</div>
                 </div>
               )}
             </div>

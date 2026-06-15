@@ -30,6 +30,19 @@ export interface TaskforceSessionLogResponse {
   entries: TaskforceSessionLogEntry[]
 }
 
+export interface TaskforceSessionActivityEntry {
+  id: string
+  occurred_at: string
+  prompt: string
+  response_summary: string | null
+  ledger_href: string | null
+}
+
+export interface TaskforceSessionActivityResponse {
+  session_id: string
+  entries: TaskforceSessionActivityEntry[]
+}
+
 export interface TaskforceFleetAgent {
   session_id: string
   fleet_session_id: string
@@ -90,6 +103,24 @@ export function readTaskforceSessionLog(
   return request(OpenAPI, {
     method: "GET",
     url: "/api/v1/v2/taskforce/session-log",
+    query: {
+      session_id: args.sessionId,
+      limit: args.limit ?? 50,
+    },
+  })
+}
+
+export interface ReadTaskforceSessionActivityArgs {
+  sessionId: string
+  limit?: number
+}
+
+export function readTaskforceSessionActivity(
+  args: ReadTaskforceSessionActivityArgs,
+): CancelablePromise<TaskforceSessionActivityResponse> {
+  return request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/v2/taskforce/session-activity",
     query: {
       session_id: args.sessionId,
       limit: args.limit ?? 50,
