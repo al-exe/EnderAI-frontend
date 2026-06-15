@@ -638,6 +638,23 @@
   color: var(--foreground);
 }
 
+.tsub {
+  margin-top: 4px;
+  color: var(--fl-faint);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tevLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tevLink:hover .tx {
+  color: var(--primary);
+}
+
 /* rail blocks */
 .block {
   margin-bottom: 26px;

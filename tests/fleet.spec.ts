@@ -136,6 +136,34 @@ async function mockFleet(
     })
   })
 
+  await page.route(
+    "**/api/v1/v2/taskforce/session-activity**",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          session_id: "session-1",
+          entries: [
+            {
+              id: "act-2",
+              occurred_at: "2026-06-12T10:18:00Z",
+              prompt: "Add the automatic tax line item",
+              response_summary: "Wired automatic tax onto subscription create",
+              ledger_href:
+                "/v2/ledger?session_id=session-1&at=2026-06-12T10:18:00Z",
+            },
+            {
+              id: "act-1",
+              occurred_at: "2026-06-12T10:02:00Z",
+              prompt: "Investigate the Stripe checkout flow",
+              response_summary: null,
+              ledger_href: null,
+            },
+          ],
+        },
+      })
+    },
+  )
+
   await page.route("**/api/v1/v2/documents/**", async (route) => {
     await route.fulfill({
       json: {
@@ -197,6 +225,39 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await page.getByRole("link", { name: "Fleet" }).first().click()
   await expect(page).toHaveURL(/\/v2\/fleet$/)
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
+})
+
+test("activity timeline shows per-turn entries newest-first and links to the Ledger", async ({
+  page,
+}) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet/session-1")
+
+  // Both captured turns render, with the agent's response summary as subtext.
+  const newest = page.getByText("Add the automatic tax line item")
+  const oldest = page.getByText("Investigate the Stripe checkout flow")
+  await expect(newest).toBeVisible()
+  await expect(oldest).toBeVisible()
+  await expect(
+    page.getByText("Wired automatic tax onto subscription create"),
+  ).toBeVisible()
+
+  // Newest-on-top ordering: the live "now" head sits above both turns, and the
+  // newer turn precedes the older one in the DOM.
+  const timeline = page.getByText("now", { exact: true })
+  await expect(timeline).toBeVisible()
+  const newestBox = await newest.boundingBox()
+  const oldestBox = await oldest.boundingBox()
+  expect(newestBox && oldestBox && newestBox.y < oldestBox.y).toBe(true)
+
+  // The org-available turn deep-links to the Ledger, anchored at its timestamp.
+  const ledgerLink = page.getByRole("link", {
+    name: "Add the automatic tax line item",
+  })
+  const href = await ledgerLink.getAttribute("href")
+  expect(href).toContain("/v2/ledger?")
+  expect(href).toContain("session_id=session-1")
+  expect(href).toContain("at=")
 })
 
 test("dragging an agent moves it to another fleet", async ({ page }) => {

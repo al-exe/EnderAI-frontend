@@ -435,6 +435,12 @@
   grid-template-columns: 74px 1fr;
   gap: 0;
 }
+/* Highlighted target of a Fleet activity deep-link (?at=…). */
+.evHighlight .evC {
+  background: var(--tf-primary-soft, color-mix(in srgb, var(--tf-primary) 10%, transparent));
+  border-left-color: var(--tf-primary);
+  box-shadow: -2px 0 0 0 var(--tf-primary);
+}
 .evT {
   font-family: var(--font-mono);
   font-size: 12px;

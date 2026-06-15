@@ -5,9 +5,11 @@ import {
   type CSSProperties,
   type FormEvent,
   type ReactNode,
+  type RefObject,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react"
 
@@ -58,6 +60,7 @@ type LedgerSearchFilters = {
   session_id?: string
   specialist?: string
   sort?: LedgerSort
+  at?: string
 }
 
 type DayGroup = {
@@ -379,6 +382,7 @@ export function LedgerPage({
         {selectedSessionId ? (
           <div className={styles.app}>
             <LedgerDetail
+              anchorAt={searchFilters.at}
               detail={detailQuery.data}
               demo={isDemoMode}
               isError={detailQuery.isError}
@@ -582,19 +586,62 @@ function LedgerRow({
   )
 }
 
+/**
+ * Index of the transcript line whose timestamp is closest to `at`, or -1.
+ *
+ * Best-effort anchor for a Fleet activity deep-link: transcript lines have no
+ * stable id, and the activity timestamp (recorded at /discover) and the
+ * transcript timestamp (recorded at /observe) come from different writes, so
+ * this lands the reader near — not exactly on — the backing turn (TF-247).
+ */
+function closestEventIndex(
+  events: LedgerTranscriptEvent[],
+  at: string | undefined,
+): number {
+  if (!at || events.length === 0) return -1
+  const target = new Date(at).getTime()
+  if (Number.isNaN(target)) return -1
+  let best = -1
+  let bestDelta = Number.POSITIVE_INFINITY
+  events.forEach((event, index) => {
+    if (!event.occurred_at) return
+    const stamp = new Date(event.occurred_at).getTime()
+    if (Number.isNaN(stamp)) return
+    const delta = Math.abs(stamp - target)
+    if (delta < bestDelta) {
+      bestDelta = delta
+      best = index
+    }
+  })
+  return best
+}
+
 function LedgerDetail({
+  anchorAt,
   detail,
   demo,
   isError,
   isLoading,
   onBack,
 }: {
+  anchorAt?: string
   detail?: LedgerSessionDetail
   demo: boolean
   isError: boolean
   isLoading: boolean
   onBack: () => void
 }) {
+  const anchorIndex = useMemo(
+    () => closestEventIndex(detail?.transcript_events ?? [], anchorAt),
+    [detail?.transcript_events, anchorAt],
+  )
+  const anchorRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (anchorIndex >= 0) {
+      anchorRef.current?.scrollIntoView({ block: "center" })
+    }
+  }, [anchorIndex])
+
   if (isLoading) {
     return (
       <div className={styles.detail}>
@@ -648,8 +695,10 @@ function LedgerDetail({
           {detail.transcript_events.length > 0 ? (
             detail.transcript_events.map((event, index) => (
               <TranscriptEvent
+                anchorRef={index === anchorIndex ? anchorRef : undefined}
                 detail={detail}
                 event={event}
+                highlighted={index === anchorIndex}
                 key={`${event.kind}-${event.occurred_at ?? index}-${index}`}
               />
             ))
@@ -666,17 +715,22 @@ function LedgerDetail({
 }
 
 function TranscriptEvent({
+  anchorRef,
   detail,
   event,
+  highlighted,
 }: {
+  anchorRef?: RefObject<HTMLDivElement | null>
   detail: LedgerSessionDetail
   event: LedgerTranscriptEvent
+  highlighted?: boolean
 }) {
   const time = formatTimeOfDay(event.occurred_at)
+  const anchorProps = { highlighted, rootRef: anchorRef }
 
   if (event.kind === "prompt") {
     return (
-      <EventShell modifier={styles.evPrompt} time={time}>
+      <EventShell modifier={styles.evPrompt} time={time} {...anchorProps}>
         <div className={styles.lab}>
           <b>{eventWho(event, detail)} asked</b>
         </div>
@@ -687,7 +741,7 @@ function TranscriptEvent({
 
   if (event.kind === "reply") {
     return (
-      <EventShell modifier={styles.evReply} time={time}>
+      <EventShell modifier={styles.evReply} time={time} {...anchorProps}>
         <div className={styles.lab}>
           <b>{agentLabel(detail)}</b> replied
         </div>
@@ -700,7 +754,7 @@ function TranscriptEvent({
     const failed = event.exit_code !== null && event.exit_code !== 0
     const repo = event.repo ?? detail.repo
     return (
-      <EventShell time={time}>
+      <EventShell time={time} {...anchorProps}>
         <div className={styles.lab}>ran command</div>
         <div className={styles.cmd}>
           <div className={styles.cmdLine}>
@@ -726,7 +780,7 @@ function TranscriptEvent({
 
   if (event.kind === "edit") {
     return (
-      <EventShell time={time}>
+      <EventShell time={time} {...anchorProps}>
         <div className={styles.lab}>edited file</div>
         <div className={styles.edit}>
           <span className={styles.editFile}>{event.file}</span>
@@ -743,7 +797,7 @@ function TranscriptEvent({
   }
 
   return (
-    <EventShell modifier={styles.evNote} time={time}>
+    <EventShell modifier={styles.evNote} time={time} {...anchorProps}>
       <div className={styles.noteTxt}>● {event.note ?? event.text}</div>
     </EventShell>
   )
@@ -751,15 +805,22 @@ function TranscriptEvent({
 
 function EventShell({
   children,
+  highlighted,
   modifier,
+  rootRef,
   time,
 }: {
   children: ReactNode
+  highlighted?: boolean
   modifier?: string
+  rootRef?: RefObject<HTMLDivElement | null>
   time: string
 }) {
   return (
-    <div className={cn(styles.ev, modifier)}>
+    <div
+      className={cn(styles.ev, modifier, highlighted && styles.evHighlight)}
+      ref={rootRef}
+    >
       <div className={styles.evT}>{time}</div>
       <div className={styles.evC}>{children}</div>
     </div>
