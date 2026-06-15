@@ -162,18 +162,73 @@ async function mockFleet(
           session_id: "session-1",
           entries: [
             {
-              id: "act-2",
+              id: "event-command",
+              kind: "command",
               occurred_at: "2026-06-12T10:18:00Z",
-              prompt: "Add the automatic tax line item",
-              response_summary: "Wired automatic tax onto subscription create",
+              role: null,
+              who: null,
+              text: null,
+              cmd: "pytest tests/payments.spec.ts",
+              exit_code: 0,
+              output: "4 passed",
+              file: null,
+              added: null,
+              removed: null,
+              note: null,
+              repo: "EnderAI",
               ledger_href:
-                "/v2/ledger?session_id=session-1&at=2026-06-12T10:18:00Z",
+                "/v2/ledger?session_id=session-1&event_id=event-command",
             },
             {
-              id: "act-1",
+              id: "event-reply",
+              kind: "reply",
+              occurred_at: "2026-06-12T10:17:00Z",
+              role: "assistant",
+              who: "@agent",
+              text: "Wired automatic tax onto subscription create",
+              cmd: null,
+              exit_code: null,
+              output: null,
+              file: null,
+              added: null,
+              removed: null,
+              note: null,
+              repo: null,
+              ledger_href:
+                "/v2/ledger?session_id=session-1&event_id=event-reply",
+            },
+            {
+              id: "event-edit",
+              kind: "edit",
+              occurred_at: "2026-06-12T10:16:30Z",
+              role: null,
+              who: null,
+              text: null,
+              cmd: null,
+              exit_code: null,
+              output: null,
+              file: "src/payments.ts",
+              added: 12,
+              removed: 2,
+              note: "Enabled automatic tax",
+              repo: "EnderAI",
+              ledger_href: null,
+            },
+            {
+              id: "event-prompt",
+              kind: "prompt",
               occurred_at: "2026-06-12T10:02:00Z",
-              prompt: "Investigate the Stripe checkout flow",
-              response_summary: null,
+              role: "user",
+              who: "@user",
+              text: "Investigate the Stripe checkout flow",
+              cmd: null,
+              exit_code: null,
+              output: null,
+              file: null,
+              added: null,
+              removed: null,
+              note: null,
+              repo: null,
               ledger_href: null,
             },
           ],
@@ -227,7 +282,10 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await mockFleet(page)
   await page.goto("/v2/fleet")
 
-  await page.getByText("Wiring automatic tax on Stripe checkout").first().click()
+  await page
+    .getByText("Wiring automatic tax on Stripe checkout")
+    .first()
+    .click()
 
   await expect(page).toHaveURL(/\/v2\/fleet\/session-1$/)
   await expect(
@@ -270,20 +328,21 @@ test("agent session can be renamed from the row menu", async ({ page }) => {
   await expect(page.getByText("Checkout tax rollout")).toBeVisible()
 })
 
-test("activity timeline shows per-turn entries newest-first and links to the Ledger", async ({
+test("activity timeline shows the full canonical event stream and exact Ledger links", async ({
   page,
 }) => {
   await mockFleet(page)
   await page.goto("/v2/fleet/session-1")
 
-  // Both captured turns render, with the agent's response summary as subtext.
-  const newest = page.getByText("Add the automatic tax line item")
+  const newest = page.getByText("$ pytest tests/payments.spec.ts")
   const oldest = page.getByText("Investigate the Stripe checkout flow")
   await expect(newest).toBeVisible()
   await expect(oldest).toBeVisible()
   await expect(
     page.getByText("Wired automatic tax onto subscription create"),
   ).toBeVisible()
+  await expect(page.getByText("Edited src/payments.ts")).toBeVisible()
+  await expect(page.getByText("4 passed · exit 0")).toBeVisible()
 
   // Newest-on-top ordering: the live "now" head sits above both turns, and the
   // newer turn precedes the older one in the DOM.
@@ -293,14 +352,14 @@ test("activity timeline shows per-turn entries newest-first and links to the Led
   const oldestBox = await oldest.boundingBox()
   expect(newestBox && oldestBox && newestBox.y < oldestBox.y).toBe(true)
 
-  // The org-available turn deep-links to the Ledger, anchored at its timestamp.
+  // The org-available event deep-links to the exact canonical Ledger event.
   const ledgerLink = page.getByRole("link", {
-    name: "Add the automatic tax line item",
+    name: /pytest tests\/payments\.spec\.ts/,
   })
   const href = await ledgerLink.getAttribute("href")
   expect(href).toContain("/v2/ledger?")
   expect(href).toContain("session_id=session-1")
-  expect(href).toContain("at=")
+  expect(href).toContain("event_id=event-command")
 })
 
 test("dragging an agent moves it to another fleet", async ({ page }) => {

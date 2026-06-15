@@ -7,6 +7,7 @@ import {
   readTaskforceSessionActivity,
   type TaskforceFleetAgent,
   type TaskforceFleetResponse,
+  type TaskforceSessionActivityEntry,
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
@@ -72,6 +73,28 @@ function metaRow(key: string, value: string, valueClass?: string) {
       </span>
     </div>
   )
+}
+
+function eventTitle(event: TaskforceSessionActivityEntry): string {
+  if (event.kind === "command") return `$ ${event.cmd ?? "command"}`
+  if (event.kind === "edit") return `Edited ${event.file ?? "file"}`
+  return event.text ?? event.note ?? event.kind
+}
+
+function eventDetail(event: TaskforceSessionActivityEntry): string | null {
+  if (event.kind === "command") {
+    const exit =
+      event.exit_code === null ? "" : `exit ${event.exit_code.toString()}`
+    return [event.output, exit].filter(Boolean).join(" · ") || null
+  }
+  if (event.kind === "edit") {
+    const stats =
+      event.added !== null || event.removed !== null
+        ? `+${event.added ?? 0} −${event.removed ?? 0}`
+        : ""
+    return [event.note, stats].filter(Boolean).join(" · ") || null
+  }
+  return event.note
 }
 
 function FleetAgentDetailRoute() {
@@ -146,11 +169,9 @@ function FleetAgentDetailRoute() {
     Boolean(bit),
   )
 
-  // Activity timeline — newest-first. The live "now" step sits on top; below it
-  // each captured turn (user prompt + a summary of the agent's response),
-  // deep-linking to the Ledger line that backs it (TF-247).
+  // The same canonical event stream shown by Ledger, newest-first here.
   const activityEntries = [...(activityQuery.data?.entries ?? [])].sort(
-    (a, b) => b.occurred_at.localeCompare(a.occurred_at),
+    (a, b) => (b.occurred_at ?? "").localeCompare(a.occurred_at ?? ""),
   )
 
   return (
@@ -279,30 +300,25 @@ function FleetAgentDetailRoute() {
                 </div>
               </div>
               {activityEntries.map((entry) => {
+                const detail = eventDetail(entry)
                 const body = (
                   <>
                     <span className={styles.tdot} />
                     <div className={styles.tt}>
                       {formatClockTime(entry.occurred_at)}
+                      <span className={styles.tkind}>{entry.kind}</span>
                     </div>
-                    <div className={styles.tx}>{entry.prompt}</div>
-                    {entry.response_summary && (
-                      <div className={styles.tsub}>
-                        {entry.response_summary}
-                      </div>
-                    )}
+                    <div className={styles.tx}>{eventTitle(entry)}</div>
+                    {detail && <div className={styles.tsub}>{detail}</div>}
                   </>
                 )
-                // The Ledger is org-only; ledger_href is null otherwise, so the
-                // row renders plain. When present we navigate to the session and
-                // anchor at this turn's timestamp (transcript lines have no id).
                 return entry.ledger_href ? (
                   <Link
                     key={entry.id}
                     to="/v2/ledger"
-                    search={{ session_id: sessionId, at: entry.occurred_at }}
+                    search={{ session_id: sessionId, event_id: entry.id }}
                     className={cn(styles.tev, styles.tevLink)}
-                    title="Open the backing Ledger line"
+                    title="Open this event in Ledger"
                   >
                     {body}
                   </Link>
