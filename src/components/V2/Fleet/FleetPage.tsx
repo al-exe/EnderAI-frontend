@@ -201,7 +201,7 @@ function AgentRow({
         <DropdownMenuContent align="end">
           <DropdownMenuItem
             onSelect={() => {
-              setRenameValue(agent.display_name)
+              setRenameValue(agent.display_name ?? "")
               setRenameOpen(true)
             }}
           >
@@ -217,7 +217,7 @@ function AgentRow({
         open={renameOpen}
         onOpenChange={(open) => {
           setRenameOpen(open)
-          if (!open) setRenameValue(agent.display_name)
+          if (!open) setRenameValue(agent.display_name ?? "")
         }}
       >
         <DialogContent>
@@ -396,7 +396,7 @@ function FleetCard({
             <DropdownMenuContent align="end">
               <DropdownMenuItem
                 onSelect={() => {
-                  setName(fleet.name)
+                  setName(fleet.name ?? "")
                   setRenaming(true)
                 }}
               >
