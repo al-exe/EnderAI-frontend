@@ -1,12 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
-import { type FormEvent, useState } from "react"
 import {
+  GripVertical,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react"
+import { type DragEvent, type FormEvent, useRef, useState } from "react"
+import {
+  assignTaskforceFleetSession,
   createTaskforceFleetSession,
   deleteTaskforceFleetSession,
   readTaskforceFleet,
   type TaskforceFleetAgent,
+  type TaskforceFleetResponse,
   type TaskforceFleetSession,
   updateTaskforceFleetSession,
 } from "@/api/v2Taskforce"
@@ -68,10 +76,22 @@ function StatusDot({ status }: { status: FleetStatus }) {
 function AgentRow({
   agent,
   onOpen,
+  onDragStart,
+  onDragEnd,
+  isDragging,
+  isMoving,
 }: {
   agent: TaskforceFleetAgent
   onOpen: (agent: TaskforceFleetAgent) => void
+  onDragStart: (
+    agent: TaskforceFleetAgent,
+    event: DragEvent<HTMLButtonElement>,
+  ) => void
+  onDragEnd: () => void
+  isDragging: boolean
+  isMoving: boolean
 }) {
+  const suppressClick = useRef(false)
   const status = agentStatus(agent)
   const age = compactPresence(agent)
   const showAgeInState = status === "waiting" || status === "idle"
@@ -81,10 +101,34 @@ function AgentRow({
     <button
       type="button"
       data-testid="fleet-agent-row"
-      className={styles.arow}
-      onClick={() => onOpen(agent)}
+      className={cn(
+        styles.arow,
+        isDragging && styles.arowDragging,
+        isMoving && styles.arowMoving,
+      )}
+      draggable={!isMoving}
+      title="Drag to move this agent to another fleet"
+      onClick={() => {
+        if (suppressClick.current) return
+        onOpen(agent)
+      }}
+      onDragStart={(event) => {
+        suppressClick.current = true
+        event.dataTransfer.effectAllowed = "move"
+        event.dataTransfer.setData("text/plain", agent.session_id)
+        onDragStart(agent, event)
+      }}
+      onDragEnd={() => {
+        onDragEnd()
+        window.setTimeout(() => {
+          suppressClick.current = false
+        }, 0)
+      }}
     >
-      <StatusDot status={status} />
+      <span className={styles.dragCell} aria-hidden="true">
+        <GripVertical className={styles.dragGrip} />
+        <StatusDot status={status} />
+      </span>
       <div className={styles.who}>
         <div className={styles.nm}>{agentDisplayName(agent)}</div>
         <div className={styles.meta}>{agentMeta(agent)}</div>
@@ -115,11 +159,31 @@ function FleetCard({
   onOpenAgent,
   onRename,
   onDelete,
+  draggingAgent,
+  dropTargetId,
+  movingSessionId,
+  onAgentDragStart,
+  onAgentDragEnd,
+  onDragOver,
+  onDropAgent,
 }: {
   fleet: TaskforceFleetSession
   onOpenAgent: (agent: TaskforceFleetAgent) => void
   onRename: (fleet: TaskforceFleetSession, name: string) => void
   onDelete: (fleet: TaskforceFleetSession) => void
+  draggingAgent: TaskforceFleetAgent | null
+  dropTargetId: string | null
+  movingSessionId: string | null
+  onAgentDragStart: (
+    agent: TaskforceFleetAgent,
+    event: DragEvent<HTMLButtonElement>,
+  ) => void
+  onAgentDragEnd: () => void
+  onDragOver: (fleetSessionId: string) => void
+  onDropAgent: (
+    agent: TaskforceFleetAgent,
+    destination: TaskforceFleetSession,
+  ) => void
 }) {
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(fleet.name)
@@ -127,6 +191,12 @@ function FleetCard({
   const repo = fleetRepo(fleet)
   const running = runningCount(fleet.agents)
   const total = fleet.agents.length
+  const isDropCandidate =
+    draggingAgent !== null && draggingAgent.fleet_session_id !== fleet.id
+  const isDropTarget = isDropCandidate && dropTargetId === fleet.id
+  const hasPendingMove =
+    movingSessionId !== null &&
+    fleet.agents.some((agent) => agent.session_id === movingSessionId)
 
   const submitRename = (event: FormEvent) => {
     event.preventDefault()
@@ -141,7 +211,26 @@ function FleetCard({
   }
 
   return (
-    <section className={styles.fleet}>
+    <section
+      aria-label={`${fleetTitle(fleet)} fleet`}
+      data-testid={`fleet-card-${fleet.id}`}
+      className={cn(
+        styles.fleet,
+        isDropTarget && styles.fleetDropTarget,
+        hasPendingMove && styles.fleetDropPending,
+      )}
+      onDragOver={(event) => {
+        if (!isDropCandidate) return
+        event.preventDefault()
+        event.dataTransfer.dropEffect = "move"
+        onDragOver(fleet.id)
+      }}
+      onDrop={(event) => {
+        if (!draggingAgent || !isDropCandidate) return
+        event.preventDefault()
+        onDropAgent(draggingAgent, fleet)
+      }}
+    >
       <div className={styles.fhead}>
         {renaming ? (
           <form onSubmit={submitRename} className="flex-1">
@@ -227,6 +316,10 @@ function FleetCard({
               key={agent.session_id}
               agent={agent}
               onOpen={onOpenAgent}
+              onDragStart={onAgentDragStart}
+              onDragEnd={onAgentDragEnd}
+              isDragging={draggingAgent?.session_id === agent.session_id}
+              isMoving={movingSessionId === agent.session_id}
             />
           ))
         )}
@@ -248,6 +341,9 @@ export function FleetPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [mutationError, setMutationError] = useState<unknown>(null)
+  const [draggingAgent, setDraggingAgent] =
+    useState<TaskforceFleetAgent | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
 
   const fleetQuery = useQuery({
     queryKey: FLEET_QUERY_KEY,
@@ -282,6 +378,58 @@ export function FleetPage() {
     onSuccess: refreshFleet,
     onError: setMutationError,
   })
+  const moveMutation = useMutation({
+    mutationFn: ({
+      sessionId,
+      destinationId,
+    }: {
+      sessionId: string
+      destinationId: string
+    }) => assignTaskforceFleetSession(sessionId, destinationId),
+    onMutate: async ({ sessionId, destinationId }) => {
+      setMutationError(null)
+      await queryClient.cancelQueries({ queryKey: FLEET_QUERY_KEY })
+      const previous =
+        queryClient.getQueryData<TaskforceFleetResponse>(FLEET_QUERY_KEY)
+
+      queryClient.setQueryData<TaskforceFleetResponse>(
+        FLEET_QUERY_KEY,
+        (current) => {
+          if (!current) return current
+          const movingAgent = current.fleet_sessions
+            .flatMap((fleet) => fleet.agents)
+            .find((agent) => agent.session_id === sessionId)
+          if (!movingAgent) return current
+
+          return {
+            ...current,
+            fleet_sessions: current.fleet_sessions.map((fleet) => ({
+              ...fleet,
+              agents:
+                fleet.id === destinationId
+                  ? [
+                      ...fleet.agents.filter(
+                        (agent) => agent.session_id !== sessionId,
+                      ),
+                      { ...movingAgent, fleet_session_id: destinationId },
+                    ]
+                  : fleet.agents.filter(
+                      (agent) => agent.session_id !== sessionId,
+                    ),
+            })),
+          }
+        },
+      )
+      return { previous }
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(FLEET_QUERY_KEY, context.previous)
+      }
+      setMutationError(error)
+    },
+    onSettled: refreshFleet,
+  })
 
   const fleetSessions = fleetQuery.data?.fleet_sessions ?? []
   const allAgents = fleetSessions.flatMap((fleet) => fleet.agents)
@@ -308,6 +456,23 @@ export function FleetPage() {
       setMutationError(null)
       deleteMutation.mutate(fleet.id)
     }
+  }
+  const endAgentDrag = () => {
+    setDraggingAgent(null)
+    setDropTargetId(null)
+  }
+  const moveAgent = (
+    agent: TaskforceFleetAgent,
+    destination: TaskforceFleetSession,
+  ) => {
+    endAgentDrag()
+    if (agent.fleet_session_id === destination.id || moveMutation.isPending) {
+      return
+    }
+    moveMutation.mutate({
+      sessionId: agent.session_id,
+      destinationId: destination.id,
+    })
   }
 
   return (
@@ -411,6 +576,21 @@ export function FleetPage() {
                   onOpenAgent={openAgent}
                   onRename={renameFleet}
                   onDelete={deleteFleet}
+                  draggingAgent={draggingAgent}
+                  dropTargetId={dropTargetId}
+                  movingSessionId={
+                    moveMutation.isPending
+                      ? moveMutation.variables.sessionId
+                      : null
+                  }
+                  onAgentDragStart={(agent) => {
+                    setMutationError(null)
+                    setDraggingAgent(agent)
+                    setDropTargetId(null)
+                  }}
+                  onAgentDragEnd={endAgentDrag}
+                  onDragOver={setDropTargetId}
+                  onDropAgent={moveAgent}
                 />
               ))}
             </div>

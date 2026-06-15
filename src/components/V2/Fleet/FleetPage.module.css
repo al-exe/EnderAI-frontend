@@ -45,6 +45,20 @@
 .fleet {
   border: 1px solid var(--border);
   background: var(--fl-surface);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.fleetDropTarget {
+  border-color: var(--primary);
+  background: var(--fl-primary-soft);
+  box-shadow: inset 0 0 0 1px var(--fl-primary-line);
+}
+
+.fleetDropPending {
+  opacity: 0.72;
 }
 
 .unassigned {
@@ -122,7 +136,7 @@
 /* rows */
 .arow {
   display: grid;
-  grid-template-columns: 14px minmax(180px, 250px) minmax(0, 1fr) 64px;
+  grid-template-columns: 26px minmax(180px, 250px) minmax(0, 1fr) 64px;
   gap: 18px;
   align-items: baseline;
   width: 100%;
@@ -130,6 +144,14 @@
   border-bottom: 1px solid var(--fl-hair);
   text-align: left;
   cursor: pointer;
+}
+
+.arowDragging {
+  opacity: 0.45;
+}
+
+.arowMoving {
+  cursor: progress;
 }
 
 .arow:last-of-type {
@@ -143,6 +165,28 @@
 .arow:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: -2px;
+}
+
+.dragCell {
+  display: flex;
+  align-items: flex-start;
+  gap: 3px;
+  width: 26px;
+}
+
+.dragGrip {
+  width: 12px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--fl-faint);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.arow:hover .dragGrip,
+.arow:focus-visible .dragGrip,
+.arowDragging .dragGrip {
+  opacity: 1;
 }
 
 /* status dot */
@@ -913,7 +957,7 @@
   }
 
   .arow {
-    grid-template-columns: 14px minmax(0, 1fr) auto;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
     gap: 12px;
     align-items: start;
   }
@@ -941,6 +985,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .fleet,
+  .dragGrip {
+    transition: none;
+  }
+
   .pulse {
     animation: none;
   }
