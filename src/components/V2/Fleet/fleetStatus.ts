@@ -124,6 +124,39 @@ export function formatClockTime(iso: string): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
+/** Relative time for the live timeline head — matches the session header. */
+export function liveActivityTime(agent: TaskforceFleetAgent): string {
+  return compactPresence(agent)
+}
+
+type LiveActivityOptions = {
+  capturePaused?: boolean
+  pauseReason?: string | null
+}
+
+/** Status-aware copy for the live timeline head. */
+export function liveActivityLabel(
+  agent: TaskforceFleetAgent,
+  options: LiveActivityOptions = {},
+): string {
+  const status = agentStatus(agent)
+  const summary = agent.summary_markdown?.trim()
+
+  if (status === "run") {
+    return summary || "Actively working on this session"
+  }
+  if (status === "waiting") {
+    return "Waiting for your input"
+  }
+  if (status === "paused" || options.capturePaused) {
+    const reason = options.pauseReason?.trim()
+    return reason
+      ? `Activity capture paused — ${reason}`
+      : "Activity capture is paused"
+  }
+  return "Connected but not actively running"
+}
+
 /** Locale-aware date and time in the browser's local timezone. */
 export function formatLocalDateTime(iso: string): string {
   const date = new Date(iso)
@@ -149,6 +182,7 @@ export function fleetTitle(fleet: TaskforceFleetSession): string {
 export function fleetRepo(
   fleet: TaskforceFleetSession,
 ): { repo: string; branch: string | null } | null {
+  if (fleet.is_history) return null
   for (const agent of fleet.agents) {
     if (agent.repo) {
       return { repo: agent.repo, branch: agent.branch }

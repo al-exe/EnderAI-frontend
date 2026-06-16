@@ -20,7 +20,10 @@ test.use({
 
 async function mockFleet(
   page: Page,
-  options: { includeDestination?: boolean } = {},
+  options: {
+    includeDestination?: boolean
+    agentOverrides?: Record<string, unknown>
+  } = {},
 ) {
   let agentFleetId = "fleet-1"
   const agent = {
@@ -41,6 +44,7 @@ async function mockFleet(
     specialist_slug: "billing",
     specialist_rule_count: 4,
     model_id: "claude-opus-4-8",
+    ...options.agentOverrides,
   }
 
   await page.addInitScript(() => {
@@ -107,7 +111,18 @@ async function mockFleet(
             is_history: true,
             created_at: "2026-06-12T09:00:00Z",
             updated_at: "2026-06-12T09:00:00Z",
-            agents: [],
+            agents: [
+              {
+                ...agent,
+                session_id: "session-history",
+                fleet_session_id: "fleet-history",
+                repo: "EnderAI-new-user-max-promo",
+                branch: "feature/new-user-max-promo",
+                display_name: "Prior promo session",
+                status: "idle",
+                minutes_ago: 120,
+              },
+            ],
           },
         ],
       },
@@ -281,6 +296,17 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await expect(page.getByText(/tokens/i)).toHaveCount(0)
   await expect(page.getByText(/saved by reuse/i)).toHaveCount(0)
 
+  const historyCard = page.getByTestId("fleet-card-fleet-history")
+  await expect(historyCard.getByText("History", { exact: true })).toBeVisible()
+  await expect(historyCard.getByText("EnderAI-new-user-max-promo")).toHaveCount(0)
+  await expect(
+    historyCard.getByText(/feature\/new-user-max-promo/),
+  ).toHaveCount(0)
+  await expect(page.getByTestId("fleet-card-fleet-1")).toContainText("billing")
+  await expect(page.getByTestId("fleet-card-fleet-1")).toContainText(
+    "feature/automatic-tax",
+  )
+
   // New fleet creates a nameless fleet (no request body).
   const createRequest = page.waitForRequest(
     (request) =>
@@ -366,10 +392,13 @@ test("activity timeline shows the full canonical event stream and exact Ledger l
   await expect(page.getByText("Edited src/payments.ts")).toBeVisible()
   await expect(page.getByText("4 passed · exit 0")).toBeVisible()
 
-  // Newest-on-top ordering: the live "now" head sits above both turns, and the
+  // Newest-on-top ordering: the live timeline head sits above both turns, and the
   // newer turn precedes the older one in the DOM.
-  const timeline = page.getByText("now", { exact: true })
+  const timeline = page.getByText("10m", { exact: true })
   await expect(timeline).toBeVisible()
+  await expect(
+    page.getByText("Wiring automatic tax onto the subscription create path"),
+  ).toBeVisible()
   const newestBox = await newest.boundingBox()
   const oldestBox = await oldest.boundingBox()
   expect(newestBox && oldestBox && newestBox.y < oldestBox.y).toBe(true)
@@ -382,6 +411,55 @@ test("activity timeline shows the full canonical event stream and exact Ledger l
   expect(href).toContain("/v2/ledger?")
   expect(href).toContain("session_id=session-1")
   expect(href).toContain("event_id=event-command")
+})
+
+test("activity timeline live head shows waiting state", async ({ page }) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      status: "waiting",
+      summary_markdown: "Stale summary from earlier work",
+      minutes_ago: 0,
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  await expect(page.getByText("now", { exact: true })).toBeVisible()
+  await expect(page.getByText("Waiting for your input")).toBeVisible()
+  await expect(
+    page.getByText("Stale summary from earlier work"),
+  ).toHaveCount(0)
+})
+
+test("activity timeline live head shows idle state", async ({ page }) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      status: "idle",
+      summary_markdown: "",
+      minutes_ago: 2,
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  await expect(page.getByText("2m", { exact: true })).toBeVisible()
+  await expect(
+    page.getByText("Connected but not actively running"),
+  ).toBeVisible()
+})
+
+test("activity timeline live head shows paused capture state", async ({
+  page,
+}) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      status: "paused",
+      summary_markdown: "",
+      minutes_ago: 1,
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  await expect(page.getByText("1m", { exact: true })).toBeVisible()
+  await expect(page.getByText("Activity capture is paused")).toBeVisible()
 })
 
 test("dragging an agent moves it to another fleet", async ({ page }) => {

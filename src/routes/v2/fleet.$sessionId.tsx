@@ -28,6 +28,8 @@ import {
   formatClockTime,
   formatLocalDateTime,
   hostLabel,
+  liveActivityLabel,
+  liveActivityTime,
   modelLabel,
   presenceLabel,
   STATE_LABEL,
@@ -299,9 +301,12 @@ function FleetAgentDetailRoute() {
             <div className={styles.timeline}>
               <div className={cn(styles.tev, styles.tevNow)}>
                 <span className={styles.tdot} />
-                <div className={styles.tt}>now</div>
+                <div className={styles.tt}>{liveActivityTime(agent)}</div>
                 <div className={styles.tx}>
-                  {agent.summary_markdown || "Active in this session"}
+                  {liveActivityLabel(agent, {
+                    capturePaused,
+                    pauseReason,
+                  })}
                 </div>
               </div>
               {activityEntries.map((entry) => {
