@@ -21,19 +21,6 @@
   );
 }
 
-/* ===== Roster header ===== */
-.summaryLine {
-  margin: 2px 0 0;
-  color: var(--fl-faint);
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  letter-spacing: 0.01em;
-}
-
-.summaryLine .lead {
-  color: var(--muted-foreground);
-}
-
 /* ===== Fleet group (enclosed session card) ===== */
 .fleetList {
   display: flex;

@@ -39,6 +39,7 @@ import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
+  V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
 import styles from "./FleetPage.module.css"
@@ -624,15 +625,15 @@ export function FleetPage() {
         >
           <header className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Fleet</h1>
-              <p className={styles.summaryLine}>
-                <span className={styles.lead}>
-                  {activeAgents.length}{" "}
-                  {activeAgents.length === 1 ? "agent" : "agents"}
-                </span>{" "}
-                · {summaryBits.join(" · ")} · {workFleets.length}{" "}
+              <div className={V2_TAB_EYEBROW_CLASS}>
+                {activeAgents.length}{" "}
+                {activeAgents.length === 1 ? "agent" : "agents"} ·{" "}
+                {summaryBits.join(" · ")} · {workFleets.length}{" "}
                 {workFleets.length === 1 ? "fleet" : "fleets"}
-              </p>
+              </div>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+                Fleet
+              </h1>
             </div>
             <Button
               variant="outline"
