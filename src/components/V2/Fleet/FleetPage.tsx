@@ -62,6 +62,7 @@ import {
   type FleetStatus,
   fleetRepo,
   fleetTitle,
+  rosterWorkSummary,
   runningCount,
   STATE_LABEL,
   waitingCount,
@@ -216,7 +217,7 @@ function AgentRow({
         </div>
         <div className={styles.work}>
           <div className={styles.workSummary}>
-            {agent.summary_markdown || "No current work captured yet"}
+            {rosterWorkSummary(agent)}
           </div>
           {docTitle && (
             <div className={styles.detailLine}>
@@ -425,6 +426,11 @@ function FleetCard({
               ) : (
                 <span className={styles.frepo}>no repo bound</span>
               ))}
+          </button>
+        )}
+
+        {!renaming && (
+          <div className={styles.fheadMeta}>
             <span className={styles.fcount}>
               {running > 0 ? (
                 <>
@@ -435,42 +441,41 @@ function FleetCard({
                 `${total} ${total === 1 ? "agent" : "agents"}`
               )}
             </span>
-          </button>
-        )}
-
-        {!renaming && !isHistory && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`${fleetTitle(fleet)} actions`}
-                className={styles.fmenu}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onSelect={() => {
-                  setName(fleet.name ?? "")
-                  setRenaming(true)
-                }}
-              >
-                <Pencil />
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onSelect={() => onDelete(fleet)}
-              >
-                <Trash2 />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            {!isHistory && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`${fleetTitle(fleet)} actions`}
+                    className={styles.fmenu}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      setName(fleet.name ?? "")
+                      setRenaming(true)
+                    }}
+                  >
+                    <Pencil />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => onDelete(fleet)}
+                  >
+                    <Trash2 />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         )}
       </div>
 
@@ -499,15 +504,6 @@ function FleetCard({
               ))
             )}
           </div>
-
-          <Link
-            to="/v2/settings"
-            search={{ tab: "connect-agent" }}
-            className={styles.newagent}
-          >
-            <Plus />
-            <span>New agent in {fleetTitle(fleet)}</span>
-          </Link>
         </>
       )}
     </section>

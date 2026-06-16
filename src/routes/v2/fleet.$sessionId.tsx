@@ -32,6 +32,7 @@ import {
   liveActivityTime,
   modelLabel,
   presenceLabel,
+  sessionWorkSummary,
   STATE_LABEL,
 } from "@/components/V2/Fleet/fleetStatus"
 import { cn } from "@/lib/utils"
@@ -272,10 +273,7 @@ function FleetAgentDetailRoute() {
           ) : (
             <div className={styles.section}>
               <div className={styles.seclabel}>Working on</div>
-              <div className={styles.nowtask}>
-                {agent.summary_markdown ||
-                  "No summary has been captured for this session yet."}
-              </div>
+              <div className={styles.nowtask}>{sessionWorkSummary(agent)}</div>
             </div>
           )}
 
