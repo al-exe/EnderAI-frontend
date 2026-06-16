@@ -187,6 +187,8 @@ function AgentRow({
         </div>
       </button>
 
+      <div className={styles.age}>{status === "run" ? age : ""}</div>
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -212,8 +214,6 @@ function AgentRow({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <div className={styles.age}>{status === "run" ? age : ""}</div>
 
       <Dialog
         open={renameOpen}
@@ -441,15 +441,6 @@ function FleetCard({
           ))
         )}
       </div>
-
-      <Link
-        to="/v2/settings"
-        search={{ tab: "connect-agent" }}
-        className={styles.newagent}
-      >
-        <Plus />
-        <span>New agent in {fleetTitle(fleet)}</span>
-      </Link>
     </section>
   )
 }
