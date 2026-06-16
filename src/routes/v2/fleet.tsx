@@ -14,16 +14,15 @@ export const Route = createFileRoute("/v2/fleet")({
 })
 
 function FleetRoute() {
-  const router = useRouterState()
-  const pathname = router.location.pathname
+  const isSessionDetail = useRouterState({
+    select: (state) =>
+      state.matches.some((match) => match.routeId === "/v2/fleet/$sessionId"),
+  })
 
   // Child route /v2/fleet/$sessionId renders via Outlet (same pattern as library).
-  // A bare /v2/fleet/ (trailing slash, no session id) must still render FleetPage —
-  // otherwise a hard refresh paints a blank screen and the Fleet tab stays unselected.
-  if (
-    pathname.startsWith("/v2/fleet/") &&
-    pathname.replace(/\/+$/, "") !== "/v2/fleet"
-  ) {
+  // The roster (/v2/fleet or /v2/fleet/) must render FleetPage — an empty Outlet
+  // after hard refresh paints a blank screen until the user navigates away and back.
+  if (isSessionDetail) {
     return <Outlet />
   }
 

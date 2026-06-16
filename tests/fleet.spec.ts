@@ -278,6 +278,45 @@ test("hard refresh on /v2/fleet/ keeps Fleet selected and renders content", asyn
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
 
+test("hard refresh on /v2/fleet keeps Fleet selected and renders content", async ({
+  page,
+}) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+  await page.reload()
+
+  await expect(page.getByRole("link", { name: "Fleet" })).toHaveAttribute(
+    "data-active",
+    "true",
+  )
+  await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
+  await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
+})
+
+test("agent session display name wraps instead of ellipsing", async ({
+  page,
+}) => {
+  const longName =
+    "Wiring automatic tax on Stripe checkout for international customers with VAT compliance"
+  await mockFleet(page, { agentOverrides: { display_name: longName } })
+  await page.goto("/v2/fleet")
+
+  const name = page.getByTestId("fleet-agent-name")
+  await expect(name).toHaveText(longName)
+
+  const typography = await name.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      textOverflow: style.textOverflow,
+      whiteSpace: style.whiteSpace,
+      fits: element.scrollWidth <= element.clientWidth + 1,
+    }
+  })
+  expect(typography.textOverflow).not.toBe("ellipsis")
+  expect(typography.whiteSpace).not.toBe("nowrap")
+  expect(typography.fits).toBe(true)
+})
+
 test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await mockFleet(page)
   await page.goto("/v2/fleet")

@@ -453,8 +453,10 @@
 
 .dtitle h1 {
   margin: 0;
+  overflow-wrap: anywhere;
   font-size: calc(22px * var(--v2-scale, 1));
   font-weight: 600;
+  line-height: 1.25;
   letter-spacing: -0.015em;
 }
 

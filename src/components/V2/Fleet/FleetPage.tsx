@@ -166,7 +166,9 @@ function AgentRow({
           <StatusDot status={status} />
         </span>
         <div className={styles.who}>
-          <div className={styles.nm}>{sessionLabel}</div>
+          <div className={styles.nm} data-testid="fleet-agent-name">
+            {sessionLabel}
+          </div>
           <div className={styles.meta}>{agentMeta(agent)}</div>
           {status !== "run" && (
             <div className={cn(styles.state, STATE_CLASS[status])}>
