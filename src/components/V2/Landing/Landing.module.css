@@ -1309,28 +1309,33 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 35px;
 }
 
 .footerBrand {
-  font-size: 14px;
+  gap: 11px;
+  font-size: 20px;
 }
 
 .footerMark {
-  width: 18px;
-  height: 18px;
+  width: 25px;
+  height: 25px;
 }
 
 .footerLinks {
   display: flex;
-  gap: 18px;
+  gap: 27.5px;
+}
+
+.footerLinks a {
+  font-size: 14.375px;
 }
 
 .copyright {
   margin-left: auto;
   color: var(--landing-faint);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 14.375px;
 }
 
 .reveal {
