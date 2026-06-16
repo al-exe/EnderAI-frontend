@@ -628,7 +628,7 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
         <SidebarHeader className="px-4 py-6 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
           <TaskforceMark />
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="pt-1.5">
           <TaskforceNav currentUser={currentUser} />
         </SidebarContent>
         <SidebarFooter className="gap-1">
