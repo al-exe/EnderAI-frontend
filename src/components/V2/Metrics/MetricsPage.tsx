@@ -34,6 +34,7 @@ import {
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
   V2_TAB_EYEBROW_CLASS,
+  V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
 import { usePersistentState } from "@/hooks/usePersistentState"
 import { cn } from "@/lib/utils"
@@ -465,13 +466,7 @@ export function MetricsPage({ currentUser, sessionId }: Props) {
       )}
     >
       <div className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}>
-        <div
-          className={cn(
-            V2_STICKY_HEADER_CLASS,
-            "border-b-0 pb-0",
-            "flex flex-col gap-6",
-          )}
-        >
+        <div className={V2_TAB_HEADER_STACK_CLASS}>
           <header className="flex flex-wrap items-end justify-between gap-4">
             <h1 className="text-2xl font-semibold">Metrics</h1>
             {!scopedSessionId && canViewOrganizationMetrics && (

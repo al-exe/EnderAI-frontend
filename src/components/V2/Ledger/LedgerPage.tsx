@@ -28,7 +28,7 @@ import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
-  V2_STICKY_HEADER_CLASS,
+  V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
 
@@ -404,13 +404,7 @@ export function LedgerPage({
             className={styles.app}
             style={{ "--grid": GRID } as CSSProperties}
           >
-            <div
-              className={cn(
-                V2_STICKY_HEADER_CLASS,
-                "border-b-0 pb-0",
-                "flex flex-col gap-6",
-              )}
-            >
+            <div className={V2_TAB_HEADER_STACK_CLASS}>
               <header className={styles.head}>
                 <div>
                   <div className={styles.crumb}>

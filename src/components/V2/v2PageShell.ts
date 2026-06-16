@@ -38,5 +38,11 @@ export const V2_STICKY_HEADER_CLASS = cn(
   "sticky top-0 z-30 -mx-6 shrink-0 border-b bg-background px-6 pt-4 pb-4",
 )
 
+/** Title block plus filter bar stacked inside `V2_STICKY_HEADER_CLASS`. */
+export const V2_TAB_HEADER_STACK_CLASS = cn(
+  V2_STICKY_HEADER_CLASS,
+  "flex flex-col gap-4 border-b-0 pb-0",
+)
+
 /** @deprecated Prefer V2_PAGE_CONTENT for tab pages. */
 export const V2_CONTENT_SHELL = V2_PAGE_CONTENT
