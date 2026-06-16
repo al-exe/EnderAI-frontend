@@ -20,7 +20,7 @@ test("/landing renders the redesigned Taskforce landing page", async ({
       name: /stop losing track.*of your agents/i,
     }),
   ).toBeVisible()
-  await expect(page.getByText("taskforce")).toBeVisible()
+  await expect(page.getByText("taskforce", { exact: true })).toBeVisible()
 
   for (const heading of [
     "Orchestration",
