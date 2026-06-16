@@ -78,7 +78,9 @@ function FeatureRow({
           <span>{label}</span>
         </div>
         <h2>{title}</h2>
-        <p>{body}</p>
+        <p className={cn(id === "profiles" && styles.profileFeatureBody)}>
+          {body}
+        </p>
       </div>
       <div className={styles.visual}>{visual}</div>
     </div>
@@ -201,9 +203,6 @@ function ProfilePanel() {
     <Panel chip="active" label="Profile">
       <div className={styles.profileBody}>
         <div className={styles.profileHead}>
-          <div className={styles.avatar}>
-            <Bot />
-          </div>
           <div>
             <div className={styles.profileName}>Payments Specialist</div>
             <div className={styles.profileRole}>role - billing & checkout</div>
@@ -275,6 +274,12 @@ function LibraryPanel() {
           reused="Reused 2x"
           signal="Updated 5d ago"
           title="PG16 migration notes"
+        />
+        <DocumentRow
+          path="/agents/profile-routing.md"
+          reused="Reused 7x"
+          signal="Updated 1w ago"
+          title="Profile routing rules"
         />
       </div>
     </Panel>

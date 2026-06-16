@@ -730,6 +730,10 @@
   text-wrap: pretty;
 }
 
+.featureCopy .profileFeatureBody {
+  font-size: 18.4px;
+}
+
 .featureLabel {
   display: flex;
   align-items: center;
@@ -1021,7 +1025,7 @@
   grid-template-columns: 18px 1fr auto;
   align-items: center;
   gap: 11px;
-  padding: 11px 12px;
+  padding: 9px 12px;
   border: 1px solid transparent;
 }
 
