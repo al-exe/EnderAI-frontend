@@ -425,6 +425,11 @@ function FleetCard({
               ) : (
                 <span className={styles.frepo}>no repo bound</span>
               ))}
+          </button>
+        )}
+
+        {!renaming && (
+          <div className={styles.fheadMeta}>
             <span className={styles.fcount}>
               {running > 0 ? (
                 <>
@@ -435,42 +440,41 @@ function FleetCard({
                 `${total} ${total === 1 ? "agent" : "agents"}`
               )}
             </span>
-          </button>
-        )}
-
-        {!renaming && !isHistory && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`${fleetTitle(fleet)} actions`}
-                className={styles.fmenu}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onSelect={() => {
-                  setName(fleet.name ?? "")
-                  setRenaming(true)
-                }}
-              >
-                <Pencil />
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onSelect={() => onDelete(fleet)}
-              >
-                <Trash2 />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            {!isHistory && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`${fleetTitle(fleet)} actions`}
+                    className={styles.fmenu}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      setName(fleet.name ?? "")
+                      setRenaming(true)
+                    }}
+                  >
+                    <Pencil />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => onDelete(fleet)}
+                  >
+                    <Trash2 />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         )}
       </div>
 

@@ -59,9 +59,10 @@
 
 .fhead {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
-  padding: 14px 18px;
+  min-height: 48px;
+  padding: 10px 18px;
   border-bottom: 1px solid var(--fl-hair);
 }
 
@@ -71,7 +72,7 @@
 
 .fheadToggle {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
   min-width: 0;
   flex: 1;
@@ -134,13 +135,20 @@
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  margin-left: auto;
   gap: 6px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
   font-size: calc(11px * var(--v2-scale, 1));
   letter-spacing: 0.01em;
   white-space: nowrap;
+}
+
+.fheadMeta {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
 }
 
 .pin {
@@ -152,7 +160,7 @@
 }
 
 .fmenu {
-  margin-left: 4px;
+  flex-shrink: 0;
   color: var(--fl-faint);
 }
 
@@ -1017,7 +1025,7 @@
 
   .fheadToggle {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 7px 10px;
     width: 100%;
@@ -1026,6 +1034,12 @@
   .fheadToggle .frepo {
     grid-row: 2;
     grid-column: 2 / -1;
+  }
+
+  .fheadMeta {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0;
   }
 
   .fcount,
