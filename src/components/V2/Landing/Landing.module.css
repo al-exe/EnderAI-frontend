@@ -484,10 +484,12 @@
 
 .greenDot {
   background: var(--landing-positive);
+  color: var(--landing-positive);
 }
 
 .amberDot {
   background: oklch(0.74 0.15 70);
+  color: oklch(0.74 0.15 70);
 }
 
 .purpleDot {
