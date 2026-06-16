@@ -249,24 +249,26 @@ function FleetAgentDetailRoute() {
         data-testid="fleet-detail-body"
       >
         <div className={styles.dmain}>
-          {/* Working on — a waiting agent surfaces its question + reply box. */}
-          {status === "waiting" && question ? (
-            <div className={styles.section}>
-              <div className={styles.seclabel}>Waiting for input</div>
-              <div className={styles.question}>
-                <div className={styles.questionText}>{question}</div>
-                <div className={styles.reply}>
-                  <input
-                    placeholder={`Reply to ${agentDisplayName(agent)}…`}
-                    aria-label="Reply to agent"
-                    disabled
-                  />
-                  <button type="button" disabled>
-                    Send
-                  </button>
+          {/* Working on — waiting agents surface a question when present. */}
+          {status === "waiting" ? (
+            question ? (
+              <div className={styles.section}>
+                <div className={styles.seclabel}>Waiting for input</div>
+                <div className={styles.question}>
+                  <div className={styles.questionText}>{question}</div>
+                  <div className={styles.reply}>
+                    <input
+                      placeholder={`Reply to ${agentDisplayName(agent)}…`}
+                      aria-label="Reply to agent"
+                      disabled
+                    />
+                    <button type="button" disabled>
+                      Send
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null
           ) : (
             <div className={styles.section}>
               <div className={styles.seclabel}>Working on</div>

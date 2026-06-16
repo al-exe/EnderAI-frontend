@@ -309,12 +309,24 @@ test("agent session display name wraps instead of ellipsing", async ({
     return {
       textOverflow: style.textOverflow,
       whiteSpace: style.whiteSpace,
+      textTransform: style.textTransform,
       fits: element.scrollWidth <= element.clientWidth + 1,
     }
   })
   expect(typography.textOverflow).not.toBe("ellipsis")
   expect(typography.whiteSpace).not.toBe("nowrap")
+  expect(typography.textTransform).toBe("none")
   expect(typography.fits).toBe(true)
+})
+
+test("agent session display name preserves stored casing", async ({ page }) => {
+  const mixedCaseName = "e2eCheckout — wire VAT for EU"
+  await mockFleet(page, { agentOverrides: { display_name: mixedCaseName } })
+  await page.goto("/v2/fleet")
+
+  const name = page.getByTestId("fleet-agent-name")
+  await expect(name).toHaveText(mixedCaseName)
+  await expect(name).toHaveCSS("text-transform", "none")
 })
 
 test("Fleet renders the calm roster from live API data", async ({ page }) => {
@@ -436,7 +448,10 @@ test("activity timeline shows the full canonical event stream and exact Ledger l
   const timeline = page.getByText("10m", { exact: true })
   await expect(timeline).toBeVisible()
   await expect(
-    page.getByText("Wiring automatic tax onto the subscription create path"),
+    page
+      .getByTestId("fleet-detail-body")
+      .getByText("Wiring automatic tax onto the subscription create path")
+      .first(),
   ).toBeVisible()
   const newestBox = await newest.boundingBox()
   const oldestBox = await oldest.boundingBox()
@@ -518,8 +533,9 @@ test("Fleet session collapse defaults and persists", async ({ page }) => {
   await page.getByTestId("fleet-header-toggle-fleet-history").click()
   await expect(historyCard).toHaveAttribute("data-collapsed", "false")
   await expect(
-    page.getByText("Inactive agent sessions appear here."),
+    historyCard.getByTestId("fleet-agent-row"),
   ).toBeVisible()
+  await expect(historyCard.getByText("Prior promo session")).toBeVisible()
 
   await page.reload()
   await expect(historyCard).toHaveAttribute("data-collapsed", "false")
@@ -541,8 +557,12 @@ test("dragging an agent moves it to another fleet", async ({ page }) => {
       request.url().endsWith("/api/v1/v2/taskforce/session/session-1") &&
       request.method() === "PATCH",
   )
-  await page
+  const agentRow = page
+    .getByTestId("fleet-card-fleet-1")
     .getByTestId("fleet-agent-row")
+  await agentRow.hover()
+  await agentRow
+    .locator("button[draggable='true']")
     .dragTo(page.getByTestId("fleet-card-fleet-2"))
 
   expect((await moveRequest).postDataJSON()).toEqual({
@@ -590,9 +610,7 @@ for (const theme of ["light", "dark"] as const) {
       const rosterColumns = await page
         .getByTestId("fleet-agent-row")
         .evaluate((row) => getComputedStyle(row).gridTemplateColumns)
-      expect(rosterColumns.trim().split(/\s+/)).toHaveLength(
-        width === 360 ? 3 : 4,
-      )
+      expect(rosterColumns.trim().split(/\s+/)).toHaveLength(4)
 
       await page.goto("/v2/fleet/session-1")
       await expect(

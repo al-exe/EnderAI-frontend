@@ -321,7 +321,7 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
   await expect(page.getByTestId("agents-card-grid")).toBeVisible()
   await expect(page.getByText("Jensen", { exact: true })).toBeVisible()
   await expect(page.getByText("Mira", { exact: true })).toBeVisible()
-  await expect(page.getByTestId("agent-status-active")).toBeVisible()
+  await expect(page.getByTestId("agent-status-active").first()).toBeVisible()
   await expect(page.getByTestId("agent-status-archived")).toBeVisible()
 
   await page.getByRole("link", { name: /open profile jensen/i }).click()

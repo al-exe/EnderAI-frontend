@@ -161,6 +161,17 @@ function AgentsIndex() {
         ? agents
         : agents.filter((agent) => agent.status === scope)
     const sorted = [...filtered].sort((a, b) => {
+      if (sortMode === "recent") {
+        const aTime = a.last_invoked_at ? Date.parse(a.last_invoked_at) : null
+        const bTime = b.last_invoked_at ? Date.parse(b.last_invoked_at) : null
+        if (aTime === null && bTime === null) {
+          return a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        }
+        if (aTime === null) return 1
+        if (bTime === null) return -1
+        const comparison = aTime - bTime
+        return sortDir === "asc" ? comparison : -comparison
+      }
       const comparison = compareAgents(a, b, sortMode)
       return sortDir === "asc" ? comparison : -comparison
     })
