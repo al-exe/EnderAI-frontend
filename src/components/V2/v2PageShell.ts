@@ -44,5 +44,8 @@ export const V2_TAB_HEADER_STACK_CLASS = cn(
   "flex flex-col gap-4 border-b-0 pb-0",
 )
 
+/** Main content below a tab title + filter header stack. */
+export const V2_TAB_CONTENT_CLASS = "flex flex-col gap-4 pt-4"
+
 /** @deprecated Prefer V2_PAGE_CONTENT for tab pages. */
 export const V2_CONTENT_SHELL = V2_PAGE_CONTENT

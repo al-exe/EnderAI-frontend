@@ -34,6 +34,7 @@ import {
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
   V2_TAB_EYEBROW_CLASS,
+  V2_TAB_CONTENT_CLASS,
   V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
 import { usePersistentState } from "@/hooks/usePersistentState"
@@ -167,6 +168,17 @@ const WINDOW_COPY: Record<MetricsWindow, { label: string; title: string }> = {
   "7d": { label: "7d", title: "this week" },
   "30d": { label: "30d", title: "in the last 30 days" },
   all: { label: "all", title: "all time" },
+}
+
+function metricsEyebrowLabel(
+  window: MetricsWindow,
+  scope: MetricsScope,
+  sessionShortId?: string,
+) {
+  if (sessionShortId) {
+    return `session · ${sessionShortId}`
+  }
+  return `${WINDOW_COPY[window].label} · ${scope}`
 }
 
 function toMetricNumber(value: string | number | null | undefined) {
@@ -467,8 +479,15 @@ export function MetricsPage({ currentUser, sessionId }: Props) {
     >
       <div className={cn(V2_PAGE_BODY, "gap-0 pb-6 md:pb-8")}>
         <div className={V2_TAB_HEADER_STACK_CLASS}>
-          <header className="flex flex-wrap items-end justify-between gap-4">
-            <h1 className="text-2xl font-semibold">Metrics</h1>
+          <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className={V2_TAB_EYEBROW_CLASS}>
+                {metricsEyebrowLabel(window, effectiveScope, sessionShortId)}
+              </div>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+                Metrics
+              </h1>
+            </div>
             {!scopedSessionId && canViewOrganizationMetrics && (
               <MetricsScopeToggle value={scope} onChange={setScope} />
             )}
@@ -480,7 +499,7 @@ export function MetricsPage({ currentUser, sessionId }: Props) {
           />
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className={V2_TAB_CONTENT_CLASS}>
         {scopedSessionId && (
           <div
             data-testid="metrics-session-filter-banner"
@@ -712,7 +731,7 @@ function ExperimentalMetricsPage({
           </header>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className={V2_TAB_CONTENT_CLASS}>
       {metricsQueryIsError && (
         <div className="border border-destructive bg-destructive/10 p-3 text-sm">
           Failed to load metrics. Try again in a moment.
@@ -908,7 +927,7 @@ function ExperimentalSessionMetrics({
           </header>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className={V2_TAB_CONTENT_CLASS}>
       <section className="grid border border-border bg-background text-foreground lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
         <div className="px-5 py-6 md:px-7">
           <div className="font-mono text-xs tracking-[0.01em] opacity-70">
