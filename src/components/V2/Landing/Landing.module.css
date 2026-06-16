@@ -45,7 +45,7 @@
     0 1px 2px oklch(0.7 0 0 / 0.06), 0 12px 32px -20px oklch(0.4 0 0 / 0.22);
 
   min-height: 100svh;
-  overflow-x: hidden;
+  overflow-x: clip;
   background: var(--landing-bg);
   color: var(--landing-fg);
   font-family: var(--font-sans);
@@ -243,7 +243,7 @@
 
 .heroCopy {
   align-self: start;
-  max-width: 540px;
+  width: 100%;
   margin-top: 7vh;
 }
 
@@ -319,11 +319,12 @@
   display: flex;
   gap: 8px;
   margin-bottom: 26px;
+  width: 100%;
 }
 
 .heroDots button {
-  width: 26px;
-  height: 4px;
+  flex: 1 1 0;
+  height: 4.4px;
   padding: 0;
   border: 0;
   background: var(--landing-border);
@@ -484,10 +485,12 @@
 
 .greenDot {
   background: var(--landing-positive);
+  color: var(--landing-positive);
 }
 
 .amberDot {
   background: oklch(0.74 0.15 70);
+  color: oklch(0.74 0.15 70);
 }
 
 .purpleDot {
@@ -1168,6 +1171,10 @@
   border-top: 1px solid var(--landing-hairline);
 }
 
+.features .proofRow:first-child {
+  border-top: 1px solid var(--landing-hairline);
+}
+
 .proofRow h2 {
   font-size: clamp(22px, 2.4vw, 27px);
 }
@@ -1307,28 +1314,33 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 35px;
 }
 
 .footerBrand {
-  font-size: 14px;
+  gap: 11px;
+  font-size: 20px;
 }
 
 .footerMark {
-  width: 18px;
-  height: 18px;
+  width: 25px;
+  height: 25px;
 }
 
 .footerLinks {
   display: flex;
-  gap: 18px;
+  gap: 27.5px;
+}
+
+.footerLinks a {
+  font-size: 14.375px;
 }
 
 .copyright {
   margin-left: auto;
   color: var(--landing-faint);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 14.375px;
 }
 
 .reveal {

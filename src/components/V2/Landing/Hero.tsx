@@ -36,6 +36,9 @@ const SCENES = [
   },
 ] as const
 
+const HERO_ROTATION_MS = 4400
+const HERO_CLICK_PAUSE_MS = 10_000
+
 function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
@@ -91,6 +94,7 @@ export function LandingHero() {
   const copyReveal = useRevealClass()
   const termReveal = useRevealClass()
   const swapTimer = useRef<number | null>(null)
+  const pauseUntilRef = useRef(0)
   const scene = SCENES[sceneIndex]
 
   const selectScene = useCallback(
@@ -119,11 +123,17 @@ export function LandingHero() {
   useEffect(() => {
     if (reducedMotion) return
     const interval = window.setInterval(() => {
+      if (Date.now() < pauseUntilRef.current) return
       selectScene((sceneIndex + 1) % SCENES.length)
-    }, 4400)
+    }, HERO_ROTATION_MS)
 
     return () => window.clearInterval(interval)
   }, [reducedMotion, sceneIndex, selectScene])
+
+  const selectSceneFromDot = (nextIndex: number) => {
+    pauseUntilRef.current = Date.now() + HERO_CLICK_PAUSE_MS
+    selectScene(nextIndex)
+  }
 
   useEffect(() => {
     return () => {
@@ -153,9 +163,6 @@ export function LandingHero() {
               className={cn(styles.heroCopy, copyReveal.className)}
               ref={copyReveal.ref}
             >
-              <span className={styles.eyebrow}>
-                AI work memory for engineering teams
-              </span>
               <h1 className={cn(isSwapping && styles.swapping)}>
                 <span className={styles.lead}>Stop </span>
                 <span className={styles.phrase}>{phrase}</span>
@@ -178,7 +185,7 @@ export function LandingHero() {
                     aria-selected={sceneIndex === index}
                     className={cn(sceneIndex === index && styles.activeDot)}
                     key={item.key}
-                    onClick={() => selectScene(index)}
+                    onClick={() => selectSceneFromDot(index)}
                     role="tab"
                     type="button"
                   />
@@ -242,7 +249,7 @@ function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
     <div className={styles.term}>
       <div className={styles.termHead}>
         <span className={styles.termDot} />
-        <span className={styles.termName}>taskforce - live</span>
+        <span className={styles.termName}>taskforce</span>
         <span className={styles.liveStatus}>
           <span />
           connected
