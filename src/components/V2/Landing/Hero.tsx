@@ -242,7 +242,7 @@ function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
     <div className={styles.term}>
       <div className={styles.termHead}>
         <span className={styles.termDot} />
-        <span className={styles.termName}>taskforce - live</span>
+        <span className={styles.termName}>taskforce</span>
         <span className={styles.liveStatus}>
           <span />
           connected
