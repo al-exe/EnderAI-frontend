@@ -12,7 +12,6 @@ export function ProvenRoi() {
           className={cn(styles.featureRow, styles.proofRow, styles.visualLeft)}
         >
           <div className={styles.featureCopy}>
-            <span className={styles.proofTag}>ROI - supporting proof</span>
             <div className={styles.featureLabel}>
               <span className={styles.featureIcon}>
                 <BarChart3 />
@@ -21,8 +20,9 @@ export function ProvenRoi() {
             </div>
             <h2>Proven ROI</h2>
             <p>
-              Quantify it: tokens and engineering time saved, with a transparent
-              methodology.
+              Measure the tokens and engineering time your agents save. Use a
+              transparent methodology to understand what Taskforce returns
+              across your work.
             </p>
           </div>
           <div className={styles.visual}>

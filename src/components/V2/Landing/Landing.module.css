@@ -1176,17 +1176,6 @@
   font-size: 15px;
 }
 
-.proofTag {
-  display: inline-block;
-  margin-bottom: 10.5px;
-  padding: 3px 8px;
-  border: 1px solid var(--landing-border);
-  color: var(--landing-faint);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-}
-
 .metricsCard {
   justify-content: center;
   padding: 18px;
