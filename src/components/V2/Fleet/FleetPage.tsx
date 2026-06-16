@@ -171,31 +171,31 @@ function AgentRow({
         isDragging && styles.arowDragging,
         isMoving && styles.arowMoving,
       )}
+      draggable={draggable && !isMoving}
+      title={
+        draggable
+          ? "Drag to move this agent to another fleet"
+          : "View this agent session"
+      }
+      onDragStart={(event) => {
+        suppressClick.current = true
+        event.dataTransfer.effectAllowed = "move"
+        event.dataTransfer.setData("text/plain", agent.session_id)
+        onDragStart(agent, event)
+      }}
+      onDragEnd={() => {
+        onDragEnd()
+        window.setTimeout(() => {
+          suppressClick.current = false
+        }, 0)
+      }}
     >
       <button
         type="button"
         className={styles.arowMain}
-        draggable={draggable && !isMoving}
-        title={
-          draggable
-            ? "Drag to move this agent to another fleet"
-            : "View this agent session"
-        }
         onClick={() => {
           if (suppressClick.current) return
           onOpen(agent)
-        }}
-        onDragStart={(event) => {
-          suppressClick.current = true
-          event.dataTransfer.effectAllowed = "move"
-          event.dataTransfer.setData("text/plain", agent.session_id)
-          onDragStart(agent, event)
-        }}
-        onDragEnd={() => {
-          onDragEnd()
-          window.setTimeout(() => {
-            suppressClick.current = false
-          }, 0)
         }}
       >
         <span className={styles.dragCell} aria-hidden="true">

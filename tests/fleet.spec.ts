@@ -562,29 +562,8 @@ test("dragging an agent moves it to another fleet", async ({ page }) => {
   const agentRow = page
     .getByTestId("fleet-card-fleet-1")
     .getByTestId("fleet-agent-row")
-  const destination = page.getByTestId("fleet-card-fleet-2")
-  await agentRow.evaluate((row, destinationId) => {
-    const button = row.querySelector("button[draggable='true']")
-    const target = document.querySelector(
-      `[data-testid='fleet-card-${destinationId}']`,
-    )
-    if (!(button instanceof HTMLButtonElement) || !(target instanceof HTMLElement)) {
-      throw new Error("Fleet drag source or destination missing")
-    }
-    const dataTransfer = new DataTransfer()
-    button.dispatchEvent(
-      new DragEvent("dragstart", { bubbles: true, dataTransfer }),
-    )
-    target.dispatchEvent(
-      new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer }),
-    )
-    target.dispatchEvent(
-      new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }),
-    )
-    button.dispatchEvent(
-      new DragEvent("dragend", { bubbles: true, dataTransfer }),
-    )
-  }, "fleet-2")
+  await agentRow.hover()
+  await agentRow.dragTo(page.getByTestId("fleet-card-fleet-2"))
 
   expect((await moveRequest).postDataJSON()).toEqual({
     fleet_session_id: "fleet-2",
@@ -631,7 +610,9 @@ for (const theme of ["light", "dark"] as const) {
       const rosterColumns = await page
         .getByTestId("fleet-agent-row")
         .evaluate((row) => getComputedStyle(row).gridTemplateColumns)
-      expect(rosterColumns.trim().split(/\s+/)).toHaveLength(4)
+      expect(rosterColumns.trim().split(/\s+/)).toHaveLength(
+        width <= 760 ? 4 : 5,
+      )
 
       await page.goto("/v2/fleet/session-1")
       await expect(
