@@ -633,7 +633,7 @@ export function FleetPage() {
   const waiting = waitingCount(activeAgents)
 
   const summaryBits = [`${running} running`]
-  if (waiting) summaryBits.push(`${waiting} waiting for input`)
+  if (waiting) summaryBits.push(`${waiting} awaiting prompt`)
 
   const openAgent = (agent: TaskforceFleetAgent) =>
     navigate({

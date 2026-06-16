@@ -556,7 +556,7 @@ test("activity timeline live head shows waiting state", async ({ page }) => {
   await page.goto("/v2/fleet/session-1")
 
   await expect(page.getByText("now", { exact: true })).toBeVisible()
-  await expect(page.getByText("Waiting for your input")).toBeVisible()
+  await expect(page.getByText("Awaiting user prompt")).toBeVisible()
   await expect(
     page.getByText("Stale summary from earlier work"),
   ).toHaveCount(0)

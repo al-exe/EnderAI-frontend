@@ -13,7 +13,7 @@ export type FleetStatus = "run" | "waiting" | "paused" | "idle"
 /** Quiet word shown next to a non-running status dot. */
 export const STATE_LABEL: Record<FleetStatus, string> = {
   run: "running",
-  waiting: "waiting for input",
+  waiting: "awaiting prompt",
   paused: "capture paused",
   idle: "idle",
 }
@@ -146,7 +146,7 @@ export function liveActivityLabel(
     return summary || "Running in this terminal"
   }
   if (status === "waiting") {
-    return "Waiting for your input"
+    return "Awaiting user prompt"
   }
   if (status === "paused" || options.capturePaused) {
     const reason = options.pauseReason?.trim()
@@ -164,7 +164,7 @@ export function rosterWorkSummary(agent: TaskforceFleetAgent): string {
 
   const status = agentStatus(agent)
   if (status === "run") return "Running in this terminal"
-  if (status === "waiting") return "Waiting for your input"
+  if (status === "waiting") return "Awaiting user prompt"
   if (status === "paused" || agentCapturePaused(agent)) {
     return "Activity capture is paused"
   }
