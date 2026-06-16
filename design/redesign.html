@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Taskforce — AI work memory for engineering teams</title>
+<link rel="icon" href="../../assets/favicon-32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Taskforce landing — refined DNA
+   Sharp corners · single purple accent · zinc neutrals
+   Geist body · JetBrains Mono labels · light + dark
+   ============================================================ */
+:root {
+  --bg: #ffffff;
+  --fg: oklch(0.16 0 0);
+  --muted: oklch(0.44 0 0);
+  --faint: oklch(0.60 0 0);
+  --border: oklch(0.895 0 0);
+  --hairline: oklch(0.94 0 0);
+  --surface: oklch(0.987 0 0);
+  --surface-2: oklch(0.965 0 0);
+  --surface-3: oklch(0.945 0 0);
+  --ink: oklch(0.205 0 0);
+  --accent: #8447ff;
+  --accent-fg: #ffffff;
+  --accent-soft: color-mix(in oklch, var(--accent) 9%, var(--bg));
+  --accent-line: color-mix(in oklch, var(--accent) 38%, var(--border));
+  --positive: oklch(0.55 0.13 155);
+  --term-bg: oklch(0.165 0 0);
+  --term-fg: oklch(0.95 0 0);
+  --term-acc: #c9a8ff;
+  --term-grn: oklch(0.78 0.14 150);
+  --shadow: 0 1px 2px oklch(0.7 0 0 / 0.06), 0 12px 32px -20px oklch(0.4 0 0 / 0.22);
+  --max: 1180px;
+  /* tweakable */
+  --type-scale: 1;
+  --radius: 0px;
+}
+html.dark {
+  --bg: oklch(0.165 0 0);
+  --fg: oklch(0.965 0 0);
+  --muted: oklch(0.70 0 0);
+  --faint: oklch(0.56 0 0);
+  --border: oklch(0.305 0 0);
+  --hairline: oklch(0.245 0 0);
+  --surface: oklch(0.205 0 0);
+  --surface-2: oklch(0.235 0 0);
+  --surface-3: oklch(0.265 0 0);
+  --ink: oklch(0.95 0 0);
+  --accent: #9d6bff;
+  --accent-soft: color-mix(in oklch, var(--accent) 15%, var(--bg));
+  --accent-line: color-mix(in oklch, var(--accent) 45%, var(--border));
+  --term-bg: oklch(0.13 0 0);
+  --shadow: 0 1px 2px oklch(0 0 0 / 0.4), 0 14px 36px -20px oklch(0 0 0 / 0.6);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.55;
+  transition: background .35s ease, color .35s ease;
+}
+a { color: inherit; text-decoration: none; }
+.mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+.num { font-variant-numeric: tabular-nums; }
+.eyebrow {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+}
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 32px; }
+
+/* ---------- Nav ---------- */
+header.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: color-mix(in oklch, var(--bg) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
+  border-bottom: 1px solid var(--hairline);
+}
+.nav-inner {
+  max-width: var(--max); margin: 0 auto; padding: 14px 32px;
+  display: flex; align-items: center; gap: 28px;
+}
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
+.brand svg { width: 20px; height: 20px; display: block; }
+.nav-links { display: flex; gap: 22px; margin-left: 8px; }
+.nav-links a {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px; letter-spacing: 0.02em; color: var(--muted);
+  transition: color .15s ease;
+}
+.nav-links a:hover { color: var(--fg); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.theme-toggle {
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+  cursor: pointer; transition: color .15s, border-color .15s;
+}
+.theme-toggle:hover { color: var(--fg); border-color: var(--faint); }
+.theme-toggle svg { width: 15px; height: 15px; }
+html:not(.dark) .theme-toggle .moon { display: none; }
+html.dark .theme-toggle .sun { display: none; }
+
+.btn {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px; letter-spacing: 0.02em;
+  padding: 9px 15px; border: 1px solid transparent;
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: background .16s ease, color .16s ease, border-color .16s ease, filter .16s ease, transform .16s ease; white-space: nowrap;
+}
+.btn.solid { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.btn.solid:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn.outline { background: transparent; color: var(--fg); border-color: var(--border); }
+.btn.outline:hover { border-color: var(--fg); }
+.btn.ghost { color: var(--muted); padding: 9px 4px; }
+.btn.ghost:hover { color: var(--fg); }
+.nav-cta { display: flex; gap: 8px; }
+
+/* ---------- Hero (cycling capability split, full-viewport) ---------- */
+.hero {
+  position: relative; overflow: hidden;
+  --nav-h: 58px;
+  min-height: calc(100svh - var(--nav-h));
+  display: flex; flex-direction: column;
+  padding: 40px 0 0;
+}
+.hero::before {
+  content: ""; position: absolute; top: -280px; left: 50%; transform: translateX(-50%);
+  width: 820px; height: 560px;
+  background: radial-gradient(ellipse at center, color-mix(in oklch, var(--accent) 24%, transparent), transparent 66%);
+  pointer-events: none; z-index: 0;
+}
+.hero-main { flex: 1 1 auto; display: flex; align-items: stretch; }
+.hero-main .wrap { width: 100%; display: flex; }
+
+/* scroll cue — horizontal divider with down arrow */
+.scroll-cue {
+  position: relative; z-index: 1; flex-shrink: 0;
+  width: 100%; max-width: var(--max); margin: 0 auto;
+  display: flex; align-items: center; gap: 20px;
+  padding: 24px 32px 30px; cursor: pointer;
+  color: var(--faint); transition: color .18s ease;
+}
+.scroll-cue:hover { color: var(--fg); }
+.scroll-cue .cue-rule { flex: 1 1 auto; height: 1px; background: var(--hairline); }
+.scroll-cue .cue-arrow { flex-shrink: 0; display: grid; place-items: center; color: var(--accent); }
+.scroll-cue .cue-arrow svg { width: 20px; height: 20px; }
+@media (prefers-reduced-motion: no-preference) {
+  html.js .scroll-cue .cue-arrow { animation: cueBounce 1.9s ease-in-out infinite; }
+  @keyframes cueBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+.hero-split {
+  position: relative; z-index: 1; flex: 1 1 auto;
+  display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.1fr);
+  gap: 46px; align-items: stretch;
+}
+.hero-copy { align-self: start; margin-top: 7vh; }
+.hero-term { align-self: end; margin-bottom: 7vh; }
+
+/* left column */
+.hero-copy { max-width: 540px; }
+.hero-copy .eyebrow { display: block; margin-bottom: 22px; }
+.hero h1 {
+  margin: 0 0 16px;
+  font-size: calc(clamp(32px, 4.4vw, 48px) * var(--type-scale));
+  line-height: 1.02; font-weight: 600; letter-spacing: -0.03em;
+  text-wrap: balance; min-height: 2.35em;
+}
+.hero h1 .lead { color: var(--fg); }
+.hero h1 .phrase { color: var(--accent); transition: opacity .26s ease, transform .26s ease; }
+.hero h1.swapping .phrase { opacity: 0; transform: translateY(7px); }
+
+.hero-cap {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px; letter-spacing: 0.04em; color: var(--muted);
+  display: flex; align-items: center; gap: 9px; margin-bottom: 22px;
+  transition: opacity .26s ease;
+}
+.hero-cap.swapping { opacity: 0; }
+.hero-cap .ck { color: var(--accent); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 500; }
+.hero-cap .sep { color: var(--faint); }
+
+.hero-dots { display: flex; gap: 8px; margin-bottom: 26px; }
+.hero-dots button {
+  appearance: none; border: 0; padding: 0; cursor: pointer;
+  width: 26px; height: 4px; background: var(--border);
+  transition: background .25s ease;
+}
+.hero-dots button.on { background: var(--accent); }
+.hero-dots button:hover { background: var(--faint); }
+.hero-dots button.on:hover { background: var(--accent); }
+
+.hero .works {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px; letter-spacing: 0.04em; color: var(--faint);
+  margin-bottom: 22px; display: inline-flex; align-items: center; gap: 8px;
+}
+.hero .works .dot { width: 5px; height: 5px; background: var(--positive); border-radius: 50%; }
+.hero-ctas { display: flex; gap: 12px; }
+.hero-ctas .btn { font-size: 13px; padding: 12px 20px; }
+
+/* right column — synchronized terminal */
+.term {
+  border: 1px solid var(--border); background: var(--term-bg); color: var(--term-fg);
+  box-shadow: var(--shadow); overflow: hidden;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  display: flex; flex-direction: column;
+}
+.term-head {
+  display: flex; align-items: center; gap: 8px; padding: 11px 14px;
+  border-bottom: 1px solid color-mix(in oklch, white 12%, transparent);
+  font-size: 10.5px; letter-spacing: 0.04em; color: oklch(0.66 0 0);
+}
+.term-head .tdot { width: 8px; height: 8px; background: var(--accent); flex-shrink: 0; }
+.term-head .nm { color: oklch(0.84 0 0); }
+.term-head .live { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.term-head .live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--positive); animation: pulse 2.4s ease-in-out infinite; }
+.term-body { position: relative; padding: 16px; min-height: 330px; }
+.tscene { position: absolute; inset: 16px; display: flex; flex-direction: column; gap: 7px; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+.tscene.active { opacity: 1; pointer-events: auto; }
+
+.tline { font-size: 11px; line-height: 1.55; color: oklch(0.82 0 0); }
+.tline .acc { color: var(--term-acc); }
+.tline .grn { color: var(--term-grn); }
+.tline .dim { color: oklch(0.56 0 0); }
+
+/* fleet scene */
+.tl-fleet { display: flex; justify-content: space-between; align-items: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.56 0 0); margin-top: 2px; }
+.ag { display: flex; align-items: center; gap: 8px; }
+.ag .d { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ag .d.grn { background: var(--term-grn); }
+.ag .d.amb { background: oklch(0.74 0.15 70); }
+.ag .anm { color: oklch(0.9 0 0); white-space: nowrap; flex-shrink: 0; }
+.ag .ah { color: oklch(0.5 0 0); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ag .ast { margin-left: auto; color: oklch(0.7 0 0); font-size: 10px; white-space: nowrap; flex-shrink: 0; }
+.live-line { margin-top: 2px; font-size: 10px; }
+
+/* conversational scenes */
+.conv { display: grid; grid-template-columns: 26px 1fr; gap: 9px; align-items: baseline; }
+.conv .who { font-size: 10px; }
+.conv .who.you { color: oklch(0.55 0 0); }
+.conv .who.tf { color: var(--term-acc); }
+.conv .who.ok { color: var(--term-grn); }
+.conv .txt { color: oklch(0.84 0 0); }
+
+/* ledger scene */
+.lhead, .lrow { display: grid; grid-template-columns: 52px 1fr auto; gap: 6px 10px; align-items: baseline; }
+.lhead { font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(0.5 0 0); padding-bottom: 4px; border-bottom: 1px solid color-mix(in oklch, white 10%, transparent); }
+.lrow .lt { color: oklch(0.55 0 0); font-size: 10px; }
+.lrow .la { color: oklch(0.84 0 0); font-size: 10px; }
+.lrow .lr { color: var(--term-acc); font-size: 10px; white-space: nowrap; }
+.search { font-size: 11px; color: oklch(0.8 0 0); display: flex; align-items: center; gap: 6px; }
+.search .hl { color: oklch(0.92 0 0); }
+.search .cur { width: 7px; height: 13px; background: var(--term-acc); display: inline-block; animation: blink 1.1s step-end infinite; }
+
+/* metrics scene */
+.mbig { display: flex; align-items: baseline; gap: 10px; margin: 4px 0 2px; }
+.mbig .mv { font-size: 34px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; }
+.mbig .ml { font-size: 12px; color: oklch(0.8 0 0); }
+.mrow { display: flex; justify-content: space-between; font-size: 11px; color: oklch(0.84 0 0); }
+.mrow span:first-child { color: oklch(0.56 0 0); }
+.mmethod { font-size: 9px; margin-top: 2px; }
+
+/* summary card */
+.tsum { margin-top: auto; display: grid; grid-auto-flow: column; justify-content: start; gap: 20px; padding: 11px 12px; border: 1px solid color-mix(in oklch, white 14%, transparent); background: color-mix(in oklch, white 4%, transparent); }
+.tsum .k { font-size: 8px; letter-spacing: 0.13em; text-transform: uppercase; color: oklch(0.55 0 0); margin-bottom: 4px; }
+.tsum .v { font-size: 12px; color: oklch(0.92 0 0); }
+.tsum .v.big { font-size: 15px; color: var(--term-acc); }
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js .tscene.active > * { animation: tlIn .42s cubic-bezier(.2,.6,.2,1) both; }
+  html.js .tscene.active > *:nth-child(1){animation-delay:.02s}
+  html.js .tscene.active > *:nth-child(2){animation-delay:.09s}
+  html.js .tscene.active > *:nth-child(3){animation-delay:.16s}
+  html.js .tscene.active > *:nth-child(4){animation-delay:.23s}
+  html.js .tscene.active > *:nth-child(5){animation-delay:.30s}
+  html.js .tscene.active > *:nth-child(6){animation-delay:.37s}
+  html.js .tscene.active > *:nth-child(7){animation-delay:.44s}
+  html.js .tscene.active > *:nth-child(8){animation-delay:.51s}
+  html.js .tscene.active > *:nth-child(9){animation-delay:.58s}
+  @keyframes tlIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+}
+
+/* ---------- Feature rows ---------- */
+.features { padding: 0 0 8px; }
+.features .row:first-child { border-top: 0; padding-top: 32px; }
+#fleet { scroll-margin-top: 28px; }
+.row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+  padding: 64px 0; border-top: 1px solid var(--hairline);
+}
+.row .copy { max-width: none; }
+.row.img-left .visual { order: -1; }
+.feat-label { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.feat-label .ico {
+  width: 34px; height: 34px; display: grid; place-items: center;
+  border: 1px solid var(--accent-line); color: var(--accent);
+  background: var(--accent-soft); flex-shrink: 0;
+}
+.feat-label .ico svg { width: 18px; height: 18px; }
+.feat-label .lbl {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); font-weight: 500;
+}
+.row h2 { margin: 0 0 14px; font-size: calc(clamp(26px, 3vw, 34px) * var(--type-scale)); line-height: 1.08; font-weight: 600; letter-spacing: -0.022em; text-wrap: balance; }
+.row .desc { margin: 0; font-size: calc(16px * var(--type-scale)); line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+
+/* generic panel */
+.row .visual { display: flex; }
+.panel {
+  border: 1px solid var(--border); background: var(--surface);
+  box-shadow: var(--shadow); overflow: hidden;
+  width: 100%; height: 350px; display: flex; flex-direction: column;
+}
+.panel:not(.metrics-card) > :last-child { flex: 1 1 auto; min-height: 0; }
+.metrics-card { justify-content: center; }
+.panel-head {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  border-bottom: 1px solid var(--hairline);
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint);
+}
+.panel-head .spacer { flex: 1; }
+.panel-head .chip {
+  font-size: 9.5px; padding: 2px 7px; border: 1px solid var(--border); color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot.green { background: var(--positive); }
+.dot.amber { background: oklch(0.7 0.16 70); }
+.dot.purple { background: var(--accent); }
+.dot.gray { background: var(--faint); }
+
+/* FLEET panel */
+.fleet-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.fleet-group .gh {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;
+  letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase;
+}
+.fleet-group .gh .count { color: var(--faint); }
+.fleet-group .gh .bar { flex: 1; height: 1px; background: var(--hairline); }
+.agent-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.agent {
+  border: 1px solid var(--border); background: var(--bg); padding: 9px 10px;
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}
+.agent .top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.agent .top .nm { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.agent .top .dot { margin-left: auto; flex-shrink: 0; }
+.agent .meta {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9.5px;
+  color: var(--faint); display: flex; justify-content: space-between; gap: 8px;
+}
+.agent .task { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.ticker {
+  border-top: 1px solid var(--hairline); padding: 9px 14px;
+  display: flex; align-items: center; gap: 8px; overflow: hidden;
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; color: var(--muted);
+}
+.ticker .tag { color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; flex-shrink: 0; }
+.ticker .stream { white-space: nowrap; color: var(--faint); }
+
+/* PROFILES panel */
+.profile-body { padding: 16px; }
+.profile-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.avatar {
+  width: 44px; height: 44px; border: 1px solid var(--accent-line); background: var(--accent-soft);
+  display: grid; place-items: center; color: var(--accent); flex-shrink: 0;
+}
+.avatar svg { width: 22px; height: 22px; }
+.profile-head .nm { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.profile-head .role { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; color: var(--muted); margin-top: 2px; letter-spacing: 0.04em; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.tag {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; letter-spacing: 0.04em;
+  padding: 3px 8px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap;
+}
+.tag.accent { color: var(--accent); border-color: var(--accent-line); }
+.stat-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tile { border: 1px solid var(--border); background: var(--bg); padding: 10px 11px; }
+.tile .v { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+.tile .v small { font-size: 11px; color: var(--positive); font-weight: 500; }
+.tile .k { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-top: 3px; }
+.profile-foot {
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--hairline);
+  display: flex; align-items: center; gap: 8px;
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; color: var(--muted);
+}
+.profile-foot .route { color: var(--accent); }
+
+/* LIBRARY panel */
+.lib-body { padding: 8px; }
+.doc {
+  display: grid; grid-template-columns: 18px 1fr auto; gap: 11px; align-items: center;
+  padding: 11px 12px; border: 1px solid transparent;
+}
+.doc + .doc { border-top: 1px solid var(--hairline); }
+.doc .di { color: var(--faint); display: grid; place-items: center; }
+.doc .di svg { width: 15px; height: 15px; }
+.doc .title { font-size: 12.5px; font-weight: 500; }
+.doc .path { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9.5px; color: var(--faint); margin-top: 2px; }
+.doc .sig { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9.5px; color: var(--muted); text-align: right; white-space: nowrap; }
+.doc .sig .reused { color: var(--accent); }
+.doc.updating {
+  border-color: var(--accent-line); background: var(--accent-soft);
+}
+.doc.updating .badge {
+  display: inline-flex; align-items: center; gap: 5px; color: var(--accent);
+}
+.doc.updating .badge .d { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 1.6s ease-in-out infinite; }
+
+/* LEDGER panel */
+.ledger-search {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  border-bottom: 1px solid var(--hairline);
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; color: var(--faint);
+}
+.ledger-search svg { width: 13px; height: 13px; }
+.ledger-search .cursor { width: 1px; height: 13px; background: var(--accent); margin-left: -2px; animation: blink 1.1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.ltable { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+.ltable th {
+  text-align: left; font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 500;
+  font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint);
+  padding: 5px 10px; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.ltable td { padding: 5px 10px; border-bottom: 1px solid var(--hairline); color: var(--muted); vertical-align: top; }
+.ltable tr:last-child td { border-bottom: 0; }
+.ltable .t-time { font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--faint); white-space: nowrap; }
+.ltable .t-sess { font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--fg); }
+.ltable .t-harness { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.ltable .t-act { color: var(--fg); }
+.ltable .t-ref a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* METRICS — supporting proof (demoted) */
+.row.proof { padding: 56px 0 64px; }
+.row.proof .copy { max-width: none; }
+.row.proof h2 { font-size: calc(clamp(22px, 2.4vw, 27px) * var(--type-scale)); }
+.row.proof .desc { font-size: calc(15px * var(--type-scale)); }
+.proof-tag {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint);
+  border: 1px solid var(--border); padding: 3px 8px; display: inline-block; margin-bottom: 14px;
+}
+
+/* ---------- Normal-case labels (only the hero eyebrow stays all-caps) ---------- */
+.hero-cap .ck,
+.tl-fleet,
+.lhead,
+.tsum .k,
+.feat-label .lbl,
+.panel-head,
+.fleet-group .gh,
+.tile .k,
+.ltable th,
+.proof-tag { text-transform: none; letter-spacing: 0.02em; }
+.metrics-card { padding: 18px; }
+.metrics-hero-stat { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.metrics-hero-stat .big { font-size: 38px; font-weight: 600; letter-spacing: -0.03em; color: var(--accent); line-height: 1; }
+.metrics-hero-stat .lbl { font-size: 13px; color: var(--fg); font-weight: 500; }
+.metrics-sub { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; color: var(--faint); letter-spacing: 0.04em; margin-bottom: 16px; }
+.chart { border: 1px solid var(--hairline); background: var(--bg); padding: 12px; margin-bottom: 14px; }
+.chart svg { width: 100%; height: 64px; display: block; }
+.metrics-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.metrics-row2 .tile .v { font-size: 17px; }
+.metrics-method {
+  margin-top: 12px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px;
+  color: var(--muted); display: flex; align-items: center; gap: 6px;
+}
+.metrics-method a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- CTA band ---------- */
+.cta-band {
+  margin-top: 40px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  background: var(--surface); position: relative; overflow: hidden;
+}
+.cta-band::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 130%, var(--accent-soft), transparent 60%);
+}
+.cta-inner { position: relative; max-width: 720px; margin: 0 auto; padding: 80px 32px; text-align: center; }
+.cta-inner h2 { margin: 0 0 16px; font-size: calc(clamp(30px, 4vw, 44px) * var(--type-scale)); font-weight: 600; letter-spacing: -0.028em; line-height: 1.05; text-wrap: balance; }
+.cta-inner h2 em { font-style: normal; color: var(--accent); }
+.cta-inner .works { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; color: var(--faint); letter-spacing: 0.04em; margin: 0 0 28px; }
+.cta-inner .hero-ctas .btn { font-size: 13px; padding: 12px 22px; }
+
+/* ---------- Footer ---------- */
+footer.foot { padding: 40px 0 56px; }
+.foot-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.foot .brand { font-size: 14px; }
+.foot .copyright { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; color: var(--faint); margin-left: auto; }
+.foot-links { display: flex; gap: 18px; }
+.foot-links a { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; color: var(--muted); }
+.foot-links a:hover { color: var(--fg); }
+
+/* ---------- Tweakable corner radius ---------- */
+.panel, .term, .btn, .theme-toggle, .agent, .tile, .tag,
+.feat-label .ico, .avatar, .proof-tag, .chart, .chip { border-radius: var(--radius); }
+
+/* ---------- Reveal — capture/no-JS safe: visible by default, gentle one-shot fade ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  html.js .reveal.in { animation: revealUp .65s cubic-bezier(.2,.6,.2,1); }
+  @keyframes revealUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .nav-links { display: none; }
+  .hero { min-height: 0; padding: 40px 0 0; }
+  .hero-main { padding: 8px 0 12px; }
+  .scroll-cue { padding: 16px 32px 24px; }
+  .hero-split { grid-template-columns: 1fr; gap: 34px; }
+  .hero-copy { max-width: none; }
+  .hero h1 { min-height: 0; }
+  .row, .row.proof { grid-template-columns: 1fr; gap: 28px; padding: 48px 0; }
+  .row .copy, .row.proof .copy { max-width: none; order: -1; }
+  .row.img-left .visual { order: 0; }
+}
+@media (max-width: 560px) {
+  .wrap, .nav-inner, .nav-cta .btn.outline { }
+  .nav-cta .btn.outline { display: none; }
+  .hero-ctas { flex-direction: column; align-items: stretch; }
+  .agent-cards { grid-template-columns: 1fr; }
+  .ltable .hide-sm { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><polygon fill="#8447ff" points="0,0 100,0 70,30 30,30 30,70 0,100"></polygon><polygon fill="#8447ff" points="70,30 70,70 30,70"></polygon></svg>
+      Taskforce
+    </a>
+    <nav class="nav-links">
+      <a href="#fleet">Orchestration</a>
+      <a href="#profiles">Profiles</a>
+      <a href="#library">Docs</a>
+      <a href="#ledger">Audit</a>
+      <a href="#metrics">ROI</a>
+    </nav>
+    <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+      </button>
+      <div class="nav-cta">
+        <a class="btn outline" href="#">Open Taskforce</a>
+        <a class="btn solid" href="#">Start free →</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ============ HERO (cycling capability split) ============ -->
+<section class="hero">
+  <div class="hero-main">
+    <div class="wrap">
+      <div class="hero-split">
+
+      <!-- LEFT — copy + rotating headline -->
+      <div class="hero-copy reveal">
+        <span class="eyebrow">AI work memory for engineering teams</span>
+        <h1><span class="lead">Stop </span><span class="phrase">losing track<br>of your agents.</span></h1>
+        <div class="hero-cap"><span class="ck">Fleet</span><span class="sep">·</span><span class="cap-name">Orchestration</span></div>
+        <div class="hero-dots" role="tablist" aria-label="Capabilities">
+          <button class="on" type="button" aria-label="Fleet"></button>
+          <button type="button" aria-label="Profiles"></button>
+          <button type="button" aria-label="Library"></button>
+          <button type="button" aria-label="Ledger"></button>
+          <button type="button" aria-label="Metrics"></button>
+        </div>
+        <div class="works"><span class="dot"></span>Works with Claude Code, Codex, and Cursor.</div>
+        <div class="hero-ctas">
+          <a class="btn solid" href="#">Start free →</a>
+          <a class="btn outline" href="#">Open Taskforce</a>
+        </div>
+      </div>
+
+      <!-- RIGHT — synchronized terminal -->
+      <div class="hero-term reveal">
+        <div class="term">
+          <div class="term-head">
+            <span class="tdot"></span><span class="nm">taskforce — live</span>
+            <span class="live"><span class="d"></span>connected</span>
+          </div>
+          <div class="term-body">
+
+            <!-- 0 · FLEET -->
+            <div class="tscene active" data-scene="0">
+              <div class="tl-fleet"><span>checkout-squad</span><span>3 agents</span></div>
+              <div class="tline ag"><span class="d grn"></span><span class="anm">tax-refactor</span><span class="ah">claude · vm-04</span><span class="ast">running</span></div>
+              <div class="tline ag"><span class="d grn"></span><span class="anm">checkout-e2e</span><span class="ah">codex · term-2</span><span class="ast">14/20</span></div>
+              <div class="tl-fleet"><span>platform</span><span>3 agents</span></div>
+              <div class="tline ag"><span class="d amb"></span><span class="anm">migrate-pg16</span><span class="ah">cursor · vm-01</span><span class="ast dim">review</span></div>
+              <div class="tline ag"><span class="d grn"></span><span class="anm">api-deprecation</span><span class="ah">claude · vm-02</span><span class="ast">38 left</span></div>
+              <div class="tline live-line"><span class="acc">live ▸</span> <span class="dim">tax-refactor referenced “Stripe checkout wiring”</span></div>
+              <div class="tsum">
+                <div><div class="k">fleet</div><div class="v big">6 active</div></div>
+                <div><div class="k">across</div><div class="v">3 terminals · 3 VMs</div></div>
+                <div><div class="k">context</div><div class="v">shared</div></div>
+              </div>
+            </div>
+
+            <!-- 1 · PROFILES -->
+            <div class="tscene" data-scene="1">
+              <div class="tline conv"><span class="who you">you</span><span class="txt">how do we handle stripe tax for new subscribers?</span></div>
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt dim">matching prompt to a specialist profile…</span></div>
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt"><span class="acc">▸ Jensen — Billing Reliability</span> · confidence <span class="grn">high</span></span></div>
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt dim">pulling linked knowledge: <span class="acc">Stripe checkout wiring</span>, <span class="acc">tax-rates rollout</span></span></div>
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt">briefing applied · role <span class="acc">billing &amp; checkout</span> · 38 docs linked</span></div>
+              <div class="tsum">
+                <div><div class="k">routed to</div><div class="v big">Jensen</div></div>
+                <div><div class="k">role</div><div class="v">billing &amp; checkout</div></div>
+                <div><div class="k">route match</div><div class="v">96%</div></div>
+              </div>
+            </div>
+
+            <!-- 2 · LIBRARY -->
+            <div class="tscene" data-scene="2">
+              <div class="tline conv"><span class="who you">you</span><span class="txt">apply the annual-plan tax pattern</span></div>
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt dim">recalling <span class="acc">Stripe checkout wiring</span> + <span class="acc">tax-rates rollout</span>…</span></div>
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt">attach <span class="acc">automatic_tax: { enabled: true }</span> on signup — see §3</span></div>
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt dim">writing patch · <span class="grn">0 tokens</span> spent on rediscovery</span></div>
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt dim">recording session back to Taskforce…</span></div>
+              <div class="tline conv"><span class="who ok">✓</span><span class="txt"><span class="acc">checkout.md</span> updated automatically</span></div>
+              <div class="tsum">
+                <div><div class="k">referenced</div><div class="v big">2 docs</div></div>
+                <div><div class="k">recorded</div><div class="v">session → Taskforce</div></div>
+              </div>
+            </div>
+
+            <!-- 3 · LEDGER -->
+            <div class="tscene" data-scene="3">
+              <div class="tline search"><span class="acc">search ▸</span> referenced:<span class="hl">“Stripe checkout wiring”</span><span class="cur"></span></div>
+              <div class="lhead"><span>time</span><span>session · activity</span><span>ref</span></div>
+              <div class="tline lrow"><span class="lt">2:14 PM</span><span class="la"><span class="dim">cursor·tax-refactor</span> Patched annual plan tax</span><span class="lr">checkout.md</span></div>
+              <div class="tline lrow"><span class="lt">1:47 PM</span><span class="la"><span class="dim">claude·checkout-e2e</span> Ran 20 E2E specs</span><span class="lr">tax-rates.md</span></div>
+              <div class="tline lrow"><span class="lt">11:02</span><span class="la"><span class="dim">codex·vat-fallback</span> Added EU no-VAT guard</span><span class="lr">checkout.md</span></div>
+              <div class="tline lrow"><span class="lt">9:30 AM</span><span class="la"><span class="dim">cursor·billing-audit</span> Reviewed webhook retries</span><span class="lr">webhooks.md</span></div>
+              <div class="tsum">
+                <div><div class="k">archived</div><div class="v big">12,408</div></div>
+                <div><div class="k">sessions</div><div class="v">fully searchable</div></div>
+              </div>
+            </div>
+
+            <!-- 4 · METRICS -->
+            <div class="tscene" data-scene="4">
+              <div class="tline conv"><span class="who tf">tf</span><span class="txt dim">rollup · last 30 days · across 12 repos</span></div>
+              <div class="mbig"><span class="mv acc">73%</span><span class="ml">rediscovery avoided</span></div>
+              <div class="tline mrow"><span>tokens saved / wk</span><span class="acc">2.4M</span></div>
+              <div class="tline mrow"><span>dollars saved / wk</span><span class="grn">$1,840</span></div>
+              <div class="tline mrow"><span>eng time / wk</span><span>31 hrs</span></div>
+              <div class="tline mmethod dim">measured vs cold-start baselines · <span class="acc">methodology ↗</span> · <span class="acc">session #a4f2 ↗</span></div>
+              <div class="tsum">
+                <div><div class="k">saved / wk</div><div class="v big">$1,840</div></div>
+                <div><div class="k">tokens</div><div class="v">2.4M</div></div>
+                <div><div class="k">basis</div><div class="v">12 repos</div></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <a class="scroll-cue" href="#fleet" aria-label="Scroll to capabilities">
+    <span class="cue-rule"></span>
+    <span class="cue-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+    <span class="cue-rule"></span>
+  </a>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features">
+  <div class="wrap">
+
+    <!-- ROW 1 — FLEET (visual left) -->
+    <div class="row img-left reveal" id="fleet">
+      <div class="copy">
+        <div class="feat-label">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
+          <span class="lbl">Fleet</span>
+        </div>
+        <h2>Orchestration</h2>
+        <p class="desc">Track every agent in one live view. Group them into fleets and enable them to contribute to a shared context window for compounding effectiveness.</p>
+      </div>
+      <div class="visual">
+        <div class="panel">
+          <div class="panel-head"><span class="dot purple"></span>Fleet<span class="spacer"></span><span class="chip">4 active</span></div>
+          <div class="fleet-body">
+            <div class="fleet-group">
+              <div class="gh">Checkout squad <span class="count">2</span><span class="bar"></span></div>
+              <div class="agent-cards">
+                <div class="agent">
+                  <div class="top"><span class="nm">tax-refactor</span><span class="dot green"></span></div>
+                  <div class="task">Applying automatic_tax to annual plan</div>
+                  <div class="meta"><span>Claude Code</span><span>vm-04</span></div>
+                </div>
+                <div class="agent">
+                  <div class="top"><span class="nm">checkout-e2e</span><span class="dot green"></span></div>
+                  <div class="task">Running Playwright suite · 14/20</div>
+                  <div class="meta"><span>Codex</span><span>term-2</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="fleet-group">
+              <div class="gh">Platform <span class="count">2</span><span class="bar"></span></div>
+              <div class="agent-cards">
+                <div class="agent">
+                  <div class="top"><span class="nm">migrate-pg16</span><span class="dot amber"></span></div>
+                  <div class="task">Awaiting review on schema diff</div>
+                  <div class="meta"><span>Cursor</span><span>vm-01</span></div>
+                </div>
+                <div class="agent">
+                  <div class="top"><span class="nm">api-deprecation</span><span class="dot green"></span></div>
+                  <div class="task">Sweeping v1 callsites · 38 left</div>
+                  <div class="meta"><span>Claude Code</span><span>vm-02</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2 — PROFILES (visual right) -->
+    <div class="row reveal" id="profiles">
+      <div class="copy">
+        <div class="feat-label">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect x="4" y="8" width="16" height="12"></rect><path d="M2 14h2M20 14h2M15 13v2M9 13v2"></path></svg></span>
+          <span class="lbl">Profiles</span>
+        </div>
+        <h2>Agent profiles</h2>
+        <p class="desc">Give your agents persistent identities. With a role, domain expertise, instructions, and captured knowledge, your agents spawn in ready to work.</p>
+      </div>
+      <div class="visual">
+        <div class="panel">
+          <div class="panel-head"><span class="dot purple"></span>Profile<span class="spacer"></span><span class="chip">active</span></div>
+          <div class="profile-body">
+            <div class="profile-head">
+              <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect x="4" y="8" width="16" height="12"></rect><path d="M2 14h2M20 14h2M15 13v2M9 13v2"></path></svg></div>
+              <div>
+                <div class="nm">Payments Specialist</div>
+                <div class="role">role · billing &amp; checkout</div>
+              </div>
+            </div>
+            <div class="tags">
+              <span class="tag accent">Stripe</span>
+              <span class="tag">tax &amp; VAT</span>
+              <span class="tag">subscriptions</span>
+              <span class="tag">webhooks</span>
+            </div>
+            <div class="stat-tiles">
+              <div class="tile"><div class="v">142<small> ▲</small></div><div class="k">Sessions</div></div>
+              <div class="tile"><div class="v">38</div><div class="k">Docs linked</div></div>
+              <div class="tile"><div class="v">96%</div><div class="k">Route match</div></div>
+            </div>
+            <div class="profile-foot"><span class="route">→ routed here</span> when prompts touch billing or tax logic</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3 — LIBRARY (visual left) -->
+    <div class="row img-left reveal" id="library">
+      <div class="copy">
+        <div class="feat-label">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg></span>
+          <span class="lbl">Library</span>
+        </div>
+        <h2>Self-updating documents</h2>
+        <p class="desc">Documents that write and update themselves as your agents work. Decisions, gotchas, and every important details get noted down and reused when your agents work with Taskforce.</p>
+      </div>
+      <div class="visual">
+        <div class="panel">
+          <div class="panel-head"><span class="dot purple"></span>Library<span class="spacer"></span></div>
+          <div class="lib-body">
+            <div class="doc updating">
+              <span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></span>
+              <div><div class="title">Stripe checkout wiring</div><div class="path">/billing/checkout.md</div></div>
+              <div class="sig"><span class="badge"><span class="d"></span>updating now</span></div>
+            </div>
+            <div class="doc">
+              <span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></span>
+              <div><div class="title">Tax-rates rollout</div><div class="path">/billing/tax-rates.md</div></div>
+              <div class="sig">Updated today<br><span class="reused">Reused 4×</span></div>
+            </div>
+            <div class="doc">
+              <span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></span>
+              <div><div class="title">Webhook retry semantics</div><div class="path">/platform/webhooks.md</div></div>
+              <div class="sig">Updated 2d ago<br><span class="reused">Reused 11×</span></div>
+            </div>
+            <div class="doc">
+              <span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></span>
+              <div><div class="title">PG16 migration notes</div><div class="path">/platform/migrate-pg16.md</div></div>
+              <div class="sig">Updated 5d ago<br><span class="reused">Reused 2×</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 4 — LEDGER (visual right) -->
+    <div class="row reveal" id="ledger">
+      <div class="copy">
+        <div class="feat-label">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg></span>
+          <span class="lbl">Ledger</span>
+        </div>
+        <h2>Audit trail</h2>
+        <p class="desc">Archive every agent conversation. Back up your future decisions with hard evidence directly from your work.</p>
+      </div>
+      <div class="visual">
+        <div class="panel">
+          <div class="panel-head"><span class="dot purple"></span>Ledger<span class="spacer"></span><span class="chip">12,408 sessions</span></div>
+          <div class="ledger-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <span>Stripe checkout wiring</span>
+          </div>
+          <table class="ltable">
+            <thead>
+              <tr><th>Time</th><th>Session</th><th class="hide-sm">Harness · agent</th><th>Activity</th><th class="hide-sm">Referenced by</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="t-time">2:14 PM</td>
+                <td class="t-sess">#a4f2</td>
+                <td class="t-harness hide-sm"><span class="dot green"></span>cursor · tax-refactor</td>
+                <td class="t-act">Patched annual plan tax</td>
+                <td class="t-ref hide-sm"><a href="#">checkout.md</a></td>
+              </tr>
+              <tr>
+                <td class="t-time">1:47 PM</td>
+                <td class="t-sess">#a4e9</td>
+                <td class="t-harness hide-sm"><span class="dot green"></span>claude · checkout-e2e</td>
+                <td class="t-act">Ran 20 E2E specs</td>
+                <td class="t-ref hide-sm"><a href="#">tax-rates.md</a></td>
+              </tr>
+              <tr>
+                <td class="t-time">11:02 AM</td>
+                <td class="t-sess">#a4c1</td>
+                <td class="t-harness hide-sm"><span class="dot gray"></span>codex · vat-fallback</td>
+                <td class="t-act">Added EU no-VAT guard</td>
+                <td class="t-ref hide-sm"><a href="#">checkout.md</a></td>
+              </tr>
+              <tr>
+                <td class="t-time">9:30 AM</td>
+                <td class="t-sess">#a4b7</td>
+                <td class="t-harness hide-sm"><span class="dot gray"></span>cursor · billing-audit</td>
+                <td class="t-act">Reviewed webhook retries</td>
+                <td class="t-ref hide-sm"><a href="#">webhooks.md</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 5 — METRICS (supporting proof, last, demoted) -->
+    <div class="row proof img-left reveal" id="metrics">
+      <div class="copy">
+        <span class="proof-tag">ROI · supporting proof</span>
+        <div class="feat-label">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="m19 9-5 5-4-4-3 3"></path></svg></span>
+          <span class="lbl">Metrics</span>
+        </div>
+        <h2>Proven ROI</h2>
+        <p class="desc">Quantify it: tokens and engineering time saved, with a transparent methodology.</p>
+      </div>
+      <div class="visual">
+        <div class="panel metrics-card">
+          <div class="metrics-hero-stat">
+            <span class="big num">73%</span>
+            <span class="lbl">rediscovery avoided</span>
+          </div>
+          <div class="metrics-sub">last 30 days · across 12 repos</div>
+          <div class="chart">
+            <svg viewBox="0 0 280 64" preserveAspectRatio="none" aria-hidden="true">
+              <polyline fill="none" stroke="var(--accent)" stroke-width="1.6" points="0,52 28,49 56,44 84,46 112,38 140,33 168,30 196,22 224,18 252,12 280,8"></polyline>
+              <polyline fill="none" stroke="var(--faint)" stroke-width="1" stroke-dasharray="3 3" points="0,52 280,48"></polyline>
+            </svg>
+          </div>
+          <div class="metrics-row2">
+            <div class="tile"><div class="v num">2.4M</div><div class="k">Tokens saved / wk</div></div>
+            <div class="tile"><div class="v num">31 hrs</div><div class="k">Eng time / wk</div></div>
+          </div>
+          <div class="metrics-method"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>Measured against cold-start baselines · <a href="#">methodology</a></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ CLOSING CTA ============ -->
+<section class="cta-band">
+  <div class="cta-inner reveal">
+    <h2>Stop starting from <em>scratch</em>.</h2>
+    <p class="works">Works with Claude Code, Codex, and Cursor.</p>
+    <div class="hero-ctas">
+      <a class="btn solid" href="#">Start free →</a>
+      <a class="btn outline" href="#">Open Taskforce</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-inner">
+      <a class="brand" href="#top">
+        <svg viewBox="0 0 100 100" aria-hidden="true" style="width:18px;height:18px"><polygon fill="#8447ff" points="0,0 100,0 70,30 30,30 30,70 0,100"></polygon><polygon fill="#8447ff" points="70,30 70,70 30,70"></polygon></svg>
+        Taskforce
+      </a>
+      <div class="foot-links">
+        <a href="#">Docs</a>
+        <a href="#">Pricing</a>
+        <a href="#">Changelog</a>
+        <a href="#">Privacy</a>
+      </div>
+      <span class="copyright">© 2026 Taskforce</span>
+    </div>
+  </div>
+</footer>
+
+</main>
+
+<script>
+// Mark JS active so reveal hide-then-show only applies with scripting on
+document.documentElement.classList.add('js');
+
+// Theme: persist, default light, respect prior choice
+(function () {
+  var saved = null;
+  try { saved = localStorage.getItem('tf-landing-theme'); } catch (e) {}
+  if (saved === 'dark') document.documentElement.classList.add('dark');
+  var btn = document.getElementById('themeToggle');
+  btn.addEventListener('click', function () {
+    var isDark = document.documentElement.classList.toggle('dark');
+    try { localStorage.setItem('tf-landing-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+  });
+})();
+
+// Reveal on scroll (one-shot fade; elements are visible by default so capture/no-JS are safe)
+(function () {
+  var els = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)) { return; }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  els.forEach(function (e) { io.observe(e); });
+})();
+</script>
+
+<!-- ============ HERO CAPABILITY CYCLE ============ -->
+<script>
+(function () {
+  var SCENES = [
+    { key: 'Fleet',    name: 'Orchestration',      phrase: 'losing track<br>of your agents.' },
+    { key: 'Profiles', name: 'Agent profiles',     phrase: 're-briefing<br>every agent.' },
+    { key: 'Library',  name: 'Self-updating documents',  phrase: 're-explaining<br>your codebase.' },
+    { key: 'Ledger',   name: 'Audit trail',        phrase: 'guessing what<br>agents did.' },
+    { key: 'Metrics',  name: 'Proven ROI',         phrase: 'flying blind<br>on AI spend.' }
+  ];
+  var h1 = document.querySelector('.hero h1');
+  var phrase = h1 && h1.querySelector('.phrase');
+  var cap = document.querySelector('.hero-cap');
+  var capK = cap && cap.querySelector('.ck');
+  var capN = cap && cap.querySelector('.cap-name');
+  var dots = [].slice.call(document.querySelectorAll('.hero-dots button'));
+  var scenes = [].slice.call(document.querySelectorAll('.tscene'));
+  if (!h1 || !phrase) return;
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var i = 0, timer = null, rotateOn = true, DURATION = 4400;
+
+  function set(n) {
+    var s = SCENES[n]; i = n;
+    phrase.innerHTML = s.phrase;
+    if (capK) capK.textContent = s.key;
+    if (capN) capN.textContent = s.name;
+    dots.forEach(function (d, k) { d.classList.toggle('on', k === n); });
+    scenes.forEach(function (sc, k) { sc.classList.toggle('active', k === n); });
+  }
+  function swap(n) {
+    h1.classList.add('swapping'); if (cap) cap.classList.add('swapping');
+    setTimeout(function () {
+      set(n);
+      h1.classList.remove('swapping'); if (cap) cap.classList.remove('swapping');
+    }, 270);
+  }
+  function next() { swap((i + 1) % SCENES.length); }
+  function start() { stop(); if (!reduce && rotateOn) timer = setInterval(next, DURATION); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+  set(0);
+  if (!reduce) start();
+
+  dots.forEach(function (d, k) {
+    d.addEventListener('click', function () { swap(k); start(); });
+  });
+
+  window.__heroRotate = {
+    start: start, stop: stop,
+    setDuration: function (ms) { DURATION = Math.max(1500, ms | 0); if (timer) start(); },
+    setOn: function (v) { rotateOn = !!v; rotateOn ? start() : stop(); }
+  };
+})();
+</script>
+
+<!-- ============ TWEAKS ============ -->
+<div id="tweaks-root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "#8447ff",
+  "typeScale": 1,
+  "corners": "sharp",
+  "eyebrow": "AI work memory for engineering teams",
+  "autoRotate": true,
+  "cycleSeconds": 4.4
+}/*EDITMODE-END*/;
+
+const DEFAULT_ACCENT = "#8447ff";
+const CORNER_PX = { sharp: "0px", soft: "6px", round: "12px" };
+
+function TaskforceTweaks() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  React.useEffect(function () {
+    const root = document.documentElement;
+    // Accent — only override when non-default so light/dark accent ramps survive at default
+    if (t.accent && t.accent.toLowerCase() !== DEFAULT_ACCENT) root.style.setProperty('--accent', t.accent);
+    else root.style.removeProperty('--accent');
+    // Type scale + corner radius
+    root.style.setProperty('--type-scale', t.typeScale);
+    root.style.setProperty('--radius', CORNER_PX[t.corners] || '0px');
+    // Copy
+    var eb = document.querySelector('.hero .eyebrow');
+    if (eb) eb.textContent = t.eyebrow;
+    // Hero capability cycle
+    if (window.__heroRotate) {
+      window.__heroRotate.setDuration(Math.round((t.cycleSeconds || 4.4) * 1000));
+      window.__heroRotate.setOn(t.autoRotate !== false);
+    }
+  }, [t]);
+
+  return (
+    <TweaksPanel title="Tweaks">
+      <TweakSection label="Theme" />
+      <TweakColor label="Accent" value={t.accent}
+                  options={['#8447ff', '#2A6FDB', '#1F8A5B', '#E0457B']}
+                  onChange={(v) => setTweak('accent', v)} />
+      <TweakSection label="Typography" />
+      <TweakSlider label="Type scale" value={t.typeScale} min={0.85} max={1.25} step={0.05} unit="×"
+                   onChange={(v) => setTweak('typeScale', v)} />
+      <TweakSection label="Layout" />
+      <TweakRadio label="Corners" value={t.corners}
+                  options={['sharp', 'soft', 'round']}
+                  onChange={(v) => setTweak('corners', v)} />
+      <TweakSection label="Hero cycle" />
+      <TweakToggle label="Auto-rotate" value={t.autoRotate}
+                   onChange={(v) => setTweak('autoRotate', v)} />
+      <TweakSlider label="Seconds / step" value={t.cycleSeconds} min={3} max={7} step={0.2} unit="s"
+                   onChange={(v) => setTweak('cycleSeconds', v)} />
+      <TweakSection label="Copy" />
+      <TweakText label="Eyebrow" value={t.eyebrow}
+                 onChange={(v) => setTweak('eyebrow', v)} />
+    </TweaksPanel>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<TaskforceTweaks />);
+</script>
+</body>
+</html>
