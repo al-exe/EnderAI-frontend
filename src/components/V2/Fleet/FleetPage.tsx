@@ -361,6 +361,7 @@ function FleetCard({
         )}
 
         {!renaming &&
+          !isHistory &&
           (repo ? (
             <span className={styles.frepo}>
               <b>{repo.repo}</b>
