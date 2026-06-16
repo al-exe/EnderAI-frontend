@@ -480,7 +480,9 @@ test("activity timeline live head shows running without summary", async ({
   await page.goto("/v2/fleet/session-1")
 
   await expect(page.getByText("now", { exact: true })).toBeVisible()
-  await expect(page.getByText("Running in this terminal")).toBeVisible()
+  await expect(
+    page.getByText("Running in this terminal", { exact: true }),
+  ).toBeVisible()
   await expect(
     page.getByText(
       "Running in this terminal. A summary appears after Taskforce capture records work.",
@@ -589,7 +591,9 @@ test("activity timeline live head shows paused capture state", async ({
   await page.goto("/v2/fleet/session-1")
 
   await expect(page.getByText("1m", { exact: true })).toBeVisible()
-  await expect(page.getByText("Activity capture is paused")).toBeVisible()
+  await expect(
+    page.getByText("Activity capture is paused", { exact: true }),
+  ).toBeVisible()
 })
 
 test("Fleet session collapse defaults and persists", async ({ page }) => {
