@@ -380,39 +380,6 @@
   text-align: right;
 }
 
-/* new-agent (card footer) */
-.newagent {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 11px 18px;
-  border-top: 1px solid var(--fl-hair);
-  color: var(--fl-faint);
-  font-family: var(--font-mono);
-  font-size: calc(11.5px * var(--v2-scale, 1));
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.newagent svg {
-  width: 13px;
-  height: 13px;
-  flex-shrink: 0;
-}
-
-.newagent span {
-  overflow: hidden;
-  min-width: 0;
-  text-overflow: ellipsis;
-}
-
-.newagent:hover {
-  background: var(--fl-hair);
-  color: var(--muted-foreground);
-}
-
 .emptyRows {
   padding: 18px;
   color: var(--fl-faint);

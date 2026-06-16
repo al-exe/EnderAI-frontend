@@ -503,15 +503,6 @@ function FleetCard({
               ))
             )}
           </div>
-
-          <Link
-            to="/v2/settings"
-            search={{ tab: "connect-agent" }}
-            className={styles.newagent}
-          >
-            <Plus />
-            <span>New agent in {fleetTitle(fleet)}</span>
-          </Link>
         </>
       )}
     </section>
