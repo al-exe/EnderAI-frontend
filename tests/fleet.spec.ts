@@ -542,7 +542,9 @@ test("Fleet session collapse defaults and persists", async ({ page }) => {
 
   await page.getByTestId("fleet-header-toggle-fleet-1").click()
   await expect(workCard).toHaveAttribute("data-collapsed", "true")
-  await expect(page.getByTestId("fleet-agent-row")).not.toBeVisible()
+  await expect(
+    workCard.getByTestId("fleet-agent-row"),
+  ).not.toBeVisible()
 
   await page.reload()
   await expect(workCard).toHaveAttribute("data-collapsed", "true")
