@@ -704,7 +704,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(
     page.getByText("Optional: persist the token across new terminals"),
   ).toHaveCount(0)
-  await expect(page.getByText("2. Connect Claude Code or Codex")).toBeVisible()
+  await expect(page.getByText("2. Connect Claude Code, Codex, or Cursor")).toBeVisible()
   const claudeCodeSetup = page.getByTestId("connect-agent-claude-code")
   await expect(claudeCodeSetup).toContainText(
     "printf '%s\\n' 'mcp-token-abc' > ~/.taskforce_mcp_token",
@@ -724,7 +724,15 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(codexSetup).toContainText(
     "https://enderai-backend.onrender.com/api/v1/v2/taskforce/install-codex.sh",
   )
+  const cursorSetup = page.getByTestId("connect-agent-cursor")
+  await expect(cursorSetup).toContainText(
+    "printf '%s\\n' 'mcp-token-abc' > ~/.taskforce_mcp_token",
+  )
+  await expect(cursorSetup).toContainText(
+    "https://enderai-backend.onrender.com/api/v1/v2/taskforce/install-cursor.sh",
+  )
   await expect(page.getByText("Trust Codex hooks once")).toBeVisible()
+  await expect(page.getByText("Reload Cursor hooks")).toBeVisible()
   await expect(
     page.getByText("New sessions will appear in Fleet immediately."),
   ).toBeVisible()
@@ -871,6 +879,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   ).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-claude-code")).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-codex")).toHaveCount(0)
+  await expect(page.getByTestId("connect-agent-cursor")).toHaveCount(0)
   await expect(page.getByTestId("connect-agent-persistent-shell")).toHaveCount(
     0,
   )
