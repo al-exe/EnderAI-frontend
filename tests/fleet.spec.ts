@@ -467,6 +467,22 @@ test("activity timeline shows the full canonical event stream and exact Ledger l
   expect(href).toContain("event_id=event-command")
 })
 
+test("activity timeline live head shows running without summary", async ({
+  page,
+}) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      status: "running",
+      summary_markdown: "",
+      minutes_ago: 0,
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  await expect(page.getByText("now", { exact: true })).toBeVisible()
+  await expect(page.getByText("Running in this terminal")).toBeVisible()
+})
+
 test("activity timeline live head shows waiting state", async ({ page }) => {
   await mockFleet(page, {
     agentOverrides: {

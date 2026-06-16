@@ -143,7 +143,7 @@ export function liveActivityLabel(
   const summary = agent.summary_markdown?.trim()
 
   if (status === "run") {
-    return summary || "Actively working on this session"
+    return summary || "Running in this terminal"
   }
   if (status === "waiting") {
     return "Waiting for your input"
