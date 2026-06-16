@@ -319,11 +319,12 @@
   display: flex;
   gap: 8px;
   margin-bottom: 26px;
+  width: 100%;
 }
 
 .heroDots button {
-  width: 26px;
-  height: 4px;
+  flex: 1 1 0;
+  height: 4.4px;
   padding: 0;
   border: 0;
   background: var(--landing-border);
