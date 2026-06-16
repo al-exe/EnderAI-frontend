@@ -175,14 +175,16 @@ function FleetGroup({
           <div className={styles.agentCard} key={agent.name}>
             <div className={styles.agentTop}>
               <span>{agent.name}</span>
+            </div>
+            <div className={styles.agentTask}>
               <span
                 className={cn(
-                  styles.statusDot,
+                  styles.actionStatus,
                   agent.accent === "amber" ? styles.amberDot : styles.greenDot,
                 )}
               />
+              <span className={styles.agentTaskText}>{agent.task}</span>
             </div>
-            <div className={styles.agentTask}>{agent.task}</div>
             <div className={styles.agentMeta}>
               <span>{agent.tool}</span>
               <span>{agent.host}</span>

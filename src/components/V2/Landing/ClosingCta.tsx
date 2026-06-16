@@ -12,7 +12,6 @@ export function ClosingCta() {
         <h2>
           Stop starting from <em>scratch</em>.
         </h2>
-        <p>Works with Claude Code, Codex, and Cursor.</p>
         <div className={styles.heroCtas}>
           <Button asChild className={styles.solidButton}>
             <Link to="/signup">

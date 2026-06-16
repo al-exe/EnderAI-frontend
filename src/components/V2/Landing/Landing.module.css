@@ -71,8 +71,8 @@
   align-items: center;
   max-width: var(--landing-max);
   margin: 0 auto;
-  padding: 14px 32px;
-  gap: 28px;
+  padding: 17.5px 32px;
+  gap: 35px;
 }
 
 .brand,
@@ -92,10 +92,20 @@
   height: 20px;
 }
 
+.brand {
+  gap: 11px;
+  font-size: 20px;
+}
+
+.brand .brandMark {
+  width: 25px;
+  height: 25px;
+}
+
 .navLinks {
   display: flex;
-  gap: 22px;
-  margin-left: 8px;
+  gap: 27.5px;
+  margin-left: 10px;
 }
 
 .navLinks a,
@@ -108,6 +118,10 @@
   transition: color 150ms ease;
 }
 
+.navLinks a {
+  font-size: 14.375px;
+}
+
 .navLinks a:hover,
 .footerLinks a:hover {
   color: var(--landing-fg);
@@ -116,19 +130,19 @@
 .navRight {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
   margin-left: auto;
 }
 
 .navCta {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .themeToggle {
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border-color: var(--landing-border);
   background: var(--landing-bg);
@@ -141,17 +155,17 @@
 }
 
 .themeToggle svg {
-  width: 15px;
-  height: 15px;
+  width: 18.75px;
+  height: 18.75px;
 }
 
 .solidButton,
 .outlineButton {
   height: auto;
   border-radius: 0;
-  padding: 9px 15px;
+  padding: 11.25px 18.75px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -180,7 +194,7 @@
 }
 
 .hero {
-  --nav-h: 61px;
+  --nav-h: 77px;
   position: relative;
   display: flex;
   overflow: hidden;
@@ -222,7 +236,7 @@
   z-index: 1;
   display: grid;
   flex: 1 1 auto;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
   gap: 46px;
 }
@@ -282,7 +296,7 @@
   margin-bottom: 22px;
   color: var(--landing-muted);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 15px;
   letter-spacing: 0.04em;
   transition: opacity 260ms ease;
 }
@@ -335,13 +349,6 @@
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.04em;
-}
-
-.workDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--landing-positive);
 }
 
 .heroCtas {
@@ -730,7 +737,7 @@
   margin-bottom: 18px;
   color: var(--landing-primary);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13.75px;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -739,16 +746,16 @@
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 42.5px;
+  height: 42.5px;
   border: 1px solid var(--landing-primary-line);
   background: var(--landing-primary-soft);
   color: var(--landing-primary);
 }
 
 .featureIcon svg {
-  width: 18px;
-  height: 18px;
+  width: 22.5px;
+  height: 22.5px;
 }
 
 .visual {
@@ -857,14 +864,26 @@
   white-space: nowrap;
 }
 
-.agentTop .statusDot {
-  margin-left: auto;
-}
-
 .agentTask {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
   color: var(--landing-muted);
   font-size: 11px;
   line-height: 1.4;
+}
+
+.actionStatus {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  margin-top: 4px;
+  animation: actionGlow 1800ms ease-in-out infinite;
+}
+
+.agentTaskText {
+  color: var(--landing-muted);
+  animation: actionTextGlow 1800ms ease-in-out infinite;
 }
 
 .agentMeta {
@@ -1260,7 +1279,7 @@
 }
 
 .ctaInner h2 {
-  margin: 0 0 16px;
+  margin: 0 0 28px;
   font-size: clamp(30px, 4vw, 44px);
   font-weight: 600;
   line-height: 1.05;
@@ -1271,14 +1290,6 @@
 .ctaInner h2 em {
   color: var(--landing-primary);
   font-style: normal;
-}
-
-.ctaInner p {
-  margin: 0 0 28px;
-  color: var(--landing-faint);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
 }
 
 .footer {
@@ -1414,6 +1425,30 @@
   }
   50% {
     transform: translateY(5px);
+  }
+}
+
+@keyframes actionGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 0%, transparent);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 10px 2px currentColor;
+    opacity: 0.58;
+  }
+}
+
+@keyframes actionTextGlow {
+  0%,
+  100% {
+    opacity: 1;
+    text-shadow: none;
+  }
+  50% {
+    opacity: 0.72;
+    text-shadow: 0 0 8px color-mix(in srgb, currentColor 35%, transparent);
   }
 }
 

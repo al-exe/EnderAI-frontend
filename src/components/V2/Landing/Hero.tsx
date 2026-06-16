@@ -164,7 +164,7 @@ export function LandingHero() {
                 className={cn(styles.heroCap, isSwapping && styles.swapping)}
               >
                 <span className={styles.capKey}>{scene.key}</span>
-                <span className={styles.capSep}>.</span>
+                <span className={styles.capSep}>·</span>
                 <span>{scene.name}</span>
               </div>
               <div
@@ -185,7 +185,6 @@ export function LandingHero() {
                 ))}
               </div>
               <div className={styles.works}>
-                <span className={styles.workDot} />
                 Works with Claude Code, Codex, and Cursor.
               </div>
               <div className={styles.heroCtas}>
