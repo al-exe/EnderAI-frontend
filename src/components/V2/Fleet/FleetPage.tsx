@@ -39,6 +39,7 @@ import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
+  V2_TAB_CONTENT_CLASS,
   V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
@@ -650,7 +651,7 @@ export function FleetPage() {
           </header>
         </div>
 
-        <div className="flex min-h-0 flex-col pt-6">
+        <div className={V2_TAB_CONTENT_CLASS}>
           {Boolean(mutationError) && (
             <div className="mb-4 border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {errorMessage(mutationError)}

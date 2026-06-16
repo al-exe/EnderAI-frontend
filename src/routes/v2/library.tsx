@@ -85,6 +85,7 @@ import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
   V2_TAB_EYEBROW_CLASS,
+  V2_TAB_CONTENT_CLASS,
   V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -814,6 +815,7 @@ function TaskforceLibrary() {
             onConfirm={(document) => deleteDocumentMutation.mutate(document.id)}
           />
 
+          <div className={V2_TAB_CONTENT_CLASS}>
           {hasInitialLoadError ? (
             <QueryErrorState
               title="Could not load the library"
@@ -947,6 +949,7 @@ function TaskforceLibrary() {
                 )}
             </>
           )}
+          </div>
         </div>
       </section>
     </DocumentDeleteContext.Provider>

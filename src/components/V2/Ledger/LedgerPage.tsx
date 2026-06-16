@@ -28,6 +28,7 @@ import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
+  V2_TAB_CONTENT_CLASS,
   V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
@@ -448,7 +449,7 @@ export function LedgerPage({
                     })
                   }
                 />
-                <div className={styles.cols}>
+                <div className={cn(styles.cols, V2_TAB_CONTENT_CLASS)}>
                   <div>Time</div>
                   <div>Session</div>
                   <div>Harness · agent</div>
@@ -459,7 +460,7 @@ export function LedgerPage({
               </div>
             </div>
 
-            <div className={styles.listShell}>
+            <div className={cn(styles.listShell, V2_TAB_CONTENT_CLASS)}>
               <LedgerList
                 groups={groups}
                 isError={ledgerQuery.isError}
@@ -666,7 +667,7 @@ function LedgerDetail({
         <span className={styles.pill}>{harnessWithVersion(detail)}</span>
         <span className={styles.pill}>{agentLabel(detail)}</span>
       </div>
-      <div className={styles.dbody}>
+      <div className={cn(styles.dbody, V2_TAB_CONTENT_CLASS)}>
         <div className={styles.transcript}>
           <div className={styles.tHead}>
             <div className={styles.eyebrow}>

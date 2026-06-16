@@ -45,7 +45,16 @@ export const V2_TAB_HEADER_STACK_CLASS = cn(
 )
 
 /** Main content below a tab title + filter header stack. */
-export const V2_TAB_CONTENT_CLASS = "flex flex-col gap-4 pt-4"
+export const V2_TAB_CONTENT_CLASS = "v2-tab-content flex flex-col gap-4 pt-4"
+
+/** ~15% above Tailwind `text-xs` / `text-sm` for v2 tab body copy. */
+export const V2_TEXT_XS_CLASS = "text-v2-xs"
+
+/** ~15% above Tailwind `text-sm` for v2 tab body copy. */
+export const V2_TEXT_SM_CLASS = "text-v2-sm"
+
+/** ~15% above Tailwind `text-base` for v2 tab body copy. */
+export const V2_TEXT_BASE_CLASS = "text-v2-base"
 
 /** @deprecated Prefer V2_PAGE_CONTENT for tab pages. */
 export const V2_CONTENT_SHELL = V2_PAGE_CONTENT

@@ -68,7 +68,7 @@
 .fname {
   overflow: hidden;
   min-width: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--v2-scale, 1));
   font-weight: 600;
   letter-spacing: 0.01em;
   text-overflow: ellipsis;
@@ -88,7 +88,7 @@
   overflow: hidden;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
   letter-spacing: 0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -107,7 +107,7 @@
   gap: 6px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
@@ -248,7 +248,7 @@
 
 .nm {
   overflow: hidden;
-  font-size: 14px;
+  font-size: calc(14px * var(--v2-scale, 1));
   font-weight: 500;
   letter-spacing: -0.005em;
   text-overflow: ellipsis;
@@ -259,7 +259,7 @@
   margin-top: 4px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--v2-scale, 1));
   letter-spacing: 0.01em;
 }
 
@@ -267,7 +267,7 @@
   margin-top: 7px;
   color: var(--muted-foreground);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--v2-scale, 1));
   letter-spacing: 0.02em;
 }
 
@@ -289,7 +289,7 @@
   display: -webkit-box;
   overflow: hidden;
   color: var(--muted-foreground);
-  font-size: 13px;
+  font-size: calc(13px * var(--v2-scale, 1));
   line-height: 1.5;
   text-overflow: ellipsis;
   -webkit-box-orient: vertical;
@@ -304,7 +304,7 @@
   flex-wrap: wrap;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
 }
 
 .file {
@@ -335,7 +335,7 @@
 .age {
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -350,7 +350,7 @@
   border-top: 1px solid var(--fl-hair);
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--v2-scale, 1));
   letter-spacing: 0.02em;
   white-space: nowrap;
   cursor: pointer;
@@ -377,7 +377,7 @@
   padding: 18px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--v2-scale, 1));
 }
 
 /* ============================================================
@@ -403,7 +403,7 @@
   margin-bottom: 20px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
   letter-spacing: 0.02em;
   min-width: 0;
 }
@@ -454,7 +454,7 @@
 
 .dtitle h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: calc(22px * var(--v2-scale, 1));
   font-weight: 600;
   letter-spacing: -0.015em;
 }
@@ -464,7 +464,7 @@
   margin-top: 7px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--v2-scale, 1));
   letter-spacing: 0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -479,7 +479,7 @@
   margin-top: 7px;
   color: var(--muted-foreground);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--v2-scale, 1));
   letter-spacing: 0.02em;
 }
 
@@ -513,7 +513,7 @@
   margin-bottom: 14px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
   font-weight: 500;
   letter-spacing: 0.01em;
 }
@@ -528,7 +528,7 @@
 
 .nowtask {
   color: var(--foreground);
-  font-size: 16px;
+  font-size: calc(16px * var(--v2-scale, 1));
   line-height: 1.5;
   letter-spacing: -0.005em;
 }
@@ -541,7 +541,7 @@
 
 .questionText {
   color: var(--foreground);
-  font-size: 14.5px;
+  font-size: calc(14.5px * var(--v2-scale, 1));
   line-height: 1.6;
 }
 
@@ -560,7 +560,7 @@
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: calc(13px * var(--v2-scale, 1));
   outline: none;
 }
 
@@ -578,7 +578,7 @@
   border: 1px solid var(--fl-primary-line);
   background: var(--fl-primary-soft);
   color: var(--foreground);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--v2-scale, 1));
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
@@ -634,7 +634,7 @@
 .tt {
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--v2-scale, 1));
   letter-spacing: 0.02em;
 }
 
@@ -647,7 +647,7 @@
 .tx {
   margin-top: 3px;
   color: var(--muted-foreground);
-  font-size: 13px;
+  font-size: calc(13px * var(--v2-scale, 1));
   line-height: 1.45;
 }
 
@@ -658,7 +658,7 @@
 .tsub {
   margin-top: 4px;
   color: var(--fl-faint);
-  font-size: 12px;
+  font-size: calc(12px * var(--v2-scale, 1));
   line-height: 1.45;
 }
 
@@ -688,7 +688,7 @@
   padding: 9px 0;
   border-bottom: 1px solid var(--fl-hair);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--v2-scale, 1));
 }
 
 .metarow:last-child {
@@ -697,7 +697,7 @@
 
 .mk {
   color: var(--fl-faint);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
   font-weight: 500;
   letter-spacing: 0.01em;
 }
@@ -721,7 +721,7 @@
   padding: 8px 0;
   border-bottom: 1px solid var(--fl-hair);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--v2-scale, 1));
 }
 
 .fileitem:last-child {
@@ -739,7 +739,7 @@
 .fs {
   flex-shrink: 0;
   color: var(--fl-faint);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--v2-scale, 1));
   letter-spacing: 0.01em;
 }
 
@@ -750,7 +750,7 @@
 .empty {
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--v2-scale, 1));
 }
 
 .doccard {
@@ -770,14 +770,14 @@
 .dmode {
   color: var(--primary);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--v2-scale, 1));
   letter-spacing: 0.01em;
 }
 
 .dttl {
   margin-top: 6px;
   color: var(--foreground);
-  font-size: 13px;
+  font-size: calc(13px * var(--v2-scale, 1));
   line-height: 1.4;
 }
 
@@ -785,7 +785,7 @@
   margin-top: 5px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--v2-scale, 1));
 }
 
 .ctxitem {
@@ -795,7 +795,7 @@
   padding: 7px 0;
   border-bottom: 1px solid var(--fl-hair);
   color: var(--muted-foreground);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--v2-scale, 1));
 }
 
 .ctxitem:last-child {
@@ -835,7 +835,7 @@
   background: var(--fl-primary-soft);
   color: var(--foreground);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: calc(10px * var(--v2-scale, 1));
 }
 
 .pfId {
@@ -844,7 +844,7 @@
 
 .pfNm {
   color: var(--foreground);
-  font-size: 13px;
+  font-size: calc(13px * var(--v2-scale, 1));
   font-weight: 500;
 }
 
@@ -852,7 +852,7 @@
   margin-top: 2px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--v2-scale, 1));
 }
 
 .pfMeta {
@@ -861,7 +861,7 @@
   border-top: 1px solid var(--fl-hair);
   color: var(--muted-foreground);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--v2-scale, 1));
 }
 
 .pauserail {
@@ -874,14 +874,14 @@
   margin-bottom: 7px;
   color: var(--fl-attention);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
   font-weight: 500;
   letter-spacing: 0.01em;
 }
 
 .prB {
   color: var(--muted-foreground);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--v2-scale, 1));
   line-height: 1.5;
 }
 
@@ -893,7 +893,7 @@
   background: var(--background);
   color: var(--muted-foreground);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: calc(11px * var(--v2-scale, 1));
   cursor: pointer;
 }
 
@@ -913,7 +913,7 @@
   background: transparent;
   color: var(--muted-foreground);
   font-family: var(--font-sans);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--v2-scale, 1));
   white-space: nowrap;
   cursor: pointer;
 }

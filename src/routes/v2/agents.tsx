@@ -29,6 +29,7 @@ import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
   V2_TAB_HEADER_STACK_CLASS,
+  V2_TAB_CONTENT_CLASS,
 } from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -181,6 +182,7 @@ function AgentsIndex() {
           />
         </div>
 
+        <div className={V2_TAB_CONTENT_CLASS}>
         <CreateProfileDialog
           open={createProfileOpen}
           onOpenChange={setCreateProfileOpen}
@@ -235,6 +237,7 @@ function AgentsIndex() {
             Refreshing profiles
           </div>
         )}
+        </div>
       </div>
     </section>
   )

@@ -10,6 +10,7 @@ import {
   type TaskforceSessionActivityEntry,
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
+import { V2_TAB_CONTENT_CLASS } from "@/components/V2/v2PageShell"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
 import {
   agentCapturePaused,
@@ -240,7 +241,10 @@ function FleetAgentDetailRoute() {
         </div>
       </div>
 
-      <div className={styles.dbody} data-testid="fleet-detail-body">
+      <div
+        className={cn(styles.dbody, V2_TAB_CONTENT_CLASS)}
+        data-testid="fleet-detail-body"
+      >
         <div className={styles.dmain}>
           {/* Working on — a waiting agent surfaces its question + reply box. */}
           {status === "waiting" && question ? (
