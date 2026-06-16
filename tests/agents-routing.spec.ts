@@ -174,6 +174,23 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
   ).toHaveCount(0)
 })
 
+test("hard refresh on /v2/agents/ keeps Profiles selected and renders content", async ({
+  page,
+}) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/agents/")
+  await page.reload()
+
+  await expect(page.getByRole("link", { name: "Profiles" })).toHaveAttribute(
+    "data-active",
+    "true",
+  )
+  await expect(
+    page.getByRole("heading", { name: "Profiles", level: 1 }),
+  ).toBeVisible()
+})
+
 test("agent detail navigation does not flash no-access or not-found", async ({
   page,
 }) => {

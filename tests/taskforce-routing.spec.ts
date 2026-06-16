@@ -101,3 +101,18 @@ test("legacy settings route redirects into the Taskforce shell", async ({
     page.getByRole("tab", { name: "Connect agent" }),
   ).toHaveAttribute("aria-selected", "true")
 })
+
+test("hard refresh on /v2/library/ keeps Library selected and renders content", async ({
+  page,
+}) => {
+  await mockAuth(page)
+
+  await page.goto("/v2/library/")
+  await page.reload()
+
+  await expect(page.getByRole("link", { name: "Library" })).toHaveAttribute(
+    "data-active",
+    "true",
+  )
+  await expect(page.getByRole("heading", { name: "Library" })).toBeVisible()
+})

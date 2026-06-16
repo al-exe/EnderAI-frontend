@@ -248,6 +248,21 @@ async function mockFleet(
   })
 }
 
+test("hard refresh on /v2/fleet/ keeps Fleet selected and renders content", async ({
+  page,
+}) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet/")
+  await page.reload()
+
+  await expect(page.getByRole("link", { name: "Fleet" })).toHaveAttribute(
+    "data-active",
+    "true",
+  )
+  await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
+  await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
+})
+
 test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await mockFleet(page)
   await page.goto("/v2/fleet")
