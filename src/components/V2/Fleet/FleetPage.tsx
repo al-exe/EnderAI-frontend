@@ -135,7 +135,7 @@ function AgentRow({
   onRename: (agent: TaskforceFleetAgent, displayName: string) => void
   onDragStart: (
     agent: TaskforceFleetAgent,
-    event: DragEvent<HTMLButtonElement>,
+    event: DragEvent<HTMLDivElement>,
   ) => void
   onDragEnd: () => void
   isDragging: boolean
@@ -328,7 +328,7 @@ function FleetCard({
   movingSessionId: string | null
   onAgentDragStart: (
     agent: TaskforceFleetAgent,
-    event: DragEvent<HTMLButtonElement>,
+    event: DragEvent<HTMLDivElement>,
   ) => void
   onAgentDragEnd: () => void
   onDragOver: (fleetSessionId: string) => void
