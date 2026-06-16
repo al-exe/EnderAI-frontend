@@ -601,6 +601,37 @@ function eventIndex(
   return events.findIndex((event) => event.id === eventId)
 }
 
+function transcriptEventTitle(event: LedgerTranscriptEvent): string {
+  if (event.kind === "prompt") return event.text ?? "Prompt"
+  if (event.kind === "reply") return event.text ?? "Reply"
+  if (event.kind === "command") return `$ ${event.cmd ?? "command"}`
+  if (event.kind === "edit") return `Edited ${event.file ?? "file"}`
+  return event.note ?? event.text ?? event.kind
+}
+
+function transcriptEventDetail(
+  event: LedgerTranscriptEvent,
+  detail: LedgerSessionDetail,
+): string | null {
+  if (event.kind === "prompt") return `${eventWho(event, detail)} asked`
+  if (event.kind === "reply") return `${agentLabel(detail)} replied`
+  if (event.kind === "command") {
+    const exit =
+      event.exit_code === null ? "" : `exit ${event.exit_code.toString()}`
+    return [event.output, exit, event.repo ?? detail.repo]
+      .filter(Boolean)
+      .join(" · ")
+  }
+  if (event.kind === "edit") {
+    const stats =
+      event.added !== null || event.removed !== null
+        ? `+${event.added ?? 0} −${event.removed ?? 0}`
+        : ""
+    return [event.note, stats].filter(Boolean).join(" · ") || null
+  }
+  return event.note
+}
+
 function LedgerDetail({
   anchorEventId,
   detail,
@@ -616,9 +647,16 @@ function LedgerDetail({
   isLoading: boolean
   onBack: () => void
 }) {
+  const transcriptEvents = useMemo(
+    () =>
+      [...(detail?.transcript_events ?? [])].sort((a, b) =>
+        (b.occurred_at ?? "").localeCompare(a.occurred_at ?? ""),
+      ),
+    [detail?.transcript_events],
+  )
   const anchorIndex = useMemo(
-    () => eventIndex(detail?.transcript_events ?? [], anchorEventId),
-    [detail?.transcript_events, anchorEventId],
+    () => eventIndex(transcriptEvents, anchorEventId),
+    [transcriptEvents, anchorEventId],
   )
   const anchorRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
@@ -677,16 +715,18 @@ function LedgerDetail({
             </div>
             <h2>{sessionTitle(detail)}</h2>
           </div>
-          {detail.transcript_events.length > 0 ? (
-            detail.transcript_events.map((event, index) => (
-              <TranscriptEvent
-                anchorRef={index === anchorIndex ? anchorRef : undefined}
-                detail={detail}
-                event={event}
-                highlighted={index === anchorIndex}
-                key={event.id}
-              />
-            ))
+          {transcriptEvents.length > 0 ? (
+            <div className={styles.transcriptTimeline}>
+              {transcriptEvents.map((event, index) => (
+                <TranscriptEvent
+                  anchorRef={index === anchorIndex ? anchorRef : undefined}
+                  detail={detail}
+                  event={event}
+                  highlighted={index === anchorIndex}
+                  key={event.id}
+                />
+              ))}
+            </div>
           ) : (
             <div className={styles.empty}>
               Transcript archive is not available for this older session.
@@ -710,80 +750,66 @@ function TranscriptEvent({
   event: LedgerTranscriptEvent
   highlighted?: boolean
 }) {
-  const time = formatTimeOfDay(event.occurred_at)
+  const time = formatClock(event.occurred_at)
   const anchorProps = { highlighted, rootRef: anchorRef }
+  const title = transcriptEventTitle(event)
+  const eventDetail = transcriptEventDetail(event, detail)
 
   if (event.kind === "prompt") {
     return (
-      <EventShell modifier={styles.evPrompt} time={time} {...anchorProps}>
-        <div className={styles.lab}>
-          <b>{eventWho(event, detail)} asked</b>
-        </div>
-        {event.text ? <div className={styles.txt}>{event.text}</div> : null}
+      <EventShell
+        kind={event.kind}
+        modifier={styles.evPrompt}
+        time={time}
+        {...anchorProps}
+      >
+        <div className={styles.evTitle}>{title}</div>
+        {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
       </EventShell>
     )
   }
 
   if (event.kind === "reply") {
     return (
-      <EventShell modifier={styles.evReply} time={time} {...anchorProps}>
-        <div className={styles.lab}>
-          <b>{agentLabel(detail)}</b> replied
-        </div>
-        {event.text ? <div className={styles.txt}>{event.text}</div> : null}
+      <EventShell
+        kind={event.kind}
+        modifier={styles.evReply}
+        time={time}
+        {...anchorProps}
+      >
+        <div className={styles.evTitle}>{title}</div>
+        {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
       </EventShell>
     )
   }
 
   if (event.kind === "command") {
-    const failed = event.exit_code !== null && event.exit_code !== 0
-    const repo = event.repo ?? detail.repo
     return (
-      <EventShell time={time} {...anchorProps}>
-        <div className={styles.lab}>ran command</div>
-        <div className={styles.cmd}>
-          <div className={styles.cmdLine}>
-            <span className={styles.cmdPr}>$</span>
-            <span className={styles.cmdC}>{event.cmd}</span>
-          </div>
-          {event.output ? (
-            <div className={styles.cmdOut}>{event.output}</div>
-          ) : null}
-          <div className={styles.cmdMeta}>
-            {event.exit_code !== null ? (
-              <span className={cn(styles.exit, failed && styles.exitFail)}>
-                <span className={styles.exitD} />
-                exit {event.exit_code}
-              </span>
-            ) : null}
-            {repo ? <span>{repo}</span> : null}
-          </div>
-        </div>
+      <EventShell kind={event.kind} time={time} {...anchorProps}>
+        <div className={cn(styles.evTitle, styles.evTitleMono)}>{title}</div>
+        {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
       </EventShell>
     )
   }
 
   if (event.kind === "edit") {
     return (
-      <EventShell time={time} {...anchorProps}>
-        <div className={styles.lab}>edited file</div>
-        <div className={styles.edit}>
-          <span className={styles.editFile}>{event.file}</span>
-          <span className={styles.editStat}>
-            <span className={styles.editAdd}>+{event.added ?? 0}</span>{" "}
-            <span className={styles.editRem}>−{event.removed ?? 0}</span>
-          </span>
-        </div>
-        {event.note ? (
-          <div className={styles.editNote}>{event.note}</div>
-        ) : null}
+      <EventShell kind={event.kind} time={time} {...anchorProps}>
+        <div className={styles.evTitle}>{title}</div>
+        {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
       </EventShell>
     )
   }
 
   return (
-    <EventShell modifier={styles.evNote} time={time} {...anchorProps}>
-      <div className={styles.noteTxt}>● {event.note ?? event.text}</div>
+    <EventShell
+      kind={event.kind}
+      modifier={styles.evNote}
+      time={time}
+      {...anchorProps}
+    >
+      <div className={styles.evTitle}>{title}</div>
+      {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
     </EventShell>
   )
 }
@@ -791,12 +817,14 @@ function TranscriptEvent({
 function EventShell({
   children,
   highlighted,
+  kind,
   modifier,
   rootRef,
   time,
 }: {
   children: ReactNode
   highlighted?: boolean
+  kind: string
   modifier?: string
   rootRef?: RefObject<HTMLDivElement | null>
   time: string
@@ -807,7 +835,11 @@ function EventShell({
       data-highlighted={highlighted ? "true" : undefined}
       ref={rootRef}
     >
-      <div className={styles.evT}>{time}</div>
+      <span className={styles.evDot} />
+      <div className={styles.evT}>
+        {time}
+        <span className={styles.evKind}>{kind}</span>
+      </div>
       <div className={styles.evC}>{children}</div>
     </div>
   )

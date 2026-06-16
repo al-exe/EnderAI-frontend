@@ -58,7 +58,7 @@ function ledgerDetail(rawTranscriptAvailable: boolean) {
     kinds: ["session.observed"],
     net_saved_tokens: 0,
     usd_amount: "0",
-    event_count: 1,
+    event_count: 4,
     cross_boundary: false,
     occurred_at_first: "2026-06-12T20:00:00Z",
     occurred_at_last: "2026-06-12T20:01:00Z",
@@ -75,9 +75,9 @@ function ledgerDetail(rawTranscriptAvailable: boolean) {
     ended_at: "2026-06-12T20:01:00Z",
     duration_ms: 60000,
     imported_at: "2026-06-12T20:01:00Z",
-    message_count: 1,
-    command_count: 0,
-    edit_count: 0,
+    message_count: 2,
+    command_count: 1,
+    edit_count: 1,
     input_tokens: 100,
     output_tokens: 20,
     cache_read_tokens: 0,
@@ -100,6 +100,54 @@ function ledgerDetail(rawTranscriptAvailable: boolean) {
         removed: null,
         note: null,
         repo: null,
+      },
+      {
+        id: "event-edit",
+        kind: "edit",
+        occurred_at: "2026-06-12T20:00:30Z",
+        role: null,
+        who: null,
+        text: null,
+        cmd: null,
+        exit_code: null,
+        output: null,
+        file: "tests/ledger.spec.ts",
+        added: 12,
+        removed: 2,
+        note: "Covered newest-first transcript ordering",
+        repo: "EnderAI",
+      },
+      {
+        id: "event-reply",
+        kind: "reply",
+        occurred_at: "2026-06-12T20:00:45Z",
+        role: "assistant",
+        who: "Codex",
+        text: "Ledger timeline now matches Fleet.",
+        cmd: null,
+        exit_code: null,
+        output: null,
+        file: null,
+        added: null,
+        removed: null,
+        note: null,
+        repo: null,
+      },
+      {
+        id: "event-command",
+        kind: "command",
+        occurred_at: "2026-06-12T20:01:00Z",
+        role: null,
+        who: null,
+        text: null,
+        cmd: "npm run test:mocked -- tests/ledger.spec.ts",
+        exit_code: 0,
+        output: "1 passed",
+        file: null,
+        added: null,
+        removed: null,
+        note: null,
+        repo: "EnderAI",
       },
     ],
     raw_transcript_available: rawTranscriptAvailable,
@@ -202,6 +250,30 @@ test("event deep links highlight the exact canonical Ledger event", async ({
   await expect(page.locator('[data-highlighted="true"]')).toContainText(
     "Polish the Ledger.",
   )
+})
+
+test("session transcript timeline matches Fleet formatting newest first", async ({
+  page,
+}) => {
+  await mockTaskforceAuth(page, "org-1")
+  await mockLedger(page, { rawTranscriptAvailable: true })
+
+  await page.goto("/v2/ledger?session_id=session-raw")
+
+  const newest = page.getByText("$ npm run test:mocked -- tests/ledger.spec.ts")
+  const oldest = page.getByText("Polish the Ledger.")
+  await expect(newest).toBeVisible()
+  await expect(oldest).toBeVisible()
+  await expect(page.getByText("command", { exact: true })).toBeVisible()
+  await expect(page.getByText("1 passed · exit 0 · EnderAI")).toBeVisible()
+  await expect(page.getByText("Edited tests/ledger.spec.ts")).toBeVisible()
+  await expect(
+    page.getByText("Covered newest-first transcript ordering · +12 −2"),
+  ).toBeVisible()
+
+  const newestBox = await newest.boundingBox()
+  const oldestBox = await oldest.boundingBox()
+  expect(newestBox && oldestBox && newestBox.y < oldestBox.y).toBe(true)
 })
 
 test("sessions without canonical events show no transcript download control", async ({
