@@ -7,46 +7,44 @@ test.use({
   },
 })
 
-test("/landing renders the expressive Taskforce demo page", async ({
+test("/landing renders the redesigned Taskforce landing page", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" })
   await page.goto("/landing")
 
-  await expect(page.getByTestId("landing-expressive")).toBeVisible()
-  await expect(page.getByTestId("landing-demo-disclosure")).toContainText(
-    "Names, events, and savings shown are example data.",
-  )
+  await expect(page.getByTestId("landing-redesign")).toBeVisible()
   await expect(page.getByText("82.4M tokens")).toHaveCount(0)
   await expect(
     page.getByRole("heading", {
-      name: /stop re-explaining your codebase/i,
+      name: /stop losing track.*of your agents/i,
     }),
   ).toBeVisible()
-  for (const testId of [
-    "landing-eyebrow",
-    "landing-summary-label",
-    "landing-terminal-summary-label",
+  await expect(page.getByText("taskforce - live")).toBeVisible()
+
+  for (const heading of [
+    "Orchestration",
+    "Agent profiles",
+    "Self-updating documents",
+    "Audit trail",
+    "Proven ROI",
   ]) {
-    await expect(page.getByTestId(testId)).toHaveCSS("text-transform", "none")
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible()
   }
+
+  await page.getByRole("tab", { name: "Profiles" }).click()
   await expect(
-    page.getByText("/tf Stripe is double-charging users on plan upgrades", {
-      exact: false,
+    page.getByRole("heading", {
+      name: /stop re-briefing.*every agent/i,
     }),
   ).toBeVisible()
+
   await expect(
-    page.getByText("Selected profile: Jensen — Billing Reliability."),
-  ).toBeVisible()
-  await expect(page.getByText("session link ready →")).toBeVisible()
-  await expect(page.getByRole("link", { name: /sign up/i })).toHaveAttribute(
-    "href",
-    "/signup",
-  )
-  await expect(page.getByRole("link", { name: /log in/i })).toHaveAttribute(
-    "href",
-    "/login",
-  )
+    page.getByRole("link", { name: /start free/i }).first(),
+  ).toHaveAttribute("href", "/signup")
+  await expect(
+    page.getByRole("link", { name: /open taskforce/i }).first(),
+  ).toHaveAttribute("href", "/login")
 })
 
 test("/pricing uses sentence-case calmer mono eyebrows", async ({ page }) => {
