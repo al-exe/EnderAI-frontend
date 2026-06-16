@@ -581,6 +581,7 @@ function AgentDetailPage() {
             Refreshing profile
           </div>
         )}
+        </div>
       </div>
     </section>
   )
