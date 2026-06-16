@@ -10,9 +10,8 @@ export function ClosingCta() {
     <section className={styles.ctaBand}>
       <div className={styles.ctaInner}>
         <h2>
-          Stop starting from <em>scratch</em>.
+          Stop starting from <em>scratch</em>. Start using Taskforce.
         </h2>
-        <p>Works with Claude Code, Codex, and Cursor.</p>
         <div className={styles.heroCtas}>
           <Button asChild className={styles.solidButton}>
             <Link to="/signup">

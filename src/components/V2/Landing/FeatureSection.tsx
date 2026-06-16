@@ -78,7 +78,9 @@ function FeatureRow({
           <span>{label}</span>
         </div>
         <h2>{title}</h2>
-        <p>{body}</p>
+        <p className={cn(id === "profiles" && styles.profileFeatureBody)}>
+          {body}
+        </p>
       </div>
       <div className={styles.visual}>{visual}</div>
     </div>
@@ -175,14 +177,16 @@ function FleetGroup({
           <div className={styles.agentCard} key={agent.name}>
             <div className={styles.agentTop}>
               <span>{agent.name}</span>
+            </div>
+            <div className={styles.agentTask}>
               <span
                 className={cn(
-                  styles.statusDot,
+                  styles.actionStatus,
                   agent.accent === "amber" ? styles.amberDot : styles.greenDot,
                 )}
               />
+              <span className={styles.agentTaskText}>{agent.task}</span>
             </div>
-            <div className={styles.agentTask}>{agent.task}</div>
             <div className={styles.agentMeta}>
               <span>{agent.tool}</span>
               <span>{agent.host}</span>
@@ -199,9 +203,6 @@ function ProfilePanel() {
     <Panel chip="active" label="Profile">
       <div className={styles.profileBody}>
         <div className={styles.profileHead}>
-          <div className={styles.avatar}>
-            <Bot />
-          </div>
           <div>
             <div className={styles.profileName}>Payments Specialist</div>
             <div className={styles.profileRole}>role - billing & checkout</div>
@@ -273,6 +274,12 @@ function LibraryPanel() {
           reused="Reused 2x"
           signal="Updated 5d ago"
           title="PG16 migration notes"
+        />
+        <DocumentRow
+          path="/agents/profile-routing.md"
+          reused="Reused 7x"
+          signal="Updated 1w ago"
+          title="Profile routing rules"
         />
       </div>
     </Panel>
