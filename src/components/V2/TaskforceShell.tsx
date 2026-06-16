@@ -148,14 +148,21 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
     }
   }
 
+  const normalizedPath = currentPath.replace(/\/+$/, "") || "/"
+
   return (
     <SidebarMenu className="px-2">
       {items.map((item) => {
         const isActive =
-          currentPath === item.path ||
+          normalizedPath === item.path ||
           (item.path === "/v2/library" &&
-            currentPath.startsWith("/v2/library/")) ||
-          (item.path === "/v2/agents" && currentPath.startsWith("/v2/agents/"))
+            normalizedPath.startsWith("/v2/library/")) ||
+          (item.path === "/v2/agents" &&
+            normalizedPath.startsWith("/v2/agents/")) ||
+          (item.path === "/v2/fleet" &&
+            normalizedPath.startsWith("/v2/fleet/")) ||
+          (item.path === "/v2/metrics" &&
+            normalizedPath.startsWith("/v2/metrics/"))
 
         return (
           <SidebarMenuItem key={item.title}>
