@@ -62,6 +62,7 @@ import {
   type FleetStatus,
   fleetRepo,
   fleetTitle,
+  rosterWorkSummary,
   runningCount,
   STATE_LABEL,
   waitingCount,
@@ -216,7 +217,7 @@ function AgentRow({
         </div>
         <div className={styles.work}>
           <div className={styles.workSummary}>
-            {agent.summary_markdown || "No current work captured yet"}
+            {rosterWorkSummary(agent)}
           </div>
           {docTitle && (
             <div className={styles.detailLine}>

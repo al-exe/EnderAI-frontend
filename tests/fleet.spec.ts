@@ -481,6 +481,66 @@ test("activity timeline live head shows running without summary", async ({
 
   await expect(page.getByText("now", { exact: true })).toBeVisible()
   await expect(page.getByText("Running in this terminal")).toBeVisible()
+  await expect(
+    page.getByText(
+      "Running in this terminal. A summary appears after Taskforce capture records work.",
+    ),
+  ).toBeVisible()
+})
+
+test("roster shows running placeholder when summary is empty", async ({
+  page,
+}) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      status: "running",
+      summary_markdown: "",
+      minutes_ago: 0,
+    },
+  })
+  await page.goto("/v2/fleet")
+
+  const row = page.getByTestId("fleet-agent-row")
+  await expect(row.getByText("Running in this terminal")).toBeVisible()
+  await expect(row.getByText("No current work captured yet")).toHaveCount(0)
+
+  const [dotBox, ageBox, menuBox] = await Promise.all([
+    row.getByTestId("fleet-status-dot").boundingBox(),
+    row.getByText("now", { exact: true }).boundingBox(),
+    row
+      .getByRole("button", {
+        name: "Wiring automatic tax on Stripe checkout actions",
+      })
+      .boundingBox(),
+  ])
+  const midY = (box: { y: number; height: number } | null) =>
+    box ? box.y + box.height / 2 : 0
+  expect(Math.abs(midY(dotBox) - midY(ageBox))).toBeLessThan(6)
+  expect(Math.abs(midY(dotBox) - midY(menuBox))).toBeLessThan(6)
+})
+
+test("collapsed fleet cards share header height", async ({ page }) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+
+  await page.getByTestId("fleet-header-toggle-fleet-1").click()
+  await expect(page.getByTestId("fleet-card-fleet-1")).toHaveAttribute(
+    "data-collapsed",
+    "true",
+  )
+
+  const headerHeight = (card: ReturnType<Page["getByTestId"]>) =>
+    card.locator(":scope > div").first().evaluate((el) => {
+      return el.getBoundingClientRect().height
+    })
+
+  const historyCard = page.getByTestId("fleet-card-fleet-history")
+  const workCard = page.getByTestId("fleet-card-fleet-1")
+  const [historyHeight, workHeight] = await Promise.all([
+    headerHeight(historyCard),
+    headerHeight(workCard),
+  ])
+  expect(Math.abs(historyHeight - workHeight)).toBeLessThan(2)
 })
 
 test("activity timeline live head shows waiting state", async ({ page }) => {

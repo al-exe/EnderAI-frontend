@@ -157,6 +157,35 @@ export function liveActivityLabel(
   return "Connected but not actively running"
 }
 
+/** Roster work column — prefer captured summary, else status-aware fallback. */
+export function rosterWorkSummary(agent: TaskforceFleetAgent): string {
+  const summary = agent.summary_markdown?.trim()
+  if (summary) return summary
+
+  const status = agentStatus(agent)
+  if (status === "run") return "Running in this terminal"
+  if (status === "waiting") return "Waiting for your input"
+  if (status === "paused" || agentCapturePaused(agent)) {
+    return "Activity capture is paused"
+  }
+  return "No current work captured yet"
+}
+
+/** Session detail "Working on" body when no summary is stored yet. */
+export function sessionWorkSummary(agent: TaskforceFleetAgent): string {
+  const summary = agent.summary_markdown?.trim()
+  if (summary) return summary
+
+  const status = agentStatus(agent)
+  if (status === "run") {
+    return "Running in this terminal. A summary appears after Taskforce capture records work."
+  }
+  if (status === "paused" || agentCapturePaused(agent)) {
+    return "Activity capture is paused, so no summary is being updated."
+  }
+  return "No summary has been captured for this session yet."
+}
+
 /** Locale-aware date and time in the browser's local timezone. */
 export function formatLocalDateTime(iso: string): string {
   const date = new Date(iso)
