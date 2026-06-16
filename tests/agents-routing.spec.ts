@@ -44,6 +44,20 @@ const agents = [
     tokens_saved: 12000,
     last_invoked_at: null,
   },
+  {
+    id: "agent-3",
+    slug: "vega",
+    name: "Vega",
+    role: "Infrastructure Specialist",
+    short_description: "Deploy pipelines and runtime health checks.",
+    domain_tags: ["Infra", "Deploy"],
+    status: "active",
+    created_from: "seeded",
+    linked_docs_count: 1,
+    invocations_count: 8,
+    tokens_saved: 8000,
+    last_invoked_at: "2026-06-01T12:00:00Z",
+  },
 ]
 
 const jensenDetail = {
@@ -191,6 +205,35 @@ test("hard refresh on /v2/agents/ keeps Profiles selected and renders content", 
   ).toBeVisible()
 })
 
+test("profiles grid sorts alphabetically and by recent use", async ({ page }) => {
+  await mockAgentsShell(page)
+  await page.goto("/v2/agents")
+
+  const grid = page.getByTestId("agents-card-grid")
+  const profileOrder = () =>
+    grid.getByRole("link").evaluateAll((links) =>
+      links.map(
+        (link) =>
+          link.getAttribute("aria-label")?.replace("Open profile ", "") ?? "",
+      ),
+    )
+
+  await expect(grid).toBeVisible()
+  await expect.poll(profileOrder).toEqual(["Vega", "Jensen", "Mira"])
+
+  await page.getByRole("button", { name: "A–Z" }).click()
+  await expect.poll(profileOrder).toEqual(["Vega", "Mira", "Jensen"])
+
+  await page.getByRole("button", { name: "Sort descending" }).click()
+  await expect.poll(profileOrder).toEqual(["Jensen", "Mira", "Vega"])
+
+  await page.getByRole("button", { name: "Recent" }).click()
+  await expect.poll(profileOrder).toEqual(["Jensen", "Vega", "Mira"])
+
+  await page.getByRole("button", { name: "Sort ascending" }).click()
+  await expect.poll(profileOrder).toEqual(["Vega", "Jensen", "Mira"])
+})
+
 test("agent detail navigation does not flash no-access or not-found", async ({
   page,
 }) => {
@@ -278,7 +321,7 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
   await expect(page.getByTestId("agents-card-grid")).toBeVisible()
   await expect(page.getByText("Jensen", { exact: true })).toBeVisible()
   await expect(page.getByText("Mira", { exact: true })).toBeVisible()
-  await expect(page.getByTestId("agent-status-active")).toBeVisible()
+  await expect(page.getByTestId("agent-status-active").first()).toBeVisible()
   await expect(page.getByTestId("agent-status-archived")).toBeVisible()
 
   await page.getByRole("link", { name: /open profile jensen/i }).click()

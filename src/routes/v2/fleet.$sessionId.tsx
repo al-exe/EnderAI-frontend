@@ -10,6 +10,7 @@ import {
   type TaskforceSessionActivityEntry,
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
+import { V2_TAB_CONTENT_CLASS } from "@/components/V2/v2PageShell"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
 import {
   agentCapturePaused,
@@ -25,7 +26,10 @@ import {
   type FleetStatus,
   fleetTitle,
   formatClockTime,
+  formatLocalDateTime,
   hostLabel,
+  liveActivityLabel,
+  liveActivityTime,
   modelLabel,
   presenceLabel,
   STATE_LABEL,
@@ -240,26 +244,31 @@ function FleetAgentDetailRoute() {
         </div>
       </div>
 
-      <div className={styles.dbody} data-testid="fleet-detail-body">
+      <div
+        className={cn(styles.dbody, V2_TAB_CONTENT_CLASS)}
+        data-testid="fleet-detail-body"
+      >
         <div className={styles.dmain}>
-          {/* Working on — a waiting agent surfaces its question + reply box. */}
-          {status === "waiting" && question ? (
-            <div className={styles.section}>
-              <div className={styles.seclabel}>Waiting for input</div>
-              <div className={styles.question}>
-                <div className={styles.questionText}>{question}</div>
-                <div className={styles.reply}>
-                  <input
-                    placeholder={`Reply to ${agentDisplayName(agent)}…`}
-                    aria-label="Reply to agent"
-                    disabled
-                  />
-                  <button type="button" disabled>
-                    Send
-                  </button>
+          {/* Working on — waiting agents surface a question when present. */}
+          {status === "waiting" ? (
+            question ? (
+              <div className={styles.section}>
+                <div className={styles.seclabel}>Waiting for input</div>
+                <div className={styles.question}>
+                  <div className={styles.questionText}>{question}</div>
+                  <div className={styles.reply}>
+                    <input
+                      placeholder={`Reply to ${agentDisplayName(agent)}…`}
+                      aria-label="Reply to agent"
+                      disabled
+                    />
+                    <button type="button" disabled>
+                      Send
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null
           ) : (
             <div className={styles.section}>
               <div className={styles.seclabel}>Working on</div>
@@ -294,9 +303,12 @@ function FleetAgentDetailRoute() {
             <div className={styles.timeline}>
               <div className={cn(styles.tev, styles.tevNow)}>
                 <span className={styles.tdot} />
-                <div className={styles.tt}>now</div>
+                <div className={styles.tt}>{liveActivityTime(agent)}</div>
                 <div className={styles.tx}>
-                  {agent.summary_markdown || "Active in this session"}
+                  {liveActivityLabel(agent, {
+                    capturePaused,
+                    pauseReason,
+                  })}
                 </div>
               </div>
               {activityEntries.map((entry) => {
@@ -387,7 +399,7 @@ function FleetAgentDetailRoute() {
             {(host || agent.repo) &&
               metaRow("Host", host ?? (agent.repo as string))}
             {model && metaRow("Model", model)}
-            {startedAt && metaRow("Started", formatClockTime(startedAt))}
+            {startedAt && metaRow("Started", formatLocalDateTime(startedAt))}
             {metaRow(
               "Capture",
               capturePaused ? "paused" : "on",

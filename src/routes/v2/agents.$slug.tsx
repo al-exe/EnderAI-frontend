@@ -43,6 +43,7 @@ import {
   V2_PAGE_CONTENT,
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
+  V2_TAB_CONTENT_CLASS,
 } from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -545,6 +546,7 @@ function AgentDetailPage() {
           onDelete={() => deleteMutation.mutate()}
         />
 
+        <div className={V2_TAB_CONTENT_CLASS}>
         {agent.description ? (
           <p className={cn("max-w-3xl", AGENT_DESCRIPTION_CLASS)}>
             {agent.description}
@@ -579,6 +581,7 @@ function AgentDetailPage() {
             Refreshing profile
           </div>
         )}
+        </div>
       </div>
     </section>
   )

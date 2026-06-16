@@ -38,6 +38,7 @@ import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutHomeRouteImport } from './routes/_layout/home'
 import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as V2FleetIndexRouteImport } from './routes/v2/fleet.index'
 import { Route as V2MetricsMethodologyRouteImport } from './routes/v2/metrics.methodology'
 import { Route as V2LibraryDocumentIdRouteImport } from './routes/v2/library.$documentId'
 import { Route as V2FleetSessionIdRouteImport } from './routes/v2/fleet.$sessionId'
@@ -187,6 +188,11 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
+const V2FleetIndexRoute = V2FleetIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => V2FleetRoute,
+} as any)
 const V2MetricsMethodologyRoute = V2MetricsMethodologyRouteImport.update({
   id: '/methodology',
   path: '/methodology',
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/v2/fleet/$sessionId': typeof V2FleetSessionIdRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
+  '/v2/fleet/': typeof V2FleetIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -259,7 +266,6 @@ export interface FileRoutesByTo {
   '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
-  '/v2/fleet': typeof V2FleetRouteWithChildren
   '/v2/home': typeof V2HomeRoute
   '/v2/ledger': typeof V2LedgerRoute
   '/v2/library': typeof V2LibraryRouteWithChildren
@@ -273,6 +279,7 @@ export interface FileRoutesByTo {
   '/v2/fleet/$sessionId': typeof V2FleetSessionIdRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
+  '/v2/fleet': typeof V2FleetIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -309,6 +316,7 @@ export interface FileRoutesById {
   '/v2/fleet/$sessionId': typeof V2FleetSessionIdRoute
   '/v2/library/$documentId': typeof V2LibraryDocumentIdRoute
   '/v2/metrics/methodology': typeof V2MetricsMethodologyRoute
+  '/v2/fleet/': typeof V2FleetIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -345,6 +353,7 @@ export interface FileRouteTypes {
     | '/v2/fleet/$sessionId'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
+    | '/v2/fleet/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -363,7 +372,6 @@ export interface FileRouteTypes {
     | '/docs/$slug'
     | '/v2/admin'
     | '/v2/agents'
-    | '/v2/fleet'
     | '/v2/home'
     | '/v2/ledger'
     | '/v2/library'
@@ -377,6 +385,7 @@ export interface FileRouteTypes {
     | '/v2/fleet/$sessionId'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
+    | '/v2/fleet'
   id:
     | '__root__'
     | '/'
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/v2/fleet/$sessionId'
     | '/v2/library/$documentId'
     | '/v2/metrics/methodology'
+    | '/v2/fleet/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -632,6 +642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/v2/fleet/': {
+      id: '/v2/fleet/'
+      path: '/'
+      fullPath: '/v2/fleet/'
+      preLoaderRoute: typeof V2FleetIndexRouteImport
+      parentRoute: typeof V2FleetRoute
+    }
     '/v2/metrics/methodology': {
       id: '/v2/metrics/methodology'
       path: '/methodology'
@@ -710,10 +727,12 @@ const V2AgentsRouteWithChildren = V2AgentsRoute._addFileChildren(
 
 interface V2FleetRouteChildren {
   V2FleetSessionIdRoute: typeof V2FleetSessionIdRoute
+  V2FleetIndexRoute: typeof V2FleetIndexRoute
 }
 
 const V2FleetRouteChildren: V2FleetRouteChildren = {
   V2FleetSessionIdRoute: V2FleetSessionIdRoute,
+  V2FleetIndexRoute: V2FleetIndexRoute,
 }
 
 const V2FleetRouteWithChildren =

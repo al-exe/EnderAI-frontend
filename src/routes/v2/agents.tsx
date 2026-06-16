@@ -11,6 +11,7 @@ import { useMemo, useState } from "react"
 import {
   type AgentSpecialistCreate,
   type AgentSpecialistStatus,
+  type AgentSpecialistSummary,
   createAgent,
   listAgents,
 } from "@/api/v2Agents"
@@ -28,7 +29,8 @@ import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
-  V2_STICKY_HEADER_CLASS,
+  V2_TAB_HEADER_STACK_CLASS,
+  V2_TAB_CONTENT_CLASS,
 } from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -41,6 +43,30 @@ const AGENT_SCOPES: { key: AgentScope; label: string }[] = [
   { key: "draft", label: "Draft" },
   { key: "archived", label: "Archived" },
 ]
+
+const AGENT_SORT_MODES = [
+  { key: "alphabetical", label: "A–Z" },
+  { key: "recent", label: "Recent" },
+] as const
+
+type AgentSortMode = (typeof AGENT_SORT_MODES)[number]["key"]
+
+function compareAgents(
+  a: AgentSpecialistSummary,
+  b: AgentSpecialistSummary,
+  sortMode: AgentSortMode,
+) {
+  if (sortMode === "alphabetical") {
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+  }
+
+  const aTime = a.last_invoked_at ? Date.parse(a.last_invoked_at) : null
+  const bTime = b.last_invoked_at ? Date.parse(b.last_invoked_at) : null
+  if (aTime === null && bTime === null) return 0
+  if (aTime === null) return 1
+  if (bTime === null) return -1
+  return aTime - bTime
+}
 
 export const Route = createFileRoute("/v2/agents")({
   component: TaskforceAgents,
@@ -103,6 +129,7 @@ function AgentsIndex() {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [scope, setScope] = useState<AgentScope>("all")
+  const [sortMode, setSortMode] = useState<AgentSortMode>("recent")
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc")
   const [createProfileOpen, setCreateProfileOpen] = useState(false)
   const agentsQuery = useQuery({
@@ -133,9 +160,23 @@ function AgentsIndex() {
       scope === "all"
         ? agents
         : agents.filter((agent) => agent.status === scope)
-    const sorted = [...filtered].sort((a, b) => b.tokens_saved - a.tokens_saved)
-    return sortDir === "asc" ? sorted.reverse() : sorted
-  }, [agents, scope, sortDir])
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortMode === "recent") {
+        const aTime = a.last_invoked_at ? Date.parse(a.last_invoked_at) : null
+        const bTime = b.last_invoked_at ? Date.parse(b.last_invoked_at) : null
+        if (aTime === null && bTime === null) {
+          return a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        }
+        if (aTime === null) return 1
+        if (bTime === null) return -1
+        const comparison = aTime - bTime
+        return sortDir === "asc" ? comparison : -comparison
+      }
+      const comparison = compareAgents(a, b, sortMode)
+      return sortDir === "asc" ? comparison : -comparison
+    })
+    return sorted
+  }, [agents, scope, sortDir, sortMode])
 
   return (
     <section
@@ -145,13 +186,7 @@ function AgentsIndex() {
       )}
     >
       <div className={V2_PAGE_BODY}>
-        <div
-          className={cn(
-            V2_STICKY_HEADER_CLASS,
-            "border-b-0 pb-0",
-            "flex flex-col gap-6",
-          )}
-        >
+        <div className={V2_TAB_HEADER_STACK_CLASS}>
           <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <div className={AGENT_EYEBROW_CLASS}>
@@ -180,13 +215,17 @@ function AgentsIndex() {
             }))}
             active={scope}
             onChange={setScope}
-            sortLabel={`tokens saved ${sortDir === "desc" ? "↓" : "↑"}`}
-            onSortToggle={() =>
+            sortModes={[...AGENT_SORT_MODES]}
+            activeSortMode={sortMode}
+            onSortModeChange={setSortMode}
+            sortDir={sortDir}
+            onSortDirToggle={() =>
               setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
             }
           />
         </div>
 
+        <div className={V2_TAB_CONTENT_CLASS}>
         <CreateProfileDialog
           open={createProfileOpen}
           onOpenChange={setCreateProfileOpen}
@@ -241,6 +280,7 @@ function AgentsIndex() {
             Refreshing profiles
           </div>
         )}
+        </div>
       </div>
     </section>
   )

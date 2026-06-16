@@ -20,7 +20,10 @@ test.use({
 
 async function mockFleet(
   page: Page,
-  options: { includeDestination?: boolean } = {},
+  options: {
+    includeDestination?: boolean
+    agentOverrides?: Record<string, unknown>
+  } = {},
 ) {
   let agentFleetId = "fleet-1"
   const agent = {
@@ -41,6 +44,7 @@ async function mockFleet(
     specialist_slug: "billing",
     specialist_rule_count: 4,
     model_id: "claude-opus-4-8",
+    ...options.agentOverrides,
   }
 
   await page.addInitScript(() => {
@@ -107,7 +111,18 @@ async function mockFleet(
             is_history: true,
             created_at: "2026-06-12T09:00:00Z",
             updated_at: "2026-06-12T09:00:00Z",
-            agents: [],
+            agents: [
+              {
+                ...agent,
+                session_id: "session-history",
+                fleet_session_id: "fleet-history",
+                repo: "EnderAI-new-user-max-promo",
+                branch: "feature/new-user-max-promo",
+                display_name: "Prior promo session",
+                status: "idle",
+                minutes_ago: 120,
+              },
+            ],
           },
         ],
       },
@@ -263,6 +278,57 @@ test("hard refresh on /v2/fleet/ keeps Fleet selected and renders content", asyn
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
 
+test("hard refresh on /v2/fleet keeps Fleet selected and renders content", async ({
+  page,
+}) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+  await page.reload()
+
+  await expect(page.getByRole("link", { name: "Fleet" })).toHaveAttribute(
+    "data-active",
+    "true",
+  )
+  await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
+  await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
+})
+
+test("agent session display name wraps instead of ellipsing", async ({
+  page,
+}) => {
+  const longName =
+    "Wiring automatic tax on Stripe checkout for international customers with VAT compliance"
+  await mockFleet(page, { agentOverrides: { display_name: longName } })
+  await page.goto("/v2/fleet")
+
+  const name = page.getByTestId("fleet-agent-name")
+  await expect(name).toHaveText(longName)
+
+  const typography = await name.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      textOverflow: style.textOverflow,
+      whiteSpace: style.whiteSpace,
+      textTransform: style.textTransform,
+      fits: element.scrollWidth <= element.clientWidth + 1,
+    }
+  })
+  expect(typography.textOverflow).not.toBe("ellipsis")
+  expect(typography.whiteSpace).not.toBe("nowrap")
+  expect(typography.textTransform).toBe("none")
+  expect(typography.fits).toBe(true)
+})
+
+test("agent session display name preserves stored casing", async ({ page }) => {
+  const mixedCaseName = "e2eCheckout — wire VAT for EU"
+  await mockFleet(page, { agentOverrides: { display_name: mixedCaseName } })
+  await page.goto("/v2/fleet")
+
+  const name = page.getByTestId("fleet-agent-name")
+  await expect(name).toHaveText(mixedCaseName)
+  await expect(name).toHaveCSS("text-transform", "none")
+})
+
 test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await mockFleet(page)
   await page.goto("/v2/fleet")
@@ -280,6 +346,17 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
   // The rejected metrics direction must not reappear.
   await expect(page.getByText(/tokens/i)).toHaveCount(0)
   await expect(page.getByText(/saved by reuse/i)).toHaveCount(0)
+
+  const historyCard = page.getByTestId("fleet-card-fleet-history")
+  await expect(historyCard.getByText("History", { exact: true })).toBeVisible()
+  await expect(historyCard.getByText("EnderAI-new-user-max-promo")).toHaveCount(0)
+  await expect(
+    historyCard.getByText(/feature\/new-user-max-promo/),
+  ).toHaveCount(0)
+  await expect(page.getByTestId("fleet-card-fleet-1")).toContainText("billing")
+  await expect(page.getByTestId("fleet-card-fleet-1")).toContainText(
+    "feature/automatic-tax",
+  )
 
   // New fleet creates a nameless fleet (no request body).
   const createRequest = page.waitForRequest(
@@ -313,6 +390,13 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await expect(page.getByText("Session", { exact: true }).first()).toBeVisible()
   await expect(page.getByText("4 conventions applied")).toBeVisible()
   await expect(page.getByText("Started")).toBeVisible()
+  const expectedStarted = await page.evaluate((iso) => {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(iso))
+  }, "2026-06-12T09:42:00Z")
+  await expect(page.getByText(expectedStarted)).toBeVisible()
 
   // Breadcrumb returns to the roster.
   await page.getByRole("link", { name: "Fleet" }).first().click()
@@ -359,10 +443,16 @@ test("activity timeline shows the full canonical event stream and exact Ledger l
   await expect(page.getByText("Edited src/payments.ts")).toBeVisible()
   await expect(page.getByText("4 passed · exit 0")).toBeVisible()
 
-  // Newest-on-top ordering: the live "now" head sits above both turns, and the
+  // Newest-on-top ordering: the live timeline head sits above both turns, and the
   // newer turn precedes the older one in the DOM.
-  const timeline = page.getByText("now", { exact: true })
+  const timeline = page.getByText("10m", { exact: true })
   await expect(timeline).toBeVisible()
+  await expect(
+    page
+      .getByTestId("fleet-detail-body")
+      .getByText("Wiring automatic tax onto the subscription create path")
+      .first(),
+  ).toBeVisible()
   const newestBox = await newest.boundingBox()
   const oldestBox = await oldest.boundingBox()
   expect(newestBox && oldestBox && newestBox.y < oldestBox.y).toBe(true)
@@ -377,6 +467,89 @@ test("activity timeline shows the full canonical event stream and exact Ledger l
   expect(href).toContain("event_id=event-command")
 })
 
+test("activity timeline live head shows waiting state", async ({ page }) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      status: "waiting",
+      summary_markdown: "Stale summary from earlier work",
+      minutes_ago: 0,
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  await expect(page.getByText("now", { exact: true })).toBeVisible()
+  await expect(page.getByText("Waiting for your input")).toBeVisible()
+  await expect(
+    page.getByText("Stale summary from earlier work"),
+  ).toHaveCount(0)
+})
+
+test("activity timeline live head shows idle state", async ({ page }) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      status: "idle",
+      summary_markdown: "",
+      minutes_ago: 2,
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  await expect(page.getByText("2m", { exact: true })).toBeVisible()
+  await expect(
+    page.getByText("Connected but not actively running"),
+  ).toBeVisible()
+})
+
+test("activity timeline live head shows paused capture state", async ({
+  page,
+}) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      status: "paused",
+      summary_markdown: "",
+      minutes_ago: 1,
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  await expect(page.getByText("1m", { exact: true })).toBeVisible()
+  await expect(page.getByText("Activity capture is paused")).toBeVisible()
+})
+
+test("Fleet session collapse defaults and persists", async ({ page }) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+
+  const historyCard = page.getByTestId("fleet-card-fleet-history")
+  const workCard = page.getByTestId("fleet-card-fleet-1")
+
+  await expect(historyCard).toHaveAttribute("data-collapsed", "true")
+  await expect(workCard).toHaveAttribute("data-collapsed", "false")
+  await expect(
+    historyCard.getByText("Inactive agent sessions appear here."),
+  ).not.toBeVisible()
+  await expect(workCard.getByTestId("fleet-agent-row")).toBeVisible()
+
+  await page.getByTestId("fleet-header-toggle-fleet-history").click()
+  await expect(historyCard).toHaveAttribute("data-collapsed", "false")
+  await expect(
+    historyCard.getByTestId("fleet-agent-row"),
+  ).toBeVisible()
+  await expect(historyCard.getByText("Prior promo session")).toBeVisible()
+
+  await page.reload()
+  await expect(historyCard).toHaveAttribute("data-collapsed", "false")
+
+  await page.getByTestId("fleet-header-toggle-fleet-1").click()
+  await expect(workCard).toHaveAttribute("data-collapsed", "true")
+  await expect(
+    workCard.getByTestId("fleet-agent-row"),
+  ).not.toBeVisible()
+
+  await page.reload()
+  await expect(workCard).toHaveAttribute("data-collapsed", "true")
+})
+
 test("dragging an agent moves it to another fleet", async ({ page }) => {
   await mockFleet(page, { includeDestination: true })
   await page.goto("/v2/fleet")
@@ -386,9 +559,11 @@ test("dragging an agent moves it to another fleet", async ({ page }) => {
       request.url().endsWith("/api/v1/v2/taskforce/session/session-1") &&
       request.method() === "PATCH",
   )
-  await page
+  const agentRow = page
+    .getByTestId("fleet-card-fleet-1")
     .getByTestId("fleet-agent-row")
-    .dragTo(page.getByTestId("fleet-card-fleet-2"))
+  await agentRow.hover()
+  await agentRow.dragTo(page.getByTestId("fleet-card-fleet-2"))
 
   expect((await moveRequest).postDataJSON()).toEqual({
     fleet_session_id: "fleet-2",
@@ -436,12 +611,14 @@ for (const theme of ["light", "dark"] as const) {
         .getByTestId("fleet-agent-row")
         .evaluate((row) => getComputedStyle(row).gridTemplateColumns)
       expect(rosterColumns.trim().split(/\s+/)).toHaveLength(
-        width === 360 ? 3 : 4,
+        width <= 760 ? 4 : 5,
       )
 
       await page.goto("/v2/fleet/session-1")
       await expect(
-        page.getByRole("heading", { name: "Stripe checkout wiring" }),
+        page.getByRole("heading", {
+          name: "Wiring automatic tax on Stripe checkout",
+        }),
       ).toBeVisible()
 
       const detailLayout = await page.evaluate(() => {

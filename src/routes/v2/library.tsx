@@ -84,8 +84,9 @@ import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
-  V2_STICKY_HEADER_CLASS,
   V2_TAB_EYEBROW_CLASS,
+  V2_TAB_CONTENT_CLASS,
+  V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
 import useCustomToast from "@/hooks/useCustomToast"
 import {
@@ -721,13 +722,7 @@ function TaskforceLibrary() {
         )}
       >
         <div className={V2_PAGE_BODY}>
-          <div
-            className={cn(
-              V2_STICKY_HEADER_CLASS,
-              "border-b-0 pb-0",
-              "flex flex-col gap-6",
-            )}
-          >
+          <div className={V2_TAB_HEADER_STACK_CLASS}>
             <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <div className={V2_TAB_EYEBROW_CLASS}>
@@ -820,6 +815,7 @@ function TaskforceLibrary() {
             onConfirm={(document) => deleteDocumentMutation.mutate(document.id)}
           />
 
+          <div className={V2_TAB_CONTENT_CLASS}>
           {hasInitialLoadError ? (
             <QueryErrorState
               title="Could not load the library"
@@ -953,6 +949,7 @@ function TaskforceLibrary() {
                 )}
             </>
           )}
+          </div>
         </div>
       </section>
     </DocumentDeleteContext.Provider>

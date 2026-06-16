@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
-import { ApiError } from "@/client"
+import { ApiError, type UserPublic } from "@/client"
 import { TaskforceShell } from "@/components/V2/TaskforceShell"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
@@ -13,13 +13,28 @@ function V2BlankFallback() {
   return <main className="min-h-svh bg-background" aria-busy="true" />
 }
 
+/** Keeps Taskforce chrome visible while `/users/me` hydrates after a hard refresh. */
+const V2_PENDING_SHELL_USER: UserPublic = {
+  id: "pending",
+  email: "",
+  is_superuser: false,
+  full_name: "",
+  created_at: "1970-01-01T00:00:00Z",
+  v2: true,
+  subscription_tier: "free",
+}
+
 function V2Pending() {
   const currentUser = peekTaskforceSession()
-  if (!currentUser) {
-    return <V2BlankFallback />
+  if (currentUser) {
+    return <TaskforceShell currentUser={currentUser} />
   }
 
-  return <TaskforceShell currentUser={currentUser} />
+  if (isLoggedIn()) {
+    return <TaskforceShell currentUser={V2_PENDING_SHELL_USER} />
+  }
+
+  return <V2BlankFallback />
 }
 
 function V2RouteError() {

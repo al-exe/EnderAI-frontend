@@ -336,6 +336,8 @@ test("metrics page keeps aggregate dashboard without session_id", async ({
 
   await page.goto("/v2/metrics")
 
+  await expect(page.getByText("7d · personal")).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Metrics", level: 1 })).toBeVisible()
   await expect(page.getByTestId("metrics-session-filter-banner")).toHaveCount(0)
   await expect(page.getByText("Reuse Rate", { exact: true })).toBeVisible()
   await expect(page.getByText("1K", { exact: true }).first()).toBeVisible()

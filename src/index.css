@@ -41,6 +41,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --text-v2-xs: 0.8625rem;
+  --text-v2-sm: 1.00625rem;
+  --text-v2-body: 1.00625rem;
+  --text-v2-base: 1.15rem;
+  --text-v2-lg: 1.29375rem;
 }
 
 :root {
@@ -152,5 +157,29 @@
   button,
   [role="button"] {
     cursor: pointer;
+  }
+}
+
+@layer components {
+  .v2-tab-content {
+    --v2-scale: 1.15;
+    font-size: var(--text-v2-body);
+    line-height: 1.5;
+  }
+
+  .v2-tab-content :where(.text-xs) {
+    font-size: var(--text-v2-xs);
+  }
+
+  .v2-tab-content :where(.text-sm) {
+    font-size: var(--text-v2-sm);
+  }
+
+  .v2-tab-content :where(.text-base) {
+    font-size: var(--text-v2-base);
+  }
+
+  .v2-tab-content :where(.text-lg) {
+    font-size: var(--text-v2-lg);
   }
 }
