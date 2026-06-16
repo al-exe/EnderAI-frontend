@@ -26,6 +26,7 @@ import {
   type FleetStatus,
   fleetTitle,
   formatClockTime,
+  formatLocalDateTime,
   hostLabel,
   modelLabel,
   presenceLabel,
@@ -391,7 +392,7 @@ function FleetAgentDetailRoute() {
             {(host || agent.repo) &&
               metaRow("Host", host ?? (agent.repo as string))}
             {model && metaRow("Model", model)}
-            {startedAt && metaRow("Started", formatClockTime(startedAt))}
+            {startedAt && metaRow("Started", formatLocalDateTime(startedAt))}
             {metaRow(
               "Capture",
               capturePaused ? "paused" : "on",

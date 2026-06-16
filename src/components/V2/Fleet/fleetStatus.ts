@@ -124,6 +124,16 @@ export function formatClockTime(iso: string): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
+/** Locale-aware date and time in the browser's local timezone. */
+export function formatLocalDateTime(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ""
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date)
+}
+
 export function presenceLabel(agent: TaskforceFleetAgent): string {
   if (agent.minutes_ago < 1) return "Active now"
   if (agent.minutes_ago === 1) return "Active 1 minute ago"

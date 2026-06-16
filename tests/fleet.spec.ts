@@ -313,6 +313,13 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await expect(page.getByText("Session", { exact: true }).first()).toBeVisible()
   await expect(page.getByText("4 conventions applied")).toBeVisible()
   await expect(page.getByText("Started")).toBeVisible()
+  const expectedStarted = await page.evaluate((iso) => {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(iso))
+  }, "2026-06-12T09:42:00Z")
+  await expect(page.getByText(expectedStarted)).toBeVisible()
 
   // Breadcrumb returns to the roster.
   await page.getByRole("link", { name: "Fleet" }).first().click()
