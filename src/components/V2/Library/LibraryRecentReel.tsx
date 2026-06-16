@@ -125,7 +125,7 @@ function RecentCard({
 }
 
 /**
- * Expressive "Recently accessed" reel — the top half of the hybrid Library. Shows
+ * Expressive "Recently viewed" reel — the top half of the hybrid Library. Shows
  * the most recently updated documents as cards above the folder/file list.
  */
 export function LibraryRecentReel({
@@ -146,10 +146,10 @@ export function LibraryRecentReel({
   if (recent.length === 0) return null
 
   return (
-    <section aria-label="Recently accessed" className="shrink-0">
-      <div className="mb-3">
+    <section aria-label="Recently viewed" className="shrink-0">
+      <div className="mb-2">
         <span className="font-mono text-[10px] tracking-[0.01em] text-foreground">
-          Recently accessed
+          Recently viewed
         </span>
       </div>
       <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
