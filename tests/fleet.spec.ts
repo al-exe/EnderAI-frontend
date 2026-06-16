@@ -501,6 +501,37 @@ test("activity timeline live head shows paused capture state", async ({
   await expect(page.getByText("Activity capture is paused")).toBeVisible()
 })
 
+test("Fleet session collapse defaults and persists", async ({ page }) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+
+  const historyCard = page.getByTestId("fleet-card-fleet-history")
+  const workCard = page.getByTestId("fleet-card-fleet-1")
+
+  await expect(historyCard).toHaveAttribute("data-collapsed", "true")
+  await expect(workCard).toHaveAttribute("data-collapsed", "false")
+  await expect(
+    page.getByText("Inactive agent sessions appear here."),
+  ).not.toBeVisible()
+  await expect(page.getByTestId("fleet-agent-row")).toBeVisible()
+
+  await page.getByTestId("fleet-header-toggle-fleet-history").click()
+  await expect(historyCard).toHaveAttribute("data-collapsed", "false")
+  await expect(
+    page.getByText("Inactive agent sessions appear here."),
+  ).toBeVisible()
+
+  await page.reload()
+  await expect(historyCard).toHaveAttribute("data-collapsed", "false")
+
+  await page.getByTestId("fleet-header-toggle-fleet-1").click()
+  await expect(workCard).toHaveAttribute("data-collapsed", "true")
+  await expect(page.getByTestId("fleet-agent-row")).not.toBeVisible()
+
+  await page.reload()
+  await expect(workCard).toHaveAttribute("data-collapsed", "true")
+})
+
 test("dragging an agent moves it to another fleet", async ({ page }) => {
   await mockFleet(page, { includeDestination: true })
   await page.goto("/v2/fleet")

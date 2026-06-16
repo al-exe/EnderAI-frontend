@@ -1,13 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import {
+  ChevronDown,
+  ChevronRight,
   GripVertical,
   MoreHorizontal,
   Pencil,
   Plus,
   Trash2,
 } from "lucide-react"
-import { type DragEvent, type FormEvent, useRef, useState } from "react"
+import {
+  type DragEvent,
+  type FormEvent,
+  useCallback,
+  useRef,
+  useState,
+} from "react"
 import {
   assignTaskforceFleetSession,
   createTaskforceFleetSession,
@@ -42,6 +50,8 @@ import {
   V2_TAB_CONTENT_CLASS,
   V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
+import { persistedKey, usePersistentState } from "@/hooks/usePersistentState"
+import { peekTaskforceSession } from "@/lib/taskforceSession"
 import { cn } from "@/lib/utils"
 import styles from "./FleetPage.module.css"
 import {
@@ -58,6 +68,33 @@ import {
 } from "./fleetStatus"
 
 const FLEET_QUERY_KEY = ["v2-taskforce-fleet"] as const
+
+type FleetCollapsedMap = Record<string, boolean>
+
+function deserializeFleetCollapsed(raw: unknown): FleetCollapsedMap | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined
+  const result: FleetCollapsedMap = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof key === "string" && typeof value === "boolean") {
+      result[key] = value
+    }
+  }
+  return result
+}
+
+function defaultFleetCollapsed(fleet: TaskforceFleetSession) {
+  return fleet.is_history
+}
+
+function fleetIsCollapsed(
+  fleet: TaskforceFleetSession,
+  collapsedByFleetId: FleetCollapsedMap,
+) {
+  if (fleet.id in collapsedByFleetId) {
+    return collapsedByFleetId[fleet.id]
+  }
+  return defaultFleetCollapsed(fleet)
+}
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong."
@@ -265,6 +302,8 @@ function AgentRow({
 
 function FleetCard({
   fleet,
+  isCollapsed,
+  onToggleCollapse,
   onOpenAgent,
   onRenameAgent,
   onRename,
@@ -278,6 +317,8 @@ function FleetCard({
   onDropAgent,
 }: {
   fleet: TaskforceFleetSession
+  isCollapsed: boolean
+  onToggleCollapse: () => void
   onOpenAgent: (agent: TaskforceFleetAgent) => void
   onRenameAgent: (agent: TaskforceFleetAgent, displayName: string) => void
   onRename: (fleet: TaskforceFleetSession, name: string) => void
@@ -328,9 +369,11 @@ function FleetCard({
     <section
       aria-label={`${fleetTitle(fleet)} fleet`}
       data-testid={`fleet-card-${fleet.id}`}
+      data-collapsed={isCollapsed ? "true" : "false"}
       className={cn(
         styles.fleet,
         isHistory && styles.history,
+        isCollapsed && styles.fleetCollapsed,
         isDropTarget && styles.fleetDropTarget,
         hasPendingMove && styles.fleetDropPending,
       )}
@@ -359,31 +402,40 @@ function FleetCard({
             />
           </form>
         ) : (
-          <span className={styles.fname}>{fleetTitle(fleet)}</span>
-        )}
-
-        {!renaming &&
-          !isHistory &&
-          (repo ? (
-            <span className={styles.frepo}>
-              <b>{repo.repo}</b>
-              {repo.branch ? ` · ${repo.branch}` : ""}
-            </span>
-          ) : (
-            <span className={styles.frepo}>no repo bound</span>
-          ))}
-
-        {!renaming && (
-          <span className={styles.fcount}>
-            {running > 0 ? (
-              <>
-                <span className={styles.pin} />
-                {running} active · {total}
-              </>
+          <button
+            type="button"
+            className={cn(styles.fheadToggle, styles.fnameButton)}
+            aria-expanded={!isCollapsed}
+            aria-controls={`fleet-body-${fleet.id}`}
+            data-testid={`fleet-header-toggle-${fleet.id}`}
+            onClick={onToggleCollapse}
+          >
+            {isCollapsed ? (
+              <ChevronRight className={styles.fchev} aria-hidden="true" />
             ) : (
-              `${total} ${total === 1 ? "agent" : "agents"}`
+              <ChevronDown className={styles.fchev} aria-hidden="true" />
             )}
-          </span>
+            <span className={styles.fname}>{fleetTitle(fleet)}</span>
+            {!isHistory &&
+              (repo ? (
+                <span className={styles.frepo}>
+                  <b>{repo.repo}</b>
+                  {repo.branch ? ` · ${repo.branch}` : ""}
+                </span>
+              ) : (
+                <span className={styles.frepo}>no repo bound</span>
+              ))}
+            <span className={styles.fcount}>
+              {running > 0 ? (
+                <>
+                  <span className={styles.pin} />
+                  {running} active · {total}
+                </>
+              ) : (
+                `${total} ${total === 1 ? "agent" : "agents"}`
+              )}
+            </span>
+          </button>
         )}
 
         {!renaming && !isHistory && (
@@ -394,6 +446,7 @@ function FleetCard({
                 size="icon-sm"
                 aria-label={`${fleetTitle(fleet)} actions`}
                 className={styles.fmenu}
+                onClick={(event) => event.stopPropagation()}
               >
                 <MoreHorizontal />
               </Button>
@@ -421,29 +474,42 @@ function FleetCard({
         )}
       </div>
 
-      <div>
-        {fleet.agents.length === 0 ? (
-          <div className={styles.emptyRows}>
-            {isHistory
-              ? "Inactive agent sessions appear here."
-              : "No active agents in this fleet yet."}
+      {!isCollapsed && (
+        <>
+          <div id={`fleet-body-${fleet.id}`}>
+            {fleet.agents.length === 0 ? (
+              <div className={styles.emptyRows}>
+                {isHistory
+                  ? "Inactive agent sessions appear here."
+                  : "No active agents in this fleet yet."}
+              </div>
+            ) : (
+              fleet.agents.map((agent) => (
+                <AgentRow
+                  key={agent.session_id}
+                  agent={agent}
+                  onOpen={onOpenAgent}
+                  onRename={onRenameAgent}
+                  onDragStart={onAgentDragStart}
+                  onDragEnd={onAgentDragEnd}
+                  isDragging={draggingAgent?.session_id === agent.session_id}
+                  isMoving={movingSessionId === agent.session_id}
+                  draggable={!isHistory}
+                />
+              ))
+            )}
           </div>
-        ) : (
-          fleet.agents.map((agent) => (
-            <AgentRow
-              key={agent.session_id}
-              agent={agent}
-              onOpen={onOpenAgent}
-              onRename={onRenameAgent}
-              onDragStart={onAgentDragStart}
-              onDragEnd={onAgentDragEnd}
-              isDragging={draggingAgent?.session_id === agent.session_id}
-              isMoving={movingSessionId === agent.session_id}
-              draggable={!isHistory}
-            />
-          ))
-        )}
-      </div>
+
+          <Link
+            to="/v2/settings"
+            search={{ tab: "connect-agent" }}
+            className={styles.newagent}
+          >
+            <Plus />
+            <span>New agent in {fleetTitle(fleet)}</span>
+          </Link>
+        </>
+      )}
     </section>
   )
 }
@@ -451,6 +517,16 @@ function FleetCard({
 export function FleetPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const currentUser = peekTaskforceSession()
+  const [collapsedByFleetId, setCollapsedByFleetId] =
+    usePersistentState<FleetCollapsedMap>(
+      persistedKey(
+        "fleet.session-collapsed",
+        currentUser?.id ?? "anonymous",
+      ),
+      {},
+      { deserialize: deserializeFleetCollapsed },
+    )
   const [mutationError, setMutationError] = useState<unknown>(null)
   const [draggingAgent, setDraggingAgent] =
     useState<TaskforceFleetAgent | null>(null)
@@ -602,6 +678,15 @@ export function FleetPage() {
       destinationId: destination.id,
     })
   }
+  const toggleFleetCollapsed = useCallback(
+    (fleet: TaskforceFleetSession) => {
+      setCollapsedByFleetId((current) => ({
+        ...current,
+        [fleet.id]: !fleetIsCollapsed(fleet, current),
+      }))
+    },
+    [setCollapsedByFleetId],
+  )
 
   return (
     <section
@@ -701,6 +786,8 @@ export function FleetPage() {
                 <FleetCard
                   key={fleet.id}
                   fleet={fleet}
+                  isCollapsed={fleetIsCollapsed(fleet, collapsedByFleetId)}
+                  onToggleCollapse={() => toggleFleetCollapsed(fleet)}
                   onOpenAgent={openAgent}
                   onRenameAgent={renameAgent}
                   onRename={renameFleet}
