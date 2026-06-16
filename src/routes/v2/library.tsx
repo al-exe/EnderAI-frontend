@@ -721,7 +721,7 @@ function TaskforceLibrary() {
           "-mb-6 bg-background font-sans text-foreground md:-mb-8",
         )}
       >
-        <div className={V2_PAGE_BODY}>
+        <div className={cn(V2_PAGE_BODY, "gap-3")}>
           <div className={V2_TAB_HEADER_STACK_CLASS}>
             <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
@@ -815,7 +815,7 @@ function TaskforceLibrary() {
             onConfirm={(document) => deleteDocumentMutation.mutate(document.id)}
           />
 
-          <div className={V2_TAB_CONTENT_CLASS}>
+          <div className={cn(V2_TAB_CONTENT_CLASS, "gap-3 pt-2")}>
           {hasInitialLoadError ? (
             <QueryErrorState
               title="Could not load the library"
