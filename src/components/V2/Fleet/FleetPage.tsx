@@ -612,8 +612,12 @@ export function FleetPage() {
   const running = runningCount(activeAgents)
   const waiting = waitingCount(activeAgents)
 
-  const summaryBits = [`${running} running`]
-  if (waiting) summaryBits.push(`${waiting} awaiting prompt`)
+  const eyebrowParts = [
+    `${workFleets.length} ${workFleets.length === 1 ? "fleet" : "fleets"}`,
+    `${activeAgents.length} ${activeAgents.length === 1 ? "agent" : "agents"}`,
+    `${running} running`,
+  ]
+  if (waiting) eyebrowParts.push(`${waiting} awaiting prompt`)
 
   const openAgent = (agent: TaskforceFleetAgent) =>
     navigate({
@@ -682,10 +686,7 @@ export function FleetPage() {
           <header className="flex items-start justify-between gap-4">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
-                {activeAgents.length}{" "}
-                {activeAgents.length === 1 ? "agent" : "agents"} ·{" "}
-                {summaryBits.join(" · ")} · {workFleets.length}{" "}
-                {workFleets.length === 1 ? "fleet" : "fleets"}
+                {eyebrowParts.join(" ")}
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">
                 Fleet
