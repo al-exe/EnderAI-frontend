@@ -10,6 +10,12 @@ import {
   type TaskforceSessionActivityEntry,
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
+import {
+  V2_PAGE_BODY,
+  V2_PAGE_FRAME,
+  V2_STICKY_HEADER_CLASS,
+  V2_TAB_CONTENT_CLASS,
+} from "@/components/V2/v2PageShell"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
 import { useFleetPulseSync } from "@/components/V2/Fleet/fleetPulseSync"
 import {
@@ -37,7 +43,6 @@ import {
   sessionWorkSummary,
 } from "@/components/V2/Fleet/fleetStatus"
 import { Markdown } from "@/components/V2/Fleet/Markdown"
-import { V2_TAB_CONTENT_CLASS } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
 
 const FLEET_QUERY_KEY = ["v2-taskforce-fleet"] as const
@@ -142,30 +147,50 @@ function FleetAgentDetailRoute() {
 
   if (fleetQuery.isLoading) {
     return (
-      <div
-        ref={setPulseRoot}
-        className={cn(styles.detail, "items-center justify-center")}
+      <section
+        className={cn(
+          V2_PAGE_FRAME,
+          styles.page,
+          "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+        )}
       >
-        <p className="text-sm text-muted-foreground">Loading session…</p>
-      </div>
+        <div
+          ref={setPulseRoot}
+          className={cn(
+            V2_PAGE_BODY,
+            styles.detail,
+            "items-center justify-center gap-0 pb-0",
+          )}
+        >
+          <p className="text-sm text-muted-foreground">Loading session…</p>
+        </div>
+      </section>
     )
   }
 
   if (!located) {
     return (
-      <div
-        ref={setPulseRoot}
-        className={cn(styles.detail, "items-start gap-4")}
+      <section
+        className={cn(
+          V2_PAGE_FRAME,
+          styles.page,
+          "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+        )}
       >
-        <p className="text-sm text-muted-foreground">
-          {fleetQuery.error
-            ? "This session could not be loaded."
-            : "This agent is no longer active."}
-        </p>
-        <Button asChild variant="outline">
-          <Link to="/v2/fleet">Back to Sessions</Link>
-        </Button>
-      </div>
+        <div
+          ref={setPulseRoot}
+          className={cn(V2_PAGE_BODY, styles.detail, "items-start gap-4 pb-0")}
+        >
+          <p className="text-sm text-muted-foreground">
+            {fleetQuery.error
+              ? "This session could not be loaded."
+              : "This agent is no longer active."}
+          </p>
+          <Button asChild variant="outline">
+            <Link to="/v2/fleet">Back to Sessions</Link>
+          </Button>
+        </div>
+      </section>
     )
   }
 
@@ -198,12 +223,21 @@ function FleetAgentDetailRoute() {
   )
 
   return (
-    <div
-      className={styles.detail}
-      data-testid="fleet-agent-detail"
-      ref={setPulseRoot}
+    <section
+      className={cn(
+        V2_PAGE_FRAME,
+        styles.page,
+        "-mb-6 bg-background font-sans text-foreground md:-mb-8",
+      )}
     >
-      <div className={styles.dtop}>
+      <div
+        className={cn(V2_PAGE_BODY, styles.detail, "gap-0 pb-0")}
+        data-testid="fleet-agent-detail"
+        ref={setPulseRoot}
+      >
+        <div
+          className={cn(styles.dtop, V2_STICKY_HEADER_CLASS, "border-b-0")}
+        >
         <div className={styles.crumb}>
           <Link to="/v2/fleet" className={styles.back}>
             <ChevronLeft />
@@ -267,10 +301,10 @@ function FleetAgentDetailRoute() {
         </div>
       </div>
 
-      <div
-        className={cn(styles.dbody, V2_TAB_CONTENT_CLASS)}
-        data-testid="fleet-detail-body"
-      >
+        <div
+          className={cn(styles.dbody, V2_TAB_CONTENT_CLASS, "pt-0")}
+          data-testid="fleet-detail-body"
+        >
         <div className={styles.dmain}>
           {/* Working on — waiting agents surface a question when present. */}
           {status === "waiting" ? (
@@ -469,7 +503,8 @@ function FleetAgentDetailRoute() {
             )}
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }
