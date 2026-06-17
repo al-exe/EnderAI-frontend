@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -43,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
@@ -247,18 +249,23 @@ function AgentRow({
           if (!open) setRenameValue(agent.display_name ?? "")
         }}
       >
-        <DialogContent>
-          <form onSubmit={submitRename}>
-            <DialogHeader>
-              <DialogTitle>Rename session</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename session</DialogTitle>
+            <DialogDescription>
+              Give this agent session a short, recognizable name.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={submitRename}>
+            <div className="space-y-2">
+              <Label htmlFor="fleet-session-name">Session name</Label>
               <Input
+                id="fleet-session-name"
                 value={renameValue}
                 onChange={(event) => setRenameValue(event.target.value)}
                 maxLength={120}
                 autoFocus
-                aria-label="Session name"
+                placeholder="Session name"
               />
             </div>
             <DialogFooter>
@@ -377,7 +384,7 @@ function FleetCard({
     >
       <div className={styles.fhead}>
         {renaming ? (
-          <form onSubmit={submitRename} className="flex-1">
+          <form onSubmit={submitRename} className={styles.fheadRename}>
             <Input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -401,16 +408,18 @@ function FleetCard({
             ) : (
               <ChevronDown className={styles.fchev} aria-hidden="true" />
             )}
-            <span className={styles.fname}>{fleetTitle(fleet)}</span>
-            {!isHistory &&
-              (repo ? (
-                <span className={styles.frepo}>
-                  <b>{repo.repo}</b>
-                  {repo.branch ? ` · ${repo.branch}` : ""}
-                </span>
-              ) : (
-                <span className={styles.frepo}>no repo bound</span>
-              ))}
+            <span className={styles.fheadIdentity}>
+              <span className={styles.fname}>{fleetTitle(fleet)}</span>
+              {!isHistory &&
+                (repo ? (
+                  <span className={styles.frepo}>
+                    <b>{repo.repo}</b>
+                    {repo.branch ? ` · ${repo.branch}` : ""}
+                  </span>
+                ) : (
+                  <span className={styles.frepo}>no repo bound</span>
+                ))}
+            </span>
           </button>
         )}
 
@@ -418,7 +427,7 @@ function FleetCard({
           <div className={styles.fheadMeta}>
             <span className={styles.fcount}>
               {running > 0
-                ? `${running} active ${total} total`
+                ? `${running} active · ${total} total`
                 : `${total} ${total === 1 ? "agent" : "agents"}`}
             </span>
             {!isHistory && (
@@ -686,7 +695,7 @@ export function FleetPage() {
           <header className="flex items-start justify-between gap-4">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
-                {eyebrowParts.join(" ")}
+                {eyebrowParts.join(" · ")}
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">
                 Fleet
