@@ -58,6 +58,7 @@ import { persistedKey, usePersistentState } from "@/hooks/usePersistentState"
 import { peekTaskforceSession } from "@/lib/taskforceSession"
 import { cn } from "@/lib/utils"
 import styles from "./FleetPage.module.css"
+import { useFleetPulseSync } from "./fleetPulseSync"
 import {
   AGENT_KIND_LABEL,
   type AgentKind,
@@ -153,19 +154,14 @@ function ClientChip({ kind }: { kind: AgentKind }) {
 
 function ActivityMarquee({
   activity,
-  isRunning,
+  active,
 }: {
   activity: string
-  isRunning: boolean
+  active: boolean
 }) {
   const containerRef = useRef<HTMLSpanElement>(null)
   const trackRef = useRef<HTMLSpanElement>(null)
   const [scrollDistance, setScrollDistance] = useState(0)
-  const [hovered, setHovered] = useState(false)
-  const [showLeftFade, setShowLeftFade] = useState(false)
-  const [atEnd, setAtEnd] = useState(false)
-  const leftFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hoveredRef = useRef(false)
 
   useEffect(() => {
     const container = containerRef.current
@@ -184,74 +180,40 @@ function ActivityMarquee({
     return () => observer.disconnect()
   }, [])
 
-  useEffect(() => {
-    return () => {
-      if (leftFadeTimerRef.current) clearTimeout(leftFadeTimerRef.current)
-    }
-  }, [])
-
   const scrolls = scrollDistance > 0
+  const forwardDuration = scrolls
+    ? Math.max(1.6, (scrollDistance / 32 + 2) / 2.5)
+    : 0
+  const rewindDuration = forwardDuration / 6
+
   const marqueeStyle = scrolls
     ? ({
         "--activity-scroll": `${scrollDistance}px`,
-        "--activity-duration": `${Math.max(4, scrollDistance / 32 + 2)}s`,
+        "--activity-fade": "12px",
       } as CSSProperties)
     : undefined
 
-  const handleMouseEnter = () => {
-    if (!scrolls) return
-    hoveredRef.current = true
-    setHovered(true)
-    setAtEnd(false)
-    leftFadeTimerRef.current = setTimeout(() => {
-      leftFadeTimerRef.current = null
-      setShowLeftFade(true)
-    }, 180)
-  }
-
-  const handleMouseLeave = () => {
-    if (leftFadeTimerRef.current) {
-      clearTimeout(leftFadeTimerRef.current)
-      leftFadeTimerRef.current = null
-    }
-    hoveredRef.current = false
-    setHovered(false)
-    setShowLeftFade(false)
-    setAtEnd(false)
-  }
-
-  const handleAnimationEnd = () => {
-    if (hoveredRef.current) setAtEnd(true)
-  }
+  const trackStyle = scrolls
+    ? ({
+        "--activity-motion-duration": `${active ? forwardDuration : rewindDuration}s`,
+        transform: active
+          ? "translateX(calc(-1 * var(--activity-scroll, 0px)))"
+          : "translateX(0)",
+      } as CSSProperties)
+    : undefined
 
   return (
     <span
       ref={containerRef}
-      className={cn(
-        styles.aactivity,
-        scrolls && styles.aactivityMarquee,
-        scrolls && (showLeftFade || atEnd) && styles.aactivityMarqueeLeftFade,
-        scrolls && atEnd && styles.aactivityMarqueeAtEnd,
-      )}
+      className={cn(styles.aactivity, scrolls && styles.aactivityMarquee)}
       style={marqueeStyle}
       title={activity}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
       <span
         ref={trackRef}
-        className={cn(
-          styles.aactivityTrack,
-          scrolls && styles.aactivityTrackScroll,
-          scrolls && hovered && styles.aactivityTrackForward,
-        )}
-        onAnimationEnd={handleAnimationEnd}
+        className={cn(styles.aactivityTrack, scrolls && styles.aactivityTrackScroll)}
+        style={trackStyle}
       >
-        {isRunning && (
-          <span className={styles.acaret} aria-hidden="true">
-            ▸{" "}
-          </span>
-        )}
         {activity}
       </span>
     </span>
@@ -289,6 +251,7 @@ function AgentRow({
   const model = agentModelName(agent)
   const branch = agent.branch?.trim() || null
   const activity = agentActivityLine(agent)
+  const [rowHovered, setRowHovered] = useState(false)
 
   const submitRename = (event: FormEvent) => {
     event.preventDefault()
@@ -311,11 +274,9 @@ function AgentRow({
         isMoving && styles.arowMoving,
       )}
       draggable={draggable && !isMoving}
-      title={
-        draggable
-          ? "Drag to move this agent to another session group"
-          : "View this agent session"
-      }
+      title={draggable ? undefined : "View this agent session"}
+      onMouseEnter={() => setRowHovered(true)}
+      onMouseLeave={() => setRowHovered(false)}
       onDragStart={(event) => {
         suppressClick.current = true
         event.dataTransfer.effectAllowed = "move"
@@ -364,7 +325,7 @@ function AgentRow({
                   </span>
                   <ActivityMarquee
                     activity={activity}
-                    isRunning={status === "run"}
+                    active={rowHovered}
                   />
                 </>
               )}
@@ -654,6 +615,7 @@ function FleetCard({
 }
 
 export function FleetPage() {
+  const setPulseRoot = useFleetPulseSync()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const currentUser = peekTaskforceSession()
@@ -830,6 +792,7 @@ export function FleetPage() {
 
   return (
     <section
+      ref={setPulseRoot}
       className={cn(
         V2_PAGE_FRAME,
         styles.page,

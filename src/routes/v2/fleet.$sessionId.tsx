@@ -11,6 +11,7 @@ import {
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
+import { useFleetPulseSync } from "@/components/V2/Fleet/fleetPulseSync"
 import {
   agentCapturePaused,
   agentDisplayName,
@@ -109,6 +110,7 @@ function eventDetail(event: TaskforceSessionActivityEntry): string | null {
 }
 
 function FleetAgentDetailRoute() {
+  const setPulseRoot = useFleetPulseSync()
   const { sessionId } = Route.useParams()
   const fleetQuery = useQuery({
     queryKey: FLEET_QUERY_KEY,
@@ -134,7 +136,10 @@ function FleetAgentDetailRoute() {
 
   if (fleetQuery.isLoading) {
     return (
-      <div className={cn(styles.detail, "items-center justify-center")}>
+      <div
+        ref={setPulseRoot}
+        className={cn(styles.detail, "items-center justify-center")}
+      >
         <p className="text-sm text-muted-foreground">Loading session…</p>
       </div>
     )
@@ -142,7 +147,10 @@ function FleetAgentDetailRoute() {
 
   if (!located) {
     return (
-      <div className={cn(styles.detail, "items-start gap-4")}>
+      <div
+        ref={setPulseRoot}
+        className={cn(styles.detail, "items-start gap-4")}
+      >
         <p className="text-sm text-muted-foreground">
           {fleetQuery.error
             ? "This session could not be loaded."
@@ -184,7 +192,7 @@ function FleetAgentDetailRoute() {
   )
 
   return (
-    <div className={styles.detail} data-testid="fleet-agent-detail">
+    <div className={styles.detail} data-testid="fleet-agent-detail" ref={setPulseRoot}>
       <div className={styles.dtop}>
         <div className={styles.crumb}>
           <Link to="/v2/fleet" className={styles.back}>
