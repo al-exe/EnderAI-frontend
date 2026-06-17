@@ -681,7 +681,7 @@ export function FleetPage() {
         <div
           className={cn(
             V2_STICKY_HEADER_CLASS,
-            "flex flex-col gap-1 border-b-0 pb-4",
+            "flex flex-col gap-1 border-b-0 pb-2",
           )}
         >
           <header className="flex items-start justify-between gap-4">
@@ -711,7 +711,7 @@ export function FleetPage() {
           </header>
         </div>
 
-        <div className={V2_TAB_CONTENT_CLASS}>
+        <div className={cn(V2_TAB_CONTENT_CLASS, "pt-2")}>
           {Boolean(mutationError) && (
             <div className="mb-4 border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {errorMessage(mutationError)}
