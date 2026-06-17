@@ -90,6 +90,7 @@
   column-gap: var(--fl-row-gap);
   align-items: center;
   min-width: 0;
+  overflow: hidden;
   padding: 0;
   border: 0;
   background: transparent;
@@ -164,6 +165,8 @@
 
 /* shared-context trigger — sits in the header's status column (col 3) */
 .fctx {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   grid-column: 3;
   justify-self: start;
@@ -174,20 +177,21 @@
   box-sizing: border-box;
   padding: 4px 9px;
   border: 1px solid var(--fl-primary-line);
-  background: var(--fl-primary-soft);
+  background: var(--fl-surface);
   color: var(--foreground);
   font-family: var(--font-mono);
   font-size: calc(11px * var(--v2-scale, 1));
   letter-spacing: 0.01em;
   white-space: nowrap;
   cursor: pointer;
+  isolation: isolate;
   transition:
     background-color 120ms ease,
     border-color 120ms ease;
 }
 
 .fctx:hover {
-  background: color-mix(in srgb, var(--primary) 22%, var(--background));
+  background: color-mix(in srgb, var(--primary) 14%, var(--fl-surface));
 }
 
 .fctx:focus-visible {
@@ -457,10 +461,28 @@
 .aactivityMarquee {
   mask-image: linear-gradient(
     90deg,
-    transparent,
-    #000 10px,
-    #000 calc(100% - 10px),
-    transparent
+    #000 0,
+    #000 calc(100% - 12px),
+    transparent 100%
+  );
+}
+
+.aactivityMarqueeLeftFade {
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%
+  );
+}
+
+.aactivityMarqueeAtEnd {
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 12px,
+    #000 100%
   );
 }
 
@@ -470,24 +492,23 @@
 }
 
 .aactivityTrackScroll {
-  animation: fleet-activity-scroll var(--activity-duration, 10s) ease-in-out
-    infinite;
+  transform: translateX(0);
+  transition: transform 0.25s ease-out;
 }
 
-@keyframes fleet-activity-scroll {
-  0%,
-  14% {
+.aactivityTrackForward {
+  animation: fleet-activity-scroll-forward var(--activity-duration, 6s)
+    ease-in-out forwards;
+  transition: none;
+}
+
+@keyframes fleet-activity-scroll-forward {
+  from {
     transform: translateX(0);
   }
 
-  46%,
-  54% {
+  to {
     transform: translateX(calc(-1 * var(--activity-scroll, 0px)));
-  }
-
-  86%,
-  100% {
-    transform: translateX(0);
   }
 }
 
@@ -1197,6 +1218,18 @@
   .fhead {
     height: auto;
     min-height: 48px;
+    grid-template-rows: auto auto;
+  }
+
+  .fheadToggle {
+    grid-row: 1;
+  }
+
+  .fctx {
+    grid-column: 2 / 4;
+    grid-row: 2;
+    justify-self: start;
+    margin-top: 2px;
   }
 
   .fheadIdentity {
@@ -1244,8 +1277,10 @@
     animation: none;
   }
 
-  .aactivityTrackScroll {
+  .aactivityTrackScroll,
+  .aactivityTrackForward {
     animation: none;
+    transition: none;
   }
 
   .aactivity {

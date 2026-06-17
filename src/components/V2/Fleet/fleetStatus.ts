@@ -133,7 +133,7 @@ export function agentDisplayName(agent: TaskforceFleetAgent): string {
 }
 
 export function agentModelName(agent: TaskforceFleetAgent): string {
-  return modelLabel(agent.model_id) || "Connected agent"
+  return modelLabel(agent.model_id) || "Auto"
 }
 
 /** Mono identity meta — "Opus 4.8 · mbp-16", host omitted when unavailable. */
