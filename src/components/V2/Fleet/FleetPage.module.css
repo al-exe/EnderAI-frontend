@@ -162,6 +162,114 @@
   display: contents;
 }
 
+/* shared-context trigger — sits in the header's status column (col 3) */
+.fctx {
+  display: inline-flex;
+  grid-column: 3;
+  justify-self: start;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 4px 9px;
+  border: 1px solid var(--fl-primary-line);
+  background: var(--fl-primary-soft);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--v2-scale, 1));
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.fctx:hover {
+  background: color-mix(in srgb, var(--primary) 22%, var(--background));
+}
+
+.fctx:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.fctx svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.fctxLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ----- shared-context drawer body ----- */
+.ctxIcon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--fl-primary-line);
+  background: var(--fl-primary-soft);
+  color: var(--primary);
+}
+
+.ctxIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ctxInject {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 9px 11px;
+  border: 1px solid var(--fl-primary-line);
+  background: var(--fl-primary-soft);
+  font-size: calc(12px * var(--v2-scale, 1));
+  line-height: 1.4;
+}
+
+.ctxInject svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.ctxEntry {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--fl-hair);
+}
+
+.ctxEntry:last-child {
+  border-bottom: 0;
+}
+
+.ctxBadge {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: calc(10.5px * var(--v2-scale, 1));
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ctxOutcome {
+  margin-top: 6px;
+  color: var(--primary);
+  font-size: calc(12px * var(--v2-scale, 1));
+  line-height: 1.45;
+}
+
 .fmenu {
   grid-column: 5;
   justify-self: end;

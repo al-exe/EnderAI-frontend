@@ -73,6 +73,25 @@ export interface TaskforceFleetResponse {
   fleet_sessions: TaskforceFleetSession[]
 }
 
+export interface TaskforceSessionContextEntry {
+  document_id: string
+  title: string
+  summary_markdown: string
+  produced_by_client: string | null
+  outcome: string | null
+  last_touched_at: string | null
+  token_cost: number
+}
+
+export interface TaskforceSessionContextResponse {
+  fleet_session_id: string
+  scope: string
+  entry_count: number
+  token_estimate: number
+  inject_token_budget: number
+  entries: TaskforceSessionContextEntry[]
+}
+
 export interface ReadTaskforceSessionSavingsArgs {
   sessionId: string
   pricingModelId?: string
@@ -131,6 +150,18 @@ export function readTaskforceFleet(): CancelablePromise<TaskforceFleetResponse> 
   return request(OpenAPI, {
     method: "GET",
     url: "/api/v1/v2/taskforce/fleet",
+  })
+}
+
+export function readTaskforceFleetSessionContext(
+  fleetSessionId: string,
+): CancelablePromise<TaskforceSessionContextResponse> {
+  return request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/v2/taskforce/fleet/{fleet_session_id}/context",
+    path: {
+      fleet_session_id: fleetSessionId,
+    },
   })
 }
 

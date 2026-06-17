@@ -72,6 +72,7 @@ import {
   runningCount,
   waitingCount,
 } from "./fleetStatus"
+import { SharedContextDrawer } from "./SharedContextDrawer"
 
 const FLEET_QUERY_KEY = ["v2-taskforce-fleet"] as const
 
@@ -470,6 +471,8 @@ function FleetCard({
             </span>
           </button>
         )}
+
+        {!renaming && !isHistory && <SharedContextDrawer fleet={fleet} />}
 
         {!renaming && (
           <div className={styles.fheadMeta}>
