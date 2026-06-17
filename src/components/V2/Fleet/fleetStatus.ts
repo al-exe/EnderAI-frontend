@@ -8,7 +8,7 @@ import type {
  * handoff. The API spells the active state `running`; this presentation model
  * keeps the shorter `run` key used by the CSS module.
  */
-export type FleetStatus = "run" | "waiting" | "paused" | "idle"
+export type FleetStatus = "run" | "waiting" | "paused" | "idle" | "inactive"
 
 /** Quiet word shown next to a non-running status dot. */
 export const STATE_LABEL: Record<FleetStatus, string> = {
@@ -16,6 +16,7 @@ export const STATE_LABEL: Record<FleetStatus, string> = {
   waiting: "awaiting prompt",
   paused: "capture paused",
   idle: "idle",
+  inactive: "inactive",
 }
 
 /** One-line roster status in the agent row's second column. */
@@ -24,6 +25,9 @@ export const ROSTER_STATUS_LABEL: Record<FleetStatus, string> = {
   waiting: "Agent waiting",
   paused: "Capture paused",
   idle: "Agent idle",
+  // Stopped (e.g. the user closed the terminal). Stays put until archived,
+  // and comes back to life if the user types in the chat again.
+  inactive: "Stopped",
 }
 
 export function rosterStatusLabel(agent: TaskforceFleetAgent): string {
@@ -163,9 +167,11 @@ const FLEET_UI_MARKERS = [
 ]
 
 /** Strip Cursor wrappers and Fleet UI paste noise for activity display. */
-export function cleanActivityPromptText(text: string | null | undefined): string {
+export function cleanActivityPromptText(
+  text: string | null | undefined,
+): string {
   if (!text) return ""
-  let cleaned = text
+  const cleaned = text
     .replace(/^<user_query>\s*/i, "")
     .replace(/\s*<\/user_query>\s*$/i, "")
     .trim()
@@ -220,24 +226,50 @@ export function liveActivityLabel(
   return "Connected but not actively running"
 }
 
-/** Compact single-line activity for the roster row sub-line. Only shows captured
-   work summary — status copy lives in the row's status column. */
-export function agentActivityLine(agent: TaskforceFleetAgent): string {
-  const summary = agent.summary_markdown?.trim()
-  if (!summary) return ""
-  const firstLine = summary.split(/\r?\n/)[0]?.trim() ?? ""
-  return firstLine.length > 120 ? `${firstLine.slice(0, 119)}…` : firstLine
+/** Newest-first recent per-turn prompts captured for this agent. */
+export function agentRecentActivity(agent: TaskforceFleetAgent): string[] {
+  return (agent.recent_activity ?? [])
+    .map((text) => text.trim())
+    .filter(Boolean)
 }
 
-/** Session detail "Working on" body when no summary is stored yet. */
+function truncateLine(text: string, max = 120): string {
+  const firstLine = text.split(/\r?\n/)[0]?.trim() ?? ""
+  return firstLine.length > max ? `${firstLine.slice(0, max - 1)}…` : firstLine
+}
+
+/** Compact single-line activity for the roster row sub-line.
+
+   Surfaces "what just happened" so the row stays glanceable. For a running
+   agent the newest prompt is the turn in progress, so we show the one before it
+   (the most recent *completed* work); otherwise we show the newest. Falls back
+   to the captured work summary when no per-turn prompts are recorded yet. */
+export function agentActivityLine(agent: TaskforceFleetAgent): string {
+  const recent = agentRecentActivity(agent)
+  const summary = agent.summary_markdown?.trim()
+  const pick = isRunning(agent)
+    ? (recent[1] ?? summary ?? recent[0])
+    : (recent[0] ?? summary)
+  return pick ? truncateLine(pick) : ""
+}
+
+/** Session detail "Working on" body.
+
+   For a running agent we surface both that something new is in progress *and*
+   the most recent thing it did just before, so the user can orient quickly. */
 export function sessionWorkSummary(agent: TaskforceFleetAgent): string {
   const summary = agent.summary_markdown?.trim()
-  if (summary) return summary
-
   const status = agentStatus(agent)
+
   if (status === "run") {
-    return "Running in this terminal. A summary appears after Taskforce capture records work."
+    const base =
+      summary ||
+      "Running in this terminal. A summary appears after Taskforce capture records work."
+    // recent[0] is the in-progress turn; recent[1] is what happened before it.
+    const previous = agentRecentActivity(agent)[1]
+    return previous ? `${base}\n\nMost recently: ${previous}` : base
   }
+  if (summary) return summary
   if (status === "paused" || agentCapturePaused(agent)) {
     return "Activity capture is paused, so no summary is being updated."
   }
