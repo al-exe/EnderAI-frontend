@@ -151,18 +151,17 @@ function ClientChip({ kind }: { kind: AgentKind }) {
 function ActivityMarquee({
   activity,
   isRunning,
+  active,
 }: {
   activity: string
   isRunning: boolean
+  active: boolean
 }) {
   const containerRef = useRef<HTMLSpanElement>(null)
   const trackRef = useRef<HTMLSpanElement>(null)
   const [scrollDistance, setScrollDistance] = useState(0)
-  const [hovered, setHovered] = useState(false)
-  const [showLeftFade, setShowLeftFade] = useState(false)
   const [atEnd, setAtEnd] = useState(false)
-  const leftFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hoveredRef = useRef(false)
+  const activeRef = useRef(false)
 
   useEffect(() => {
     const container = containerRef.current
@@ -182,43 +181,20 @@ function ActivityMarquee({
   }, [activity])
 
   useEffect(() => {
-    return () => {
-      if (leftFadeTimerRef.current) clearTimeout(leftFadeTimerRef.current)
-    }
-  }, [])
+    activeRef.current = active
+    if (!active) setAtEnd(false)
+  }, [active])
 
   const scrolls = scrollDistance > 0
   const marqueeStyle = scrolls
     ? ({
         "--activity-scroll": `${scrollDistance}px`,
-        "--activity-duration": `${Math.max(4, scrollDistance / 32 + 2)}s`,
+        "--activity-duration": `${Math.max(1.6, (scrollDistance / 32 + 2) / 2.5)}s`,
       } as CSSProperties)
     : undefined
 
-  const handleMouseEnter = () => {
-    if (!scrolls) return
-    hoveredRef.current = true
-    setHovered(true)
-    setAtEnd(false)
-    leftFadeTimerRef.current = setTimeout(() => {
-      leftFadeTimerRef.current = null
-      setShowLeftFade(true)
-    }, 180)
-  }
-
-  const handleMouseLeave = () => {
-    if (leftFadeTimerRef.current) {
-      clearTimeout(leftFadeTimerRef.current)
-      leftFadeTimerRef.current = null
-    }
-    hoveredRef.current = false
-    setHovered(false)
-    setShowLeftFade(false)
-    setAtEnd(false)
-  }
-
   const handleAnimationEnd = () => {
-    if (hoveredRef.current) setAtEnd(true)
+    if (activeRef.current) setAtEnd(true)
   }
 
   return (
@@ -227,20 +203,17 @@ function ActivityMarquee({
       className={cn(
         styles.aactivity,
         scrolls && styles.aactivityMarquee,
-        scrolls && (showLeftFade || atEnd) && styles.aactivityMarqueeLeftFade,
         scrolls && atEnd && styles.aactivityMarqueeAtEnd,
       )}
       style={marqueeStyle}
       title={activity}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
       <span
         ref={trackRef}
         className={cn(
           styles.aactivityTrack,
           scrolls && styles.aactivityTrackScroll,
-          scrolls && hovered && styles.aactivityTrackForward,
+          scrolls && active && styles.aactivityTrackForward,
         )}
         onAnimationEnd={handleAnimationEnd}
       >
@@ -286,6 +259,7 @@ function AgentRow({
   const model = agentModelName(agent)
   const branch = agent.branch?.trim() || null
   const activity = agentActivityLine(agent)
+  const [rowHovered, setRowHovered] = useState(false)
 
   const submitRename = (event: FormEvent) => {
     event.preventDefault()
@@ -308,11 +282,9 @@ function AgentRow({
         isMoving && styles.arowMoving,
       )}
       draggable={draggable && !isMoving}
-      title={
-        draggable
-          ? "Drag to move this agent to another session group"
-          : "View this agent session"
-      }
+      title={draggable ? undefined : "View this agent session"}
+      onMouseEnter={() => setRowHovered(true)}
+      onMouseLeave={() => setRowHovered(false)}
       onDragStart={(event) => {
         suppressClick.current = true
         event.dataTransfer.effectAllowed = "move"
@@ -362,6 +334,7 @@ function AgentRow({
                   <ActivityMarquee
                     activity={activity}
                     isRunning={status === "run"}
+                    active={rowHovered}
                   />
                 </>
               )}
