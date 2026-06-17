@@ -134,21 +134,6 @@
   outline-offset: 2px;
 }
 
-.frepo {
-  overflow: hidden;
-  color: var(--fl-faint);
-  font-family: var(--font-mono);
-  font-size: calc(11px * var(--v2-scale, 1));
-  letter-spacing: 0.01em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.frepo b {
-  color: var(--muted-foreground);
-  font-weight: 400;
-}
-
 .fcount {
   display: inline-flex;
   grid-column: 4;
@@ -1022,10 +1007,6 @@
   .fheadIdentity {
     flex-wrap: wrap;
     row-gap: 2px;
-  }
-
-  .fheadIdentity .frepo {
-    width: 100%;
   }
 
   .fcount {

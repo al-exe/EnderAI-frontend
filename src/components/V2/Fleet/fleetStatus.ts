@@ -115,9 +115,10 @@ export function modelLabel(modelId: string | null): string | null {
   return version ? `${name} ${version}` : name
 }
 
+/** Fallback label when display_name is unset. Uses cwd basename only. */
 export function repoLabel(agent: TaskforceFleetAgent): string {
   const cwdParts = agent.cwd?.split("/").filter(Boolean) ?? []
-  return agent.repo || cwdParts[cwdParts.length - 1] || "Unknown repo"
+  return cwdParts[cwdParts.length - 1] || "Unknown repo"
 }
 
 /** Machine label, e.g. "mbp-16". Not captured by ingestion yet. */
@@ -253,19 +254,6 @@ export function presenceLabel(agent: TaskforceFleetAgent): string {
 /** Display name for a fleet (server may create nameless fleets). */
 export function fleetTitle(fleet: TaskforceFleetSession): string {
   return fleet.name?.trim() || "Untitled group"
-}
-
-/** Repo/branch shown on a fleet card header, derived from its agents. */
-export function fleetRepo(
-  fleet: TaskforceFleetSession,
-): { repo: string; branch: string | null } | null {
-  if (fleet.is_history) return null
-  for (const agent of fleet.agents) {
-    if (agent.repo) {
-      return { repo: agent.repo, branch: agent.branch }
-    }
-  }
-  return null
 }
 
 export function runningCount(agents: TaskforceFleetAgent[]): number {
