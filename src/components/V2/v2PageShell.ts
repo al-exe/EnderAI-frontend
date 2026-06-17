@@ -3,8 +3,14 @@ import { cn } from "@/lib/utils"
 /** Scrollable v2 page frame inside TaskforceShell (no extra inset). */
 export const V2_PAGE_FRAME = "flex min-h-0 flex-1 flex-col overflow-y-auto"
 
+/** Horizontal gutter inside TaskforceShell main padding (tab bodies + header search). */
+export const V2_TAB_GUTTER_X = "px-6"
+
+/** Left inset for shell header search so it lines up with tab content containers. */
+export const V2_HEADER_SEARCH_INSET = "pl-6"
+
 /** Shared horizontal/bottom padding for v2 tab bodies; top inset comes from the shell. */
-export const V2_PAGE_PADDING = "px-6 pb-6 pt-0 md:pb-8"
+export const V2_PAGE_PADDING = cn(V2_TAB_GUTTER_X, "pb-6 pt-0 md:pb-8")
 
 /**
  * Scrollable tab body — matches Agents list/detail layout inside shell main
@@ -35,7 +41,9 @@ export const V2_TAB_EYEBROW_CLASS =
 
 /** Sticky page header inside a padded scroll area (offsets horizontal `V2_PAGE_PADDING`). */
 export const V2_STICKY_HEADER_CLASS = cn(
-  "sticky top-0 z-30 -mx-6 shrink-0 border-b bg-background px-6 pt-4 pb-4",
+  "sticky top-0 z-30 shrink-0 border-b bg-background pt-4 pb-4",
+  "-mx-6",
+  V2_TAB_GUTTER_X,
 )
 
 /** Title block plus filter bar stacked inside `V2_STICKY_HEADER_CLASS`. */
