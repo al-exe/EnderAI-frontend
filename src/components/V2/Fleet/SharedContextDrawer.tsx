@@ -36,7 +36,7 @@ function timeAgo(iso: string | null): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
-/** Read-only "shared context" drawer for one session group.
+/** Read-only session context drawer for one session group.
  *
  * Surfaces the documents the group's agents have produced (served by
  * GET /v2/taskforce/fleet/{id}/context). The feed is fetched lazily on open
@@ -62,11 +62,11 @@ export function SharedContextDrawer({
         <button
           type="button"
           className={styles.fctx}
-          aria-label={`Shared context for ${fleetTitle(fleet)}`}
+          aria-label={`Session context for ${fleetTitle(fleet)}`}
           onClick={(event) => event.stopPropagation()}
         >
           <FileText aria-hidden="true" />
-          <span className={styles.fctxLabel}>Shared context</span>
+          <span className={styles.fctxLabel}>Session context</span>
         </button>
       </SheetTrigger>
       <SheetContent
@@ -81,7 +81,7 @@ export function SharedContextDrawer({
             </span>
             <div className="min-w-0">
               <h2 className="text-sm font-semibold tracking-tight">
-                Shared context
+                Session context
               </h2>
               <p className="text-muted-foreground truncate font-mono text-xs">
                 {data?.scope ?? fleetTitle(fleet)}
@@ -122,11 +122,11 @@ export function SharedContextDrawer({
             </div>
           ) : query.error ? (
             <p className="text-destructive text-sm">
-              Shared context could not load.
+              Session context could not load.
             </p>
           ) : entries.length === 0 ? (
             <p className="text-muted-foreground text-sm leading-relaxed">
-              No shared context yet. As this group's agents capture work, their
+              No session context yet. As this group's agents capture work, their
               documents appear here and are injected into each agent's turn.
             </p>
           ) : (

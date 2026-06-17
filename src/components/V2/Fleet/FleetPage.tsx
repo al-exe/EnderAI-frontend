@@ -158,6 +158,11 @@ function ActivityMarquee({
   const containerRef = useRef<HTMLSpanElement>(null)
   const trackRef = useRef<HTMLSpanElement>(null)
   const [scrollDistance, setScrollDistance] = useState(0)
+  const [hovered, setHovered] = useState(false)
+  const [showLeftFade, setShowLeftFade] = useState(false)
+  const [atEnd, setAtEnd] = useState(false)
+  const leftFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hoveredRef = useRef(false)
 
   useEffect(() => {
     const container = containerRef.current
@@ -176,27 +181,68 @@ function ActivityMarquee({
     return () => observer.disconnect()
   }, [activity])
 
+  useEffect(() => {
+    return () => {
+      if (leftFadeTimerRef.current) clearTimeout(leftFadeTimerRef.current)
+    }
+  }, [])
+
   const scrolls = scrollDistance > 0
   const marqueeStyle = scrolls
     ? ({
         "--activity-scroll": `${scrollDistance}px`,
-        "--activity-duration": `${Math.max(8, scrollDistance / 24 + 6)}s`,
+        "--activity-duration": `${Math.max(4, scrollDistance / 32 + 2)}s`,
       } as CSSProperties)
     : undefined
+
+  const handleMouseEnter = () => {
+    if (!scrolls) return
+    hoveredRef.current = true
+    setHovered(true)
+    setAtEnd(false)
+    leftFadeTimerRef.current = setTimeout(() => {
+      leftFadeTimerRef.current = null
+      setShowLeftFade(true)
+    }, 180)
+  }
+
+  const handleMouseLeave = () => {
+    if (leftFadeTimerRef.current) {
+      clearTimeout(leftFadeTimerRef.current)
+      leftFadeTimerRef.current = null
+    }
+    hoveredRef.current = false
+    setHovered(false)
+    setShowLeftFade(false)
+    setAtEnd(false)
+  }
+
+  const handleAnimationEnd = () => {
+    if (hoveredRef.current) setAtEnd(true)
+  }
 
   return (
     <span
       ref={containerRef}
-      className={cn(styles.aactivity, scrolls && styles.aactivityMarquee)}
+      className={cn(
+        styles.aactivity,
+        scrolls && styles.aactivityMarquee,
+        scrolls && (showLeftFade || atEnd) && styles.aactivityMarqueeLeftFade,
+        scrolls && atEnd && styles.aactivityMarqueeAtEnd,
+      )}
       style={marqueeStyle}
       title={activity}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <span
         ref={trackRef}
         className={cn(
           styles.aactivityTrack,
           scrolls && styles.aactivityTrackScroll,
+          scrolls && hovered && styles.aactivityTrackForward,
         )}
+        onAnimationEnd={handleAnimationEnd}
       >
         {isRunning && (
           <span className={styles.acaret} aria-hidden="true">
