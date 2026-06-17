@@ -434,15 +434,12 @@ function FleetCard({
             )}
             <span className={styles.fheadIdentity}>
               <span className={styles.fname}>{fleetTitle(fleet)}</span>
-              {!isHistory &&
-                (repo ? (
-                  <span className={styles.frepo}>
-                    <b>{repo.repo}</b>
-                    {repo.branch ? ` · ${repo.branch}` : ""}
-                  </span>
-                ) : (
-                  <span className={styles.frepo}>no repo bound</span>
-                ))}
+              {!isHistory && repo ? (
+                <span className={styles.frepo}>
+                  <b>{repo.repo}</b>
+                  {repo.branch ? ` · ${repo.branch}` : ""}
+                </span>
+              ) : null}
             </span>
           </button>
         )}
@@ -450,9 +447,7 @@ function FleetCard({
         {!renaming && (
           <div className={styles.fheadMeta}>
             <span className={styles.fcount}>
-              {running > 0
-                ? `${running} active · ${total} total`
-                : `${total} ${total === 1 ? "agent" : "agents"}`}
+              {`${running} active · ${total} total`}
             </span>
             {!isHistory && (
               <DropdownMenu>
@@ -646,7 +641,7 @@ export function FleetPage() {
   const waiting = waitingCount(activeAgents)
 
   const eyebrowParts = [
-    `${workFleets.length} ${workFleets.length === 1 ? "group" : "groups"}`,
+    `${workFleets.length} ${workFleets.length === 1 ? "session" : "sessions"}`,
     `${activeAgents.length} ${activeAgents.length === 1 ? "agent" : "agents"}`,
     `${running} running`,
   ]
@@ -735,7 +730,7 @@ export function FleetPage() {
               }}
             >
               <Plus />
-              New group
+              New session
             </Button>
           </header>
         </div>

@@ -336,7 +336,7 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
   )
   await expect(page.getByText("10m")).toBeVisible()
   // Calm summary line — fleets, agents, running; no spend/token metrics.
-  await expect(page.getByText("1 group · 1 agent · 1 running")).toBeVisible()
+  await expect(page.getByText("1 session · 1 agent · 1 running")).toBeVisible()
 
   // The rejected metrics direction must not reappear.
   await expect(page.getByText(/tokens/i)).toHaveCount(0)
@@ -359,7 +359,7 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
       request.url().endsWith("/api/v1/v2/taskforce/fleet") &&
       request.method() === "POST",
   )
-  await page.getByRole("button", { name: "New group" }).click()
+  await page.getByRole("button", { name: "New session" }).click()
   expect((await createRequest).postDataJSON()).toEqual({})
 })
 
