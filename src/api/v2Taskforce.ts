@@ -53,7 +53,8 @@ export interface TaskforceFleetAgent {
   summary_markdown: string
   last_seen_at: string
   minutes_ago: number
-  status: "running" | "waiting" | "paused" | "idle"
+  status: "running" | "waiting" | "paused" | "idle" | "inactive"
+  recent_activity: string[]
   started_at: string | null
   specialist_slug: string | null
   specialist_rule_count: number | null

@@ -379,6 +379,12 @@
   background: var(--fl-faint);
 }
 
+/* Stopped/Inactive: a calm gray dot (not red/purple) — the session is set
+   aside but still here, and revives if the user types in it again. */
+.inactive {
+  background: var(--fl-faint);
+}
+
 .paused {
   background: transparent;
   box-shadow: inset 0 0 0 1.5px var(--fl-faint);
@@ -478,12 +484,7 @@
 }
 
 .aactivityMarqueeAtEnd {
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 12px,
-    #000 100%
-  );
+  mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 100%);
 }
 
 .aactivityTrack {
@@ -588,7 +589,8 @@
 }
 
 .statePaused,
-.stateIdle {
+.stateIdle,
+.stateInactive {
   color: var(--fl-faint);
 }
 

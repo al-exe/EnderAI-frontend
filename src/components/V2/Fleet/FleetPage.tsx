@@ -79,7 +79,9 @@ const FLEET_QUERY_KEY = ["v2-taskforce-fleet"] as const
 
 type FleetCollapsedMap = Record<string, boolean>
 
-function deserializeFleetCollapsed(raw: unknown): FleetCollapsedMap | undefined {
+function deserializeFleetCollapsed(
+  raw: unknown,
+): FleetCollapsedMap | undefined {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined
   const result: FleetCollapsedMap = {}
   for (const [key, value] of Object.entries(raw)) {
@@ -113,6 +115,7 @@ const STATE_CLASS: Record<FleetStatus, string> = {
   waiting: styles.stateWaiting,
   paused: styles.statePaused,
   idle: styles.stateIdle,
+  inactive: styles.stateInactive,
 }
 
 function StatusDot({ status }: { status: FleetStatus }) {
@@ -179,7 +182,7 @@ function ActivityMarquee({
     observer.observe(container)
     observer.observe(track)
     return () => observer.disconnect()
-  }, [activity])
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -498,10 +501,10 @@ function FleetCard({
   const running = runningCount(fleet.agents)
   const total = fleet.agents.length
   const isHistory = fleet.is_history
+  // The Archive group IS a valid drop target — archiving is the user dragging a
+  // session into it. (Agents never reach Archive automatically.)
   const isDropCandidate =
-    !isHistory &&
-    draggingAgent !== null &&
-    draggingAgent.fleet_session_id !== fleet.id
+    draggingAgent !== null && draggingAgent.fleet_session_id !== fleet.id
   const isDropTarget = isDropCandidate && dropTargetId === fleet.id
   const hasPendingMove =
     movingSessionId !== null &&
@@ -622,31 +625,29 @@ function FleetCard({
       </div>
 
       {!isCollapsed && (
-        <>
-          <div id={`fleet-body-${fleet.id}`}>
-            {fleet.agents.length === 0 ? (
-              <div className={styles.emptyRows}>
-                {isHistory
-                  ? "Inactive agent sessions appear here."
-                  : "No active agents in this session group yet."}
-              </div>
-            ) : (
-              fleet.agents.map((agent) => (
-                <AgentRow
-                  key={agent.session_id}
-                  agent={agent}
-                  onOpen={onOpenAgent}
-                  onRename={onRenameAgent}
-                  onDragStart={onAgentDragStart}
-                  onDragEnd={onAgentDragEnd}
-                  isDragging={draggingAgent?.session_id === agent.session_id}
-                  isMoving={movingSessionId === agent.session_id}
-                  draggable={!isHistory}
-                />
-              ))
-            )}
-          </div>
-        </>
+        <div id={`fleet-body-${fleet.id}`}>
+          {fleet.agents.length === 0 ? (
+            <div className={styles.emptyRows}>
+              {isHistory
+                ? "Drag a session here to archive it."
+                : "No active agents in this session group yet."}
+            </div>
+          ) : (
+            fleet.agents.map((agent) => (
+              <AgentRow
+                key={agent.session_id}
+                agent={agent}
+                onOpen={onOpenAgent}
+                onRename={onRenameAgent}
+                onDragStart={onAgentDragStart}
+                onDragEnd={onAgentDragEnd}
+                isDragging={draggingAgent?.session_id === agent.session_id}
+                isMoving={movingSessionId === agent.session_id}
+                draggable
+              />
+            ))
+          )}
+        </div>
       )}
     </section>
   )
@@ -658,10 +659,7 @@ export function FleetPage() {
   const currentUser = peekTaskforceSession()
   const [collapsedByFleetId, setCollapsedByFleetId] =
     usePersistentState<FleetCollapsedMap>(
-      persistedKey(
-        "fleet.session-collapsed",
-        currentUser?.id ?? "anonymous",
-      ),
+      persistedKey("fleet.session-collapsed", currentUser?.id ?? "anonymous"),
       {},
       { deserialize: deserializeFleetCollapsed },
     )

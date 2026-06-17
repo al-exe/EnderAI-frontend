@@ -10,7 +10,6 @@ import {
   type TaskforceSessionActivityEntry,
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
-import { V2_TAB_CONTENT_CLASS } from "@/components/V2/v2PageShell"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
 import {
   agentCapturePaused,
@@ -33,9 +32,10 @@ import {
   liveActivityTime,
   modelLabel,
   presenceLabel,
-  sessionWorkSummary,
   STATE_LABEL,
+  sessionWorkSummary,
 } from "@/components/V2/Fleet/fleetStatus"
+import { V2_TAB_CONTENT_CLASS } from "@/components/V2/v2PageShell"
 import { cn } from "@/lib/utils"
 
 const FLEET_QUERY_KEY = ["v2-taskforce-fleet"] as const
@@ -68,6 +68,7 @@ const STATE_CLASS: Record<FleetStatus, string | undefined> = {
   waiting: styles.stateWaiting,
   paused: styles.statePaused,
   idle: styles.stateIdle,
+  inactive: styles.stateInactive,
 }
 
 function metaRow(key: string, value: string, valueClass?: string) {
