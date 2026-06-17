@@ -57,7 +57,10 @@ import { peekTaskforceSession } from "@/lib/taskforceSession"
 import { cn } from "@/lib/utils"
 import styles from "./FleetPage.module.css"
 import {
+  AGENT_KIND_LABEL,
+  type AgentKind,
   agentDisplayName,
+  agentKind,
   agentStatus,
   compactPresence,
   type FleetStatus,
@@ -118,6 +121,26 @@ function StatusDot({ status }: { status: FleetStatus }) {
         status === "run" && styles.pulse,
       )}
     />
+  )
+}
+
+const CHIP_CLASS: Record<AgentKind, string> = {
+  claude: styles.chipClaude,
+  codex: styles.chipCodex,
+  cursor: styles.chipCursor,
+  other: styles.chipOther,
+}
+
+function ClientChip({ kind }: { kind: AgentKind }) {
+  const label = AGENT_KIND_LABEL[kind]
+  return (
+    <span
+      data-testid="fleet-agent-chip"
+      className={cn(styles.chip, CHIP_CLASS[kind])}
+      title={`Driven by ${label}`}
+    >
+      {label}
+    </span>
   )
 }
 
@@ -202,6 +225,7 @@ function AgentRow({
           <StatusDot status={status} />
         </span>
         <div className={styles.who}>
+          <ClientChip kind={agentKind(agent)} />
           <div className={styles.nm} data-testid="fleet-agent-name">
             {sessionLabel}
           </div>

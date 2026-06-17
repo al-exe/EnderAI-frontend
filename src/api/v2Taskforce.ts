@@ -59,6 +59,7 @@ export interface TaskforceFleetAgent {
   specialist_slug: string | null
   specialist_rule_count: number | null
   model_id: string | null
+  agent_kind: "claude" | "codex" | "cursor" | "other"
 }
 
 export interface TaskforceFleetSession {
