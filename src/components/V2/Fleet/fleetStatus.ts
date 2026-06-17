@@ -220,6 +220,17 @@ export function liveActivityLabel(
   return "Connected but not actively running"
 }
 
+/** Compact single-line activity for the roster row sub-line. Collapses the
+   live activity copy to its first line and clamps length so it never wraps. */
+export function agentActivityLine(
+  agent: TaskforceFleetAgent,
+  options: LiveActivityOptions = {},
+): string {
+  const firstLine =
+    liveActivityLabel(agent, options).split(/\r?\n/)[0]?.trim() ?? ""
+  return firstLine.length > 120 ? `${firstLine.slice(0, 119)}…` : firstLine
+}
+
 /** Session detail "Working on" body when no summary is stored yet. */
 export function sessionWorkSummary(agent: TaskforceFleetAgent): string {
   const summary = agent.summary_markdown?.trim()
