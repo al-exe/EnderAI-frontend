@@ -155,6 +155,37 @@ export function formatClockTime(iso: string): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
+const FLEET_UI_MARKERS = [
+  "View in Ledger",
+  "Awaiting user prompt",
+  "Running in this terminal",
+]
+
+/** Strip Cursor wrappers and Fleet UI paste noise for activity display. */
+export function cleanActivityPromptText(text: string | null | undefined): string {
+  if (!text) return ""
+  let cleaned = text
+    .replace(/^<user_query>\s*/i, "")
+    .replace(/\s*<\/user_query>\s*$/i, "")
+    .trim()
+  if (!FLEET_UI_MARKERS.some((marker) => cleaned.includes(marker))) {
+    return cleaned
+  }
+  const blocks = cleaned
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+  const tail = blocks[blocks.length - 1]
+  if (
+    tail &&
+    tail.length <= 400 &&
+    !FLEET_UI_MARKERS.some((marker) => tail.includes(marker))
+  ) {
+    return tail
+  }
+  return cleaned
+}
+
 /** Relative time for the live timeline head — matches the session header. */
 export function liveActivityTime(agent: TaskforceFleetAgent): string {
   return compactPresence(agent)
@@ -221,7 +252,7 @@ export function presenceLabel(agent: TaskforceFleetAgent): string {
 
 /** Display name for a fleet (server may create nameless fleets). */
 export function fleetTitle(fleet: TaskforceFleetSession): string {
-  return fleet.name?.trim() || "Untitled fleet"
+  return fleet.name?.trim() || "Untitled group"
 }
 
 /** Repo/branch shown on a fleet card header, derived from its agents. */

@@ -22,6 +22,7 @@ import {
   agentSpecialistRuleCount,
   agentStartedAt,
   agentStatus,
+  cleanActivityPromptText,
   compactPresence,
   type FleetStatus,
   fleetTitle,
@@ -83,7 +84,11 @@ function metaRow(key: string, value: string, valueClass?: string) {
 function eventTitle(event: TaskforceSessionActivityEntry): string {
   if (event.kind === "command") return `$ ${event.cmd ?? "command"}`
   if (event.kind === "edit") return `Edited ${event.file ?? "file"}`
-  return event.text ?? event.note ?? event.kind
+  const raw = event.text ?? event.note ?? event.kind
+  if (event.kind === "prompt" || event.kind === "reply") {
+    return cleanActivityPromptText(raw) || raw
+  }
+  return raw
 }
 
 function eventDetail(event: TaskforceSessionActivityEntry): string | null {
@@ -143,7 +148,7 @@ function FleetAgentDetailRoute() {
             : "This agent is no longer active."}
         </p>
         <Button asChild variant="outline">
-          <Link to="/v2/fleet">Back to Fleet</Link>
+          <Link to="/v2/fleet">Back to Sessions</Link>
         </Button>
       </div>
     )
@@ -185,7 +190,7 @@ function FleetAgentDetailRoute() {
         <div className={styles.crumb}>
           <Link to="/v2/fleet" className={styles.back}>
             <ChevronLeft />
-            Fleet
+            Sessions
           </Link>
           <span className={styles.sep}>/</span>
           <span>{fleetName}</span>
@@ -392,7 +397,7 @@ function FleetAgentDetailRoute() {
           {/* Session meta */}
           <div className={styles.block}>
             <div className={styles.seclabel}>Session</div>
-            {metaRow("Fleet", fleetName)}
+            {metaRow("Group", fleetName)}
             {agent.branch && metaRow("Branch", agent.branch)}
             {(host || agent.repo) &&
               metaRow("Host", host ?? (agent.repo as string))}

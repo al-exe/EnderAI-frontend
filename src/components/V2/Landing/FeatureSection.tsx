@@ -10,12 +10,12 @@ export function FeatureSection() {
     <section className={styles.features}>
       <div className={styles.wrap}>
         <FeatureRow
-          body="Track every agent in one live view. Group them into fleets and enable them to contribute to a shared context window for compounding effectiveness."
+          body="Track every agent in one live view. Organize sessions into groups and enable them to contribute to a shared context window for compounding effectiveness."
           icon={Boxes}
-          id="fleet"
-          label="Fleet"
+          id="sessions"
+          label="Sessions"
           title="Orchestration"
-          visual={<FleetPanel />}
+          visual={<SessionsPanel />}
           visualLeft
         />
         <FeatureRow
@@ -109,9 +109,9 @@ function Panel({
   )
 }
 
-function FleetPanel() {
+function SessionsPanel() {
   return (
-    <Panel chip="4 active" label="Fleet">
+    <Panel chip="4 active" label="Sessions">
       <div className={styles.fleetBody}>
         <FleetGroup
           agents={[

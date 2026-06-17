@@ -196,7 +196,7 @@ function AgentRow({
       draggable={draggable && !isMoving}
       title={
         draggable
-          ? "Drag to move this agent to another fleet"
+          ? "Drag to move this agent to another session group"
           : "View this agent session"
       }
       onDragStart={(event) => {
@@ -384,7 +384,7 @@ function FleetCard({
 
   return (
     <section
-      aria-label={`${fleetTitle(fleet)} fleet`}
+      aria-label={`${fleetTitle(fleet)} session group`}
       data-testid={`fleet-card-${fleet.id}`}
       data-collapsed={isCollapsed ? "true" : "false"}
       className={cn(
@@ -414,7 +414,7 @@ function FleetCard({
               onChange={(event) => setName(event.target.value)}
               maxLength={120}
               autoFocus
-              aria-label="Fleet name"
+              aria-label="Session group name"
               className="h-7"
             />
           </form>
@@ -499,7 +499,7 @@ function FleetCard({
               <div className={styles.emptyRows}>
                 {isHistory
                   ? "Inactive agent sessions appear here."
-                  : "No active agents in this fleet yet."}
+                  : "No active agents in this session group yet."}
               </div>
             ) : (
               fleet.agents.map((agent) => (
@@ -646,7 +646,7 @@ export function FleetPage() {
   const waiting = waitingCount(activeAgents)
 
   const eyebrowParts = [
-    `${workFleets.length} ${workFleets.length === 1 ? "fleet" : "fleets"}`,
+    `${workFleets.length} ${workFleets.length === 1 ? "group" : "groups"}`,
     `${activeAgents.length} ${activeAgents.length === 1 ? "agent" : "agents"}`,
     `${running} running`,
   ]
@@ -722,7 +722,7 @@ export function FleetPage() {
                 {eyebrowParts.join(" · ")}
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-                Fleet
+                Sessions
               </h1>
             </div>
             <Button
@@ -735,7 +735,7 @@ export function FleetPage() {
               }}
             >
               <Plus />
-              New fleet
+              New group
             </Button>
           </header>
         </div>
@@ -759,7 +759,7 @@ export function FleetPage() {
           ) : fleetQuery.error ? (
             <div className="border border-destructive/30 bg-destructive/5 p-6">
               <h2 className="font-medium text-destructive">
-                Fleet could not load
+                Sessions could not load
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {errorMessage(fleetQuery.error)}

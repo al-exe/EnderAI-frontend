@@ -270,11 +270,11 @@ test("hard refresh on /v2/fleet/ keeps Fleet selected and renders content", asyn
   await page.goto("/v2/fleet/")
   await page.reload()
 
-  await expect(page.getByRole("link", { name: "Fleet" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Sessions" })).toHaveAttribute(
     "data-active",
     "true",
   )
-  await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible()
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
 
@@ -285,11 +285,11 @@ test("hard refresh on /v2/fleet keeps Fleet selected and renders content", async
   await page.goto("/v2/fleet")
   await page.reload()
 
-  await expect(page.getByRole("link", { name: "Fleet" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Sessions" })).toHaveAttribute(
     "data-active",
     "true",
   )
-  await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible()
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
 
@@ -329,14 +329,14 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await mockFleet(page)
   await page.goto("/v2/fleet")
 
-  await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible()
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
   await expect(page.getByTestId("fleet-agent-status")).toHaveText(
     "Agent responding",
   )
   await expect(page.getByText("10m")).toBeVisible()
   // Calm summary line — fleets, agents, running; no spend/token metrics.
-  await expect(page.getByText("1 fleet 1 agent 1 running")).toBeVisible()
+  await expect(page.getByText("1 group · 1 agent · 1 running")).toBeVisible()
 
   // The rejected metrics direction must not reappear.
   await expect(page.getByText(/tokens/i)).toHaveCount(0)
@@ -359,7 +359,7 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
       request.url().endsWith("/api/v1/v2/taskforce/fleet") &&
       request.method() === "POST",
   )
-  await page.getByRole("button", { name: "New fleet" }).click()
+  await page.getByRole("button", { name: "New group" }).click()
   expect((await createRequest).postDataJSON()).toEqual({})
 })
 
@@ -394,7 +394,7 @@ test("clicking an agent row opens the session detail and back returns", async ({
   await expect(page.getByText(expectedStarted)).toBeVisible()
 
   // Breadcrumb returns to the roster.
-  await page.getByRole("link", { name: "Fleet" }).first().click()
+  await page.getByRole("link", { name: "Sessions" }).first().click()
   await expect(page).toHaveURL(/\/v2\/fleet$/)
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
@@ -661,7 +661,7 @@ for (const theme of ["light", "dark"] as const) {
     for (const width of [360, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 })
       await page.goto("/v2/fleet")
-      await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
+      await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible()
       await expect(page.locator("html")).toHaveClass(new RegExp(theme))
 
       const rosterOverflow = await page.evaluate(

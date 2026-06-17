@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import styles from "./Landing.module.css"
 
 const navItems = [
-  { href: "#fleet", label: "Orchestration" },
+  { href: "#sessions", label: "Orchestration" },
   { href: "#profiles", label: "Profiles" },
   { href: "#library", label: "Docs" },
   { href: "#ledger", label: "Audit" },

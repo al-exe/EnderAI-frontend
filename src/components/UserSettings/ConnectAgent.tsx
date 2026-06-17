@@ -132,7 +132,7 @@ function buildAgentInstructionSnippet({
       "If Taskforce V2 MCP tools are available:",
       "- When creating or rotating a Taskforce MCP credential during setup, tell the user to start from a fresh terminal before reconnecting the AI client so the updated shell environment is loaded.",
       "- For Cursor, Codex, and other hookless MCP clients, call `taskforce_session_start` at the start of meaningful user-initiated work with `client` set to your harness (`cursor`, `codex`, etc.). Thread the returned `session_id` through every subsequent `taskforce_session_observe` call.",
-      "- When hooks are installed (Claude Code, Codex, Cursor Connect flows), discovery and Fleet registration happen automatically; still call `taskforce_session_start` when you need explicit preamble injection in Cursor.",
+      "- When hooks are installed (Claude Code, Codex, Cursor Connect flows), discovery and Sessions registration happen automatically; still call `taskforce_session_start` when you need explicit preamble injection in Cursor.",
       "- Create or reuse a Taskforce document at the start of meaningful user-initiated work with `taskforce_begin_document`. It scores existing documents against the request, reuses + self-heals a strong match, or creates a fresh one. Read the returned `match_reasons`, `candidate_summaries`, and `self_healed_fields` before continuing.",
       "- Maintain both document views: a concise Summary view shown by default and a comprehensive Details view available on demand.",
       "- Use `taskforce_update_document` as material progress develops (commands, files, links, decisions, changes, open questions, progress notes). Pass `details_sections` with stable `anchor_id`s to upsert specific Details sections, and `summary_points` for new Summary claims.",
@@ -595,7 +595,7 @@ const ConnectAgent = () => {
 
               <SnippetBlock
                 title="Connect Codex"
-                description="Persists the credential and installs Fleet registration plus prior-work discovery hooks."
+                description="Persists the credential and installs Sessions registration plus prior-work discovery hooks."
                 snippet={codexConnectSnippet ?? ""}
                 copiedText={copiedText}
                 onCopy={(value) => {
@@ -607,7 +607,7 @@ const ConnectAgent = () => {
 
               <SnippetBlock
                 title="Connect Cursor"
-                description="Persists the credential and installs Fleet registration, discovery metrics, and conversation capture hooks."
+                description="Persists the credential and installs Sessions registration, discovery metrics, and conversation capture hooks."
                 snippet={cursorConnectSnippet ?? ""}
                 copiedText={copiedText}
                 onCopy={(value) => {
@@ -623,7 +623,7 @@ const ConnectAgent = () => {
                 <AlertDescription>
                   After installing, restart Codex, run `/hooks`, trust the
                   Taskforce hooks, then start a new Codex session. New sessions
-                  will appear in Fleet immediately.
+                  will appear in Sessions immediately.
                 </AlertDescription>
               </Alert>
 
@@ -632,7 +632,7 @@ const ConnectAgent = () => {
                 <AlertTitle>Reload Cursor hooks</AlertTitle>
                 <AlertDescription>
                   After installing, restart Cursor or reload hooks from Settings
-                  → Hooks. New Agent sessions will appear in Fleet immediately.
+                  → Hooks. New Agent sessions will appear in Sessions immediately.
                   For full prior-work preamble injection in Cursor, also keep the
                   Taskforce MCP server connected and follow the agent
                   instructions below.
