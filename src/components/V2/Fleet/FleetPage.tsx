@@ -99,8 +99,8 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong."
 }
 
-const STATE_CLASS: Record<FleetStatus, string | undefined> = {
-  run: undefined,
+const STATE_CLASS: Record<FleetStatus, string> = {
+  run: styles.stateRunning,
   waiting: styles.stateWaiting,
   paused: styles.statePaused,
   idle: styles.stateIdle,
@@ -417,14 +417,9 @@ function FleetCard({
         {!renaming && (
           <div className={styles.fheadMeta}>
             <span className={styles.fcount}>
-              {running > 0 ? (
-                <>
-                  <span className={styles.pin} />
-                  {running} active · {total}
-                </>
-              ) : (
-                `${total} ${total === 1 ? "agent" : "agents"}`
-              )}
+              {running > 0
+                ? `${running} active ${total} total`
+                : `${total} ${total === 1 ? "agent" : "agents"}`}
             </span>
             {!isHistory && (
               <DropdownMenu>

@@ -152,14 +152,6 @@
   margin-left: auto;
 }
 
-.pin {
-  width: 5px;
-  height: 5px;
-  /* biome-ignore lint/complexity/noImportantStyles: global square-corner rule should not flatten status indicators. */
-  border-radius: 999px !important;
-  background: var(--primary);
-}
-
 .fmenu {
   flex-shrink: 0;
   color: var(--fl-faint);
@@ -168,7 +160,7 @@
 /* rows */
 .arow {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr) auto 64px;
+  grid-template-columns: 26px minmax(0, 1fr) 9.5rem 2.75rem 40px;
   gap: 18px;
   align-items: center;
   width: 100%;
@@ -309,6 +301,10 @@
   white-space: nowrap;
 }
 
+.stateRunning {
+  color: var(--primary);
+}
+
 .stateWaiting {
   color: var(--fl-attention);
 }
@@ -320,7 +316,8 @@
 
 /* age */
 .age {
-  align-self: center;
+  justify-self: end;
+  width: 100%;
   color: var(--fl-faint);
   font-family: var(--font-mono);
   font-size: calc(11px * var(--v2-scale, 1));
@@ -966,7 +963,7 @@
   }
 
   .arow {
-    grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr) 40px;
+    grid-template-columns: 26px minmax(0, 1fr) 7.5rem 40px;
     gap: 10px;
     align-items: center;
   }
