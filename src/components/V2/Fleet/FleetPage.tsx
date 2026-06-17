@@ -64,7 +64,6 @@ import {
   agentStatus,
   compactPresence,
   type FleetStatus,
-  fleetRepo,
   fleetTitle,
   rosterStatusLabel,
   runningCount,
@@ -357,7 +356,6 @@ function FleetCard({
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(fleet.name ?? "")
 
-  const repo = fleetRepo(fleet)
   const running = runningCount(fleet.agents)
   const total = fleet.agents.length
   const isHistory = fleet.is_history
@@ -434,12 +432,6 @@ function FleetCard({
             )}
             <span className={styles.fheadIdentity}>
               <span className={styles.fname}>{fleetTitle(fleet)}</span>
-              {!isHistory && repo ? (
-                <span className={styles.frepo}>
-                  <b>{repo.repo}</b>
-                  {repo.branch ? ` · ${repo.branch}` : ""}
-                </span>
-              ) : null}
             </span>
           </button>
         )}

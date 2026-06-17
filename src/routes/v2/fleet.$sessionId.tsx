@@ -175,9 +175,7 @@ function FleetAgentDetailRoute() {
     }
   })
 
-  const dmetaBits = [model, host, agent.branch].filter((bit): bit is string =>
-    Boolean(bit),
-  )
+  const dmetaBits = [model, host].filter((bit): bit is string => Boolean(bit))
 
   // The same canonical event stream shown by Ledger, newest-first here.
   const activityEntries = [...(activityQuery.data?.entries ?? [])].sort(
@@ -398,9 +396,6 @@ function FleetAgentDetailRoute() {
           <div className={styles.block}>
             <div className={styles.seclabel}>Session</div>
             {metaRow("Group", fleetName)}
-            {agent.branch && metaRow("Branch", agent.branch)}
-            {(host || agent.repo) &&
-              metaRow("Host", host ?? (agent.repo as string))}
             {model && metaRow("Model", model)}
             {startedAt && metaRow("Started", formatLocalDateTime(startedAt))}
             {metaRow(
