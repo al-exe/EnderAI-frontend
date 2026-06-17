@@ -168,11 +168,11 @@
 /* rows */
 .arow {
   display: grid;
-  grid-template-columns: 26px minmax(200px, min(360px, 34vw)) minmax(0, 1fr) auto 64px;
+  grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr) auto 64px;
   gap: 18px;
   align-items: center;
   width: 100%;
-  padding: 16px 18px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--fl-hair);
   text-align: left;
 }
@@ -286,28 +286,27 @@
 }
 
 .nm {
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  color: var(--foreground);
   font-size: calc(14px * var(--v2-scale, 1));
   font-weight: 500;
   line-height: 1.35;
   letter-spacing: -0.005em;
+  text-overflow: ellipsis;
   text-transform: none;
+  white-space: nowrap;
 }
 
-.meta {
-  margin-top: 4px;
-  color: var(--fl-faint);
-  font-family: var(--font-mono);
-  font-size: calc(10.5px * var(--v2-scale, 1));
-  letter-spacing: 0.01em;
-}
-
-.state {
-  margin-top: 7px;
+/* roster status */
+.status {
+  min-width: 0;
+  overflow: hidden;
   color: var(--muted-foreground);
-  font-family: var(--font-mono);
-  font-size: calc(10.5px * var(--v2-scale, 1));
-  letter-spacing: 0.02em;
+  font-size: calc(13px * var(--v2-scale, 1));
+  line-height: 1.35;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .stateWaiting {
@@ -317,58 +316,6 @@
 .statePaused,
 .stateIdle {
   color: var(--fl-faint);
-}
-
-/* work */
-.work {
-  min-width: 0;
-  align-self: center;
-}
-
-.workSummary {
-  display: -webkit-box;
-  overflow: hidden;
-  color: var(--muted-foreground);
-  font-size: calc(13px * var(--v2-scale, 1));
-  line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-}
-
-.detailLine {
-  display: flex;
-  align-items: center;
-  margin-top: 6px;
-  gap: 8px;
-  flex-wrap: wrap;
-  color: var(--fl-faint);
-  font-family: var(--font-mono);
-  font-size: calc(11px * var(--v2-scale, 1));
-}
-
-.file {
-  color: var(--muted-foreground);
-}
-
-.more {
-  color: var(--fl-faint);
-}
-
-.docInline {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--fl-faint);
-}
-
-.docInline::before {
-  width: 3px;
-  height: 3px;
-  /* biome-ignore lint/complexity/noImportantStyles: global square-corner rule should not flatten dot separators. */
-  border-radius: 999px !important;
-  background: var(--fl-faint);
-  content: "";
 }
 
 /* age */
@@ -1019,26 +966,13 @@
   }
 
   .arow {
-    grid-template-columns: 26px minmax(0, 1fr) auto auto;
-    gap: 12px;
+    grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr) 40px;
+    gap: 10px;
     align-items: center;
   }
 
-  .arow .work {
-    grid-row: 2;
-    grid-column: 2 / 4;
-    align-self: start;
-    text-align: left;
-  }
-
   .arow .age {
-    grid-row: 1;
-    grid-column: 3;
-  }
-
-  .arowMenu {
-    grid-row: 1;
-    grid-column: 4;
+    display: none;
   }
 
   .dmain,

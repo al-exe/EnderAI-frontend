@@ -18,6 +18,18 @@ export const STATE_LABEL: Record<FleetStatus, string> = {
   idle: "idle",
 }
 
+/** One-line roster status in the agent row's second column. */
+export const ROSTER_STATUS_LABEL: Record<FleetStatus, string> = {
+  run: "Agent responding",
+  waiting: "Agent waiting",
+  paused: "Capture paused",
+  idle: "Agent idle",
+}
+
+export function rosterStatusLabel(agent: TaskforceFleetAgent): string {
+  return ROSTER_STATUS_LABEL[agentStatus(agent)]
+}
+
 // Ingestion does not capture these fields yet. Keep the accessors defensive so
 // the detail route can adopt them without fabricating data in the API.
 type FutureAgentFields = TaskforceFleetAgent & {
@@ -155,20 +167,6 @@ export function liveActivityLabel(
       : "Activity capture is paused"
   }
   return "Connected but not actively running"
-}
-
-/** Roster work column — prefer captured summary, else status-aware fallback. */
-export function rosterWorkSummary(agent: TaskforceFleetAgent): string {
-  const summary = agent.summary_markdown?.trim()
-  if (summary) return summary
-
-  const status = agentStatus(agent)
-  if (status === "run") return "Running in this terminal"
-  if (status === "waiting") return "Awaiting user prompt"
-  if (status === "paused" || agentCapturePaused(agent)) {
-    return "Activity capture is paused"
-  }
-  return "No current work captured yet"
 }
 
 /** Session detail "Working on" body when no summary is stored yet. */
