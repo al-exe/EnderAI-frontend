@@ -293,9 +293,7 @@ test("hard refresh on /v2/fleet keeps Fleet selected and renders content", async
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
 
-test("agent session display name wraps instead of ellipsing", async ({
-  page,
-}) => {
+test("agent session display name truncates on one line", async ({ page }) => {
   const longName =
     "Wiring automatic tax on Stripe checkout for international customers with VAT compliance"
   await mockFleet(page, { agentOverrides: { display_name: longName } })
@@ -310,13 +308,11 @@ test("agent session display name wraps instead of ellipsing", async ({
       textOverflow: style.textOverflow,
       whiteSpace: style.whiteSpace,
       textTransform: style.textTransform,
-      fits: element.scrollWidth <= element.clientWidth + 1,
     }
   })
-  expect(typography.textOverflow).not.toBe("ellipsis")
-  expect(typography.whiteSpace).not.toBe("nowrap")
+  expect(typography.textOverflow).toBe("ellipsis")
+  expect(typography.whiteSpace).toBe("nowrap")
   expect(typography.textTransform).toBe("none")
-  expect(typography.fits).toBe(true)
 })
 
 test("agent session display name preserves stored casing", async ({ page }) => {
@@ -335,11 +331,10 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Fleet" })).toBeVisible()
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
-  await expect(page.getByText("Opus 4.8")).toBeVisible()
+  await expect(page.getByTestId("fleet-agent-status")).toHaveText(
+    "Agent responding",
+  )
   await expect(page.getByText("10m")).toBeVisible()
-  await expect(
-    page.getByText("Wiring automatic tax onto the subscription create path"),
-  ).toBeVisible()
   // Calm summary line — agents · running · fleets, no spend/token metrics.
   await expect(page.getByText("1 agent · 1 running · 1 fleet")).toBeVisible()
 
@@ -490,9 +485,7 @@ test("activity timeline live head shows running without summary", async ({
   ).toBeVisible()
 })
 
-test("roster shows running placeholder when summary is empty", async ({
-  page,
-}) => {
+test("roster shows agent status when summary is empty", async ({ page }) => {
   await mockFleet(page, {
     agentOverrides: {
       status: "running",
@@ -503,7 +496,9 @@ test("roster shows running placeholder when summary is empty", async ({
   await page.goto("/v2/fleet")
 
   const row = page.getByTestId("fleet-agent-row")
-  await expect(row.getByText("Running in this terminal")).toBeVisible()
+  await expect(row.getByTestId("fleet-agent-status")).toHaveText(
+    "Agent responding",
+  )
   await expect(row.getByText("No current work captured yet")).toHaveCount(0)
 
   const [dotBox, ageBox, menuBox] = await Promise.all([

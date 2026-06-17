@@ -56,15 +56,13 @@ import { cn } from "@/lib/utils"
 import styles from "./FleetPage.module.css"
 import {
   agentDisplayName,
-  agentMeta,
   agentStatus,
   compactPresence,
   type FleetStatus,
   fleetRepo,
   fleetTitle,
-  rosterWorkSummary,
+  rosterStatusLabel,
   runningCount,
-  STATE_LABEL,
   waitingCount,
 } from "./fleetStatus"
 
@@ -148,8 +146,6 @@ function AgentRow({
   const [renameValue, setRenameValue] = useState(agent.display_name ?? "")
   const status = agentStatus(agent)
   const age = compactPresence(agent)
-  const showAgeInState = status === "waiting" || status === "idle"
-  const docTitle = agent.active_document_id ? agent.title : null
   const sessionLabel = agentDisplayName(agent)
 
   const submitRename = (event: FormEvent) => {
@@ -207,27 +203,16 @@ function AgentRow({
           <div className={styles.nm} data-testid="fleet-agent-name">
             {sessionLabel}
           </div>
-          <div className={styles.meta}>{agentMeta(agent)}</div>
-          {status !== "run" && (
-            <div className={cn(styles.state, STATE_CLASS[status])}>
-              {STATE_LABEL[status]}
-              {showAgeInState ? ` · ${age}` : ""}
-            </div>
-          )}
         </div>
-        <div className={styles.work}>
-          <div className={styles.workSummary}>
-            {rosterWorkSummary(agent)}
-          </div>
-          {docTitle && (
-            <div className={styles.detailLine}>
-              <span className={styles.docInline}>{docTitle}</span>
-            </div>
-          )}
+        <div
+          className={cn(styles.status, STATE_CLASS[status])}
+          data-testid="fleet-agent-status"
+        >
+          {rosterStatusLabel(agent)}
         </div>
       </button>
 
-      <div className={styles.age}>{status === "run" ? age : ""}</div>
+      <div className={styles.age}>{age}</div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
