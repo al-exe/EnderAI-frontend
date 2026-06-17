@@ -423,7 +423,7 @@
   white-space: nowrap;
 }
 
-/* second identity line — model · repo · live activity */
+/* second identity line — model · branch · live activity */
 .asub {
   display: flex;
   min-width: 0;
@@ -442,16 +442,53 @@
 }
 
 .amodel,
-.arepo {
+.abranch {
   flex-shrink: 0;
   color: var(--muted-foreground);
 }
 
 .aactivity {
   overflow: hidden;
+  flex: 1;
   min-width: 0;
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.aactivityMarquee {
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 10px,
+    #000 calc(100% - 10px),
+    transparent
+  );
+}
+
+.aactivityTrack {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.aactivityTrackScroll {
+  animation: fleet-activity-scroll var(--activity-duration, 10s) ease-in-out
+    infinite;
+}
+
+@keyframes fleet-activity-scroll {
+  0%,
+  14% {
+    transform: translateX(0);
+  }
+
+  46%,
+  54% {
+    transform: translateX(calc(-1 * var(--activity-scroll, 0px)));
+  }
+
+  86%,
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .acaret {
@@ -1205,5 +1242,13 @@
 
   .pulse {
     animation: none;
+  }
+
+  .aactivityTrackScroll {
+    animation: none;
+  }
+
+  .aactivity {
+    text-overflow: ellipsis;
   }
 }

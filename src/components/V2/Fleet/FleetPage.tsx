@@ -10,9 +10,11 @@ import {
   Trash2,
 } from "lucide-react"
 import {
+  type CSSProperties,
   type DragEvent,
   type FormEvent,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react"
@@ -67,7 +69,6 @@ import {
   compactPresence,
   type FleetStatus,
   fleetTitle,
-  repoLabel,
   rosterStatusLabel,
   runningCount,
   waitingCount,
@@ -147,6 +148,67 @@ function ClientChip({ kind }: { kind: AgentKind }) {
   )
 }
 
+function ActivityMarquee({
+  activity,
+  isRunning,
+}: {
+  activity: string
+  isRunning: boolean
+}) {
+  const containerRef = useRef<HTMLSpanElement>(null)
+  const trackRef = useRef<HTMLSpanElement>(null)
+  const [scrollDistance, setScrollDistance] = useState(0)
+
+  useEffect(() => {
+    const container = containerRef.current
+    const track = trackRef.current
+    if (!container || !track) return
+
+    const measure = () => {
+      const overflow = track.scrollWidth - container.clientWidth
+      setScrollDistance(overflow > 4 ? overflow : 0)
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(container)
+    observer.observe(track)
+    return () => observer.disconnect()
+  }, [activity])
+
+  const scrolls = scrollDistance > 0
+  const marqueeStyle = scrolls
+    ? ({
+        "--activity-scroll": `${scrollDistance}px`,
+        "--activity-duration": `${Math.max(8, scrollDistance / 24 + 6)}s`,
+      } as CSSProperties)
+    : undefined
+
+  return (
+    <span
+      ref={containerRef}
+      className={cn(styles.aactivity, scrolls && styles.aactivityMarquee)}
+      style={marqueeStyle}
+      title={activity}
+    >
+      <span
+        ref={trackRef}
+        className={cn(
+          styles.aactivityTrack,
+          scrolls && styles.aactivityTrackScroll,
+        )}
+      >
+        {isRunning && (
+          <span className={styles.acaret} aria-hidden="true">
+            ▸{" "}
+          </span>
+        )}
+        {activity}
+      </span>
+    </span>
+  )
+}
+
 function AgentRow({
   agent,
   onOpen,
@@ -176,7 +238,7 @@ function AgentRow({
   const age = compactPresence(agent)
   const sessionLabel = agentDisplayName(agent)
   const model = agentModelName(agent)
-  const repo = agent.cwd ? repoLabel(agent) : null
+  const branch = agent.branch?.trim() || null
   const activity = agentActivityLine(agent)
 
   const submitRename = (event: FormEvent) => {
@@ -238,12 +300,12 @@ function AgentRow({
             </div>
             <div className={styles.asub} data-testid="fleet-agent-sub">
               <span className={styles.amodel}>{model}</span>
-              {repo && (
+              {branch && (
                 <>
                   <span className={styles.asep} aria-hidden="true">
                     ·
                   </span>
-                  <span className={styles.arepo}>{repo}</span>
+                  <span className={styles.abranch}>{branch}</span>
                 </>
               )}
               {activity && (
@@ -251,14 +313,10 @@ function AgentRow({
                   <span className={styles.asep} aria-hidden="true">
                     ·
                   </span>
-                  <span className={styles.aactivity} title={activity}>
-                    {status === "run" && (
-                      <span className={styles.acaret} aria-hidden="true">
-                        ▸{" "}
-                      </span>
-                    )}
-                    {activity}
-                  </span>
+                  <ActivityMarquee
+                    activity={activity}
+                    isRunning={status === "run"}
+                  />
                 </>
               )}
             </div>

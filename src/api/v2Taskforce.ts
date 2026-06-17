@@ -45,6 +45,7 @@ export interface TaskforceFleetAgent {
   session_id: string
   fleet_session_id: string
   cwd: string | null
+  branch: string | null
   active_document_id: string | null
   referenced_document_ids: string[]
   display_name: string
