@@ -10,7 +10,7 @@ import styles from "./Landing.module.css"
 
 const SCENES = [
   {
-    key: "Fleet",
+    key: "Sessions",
     name: "Orchestration",
     phrase: ["losing track", "of your agents."],
   },
@@ -224,7 +224,7 @@ export function LandingHero() {
       <a
         aria-label="Scroll to capabilities"
         className={styles.scrollCue}
-        href="#fleet"
+        href="#sessions"
       >
         <span className={styles.cueRule} />
         <span className={styles.cueArrow}>
@@ -308,7 +308,7 @@ function FleetScene() {
       </div>
       <SummaryGrid
         items={[
-          ["fleet", "6 active", true],
+          ["sessions", "6 active", true],
           ["across", "3 terminals - 3 VMs"],
           ["context", "shared"],
         ]}

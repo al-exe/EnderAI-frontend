@@ -19,6 +19,7 @@
     oklch(0.68 0.12 62) 72%,
     var(--foreground)
   );
+  --fl-waiting: var(--destructive);
 }
 
 /* ===== Fleet group (enclosed session card) ===== */
@@ -150,7 +151,7 @@
 
 .fcount {
   display: inline-flex;
-  grid-column: 3;
+  grid-column: 4;
   justify-self: end;
   flex-shrink: 0;
   align-items: center;
@@ -158,8 +159,10 @@
   color: var(--fl-faint);
   font-family: var(--font-mono);
   font-size: calc(11px * var(--v2-scale, 1));
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
   white-space: nowrap;
+  text-align: right;
 }
 
 .fheadMeta {
@@ -277,7 +280,7 @@
 }
 
 .waiting {
-  background: var(--fl-attention);
+  background: var(--fl-waiting);
 }
 
 @keyframes fleet-pulse {
@@ -300,6 +303,7 @@
 
 .nm {
   overflow: hidden;
+  flex: 1;
   min-width: 0;
   color: var(--foreground);
   font-size: calc(14px * var(--v2-scale, 1));
@@ -337,11 +341,11 @@
   color: color-mix(in srgb, #d97757 72%, var(--foreground));
 }
 
-/* ChatGPT white — a light chip that reads on either theme. */
+/* Codex indigo — blue/purple brand tint on either theme. */
 .chipCodex {
-  border-color: color-mix(in srgb, var(--foreground) 24%, var(--border));
-  background: #ffffff;
-  color: #1a1a1a;
+  border-color: color-mix(in srgb, #5b6ce8 52%, var(--border));
+  background: color-mix(in srgb, #5b6ce8 18%, var(--background));
+  color: color-mix(in srgb, #5b6ce8 84%, var(--foreground));
 }
 
 /* Cursor gray. */
@@ -379,7 +383,7 @@
 }
 
 .stateWaiting {
-  color: var(--fl-attention);
+  color: var(--fl-waiting);
 }
 
 .statePaused,
@@ -655,7 +659,10 @@
   background: var(--primary);
 }
 
-.tevWait .tdot,
+.tevWait .tdot {
+  background: var(--fl-waiting);
+}
+
 .tevPause .tdot {
   background: var(--fl-attention);
 }

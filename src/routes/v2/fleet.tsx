@@ -5,7 +5,7 @@ export const Route = createFileRoute("/v2/fleet")({
   head: () => ({
     meta: [
       {
-        title: "Taskforce | Fleet",
+        title: "Taskforce | Sessions",
       },
     ],
   }),

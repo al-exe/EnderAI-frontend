@@ -66,7 +66,7 @@ type TaskforceNavItem = {
 }
 
 const taskforceItems: TaskforceNavItem[] = [
-  { icon: LayoutGrid, title: "Fleet", path: "/v2/fleet" },
+  { icon: LayoutGrid, title: "Sessions", path: "/v2/fleet" },
   { icon: Bot, title: "Profiles", path: "/v2/agents" },
   { icon: BookOpen, title: "Library", path: "/v2/library" },
   { icon: ReceiptText, title: "Ledger", path: "/v2/ledger" },

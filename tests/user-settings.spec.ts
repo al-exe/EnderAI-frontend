@@ -734,7 +734,7 @@ test("Connect agent generates the hosted MCP setup and hides revoked credentials
   await expect(page.getByText("Trust Codex hooks once")).toBeVisible()
   await expect(page.getByText("Reload Cursor hooks")).toBeVisible()
   await expect(
-    page.getByText("New sessions will appear in Fleet immediately."),
+    page.getByText("New sessions will appear in Sessions immediately."),
   ).toBeVisible()
   await expect(page.getByText("3. Advanced MCP setup")).toBeVisible()
   await expect(

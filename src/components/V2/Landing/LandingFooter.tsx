@@ -23,7 +23,7 @@ export function LandingFooter() {
           <div className={styles.footerLinks}>
             <a href="#library">Docs</a>
             <Link to="/pricing">Pricing</Link>
-            <a href="#fleet">Changelog</a>
+            <a href="#sessions">Changelog</a>
             <a href="#top">Privacy</a>
           </div>
           <span className={styles.copyright}>2026 Taskforce</span>

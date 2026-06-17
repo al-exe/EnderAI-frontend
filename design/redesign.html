@@ -297,7 +297,7 @@ html.dark .theme-toggle .sun { display: none; }
 /* ---------- Feature rows ---------- */
 .features { padding: 0 0 8px; }
 .features .row:first-child { border-top: 0; padding-top: 32px; }
-#fleet { scroll-margin-top: 28px; }
+#sessions { scroll-margin-top: 28px; }
 .row {
   display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
   padding: 64px 0; border-top: 1px solid var(--hairline);
@@ -550,7 +550,7 @@ footer.foot { padding: 40px 0 56px; }
       Taskforce
     </a>
     <nav class="nav-links">
-      <a href="#fleet">Orchestration</a>
+      <a href="#sessions">Orchestration</a>
       <a href="#profiles">Profiles</a>
       <a href="#library">Docs</a>
       <a href="#ledger">Audit</a>
@@ -581,9 +581,9 @@ footer.foot { padding: 40px 0 56px; }
       <div class="hero-copy reveal">
         <span class="eyebrow">AI work memory for engineering teams</span>
         <h1><span class="lead">Stop </span><span class="phrase">losing track<br>of your agents.</span></h1>
-        <div class="hero-cap"><span class="ck">Fleet</span><span class="sep">·</span><span class="cap-name">Orchestration</span></div>
+        <div class="hero-cap"><span class="ck">Sessions</span><span class="sep">·</span><span class="cap-name">Orchestration</span></div>
         <div class="hero-dots" role="tablist" aria-label="Capabilities">
-          <button class="on" type="button" aria-label="Fleet"></button>
+          <button class="on" type="button" aria-label="Sessions"></button>
           <button type="button" aria-label="Profiles"></button>
           <button type="button" aria-label="Library"></button>
           <button type="button" aria-label="Ledger"></button>
@@ -615,7 +615,7 @@ footer.foot { padding: 40px 0 56px; }
               <div class="tline ag"><span class="d grn"></span><span class="anm">api-deprecation</span><span class="ah">claude · vm-02</span><span class="ast">38 left</span></div>
               <div class="tline live-line"><span class="acc">live ▸</span> <span class="dim">tax-refactor referenced “Stripe checkout wiring”</span></div>
               <div class="tsum">
-                <div><div class="k">fleet</div><div class="v big">6 active</div></div>
+                <div><div class="k">sessions</div><div class="v big">6 active</div></div>
                 <div><div class="k">across</div><div class="v">3 terminals · 3 VMs</div></div>
                 <div><div class="k">context</div><div class="v">shared</div></div>
               </div>
@@ -685,7 +685,7 @@ footer.foot { padding: 40px 0 56px; }
   </div>
   </div>
 
-  <a class="scroll-cue" href="#fleet" aria-label="Scroll to capabilities">
+  <a class="scroll-cue" href="#sessions" aria-label="Scroll to capabilities">
     <span class="cue-rule"></span>
     <span class="cue-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
     <span class="cue-rule"></span>
@@ -697,18 +697,18 @@ footer.foot { padding: 40px 0 56px; }
   <div class="wrap">
 
     <!-- ROW 1 — FLEET (visual left) -->
-    <div class="row img-left reveal" id="fleet">
+    <div class="row img-left reveal" id="sessions">
       <div class="copy">
         <div class="feat-label">
           <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
-          <span class="lbl">Fleet</span>
+          <span class="lbl">Sessions</span>
         </div>
         <h2>Orchestration</h2>
         <p class="desc">Track every agent in one live view. Group them into fleets and enable them to contribute to a shared context window for compounding effectiveness.</p>
       </div>
       <div class="visual">
         <div class="panel">
-          <div class="panel-head"><span class="dot purple"></span>Fleet<span class="spacer"></span><span class="chip">4 active</span></div>
+          <div class="panel-head"><span class="dot purple"></span>Sessions<span class="spacer"></span><span class="chip">4 active</span></div>
           <div class="fleet-body">
             <div class="fleet-group">
               <div class="gh">Checkout squad <span class="count">2</span><span class="bar"></span></div>
@@ -978,7 +978,7 @@ document.documentElement.classList.add('js');
 <script>
 (function () {
   var SCENES = [
-    { key: 'Fleet',    name: 'Orchestration',      phrase: 'losing track<br>of your agents.' },
+    { key: 'Sessions',    name: 'Orchestration',      phrase: 'losing track<br>of your agents.' },
     { key: 'Profiles', name: 'Agent profiles',     phrase: 're-briefing<br>every agent.' },
     { key: 'Library',  name: 'Self-updating documents',  phrase: 're-explaining<br>your codebase.' },
     { key: 'Ledger',   name: 'Audit trail',        phrase: 'guessing what<br>agents did.' },

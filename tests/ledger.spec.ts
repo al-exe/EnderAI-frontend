@@ -123,7 +123,7 @@ function ledgerDetail(rawTranscriptAvailable: boolean) {
         occurred_at: "2026-06-12T20:00:45Z",
         role: "assistant",
         who: "Codex",
-        text: "Ledger timeline now matches Fleet.",
+        text: "Ledger timeline now matches Sessions.",
         cmd: null,
         exit_code: null,
         output: null,
