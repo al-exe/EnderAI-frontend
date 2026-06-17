@@ -292,11 +292,15 @@
 
 /* identity */
 .who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
 }
 
 .nm {
   overflow: hidden;
+  min-width: 0;
   color: var(--foreground);
   font-size: calc(14px * var(--v2-scale, 1));
   font-weight: 500;
@@ -305,6 +309,57 @@
   text-overflow: ellipsis;
   text-transform: none;
   white-space: nowrap;
+}
+
+/* client chip — which coding tool drives the session. Fixed width so the chips
+   line up in a column to the left of the agent names. */
+.chip {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: 62px;
+  height: 20px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  font-size: calc(10.5px * var(--v2-scale, 1));
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* Anthropic orange. */
+.chipClaude {
+  border-color: color-mix(in srgb, #d97757 50%, var(--border));
+  background: color-mix(in srgb, #d97757 16%, var(--background));
+  color: color-mix(in srgb, #d97757 72%, var(--foreground));
+}
+
+/* ChatGPT white — a light chip that reads on either theme. */
+.chipCodex {
+  border-color: color-mix(in srgb, var(--foreground) 24%, var(--border));
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+/* Cursor gray. */
+.chipCursor {
+  border-color: color-mix(in srgb, var(--foreground) 16%, var(--border));
+  background: color-mix(
+    in srgb,
+    var(--muted-foreground) 18%,
+    var(--background)
+  );
+  color: var(--muted-foreground);
+}
+
+/* Unknown / unreported tool. */
+.chipOther {
+  border-color: var(--border);
+  background: transparent;
+  color: var(--fl-faint);
 }
 
 /* roster status */

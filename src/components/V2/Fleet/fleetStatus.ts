@@ -30,6 +30,25 @@ export function rosterStatusLabel(agent: TaskforceFleetAgent): string {
   return ROSTER_STATUS_LABEL[agentStatus(agent)]
 }
 
+/** Which coding tool drives a session — backend-classified for the row chip. */
+export type AgentKind = "claude" | "codex" | "cursor" | "other"
+
+/** Short chip label per tool. "Other" covers unknown/unreported clients. */
+export const AGENT_KIND_LABEL: Record<AgentKind, string> = {
+  claude: "Claude",
+  codex: "Codex",
+  cursor: "Cursor",
+  other: "Other",
+}
+
+/** Defensive against APIs that predate `agent_kind`. */
+export function agentKind(agent: TaskforceFleetAgent): AgentKind {
+  const kind = agent.agent_kind
+  return kind === "claude" || kind === "codex" || kind === "cursor"
+    ? kind
+    : "other"
+}
+
 // Ingestion does not capture these fields yet. Keep the accessors defensive so
 // the detail route can adopt them without fabricating data in the API.
 type FutureAgentFields = TaskforceFleetAgent & {
