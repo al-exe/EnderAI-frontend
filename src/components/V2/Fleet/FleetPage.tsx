@@ -13,7 +13,6 @@ import {
   type CSSProperties,
   type DragEvent,
   type FormEvent,
-  type TransitionEvent,
   useCallback,
   useEffect,
   useRef,
@@ -160,8 +159,6 @@ function ActivityMarquee({
   const containerRef = useRef<HTMLSpanElement>(null)
   const trackRef = useRef<HTMLSpanElement>(null)
   const [scrollDistance, setScrollDistance] = useState(0)
-  const [atEnd, setAtEnd] = useState(false)
-  const activeRef = useRef(false)
 
   useEffect(() => {
     const container = containerRef.current
@@ -179,11 +176,6 @@ function ActivityMarquee({
     observer.observe(track)
     return () => observer.disconnect()
   }, [activity])
-
-  useEffect(() => {
-    activeRef.current = active
-    if (active) setAtEnd(false)
-  }, [active])
 
   const scrolls = scrollDistance > 0
   const forwardDuration = scrolls
@@ -207,21 +199,10 @@ function ActivityMarquee({
       } as CSSProperties)
     : undefined
 
-  const handleTransitionEnd = (event: TransitionEvent<HTMLSpanElement>) => {
-    if (event.propertyName !== "transform" || event.target !== trackRef.current) {
-      return
-    }
-    setAtEnd(activeRef.current)
-  }
-
   return (
     <span
       ref={containerRef}
-      className={cn(
-        styles.aactivity,
-        scrolls && styles.aactivityMarquee,
-        scrolls && atEnd && styles.aactivityMarqueeAtEnd,
-      )}
+      className={cn(styles.aactivity, scrolls && styles.aactivityMarquee)}
       style={marqueeStyle}
       title={activity}
     >
@@ -229,7 +210,6 @@ function ActivityMarquee({
         ref={trackRef}
         className={cn(styles.aactivityTrack, scrolls && styles.aactivityTrackScroll)}
         style={trackStyle}
-        onTransitionEnd={handleTransitionEnd}
       >
         {activity}
       </span>
