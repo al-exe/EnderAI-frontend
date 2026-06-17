@@ -99,8 +99,8 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong."
 }
 
-const STATE_CLASS: Record<FleetStatus, string | undefined> = {
-  run: undefined,
+const STATE_CLASS: Record<FleetStatus, string> = {
+  run: styles.stateRunning,
   waiting: styles.stateWaiting,
   paused: styles.statePaused,
   idle: styles.stateIdle,
@@ -417,14 +417,9 @@ function FleetCard({
         {!renaming && (
           <div className={styles.fheadMeta}>
             <span className={styles.fcount}>
-              {running > 0 ? (
-                <>
-                  <span className={styles.pin} />
-                  {running} active · {total}
-                </>
-              ) : (
-                `${total} ${total === 1 ? "agent" : "agents"}`
-              )}
+              {running > 0
+                ? `${running} active ${total} total`
+                : `${total} ${total === 1 ? "agent" : "agents"}`}
             </span>
             {!isHistory && (
               <DropdownMenu>
@@ -617,8 +612,12 @@ export function FleetPage() {
   const running = runningCount(activeAgents)
   const waiting = waitingCount(activeAgents)
 
-  const summaryBits = [`${running} running`]
-  if (waiting) summaryBits.push(`${waiting} awaiting prompt`)
+  const eyebrowParts = [
+    `${workFleets.length} ${workFleets.length === 1 ? "fleet" : "fleets"}`,
+    `${activeAgents.length} ${activeAgents.length === 1 ? "agent" : "agents"}`,
+    `${running} running`,
+  ]
+  if (waiting) eyebrowParts.push(`${waiting} awaiting prompt`)
 
   const openAgent = (agent: TaskforceFleetAgent) =>
     navigate({
@@ -687,10 +686,7 @@ export function FleetPage() {
           <header className="flex items-start justify-between gap-4">
             <div>
               <div className={V2_TAB_EYEBROW_CLASS}>
-                {activeAgents.length}{" "}
-                {activeAgents.length === 1 ? "agent" : "agents"} ·{" "}
-                {summaryBits.join(" · ")} · {workFleets.length}{" "}
-                {workFleets.length === 1 ? "fleet" : "fleets"}
+                {eyebrowParts.join(" ")}
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">
                 Fleet
