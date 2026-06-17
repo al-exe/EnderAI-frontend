@@ -389,6 +389,7 @@ function FleetCard({
         styles.fleet,
         isHistory && styles.history,
         isCollapsed && styles.fleetCollapsed,
+        isDropCandidate && styles.fleetDropCandidate,
         isDropTarget && styles.fleetDropTarget,
         hasPendingMove && styles.fleetDropPending,
       )}
