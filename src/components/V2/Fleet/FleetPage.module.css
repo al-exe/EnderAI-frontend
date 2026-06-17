@@ -5,6 +5,7 @@
 
 .page,
 .detail {
+  --fleet-pulse-period: 2.6s;
   --fl-surface: color-mix(in srgb, var(--card) 94%, var(--muted));
   --fl-faint: color-mix(
     in srgb,
@@ -70,7 +71,7 @@
 
 .fhead {
   display: grid;
-  grid-template-columns: var(--fl-row-cols);
+  grid-template-columns: 26px minmax(0, 1fr) max-content max-content 40px;
   gap: var(--fl-row-gap);
   align-items: center;
   box-sizing: border-box;
@@ -175,6 +176,7 @@
   flex-shrink: 0;
   width: max-content;
   box-sizing: border-box;
+  margin-inline-end: 10px;
   padding: 4px 9px;
   border: 1px solid var(--fl-primary-line);
   background: var(--fl-surface);
@@ -372,7 +374,8 @@
 }
 
 .pulse {
-  animation: fleet-pulse 2.6s ease-in-out infinite;
+  animation: fleet-pulse var(--fleet-pulse-period) ease-in-out infinite;
+  animation-delay: var(--fleet-pulse-delay, 0s);
 }
 
 .idle {
@@ -485,28 +488,7 @@
 
 .aactivityTrackScroll {
   padding-left: var(--activity-fade, 12px);
-  transform: translateX(0);
-  transition: transform 0.25s ease-out;
-}
-
-.aactivityTrackForward {
-  animation: fleet-activity-scroll-forward var(--activity-duration, 6s)
-    ease-in-out forwards;
-  transition: none;
-}
-
-@keyframes fleet-activity-scroll-forward {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(calc(-1 * var(--activity-scroll, 0px)));
-  }
-}
-
-.acaret {
-  color: var(--primary);
+  transition: transform var(--activity-motion-duration, 0.25s) ease-in-out;
 }
 
 /* client chip — which coding tool drives the session. Fixed width so the chips
@@ -1270,9 +1252,7 @@
     animation: none;
   }
 
-  .aactivityTrackScroll,
-  .aactivityTrackForward {
-    animation: none;
+  .aactivityTrackScroll {
     transition: none;
   }
 
