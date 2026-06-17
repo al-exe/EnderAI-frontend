@@ -13,7 +13,9 @@
   );
   --fl-hair: color-mix(in srgb, var(--foreground) 12%, var(--background));
   --fl-primary-soft: color-mix(in srgb, var(--primary) 14%, var(--background));
+  --fl-primary-softer: color-mix(in srgb, var(--primary) 7%, var(--background));
   --fl-primary-line: color-mix(in srgb, var(--primary) 40%, var(--border));
+  --fl-primary-line-soft: color-mix(in srgb, var(--primary) 22%, var(--border));
   --fl-attention: color-mix(
     in oklab,
     oklch(0.68 0.12 62) 72%,
@@ -39,6 +41,12 @@
     border-color 120ms ease,
     background-color 120ms ease,
     opacity 120ms ease;
+}
+
+.fleetDropCandidate {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+  background: var(--fl-primary-softer);
+  box-shadow: inset 0 0 0 1px var(--fl-primary-line-soft);
 }
 
 .fleetDropTarget {
