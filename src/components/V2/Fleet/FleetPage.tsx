@@ -59,12 +59,15 @@ import styles from "./FleetPage.module.css"
 import {
   AGENT_KIND_LABEL,
   type AgentKind,
+  agentActivityLine,
   agentDisplayName,
   agentKind,
+  agentModelName,
   agentStatus,
   compactPresence,
   type FleetStatus,
   fleetTitle,
+  repoLabel,
   rosterStatusLabel,
   runningCount,
   waitingCount,
@@ -171,6 +174,9 @@ function AgentRow({
   const status = agentStatus(agent)
   const age = compactPresence(agent)
   const sessionLabel = agentDisplayName(agent)
+  const model = agentModelName(agent)
+  const repo = agent.cwd ? repoLabel(agent) : null
+  const activity = agentActivityLine(agent)
 
   const submitRename = (event: FormEvent) => {
     event.preventDefault()
@@ -225,8 +231,36 @@ function AgentRow({
         </span>
         <div className={styles.who}>
           <ClientChip kind={agentKind(agent)} />
-          <div className={styles.nm} data-testid="fleet-agent-name">
-            {sessionLabel}
+          <div className={styles.identity}>
+            <div className={styles.nm} data-testid="fleet-agent-name">
+              {sessionLabel}
+            </div>
+            <div className={styles.asub} data-testid="fleet-agent-sub">
+              <span className={styles.amodel}>{model}</span>
+              {repo && (
+                <>
+                  <span className={styles.asep} aria-hidden="true">
+                    ·
+                  </span>
+                  <span className={styles.arepo}>{repo}</span>
+                </>
+              )}
+              {activity && (
+                <>
+                  <span className={styles.asep} aria-hidden="true">
+                    ·
+                  </span>
+                  <span className={styles.aactivity} title={activity}>
+                    {status === "run" && (
+                      <span className={styles.acaret} aria-hidden="true">
+                        ▸{" "}
+                      </span>
+                    )}
+                    {activity}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div

@@ -294,9 +294,16 @@
   min-width: 0;
 }
 
+.identity {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
 .nm {
   overflow: hidden;
-  flex: 1;
   min-width: 0;
   color: var(--foreground);
   font-size: calc(14px * var(--v2-scale, 1));
@@ -306,6 +313,41 @@
   text-overflow: ellipsis;
   text-transform: none;
   white-space: nowrap;
+}
+
+/* second identity line — model · repo · live activity */
+.asub {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--fl-faint);
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--v2-scale, 1));
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.asep {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--fl-faint) 55%, var(--background));
+}
+
+.amodel,
+.arepo {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+}
+
+.aactivity {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acaret {
+  color: var(--primary);
 }
 
 /* client chip — which coding tool drives the session. Fixed width so the chips
