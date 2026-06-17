@@ -52,6 +52,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { V2_HEADER_SEARCH_INSET } from "@/components/V2/v2PageShell"
 import { normalizeTaskforceDiscordUrl } from "@/lib/taskforceExternalLinks"
 import { cn } from "@/lib/utils"
 
@@ -639,10 +640,12 @@ export function TaskforceShell({ currentUser }: TaskforceShellProps) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="min-h-0 overflow-hidden">
-        <header className="shrink-0 border-b bg-background px-5 md:px-8">
+        <header className="shrink-0 border-b bg-background px-6 md:px-8">
           <div className="flex h-16 items-center gap-3">
             <SidebarTrigger className="md:hidden" />
-            <DocumentSearch />
+            <div className={cn(V2_HEADER_SEARCH_INSET, "min-w-0 flex-1")}>
+              <DocumentSearch />
+            </div>
           </div>
         </header>
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pt-4 pb-6 md:px-8 md:pt-5 md:pb-8">
