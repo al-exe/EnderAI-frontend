@@ -13,6 +13,7 @@ import {
   type CSSProperties,
   type DragEvent,
   type FormEvent,
+  type TransitionEvent,
   useCallback,
   useEffect,
   useRef,
@@ -58,6 +59,7 @@ import { persistedKey, usePersistentState } from "@/hooks/usePersistentState"
 import { peekTaskforceSession } from "@/lib/taskforceSession"
 import { cn } from "@/lib/utils"
 import styles from "./FleetPage.module.css"
+import { useFleetPulseSync } from "./fleetPulseSync"
 import {
   AGENT_KIND_LABEL,
   type AgentKind,
@@ -150,11 +152,9 @@ function ClientChip({ kind }: { kind: AgentKind }) {
 
 function ActivityMarquee({
   activity,
-  isRunning,
   active,
 }: {
   activity: string
-  isRunning: boolean
   active: boolean
 }) {
   const containerRef = useRef<HTMLSpanElement>(null)
@@ -182,19 +182,36 @@ function ActivityMarquee({
 
   useEffect(() => {
     activeRef.current = active
-    if (!active) setAtEnd(false)
+    if (active) setAtEnd(false)
   }, [active])
 
   const scrolls = scrollDistance > 0
+  const forwardDuration = scrolls
+    ? Math.max(1.6, (scrollDistance / 32 + 2) / 2.5)
+    : 0
+  const rewindDuration = forwardDuration / 6
+
   const marqueeStyle = scrolls
     ? ({
         "--activity-scroll": `${scrollDistance}px`,
-        "--activity-duration": `${Math.max(1.6, (scrollDistance / 32 + 2) / 2.5)}s`,
+        "--activity-fade": "12px",
       } as CSSProperties)
     : undefined
 
-  const handleAnimationEnd = () => {
-    if (activeRef.current) setAtEnd(true)
+  const trackStyle = scrolls
+    ? ({
+        "--activity-motion-duration": `${active ? forwardDuration : rewindDuration}s`,
+        transform: active
+          ? "translateX(calc(-1 * var(--activity-scroll, 0px)))"
+          : "translateX(0)",
+      } as CSSProperties)
+    : undefined
+
+  const handleTransitionEnd = (event: TransitionEvent<HTMLSpanElement>) => {
+    if (event.propertyName !== "transform" || event.target !== trackRef.current) {
+      return
+    }
+    setAtEnd(activeRef.current)
   }
 
   return (
@@ -210,18 +227,10 @@ function ActivityMarquee({
     >
       <span
         ref={trackRef}
-        className={cn(
-          styles.aactivityTrack,
-          scrolls && styles.aactivityTrackScroll,
-          scrolls && active && styles.aactivityTrackForward,
-        )}
-        onAnimationEnd={handleAnimationEnd}
+        className={cn(styles.aactivityTrack, scrolls && styles.aactivityTrackScroll)}
+        style={trackStyle}
+        onTransitionEnd={handleTransitionEnd}
       >
-        {isRunning && (
-          <span className={styles.acaret} aria-hidden="true">
-            ▸{" "}
-          </span>
-        )}
         {activity}
       </span>
     </span>
@@ -333,7 +342,6 @@ function AgentRow({
                   </span>
                   <ActivityMarquee
                     activity={activity}
-                    isRunning={status === "run"}
                     active={rowHovered}
                   />
                 </>
@@ -626,6 +634,7 @@ function FleetCard({
 }
 
 export function FleetPage() {
+  const setPulseRoot = useFleetPulseSync()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const currentUser = peekTaskforceSession()
@@ -805,6 +814,7 @@ export function FleetPage() {
 
   return (
     <section
+      ref={setPulseRoot}
       className={cn(
         V2_PAGE_FRAME,
         styles.page,
