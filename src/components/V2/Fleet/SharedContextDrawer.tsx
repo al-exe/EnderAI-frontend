@@ -74,11 +74,11 @@ export function SharedContextDrawer({
         data-testid="fleet-context-drawer"
       >
         <div className="border-border border-b p-5">
-          <div className="flex items-center gap-3">
+          <div className={styles.ctxRow}>
             <span className={styles.ctxIcon}>
               <FileText aria-hidden="true" />
             </span>
-            <div className="min-w-0">
+            <div className={styles.ctxRowBody}>
               <h2 className="text-sm font-semibold tracking-tight">
                 Session context
               </h2>
@@ -87,26 +87,30 @@ export function SharedContextDrawer({
               </p>
             </div>
           </div>
-          <div className={styles.ctxInject}>
-            <Zap aria-hidden="true" />
-            <span>
-              Injected into this group's agents each turn, up to{" "}
-              <b>
-                {(data?.inject_token_budget ?? 2000).toLocaleString()} tokens
-              </b>
-              .
+          <div className={styles.ctxRow}>
+            <span className={styles.ctxIcon}>
+              <Zap aria-hidden="true" />
             </span>
-          </div>
-          {data && (
-            <div className="text-muted-foreground mt-3 flex flex-wrap gap-x-2 gap-y-1 font-mono text-[11px]">
-              <span>
-                {data.entry_count}{" "}
-                {data.entry_count === 1 ? "document" : "documents"}
-              </span>
-              <span aria-hidden="true">·</span>
-              <span>~{data.token_estimate.toLocaleString()} tokens</span>
+            <div className={styles.ctxRowBody}>
+              <p className={styles.ctxInjectText}>
+                Injected into this group's agents each turn, up to{" "}
+                <b>
+                  {(data?.inject_token_budget ?? 2000).toLocaleString()} tokens
+                </b>
+                .
+              </p>
+              {data && (
+                <div className="text-muted-foreground mt-3 flex flex-wrap gap-x-2 gap-y-1 font-mono text-[11px]">
+                  <span>
+                    {data.entry_count}{" "}
+                    {data.entry_count === 1 ? "document" : "documents"}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span>~{data.token_estimate.toLocaleString()} tokens</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">

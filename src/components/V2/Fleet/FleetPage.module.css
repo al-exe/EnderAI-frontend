@@ -213,6 +213,21 @@
 }
 
 /* ----- shared-context drawer body ----- */
+.ctxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ctxRow + .ctxRow {
+  margin-top: 14px;
+}
+
+.ctxRowBody {
+  min-width: 0;
+  flex: 1;
+}
+
 .ctxIcon {
   display: grid;
   flex-shrink: 0;
@@ -229,23 +244,14 @@
   height: 16px;
 }
 
-.ctxInject {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-top: 14px;
-  padding: 9px 11px;
+.ctxInjectText {
+  margin: 0;
+  padding: 9px 11px 9px 0;
   border: 1px solid var(--fl-primary-line);
+  border-left: 0;
   background: var(--fl-primary-soft);
   font-size: calc(12px * var(--v2-scale, 1));
   line-height: 1.4;
-}
-
-.ctxInject svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-  color: var(--primary);
 }
 
 .ctxEntry {
