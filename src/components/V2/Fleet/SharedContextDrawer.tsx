@@ -7,21 +7,20 @@ import {
   type TaskforceSessionContextEntry,
 } from "@/api/v2Taskforce"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 import styles from "./FleetPage.module.css"
-import { fleetTitle } from "./fleetStatus"
+import {
+  clientKind,
+  clientLabel,
+  fleetTitle,
+  type AgentKind,
+} from "./fleetStatus"
 
-// The harness that produced a document, mapped to the same short labels the
-// roster row chips use. Falls back to the raw client string when unknown.
-const CLIENT_LABEL: Record<string, string> = {
-  "claude-code": "Claude",
-  claude: "Claude",
-  codex: "Codex",
-  cursor: "Cursor",
-}
-
-function clientLabel(value: string | null): string {
-  if (!value) return "Agent"
-  return CLIENT_LABEL[value] ?? value
+const CHIP_CLASS: Record<AgentKind, string> = {
+  claude: styles.chipClaude,
+  codex: styles.chipCodex,
+  cursor: styles.chipCursor,
+  other: styles.chipOther,
 }
 
 function timeAgo(iso: string | null): string {
@@ -143,10 +142,11 @@ export function SharedContextDrawer({
 }
 
 function ContextEntry({ entry }: { entry: TaskforceSessionContextEntry }) {
+  const kind = clientKind(entry.produced_by_client)
   return (
     <li className={styles.ctxEntry} data-testid="fleet-context-entry">
       <div className="mb-1.5 flex items-center gap-2">
-        <span className={styles.ctxBadge}>
+        <span className={cn(styles.ctxBadge, CHIP_CLASS[kind])}>
           {clientLabel(entry.produced_by_client)}
         </span>
         <span className="min-w-0 flex-1 truncate text-[13px] font-medium">

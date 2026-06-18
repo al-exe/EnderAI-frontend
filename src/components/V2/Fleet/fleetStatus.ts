@@ -45,6 +45,22 @@ export const AGENT_KIND_LABEL: Record<AgentKind, string> = {
   other: "Other",
 }
 
+/** Map a harness client string to the roster chip kind. */
+export function clientKind(value: string | null): AgentKind {
+  if (!value) return "other"
+  const normalized = value.toLowerCase()
+  if (normalized === "claude" || normalized === "claude-code") return "claude"
+  if (normalized === "codex") return "codex"
+  if (normalized === "cursor") return "cursor"
+  return "other"
+}
+
+export function clientLabel(value: string | null): string {
+  if (!value) return "Agent"
+  const kind = clientKind(value)
+  return kind === "other" ? value : AGENT_KIND_LABEL[kind]
+}
+
 /** Defensive against APIs that predate `agent_kind`. */
 export function agentKind(agent: TaskforceFleetAgent): AgentKind {
   const kind = agent.agent_kind
