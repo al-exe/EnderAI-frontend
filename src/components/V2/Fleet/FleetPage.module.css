@@ -213,6 +213,70 @@
 }
 
 /* ----- shared-context drawer body ----- */
+.ctxDrawer {
+  --ctx-pad-inline: 26px;
+  --ctx-lead-col: 62px;
+  --ctx-col-gap: 12px;
+  width: 100%;
+  max-width: min(100vw, 520px);
+}
+
+.ctxPanel {
+  padding-inline: var(--ctx-pad-inline);
+}
+
+.ctxPanelHeader {
+  padding-block: 22px 20px;
+  border-bottom: 1px solid var(--fl-hair);
+}
+
+.ctxPanelBody {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding-block: 20px 24px;
+}
+
+.ctxGrid {
+  display: grid;
+  grid-template-columns: var(--ctx-lead-col) minmax(0, 1fr);
+  column-gap: var(--ctx-col-gap);
+  align-items: start;
+}
+
+.ctxGrid + .ctxGrid {
+  margin-top: 14px;
+}
+
+.ctxLead {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.ctxCol {
+  min-width: 0;
+}
+
+.ctxTitle {
+  margin: 0;
+  font-size: calc(14px * var(--v2-scale, 1));
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.ctxScope {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--v2-scale, 1));
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ctxIcon {
   display: grid;
   flex-shrink: 0;
@@ -229,23 +293,32 @@
   height: 16px;
 }
 
-.ctxInject {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-top: 14px;
-  padding: 9px 11px;
+.ctxInjectText {
+  margin: 0;
+  padding: 9px 12px;
   border: 1px solid var(--fl-primary-line);
   background: var(--fl-primary-soft);
   font-size: calc(12px * var(--v2-scale, 1));
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-.ctxInject svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-  color: var(--primary);
+.ctxMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--v2-scale, 1));
+  line-height: 1.35;
+}
+
+.ctxList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .ctxEntry {
@@ -257,14 +330,74 @@
   border-bottom: 0;
 }
 
+.ctxEntryHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ctxEntryTitle {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: calc(13px * var(--v2-scale, 1));
+  font-weight: 500;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ctxEntryTime {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: calc(10.5px * var(--v2-scale, 1));
+  line-height: 1.35;
+}
+
+.ctxEntrySummary {
+  margin: 8px 0 0;
+  color: var(--muted-foreground);
+  font-size: calc(13px * var(--v2-scale, 1));
+  line-height: 1.5;
+}
+
+.ctxEmptyText {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: calc(13px * var(--v2-scale, 1));
+  line-height: 1.5;
+}
+
+.ctxErrorText {
+  margin: 0;
+  color: var(--destructive);
+  font-size: calc(13px * var(--v2-scale, 1));
+  line-height: 1.5;
+}
+
+.ctxLoading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ctxLoadingRow {
+  height: 80px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 .ctxBadge {
   flex-shrink: 0;
   padding: 2px 6px;
   border: 1px solid var(--border);
-  color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: calc(10.5px * var(--v2-scale, 1));
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
@@ -436,7 +569,7 @@
   white-space: nowrap;
 }
 
-/* second identity line — model · branch · live activity */
+/* second identity line — model, branch, live activity */
 .asub {
   display: flex;
   min-width: 0;
@@ -447,11 +580,6 @@
   font-size: calc(11px * var(--v2-scale, 1));
   line-height: 1.35;
   white-space: nowrap;
-}
-
-.asep {
-  flex-shrink: 0;
-  color: color-mix(in srgb, var(--fl-faint) 55%, var(--background));
 }
 
 .amodel,
@@ -469,11 +597,9 @@
 
 .aactivityMarquee {
   --activity-fade: 12px;
-  --activity-end-inset: calc(var(--activity-fade) + 4px);
   mask-image: linear-gradient(
     90deg,
-    transparent 0,
-    #000 var(--activity-fade),
+    #000 0,
     #000 calc(100% - var(--activity-fade)),
     transparent 100%
   );
@@ -485,8 +611,7 @@
 }
 
 .aactivityTrackScroll {
-  padding-left: var(--activity-fade, 12px);
-  padding-right: var(--activity-end-inset, 16px);
+  padding-right: calc(var(--activity-fade, 12px) + 4px);
   transition: transform var(--activity-motion-duration, 0.25s) ease-in-out;
 }
 
