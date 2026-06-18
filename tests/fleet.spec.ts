@@ -253,10 +253,24 @@ async function mockFleet(
   )
 
   await page.route("**/api/v1/v2/documents/**", async (route) => {
-    await route.fulfill({
-      json: {
+    const documentId = route.request().url().split("/").pop()
+    const documents: Record<string, { id: string; title: string }> = {
+      "doc-1": {
+        id: "doc-1",
+        title: "User requested feature: new agents should auto-join a designated 'Default' session",
+      },
+      "doc-2": {
         id: "doc-2",
         title: "Payments — error taxonomy",
+      },
+    }
+    const document = documents[documentId ?? ""] ?? {
+      id: documentId ?? "doc-unknown",
+      title: "Unknown document",
+    }
+    await route.fulfill({
+      json: {
+        ...document,
         content_markdown: "",
       },
     })
@@ -694,6 +708,13 @@ for (const theme of ["light", "dark"] as const) {
         page.getByRole("heading", {
           name: "Wiring automatic tax on Stripe checkout",
         }),
+      ).toBeVisible()
+      await expect(page.getByTestId("fleet-detail-document")).toBeVisible()
+      await expect(page.getByTestId("fleet-detail-document")).toContainText(
+        "User requested feature",
+      )
+      await expect(
+        page.getByTestId("fleet-detail-session-context"),
       ).toBeVisible()
 
       const detailLayout = await page.evaluate(() => {
