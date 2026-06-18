@@ -22,12 +22,10 @@ export const STATE_LABEL: Record<FleetStatus, string> = {
 /** One-line roster status in the agent row's second column. */
 export const ROSTER_STATUS_LABEL: Record<FleetStatus, string> = {
   run: "Agent running",
-  waiting: "Agent waiting",
+  waiting: "Agent idle",
   paused: "Capture paused",
-  idle: "Agent idle",
-  // Stopped (e.g. the user closed the terminal). Stays put until archived,
-  // and comes back to life if the user types in the chat again.
-  inactive: "Stopped",
+  idle: "Idle",
+  inactive: "Agent waiting",
 }
 
 export function rosterStatusLabel(agent: TaskforceFleetAgent): string {
