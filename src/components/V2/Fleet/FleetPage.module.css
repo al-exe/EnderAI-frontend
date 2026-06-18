@@ -274,6 +274,11 @@
   line-height: 1.45;
 }
 
+.ctxInjectText > span {
+  min-width: 0;
+  flex: 1;
+}
+
 .ctxInjectIcon {
   width: 15px;
   height: 15px;

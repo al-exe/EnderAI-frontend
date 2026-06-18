@@ -80,12 +80,14 @@ export function SharedContextDrawer({
           </p>
           <p className={styles.ctxInjectText}>
             <Zap aria-hidden="true" className={styles.ctxInjectIcon} />
-            Shared context between all agents in this session. Automatically
-            injected into each agent, up to{" "}
-            <b>
-              {(data?.inject_token_budget ?? 2000).toLocaleString()} tokens
-            </b>
-            .
+            <span>
+              Shared context between all agents in this session. Automatically
+              injected into each agent, up to{" "}
+              <b>
+                {(data?.inject_token_budget ?? 2000).toLocaleString()} tokens
+              </b>
+              .
+            </span>
           </p>
           {data && (
             <div className={styles.ctxMeta}>
