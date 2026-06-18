@@ -247,3 +247,46 @@ export function renameTaskforceSession(
     },
   })
 }
+
+export interface TaskforceSessionInboxMessage {
+  id: string
+  body: string
+  created_at: string
+  delivered_at: string | null
+}
+
+export interface TaskforceSessionInboxListResponse {
+  session_id: string
+  pending: TaskforceSessionInboxMessage[]
+}
+
+/** Pending (undelivered) queued prompts for an agent session. */
+export function readTaskforceSessionInbox(
+  sessionId: string,
+): CancelablePromise<TaskforceSessionInboxListResponse> {
+  return request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/v2/taskforce/session/{session_id}/inbox",
+    path: {
+      session_id: sessionId,
+    },
+  })
+}
+
+/**
+ * Queue a prompt for an idle Claude/Codex agent. Its Stop hook claims and
+ * re-injects the message as a fresh user turn the next time it goes idle.
+ */
+export function enqueueTaskforceSessionInbox(
+  sessionId: string,
+  body: string,
+): CancelablePromise<TaskforceSessionInboxMessage> {
+  return request(OpenAPI, {
+    method: "POST",
+    url: "/api/v1/v2/taskforce/session/{session_id}/inbox",
+    path: {
+      session_id: sessionId,
+    },
+    body: { body },
+  })
+}
