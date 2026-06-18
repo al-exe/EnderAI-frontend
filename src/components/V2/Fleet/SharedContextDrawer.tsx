@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { FileText, Zap } from "lucide-react"
 import { type ReactNode, useState } from "react"
 import {
@@ -169,21 +170,29 @@ function ContextEntry({ entry }: { entry: TaskforceSessionContextEntry }) {
   const kind = clientKind(entry.produced_by_client)
   return (
     <li className={styles.ctxEntry} data-testid="fleet-context-entry">
-      <div className={styles.ctxEntryTop}>
-        <span className={cn(styles.ctxBadge, CHIP_CLASS[kind])}>
-          {clientLabel(entry.produced_by_client)}
-        </span>
-        <span className={styles.ctxEntryTitle}>{entry.title}</span>
-        <span className={styles.ctxEntryTime}>
-          {timeAgo(entry.last_touched_at)}
-        </span>
-      </div>
-      {entry.summary_markdown && (
-        <p className={styles.ctxEntrySummary}>{entry.summary_markdown}</p>
-      )}
-      {entry.outcome && (
-        <p className={styles.ctxOutcome}>Outcome: {entry.outcome}</p>
-      )}
+      <Link
+        to="/v2/library/$documentId"
+        params={{ documentId: entry.document_id }}
+        className={styles.ctxEntryLink}
+        title={`Open "${entry.title}" in Library`}
+        aria-label={`Open ${entry.title} in Library`}
+      >
+        <div className={styles.ctxEntryTop}>
+          <span className={cn(styles.ctxBadge, CHIP_CLASS[kind])}>
+            {clientLabel(entry.produced_by_client)}
+          </span>
+          <span className={styles.ctxEntryTitle}>{entry.title}</span>
+          <span className={styles.ctxEntryTime}>
+            {timeAgo(entry.last_touched_at)}
+          </span>
+        </div>
+        {entry.summary_markdown && (
+          <p className={styles.ctxEntrySummary}>{entry.summary_markdown}</p>
+        )}
+        {entry.outcome && (
+          <p className={styles.ctxOutcome}>Outcome: {entry.outcome}</p>
+        )}
+      </Link>
     </li>
   )
 }

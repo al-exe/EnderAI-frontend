@@ -233,7 +233,7 @@ function FleetAgentDetailRoute() {
       )}
     >
       <div
-        className={cn(V2_PAGE_BODY, styles.detail, "gap-0 pb-0")}
+        className={cn(V2_PAGE_BODY, styles.detail, "gap-0 pb-6 md:pb-8")}
         data-testid="fleet-agent-detail"
         ref={setPulseRoot}
       >
@@ -307,7 +307,7 @@ function FleetAgentDetailRoute() {
           className={cn(styles.dbody, V2_TAB_CONTENT_CLASS, "pt-0")}
           data-testid="fleet-detail-body"
         >
-        <div className={styles.dmain}>
+        <div className={styles.dmain} data-testid="fleet-detail-main">
           {/* Currently working on — waiting agents surface a question when present. */}
           {status === "waiting" ? (
             question ? (
