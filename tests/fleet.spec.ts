@@ -380,7 +380,7 @@ test("clicking an agent row opens the session detail and back returns", async ({
       name: "Wiring automatic tax on Stripe checkout",
     }),
   ).toBeVisible()
-  await expect(page.getByText("Working on")).toBeVisible()
+  await expect(page.getByText("Currently working on")).toBeVisible()
   await expect(page.getByText("Activity")).toBeVisible()
   await expect(page.getByText("Session", { exact: true }).first()).toBeVisible()
   await expect(page.getByText("4 conventions applied")).toBeVisible()
