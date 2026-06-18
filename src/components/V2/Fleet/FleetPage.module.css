@@ -569,7 +569,7 @@
   white-space: nowrap;
 }
 
-/* second identity line — model, branch, live activity */
+/* second identity line — model · branch · live activity */
 .asub {
   display: flex;
   min-width: 0;
@@ -582,6 +582,11 @@
   white-space: nowrap;
 }
 
+.asep {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--fl-faint) 55%, var(--background));
+}
+
 .amodel,
 .abranch {
   flex-shrink: 0;
@@ -592,14 +597,17 @@
   overflow: hidden;
   flex: 1;
   min-width: 0;
+  padding-left: var(--activity-fade, 12px);
   white-space: nowrap;
 }
 
 .aactivityMarquee {
   --activity-fade: 12px;
+  --activity-end-inset: calc(var(--activity-fade) + 4px);
   mask-image: linear-gradient(
     90deg,
-    #000 0,
+    transparent 0,
+    #000 var(--activity-fade),
     #000 calc(100% - var(--activity-fade)),
     transparent 100%
   );
@@ -611,7 +619,7 @@
 }
 
 .aactivityTrackScroll {
-  padding-right: calc(var(--activity-fade, 12px) + 4px);
+  padding-right: var(--activity-end-inset, 16px);
   transition: transform var(--activity-motion-duration, 0.25s) ease-in-out;
 }
 
