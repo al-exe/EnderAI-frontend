@@ -25,7 +25,7 @@ export const ROSTER_STATUS_LABEL: Record<FleetStatus, string> = {
   waiting: "Agent idle",
   paused: "Capture paused",
   idle: "Idle",
-  inactive: "Agent waiting",
+  inactive: "Inactive",
 }
 
 export function rosterStatusLabel(agent: TaskforceFleetAgent): string {
