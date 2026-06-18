@@ -742,7 +742,14 @@
 
 .dtop {
   flex-shrink: 0;
-  border-bottom: 1px solid var(--fl-hair);
+}
+
+.dtop::after {
+  display: block;
+  height: 1px;
+  margin-top: 16px;
+  background: var(--fl-hair);
+  content: "";
 }
 
 .crumb {
