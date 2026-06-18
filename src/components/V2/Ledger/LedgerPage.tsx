@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { Loader2 } from "lucide-react"
+import { ChevronLeft, Loader2 } from "lucide-react"
 import {
   type CSSProperties,
   type FormEvent,
@@ -28,6 +28,7 @@ import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
+  V2_STICKY_HEADER_CLASS,
   V2_TAB_CONTENT_CLASS,
   V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
@@ -668,10 +669,21 @@ function LedgerDetail({
   if (isLoading) {
     return (
       <div className={styles.detail}>
-        <div className={styles.subbar}>
-          <button className={styles.back} onClick={onBack} type="button">
-            ← Ledger
-          </button>
+        <div
+          className={cn(styles.detailTop, V2_STICKY_HEADER_CLASS, "border-b-0")}
+        >
+          <div className={styles.detailCrumb}>
+            <button
+              className={styles.detailBack}
+              onClick={onBack}
+              type="button"
+            >
+              <ChevronLeft />
+              Ledger
+            </button>
+            <span className={styles.detailSep}>/</span>
+            <span>Session</span>
+          </div>
         </div>
         <div className={styles.status}>
           <Loader2 className={styles.spin} size={13} />
@@ -684,10 +696,21 @@ function LedgerDetail({
   if (isError || !detail) {
     return (
       <div className={styles.detail}>
-        <div className={styles.subbar}>
-          <button className={styles.back} onClick={onBack} type="button">
-            ← Ledger
-          </button>
+        <div
+          className={cn(styles.detailTop, V2_STICKY_HEADER_CLASS, "border-b-0")}
+        >
+          <div className={styles.detailCrumb}>
+            <button
+              className={styles.detailBack}
+              onClick={onBack}
+              type="button"
+            >
+              <ChevronLeft />
+              Ledger
+            </button>
+            <span className={styles.detailSep}>/</span>
+            <span>Session</span>
+          </div>
         </div>
         <div className={styles.empty}>Couldn't load this session.</div>
       </div>
@@ -696,25 +719,41 @@ function LedgerDetail({
 
   return (
     <div className={styles.detail}>
-      <div className={styles.subbar}>
-        <button className={styles.back} onClick={onBack} type="button">
-          ← Ledger
-        </button>
-        <span className={styles.idText}>{detail.session_id}</span>
-        <span className={styles.subSp} />
-        <span className={styles.pill}>{harnessWithVersion(detail)}</span>
-        <span className={styles.pill}>{agentLabel(detail)}</span>
-      </div>
-      <div className={cn(styles.dbody, V2_TAB_CONTENT_CLASS)}>
-        <div className={styles.transcript}>
-          <div className={styles.tHead}>
-            <div className={styles.eyebrow}>
-              {formatDateLong(detail.started_at ?? detail.occurred_at_first)} ·{" "}
-              {whoLabel(detail)} ·{" "}
-              {clientLabel(detail.harness_label ?? detail.client)}
+      <div
+        className={cn(styles.detailTop, V2_STICKY_HEADER_CLASS, "border-b-0")}
+      >
+        <div className={styles.detailCrumb}>
+          <button className={styles.detailBack} onClick={onBack} type="button">
+            <ChevronLeft />
+            Ledger
+          </button>
+          <span className={styles.detailSep}>/</span>
+          <span>{detail.session_id}</span>
+        </div>
+
+        <div className={styles.detailHead}>
+          <span className={styles.detailDot} />
+          <div className={styles.detailTitle}>
+            <h1>{sessionTitle(detail)}</h1>
+            <div className={styles.detailMeta}>
+              <b>
+                {formatDateLong(detail.started_at ?? detail.occurred_at_first)}
+              </b>
+              <span> · {whoLabel(detail)}</span>
+              <span>
+                {" "}
+                · {clientLabel(detail.harness_label ?? detail.client)}
+              </span>
             </div>
-            <h2>{sessionTitle(detail)}</h2>
+            <div className={styles.detailState}>
+              {harnessWithVersion(detail)} · {agentLabel(detail)}
+            </div>
           </div>
+        </div>
+      </div>
+      <div className={cn(styles.detailBody, V2_TAB_CONTENT_CLASS, "pt-0")}>
+        <div className={styles.detailMain}>
+          <div className={styles.sectionLabel}>Transcript</div>
           {transcriptEvents.length > 0 ? (
             <div className={styles.transcriptTimeline}>
               {transcriptEvents.map((event, index) => (
