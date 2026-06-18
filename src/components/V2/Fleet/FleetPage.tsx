@@ -7,6 +7,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Star,
   Trash2,
 } from "lucide-react"
 import {
@@ -24,6 +25,7 @@ import {
   deleteTaskforceFleetSession,
   readTaskforceFleet,
   renameTaskforceSession,
+  setDefaultTaskforceFleetSession,
   type TaskforceFleetAgent,
   type TaskforceFleetResponse,
   type TaskforceFleetSession,
@@ -427,6 +429,7 @@ function FleetCard({
   onRenameAgent,
   onRename,
   onDelete,
+  onSetDefault,
   draggingAgent,
   dropTargetId,
   movingSessionId,
@@ -442,6 +445,7 @@ function FleetCard({
   onRenameAgent: (agent: TaskforceFleetAgent, displayName: string) => void
   onRename: (fleet: TaskforceFleetSession, name: string) => void
   onDelete: (fleet: TaskforceFleetSession) => void
+  onSetDefault: (fleet: TaskforceFleetSession) => void
   draggingAgent: TaskforceFleetAgent | null
   dropTargetId: string | null
   movingSessionId: string | null
@@ -536,6 +540,9 @@ function FleetCard({
             )}
             <span className={styles.fheadIdentity}>
               <span className={styles.fname}>{fleetTitle(fleet)}</span>
+              {fleet.is_default && !isHistory && (
+                <span className={styles.fdefault}>(default)</span>
+              )}
             </span>
           </button>
         )}
@@ -570,6 +577,12 @@ function FleetCard({
                     <Pencil />
                     Rename
                   </DropdownMenuItem>
+                  {!fleet.is_default && (
+                    <DropdownMenuItem onSelect={() => onSetDefault(fleet)}>
+                      <Star />
+                      Make default
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     variant="destructive"
@@ -674,6 +687,15 @@ export function FleetPage() {
     onSuccess: refreshFleet,
     onError: setMutationError,
   })
+  const setDefaultMutation = useMutation({
+    mutationFn: (fleet: TaskforceFleetSession) =>
+      setDefaultTaskforceFleetSession(fleet.id),
+    onSuccess: () => {
+      setMutationError(null)
+      refreshFleet()
+    },
+    onError: setMutationError,
+  })
   const moveMutation = useMutation({
     mutationFn: ({
       sessionId,
@@ -762,6 +784,10 @@ export function FleetPage() {
       setMutationError(null)
       deleteMutation.mutate(fleet.id)
     }
+  }
+  const setDefaultFleet = (fleet: TaskforceFleetSession) => {
+    setMutationError(null)
+    setDefaultMutation.mutate(fleet)
   }
   const endAgentDrag = () => {
     setDraggingAgent(null)
@@ -892,6 +918,7 @@ export function FleetPage() {
                   onRenameAgent={renameAgent}
                   onRename={renameFleet}
                   onDelete={deleteFleet}
+                  onSetDefault={setDefaultFleet}
                   draggingAgent={draggingAgent}
                   dropTargetId={dropTargetId}
                   movingSessionId={

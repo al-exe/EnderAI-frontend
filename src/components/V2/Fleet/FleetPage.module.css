@@ -135,6 +135,14 @@
   white-space: nowrap;
 }
 
+.fdefault {
+  flex-shrink: 0;
+  color: var(--fl-faint);
+  font-size: calc(11px * var(--v2-scale, 1));
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
 .fnameButton {
   text-align: left;
 }
