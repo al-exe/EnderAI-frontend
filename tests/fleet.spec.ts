@@ -332,7 +332,7 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible()
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
   await expect(page.getByTestId("fleet-agent-status")).toHaveText(
-    "Agent responding",
+    "Agent running",
   )
   await expect(page.getByText("10m")).toBeVisible()
   // Calm summary line — fleets, agents, running; no spend/token metrics.
@@ -497,7 +497,7 @@ test("roster shows agent status when summary is empty", async ({ page }) => {
 
   const row = page.getByTestId("fleet-agent-row")
   await expect(row.getByTestId("fleet-agent-status")).toHaveText(
-    "Agent responding",
+    "Agent running",
   )
   await expect(row.getByText("No current work captured yet")).toHaveCount(0)
 

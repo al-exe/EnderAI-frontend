@@ -21,7 +21,7 @@ export const STATE_LABEL: Record<FleetStatus, string> = {
 
 /** One-line roster status in the agent row's second column. */
 export const ROSTER_STATUS_LABEL: Record<FleetStatus, string> = {
-  run: "Agent responding",
+  run: "Agent running",
   waiting: "Agent waiting",
   paused: "Capture paused",
   idle: "Agent idle",
