@@ -174,24 +174,53 @@ export function formatClockTime(iso: string): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
+const USER_QUERY_RE = /^<user_query>\s*|\s*<\/user_query>\s*$/gim
+
 const FLEET_UI_MARKERS = [
   "View in Ledger",
   "Awaiting user prompt",
   "Running in this terminal",
+  "Activity capture is paused",
+  "Currently working on",
+  "Previously worked on",
+  "Activity",
 ]
+
+const ACTIVITY_LINE_RE =
+  /^(?:\d{1,2}:\d{2}\s*(?:AM|PM))?(?:prompt|command|reply|edit|note)?$/i
+
+function looksLikeActivityScrape(line: string): boolean {
+  const lowered = line.toLowerCase()
+  if (ACTIVITY_LINE_RE.test(line)) return true
+  if (lowered.endsWith("prompt") && line.length <= 24) return true
+  if (lowered.startsWith("$ ") || lowered.startsWith("pmcommand")) return true
+  if (lowered.startsWith("ran: ")) return true
+  return false
+}
+
+function stripCursorDiagnosticTail(text: string): string {
+  const ranIdx = text.search(/\sRan:\s/)
+  if (ranIdx >= 0) return text.slice(0, ranIdx).trim()
+  return text
+}
 
 /** Strip Cursor wrappers and Fleet UI paste noise for activity display. */
 export function cleanActivityPromptText(
   text: string | null | undefined,
 ): string {
   if (!text) return ""
-  const cleaned = text
-    .replace(/^<user_query>\s*/i, "")
-    .replace(/\s*<\/user_query>\s*$/i, "")
-    .trim()
+
+  const innerMatch = text.match(/<user_query>\s*([\s\S]*?)\s*<\/user_query>/i)
+  const working = innerMatch ? innerMatch[1] : text
+
+  let cleaned = working.replace(USER_QUERY_RE, "").trim()
+  cleaned = stripCursorDiagnosticTail(cleaned)
+  if (!cleaned) return ""
+
   if (!FLEET_UI_MARKERS.some((marker) => cleaned.includes(marker))) {
     return cleaned
   }
+
   const blocks = cleaned
     .split(/\n\s*\n/)
     .map((block) => block.trim())
@@ -200,10 +229,25 @@ export function cleanActivityPromptText(
   if (
     tail &&
     tail.length <= 400 &&
-    !FLEET_UI_MARKERS.some((marker) => tail.includes(marker))
+    !FLEET_UI_MARKERS.some((marker) => tail.includes(marker)) &&
+    !looksLikeActivityScrape(tail)
   ) {
     return tail
   }
+
+  const lines = cleaned.split(/\r?\n/)
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const candidate = lines[index]?.trim() ?? ""
+    if (
+      !candidate ||
+      FLEET_UI_MARKERS.some((marker) => candidate.includes(marker))
+    ) {
+      continue
+    }
+    if (looksLikeActivityScrape(candidate)) continue
+    return candidate
+  }
+
   return cleaned
 }
 
@@ -223,7 +267,7 @@ export function liveActivityLabel(
   options: LiveActivityOptions = {},
 ): string {
   const status = agentStatus(agent)
-  const summary = agent.summary_markdown?.trim()
+  const summary = cleanActivityPromptText(agent.summary_markdown?.trim())
 
   if (status === "run") {
     return summary || "Running in this terminal"
@@ -260,16 +304,17 @@ function truncateLine(text: string, max = 120): string {
    to the captured work summary when no per-turn prompts are recorded yet. */
 export function agentActivityLine(agent: TaskforceFleetAgent): string {
   const recent = agentRecentActivity(agent)
-  const summary = agent.summary_markdown?.trim()
+  const summary = cleanActivityPromptText(agent.summary_markdown?.trim())
   const pick = isRunning(agent)
     ? (recent[1] ?? summary ?? recent[0])
     : (recent[0] ?? summary)
-  return pick ? truncateLine(pick) : ""
+  const cleaned = pick ? cleanActivityPromptText(pick) : ""
+  return cleaned ? truncateLine(cleaned) : ""
 }
 
 /** Session detail "Currently working on" body. */
 export function sessionWorkSummary(agent: TaskforceFleetAgent): string {
-  const summary = agent.summary_markdown?.trim()
+  const summary = cleanActivityPromptText(agent.summary_markdown?.trim())
   const status = agentStatus(agent)
 
   if (status === "run") {
@@ -293,7 +338,7 @@ export function sessionWorkSummary(agent: TaskforceFleetAgent): string {
 export function sessionPreviousWork(agent: TaskforceFleetAgent): string {
   if (agentStatus(agent) !== "run") return ""
   // recent[0] is the in-progress turn; recent[1] is what happened before it.
-  return agentRecentActivity(agent)[1] ?? ""
+  return cleanActivityPromptText(agentRecentActivity(agent)[1] ?? "")
 }
 
 /** Locale-aware date and time in the browser's local timezone. */

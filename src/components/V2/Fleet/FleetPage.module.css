@@ -75,9 +75,10 @@
   gap: var(--fl-row-gap);
   align-items: center;
   box-sizing: border-box;
-  height: 48px;
-  padding: 10px 18px;
+  height: 54px;
+  padding: 13px 18px;
   border-bottom: 1px solid var(--fl-hair);
+  background: color-mix(in srgb, var(--fl-surface) 68%, var(--background));
 }
 
 .fleetCollapsed .fhead {
@@ -1008,6 +1009,10 @@
 }
 
 .tt {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
   color: var(--fl-faint);
   font-family: var(--font-mono);
   font-size: calc(10.5px * var(--v2-scale, 1));
@@ -1015,7 +1020,6 @@
 }
 
 .tkind {
-  margin-left: 8px;
   color: var(--muted-foreground);
   text-transform: uppercase;
 }
@@ -1339,7 +1343,7 @@
 
   .fhead {
     height: auto;
-    min-height: 48px;
+    min-height: 54px;
     grid-template-rows: auto auto;
   }
 

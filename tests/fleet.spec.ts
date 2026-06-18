@@ -554,6 +554,30 @@ test("collapsed fleet cards share header height", async ({ page }) => {
   expect(Math.abs(historyHeight - workHeight)).toBeLessThan(2)
 })
 
+test("session detail strips Cursor capture noise from working-on text", async ({
+  page,
+}) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      summary_markdown:
+        "<user_query> merge </user_query> Ran: cd /home/alexlee/dev && git status",
+      recent_activity: [
+        "<user_query> merge </user_query> Ran: cd /home/alexlee/dev && git status",
+        "Prior tax wiring",
+      ],
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  const workingOn = page
+    .getByText("Currently working on")
+    .locator("xpath=following-sibling::*[1]")
+  await expect(workingOn).toContainText("merge")
+  await expect(workingOn).not.toContainText("Ran:")
+  await expect(page.getByText("Prior tax wiring")).toBeVisible()
+  await expect(page.getByText(/<user_query>/)).toHaveCount(0)
+})
+
 test("activity timeline live head shows waiting state", async ({ page }) => {
   await mockFleet(page, {
     agentOverrides: {
