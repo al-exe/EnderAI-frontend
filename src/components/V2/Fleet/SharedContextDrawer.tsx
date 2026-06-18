@@ -95,7 +95,8 @@ export function SharedContextDrawer({
             </span>
             <div className={styles.ctxCol}>
               <p className={styles.ctxInjectText}>
-                Injected into this group's agents each turn, up to{" "}
+                Shared context between all agents in this session. Automatically
+                injected into each agent, up to{" "}
                 <b>
                   {(data?.inject_token_budget ?? 2000).toLocaleString()} tokens
                 </b>
