@@ -139,6 +139,12 @@ function FleetAgentDetailRoute() {
 
   // Resolve referenced-document titles for the "Context in use" rail block.
   const referencedIds = located?.agent.referenced_document_ids ?? []
+  const activeDocumentId = located?.agent.active_document_id ?? null
+  const activeDocumentQuery = useQuery({
+    queryKey: ["v2-document", { documentId: activeDocumentId }],
+    queryFn: () => readV2Document(activeDocumentId!),
+    enabled: Boolean(activeDocumentId),
+  })
   const contextQueries = useQueries({
     queries: referencedIds.map((documentId) => ({
       queryKey: ["v2-document", { documentId }],
@@ -215,6 +221,11 @@ function FleetAgentDetailRoute() {
       label: query?.data?.title || (query?.isLoading ? "Loading…" : id),
     }
   })
+
+  const activeDocumentTitle =
+    activeDocumentQuery.data?.title ||
+    agent.title ||
+    "Active Taskforce document"
 
   const dmetaBits = [model, host].filter((bit): bit is string => Boolean(bit))
 
@@ -346,24 +357,6 @@ function FleetAgentDetailRoute() {
             </div>
           ) : null}
 
-          {/* Document */}
-          {agent.active_document_id && (
-            <div className={styles.section}>
-              <div className={styles.seclabel}>Document</div>
-              <Link
-                to="/v2/library/$documentId"
-                params={{ documentId: agent.active_document_id }}
-                className={styles.doccard}
-              >
-                <div className={styles.dmode}>writing</div>
-                <div className={styles.dttl}>
-                  {agent.title || "Active Taskforce document"}
-                </div>
-                <div className={styles.dupd}>Captured by this session</div>
-              </Link>
-            </div>
-          )}
-
           {/* Activity — durable per-turn timeline, newest-first (TF-247). */}
           <div className={styles.section}>
             <div className={styles.seclabel}>Activity</div>
@@ -479,6 +472,26 @@ function FleetAgentDetailRoute() {
             )}
             {metaRow("Session", agent.session_id)}
           </div>
+
+          {agent.active_document_id && (
+            <div className={styles.block}>
+              <div className={styles.seclabel}>Document</div>
+              <Link
+                to="/v2/library/$documentId"
+                params={{ documentId: agent.active_document_id }}
+                className={styles.doccard}
+                data-testid="fleet-detail-document"
+              >
+                <div className={styles.dmode}>writing</div>
+                <div className={styles.dttl}>
+                  {activeDocumentQuery.isLoading && !activeDocumentQuery.data
+                    ? "Loading…"
+                    : activeDocumentTitle}
+                </div>
+                <div className={styles.dupd}>Captured by this session</div>
+              </Link>
+            </div>
+          )}
 
           {/* Context in use — resolved referenced-document titles. */}
           {contextItems.length > 0 && (
