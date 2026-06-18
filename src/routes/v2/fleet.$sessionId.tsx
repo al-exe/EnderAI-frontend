@@ -462,7 +462,7 @@ function FleetAgentDetailRoute() {
           {/* Session meta */}
           <div className={styles.block}>
             <div className={styles.seclabel}>Session</div>
-            {metaRow("Group", fleetName)}
+            <p className={styles.sessionName}>{fleetName}</p>
             {model && metaRow("Model", model)}
             {startedAt && metaRow("Started", formatLocalDateTime(startedAt))}
             {metaRow(
