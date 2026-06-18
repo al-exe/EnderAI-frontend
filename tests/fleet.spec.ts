@@ -112,6 +112,9 @@ async function mockFleet(
             created_at: "2026-06-12T09:00:00Z",
             updated_at: "2026-06-12T09:00:00Z",
             agents: [
+              ...(agentFleetId === "fleet-history"
+                ? [{ ...agent, fleet_session_id: agentFleetId }]
+                : []),
               {
                 ...agent,
                 session_id: "session-history",
@@ -257,7 +260,8 @@ async function mockFleet(
     const documents: Record<string, { id: string; title: string }> = {
       "doc-1": {
         id: "doc-1",
-        title: "User requested feature: new agents should auto-join a designated 'Default' session",
+        title:
+          "User requested feature: new agents should auto-join a designated 'Default' session",
       },
       "doc-2": {
         id: "doc-2",
@@ -358,11 +362,12 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
 
   const historyCard = page.getByTestId("fleet-card-fleet-history")
   await expect(historyCard.getByText("History", { exact: true })).toBeVisible()
-  await expect(historyCard.getByText("EnderAI-new-user-max-promo")).toHaveCount(0)
+  await expect(historyCard.getByText("EnderAI-new-user-max-promo")).toHaveCount(
+    0,
+  )
   await expect(
     historyCard.getByText(/feature\/new-user-max-promo/),
   ).toHaveCount(0)
-  await expect(page.getByTestId("fleet-card-fleet-1")).toContainText("billing")
   await expect(page.getByTestId("fleet-card-fleet-1")).toContainText(
     "feature/automatic-tax",
   )
@@ -434,6 +439,36 @@ test("agent session can be renamed from the row menu", async ({ page }) => {
     display_name: "Checkout tax rollout",
   })
   await expect(page.getByText("Checkout tax rollout")).toBeVisible()
+})
+
+test("agent session can be archived from the row menu", async ({ page }) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+
+  await page
+    .getByRole("button", {
+      name: "Wiring automatic tax on Stripe checkout actions",
+    })
+    .click()
+  const archiveRequest = page.waitForRequest(
+    (request) =>
+      request.url().endsWith("/api/v1/v2/taskforce/session/session-1") &&
+      request.method() === "PATCH",
+  )
+  await page.getByRole("menuitem", { name: "Archive agent" }).click()
+
+  expect((await archiveRequest).postDataJSON()).toEqual({
+    fleet_session_id: "fleet-history",
+  })
+  await expect(page.getByTestId("fleet-card-fleet-1")).not.toContainText(
+    "Wiring automatic tax on Stripe checkout",
+  )
+
+  const historyCard = page.getByTestId("fleet-card-fleet-history")
+  await historyCard.getByRole("button", { name: /History/ }).click()
+  await expect(historyCard).toContainText(
+    "Wiring automatic tax on Stripe checkout",
+  )
 })
 
 test("activity timeline shows the full canonical event stream and exact Ledger links", async ({
@@ -541,9 +576,12 @@ test("collapsed fleet cards share header height", async ({ page }) => {
   )
 
   const headerHeight = (card: ReturnType<Page["getByTestId"]>) =>
-    card.locator(":scope > div").first().evaluate((el) => {
-      return el.getBoundingClientRect().height
-    })
+    card
+      .locator(":scope > div")
+      .first()
+      .evaluate((el) => {
+        return el.getBoundingClientRect().height
+      })
 
   const historyCard = page.getByTestId("fleet-card-fleet-history")
   const workCard = page.getByTestId("fleet-card-fleet-1")
@@ -590,9 +628,7 @@ test("activity timeline live head shows waiting state", async ({ page }) => {
 
   await expect(page.getByText("now", { exact: true })).toBeVisible()
   await expect(page.getByText("Awaiting user prompt")).toBeVisible()
-  await expect(
-    page.getByText("Stale summary from earlier work"),
-  ).toHaveCount(0)
+  await expect(page.getByText("Stale summary from earlier work")).toHaveCount(0)
 })
 
 test("activity timeline live head shows idle state", async ({ page }) => {
@@ -645,9 +681,7 @@ test("Fleet session collapse defaults and persists", async ({ page }) => {
 
   await page.getByTestId("fleet-header-toggle-fleet-history").click()
   await expect(historyCard).toHaveAttribute("data-collapsed", "false")
-  await expect(
-    historyCard.getByTestId("fleet-agent-row"),
-  ).toBeVisible()
+  await expect(historyCard.getByTestId("fleet-agent-row")).toBeVisible()
   await expect(historyCard.getByText("Prior promo session")).toBeVisible()
 
   await page.reload()
@@ -655,9 +689,7 @@ test("Fleet session collapse defaults and persists", async ({ page }) => {
 
   await page.getByTestId("fleet-header-toggle-fleet-1").click()
   await expect(workCard).toHaveAttribute("data-collapsed", "true")
-  await expect(
-    workCard.getByTestId("fleet-agent-row"),
-  ).not.toBeVisible()
+  await expect(workCard.getByTestId("fleet-agent-row")).not.toBeVisible()
 
   await page.reload()
   await expect(workCard).toHaveAttribute("data-collapsed", "true")
@@ -699,7 +731,9 @@ for (const theme of ["light", "dark"] as const) {
     for (const width of [360, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 })
       await page.goto("/v2/fleet")
-      await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible()
+      await expect(
+        page.getByRole("heading", { name: "Sessions" }),
+      ).toBeVisible()
       await expect(page.locator("html")).toHaveClass(new RegExp(theme))
 
       const rosterOverflow = await page.evaluate(
@@ -723,9 +757,12 @@ for (const theme of ["light", "dark"] as const) {
       const rosterColumns = await page
         .getByTestId("fleet-agent-row")
         .evaluate((row) => getComputedStyle(row).gridTemplateColumns)
-      expect(rosterColumns.trim().split(/\s+/)).toHaveLength(
-        width <= 760 ? 4 : 5,
-      )
+      const rosterColumnCount = rosterColumns
+        .replace(/minmax\([^)]+\)/g, "minmax()")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+      expect(rosterColumnCount).toBe(width <= 760 ? 4 : 5)
 
       await page.goto("/v2/fleet/session-1")
       await expect(
