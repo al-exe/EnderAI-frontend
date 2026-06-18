@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import {
+  Archive,
   ChevronDown,
   ChevronRight,
   GripVertical,
@@ -213,7 +214,10 @@ function ActivityMarquee({
     >
       <span
         ref={trackRef}
-        className={cn(styles.aactivityTrack, scrolls && styles.aactivityTrackScroll)}
+        className={cn(
+          styles.aactivityTrack,
+          scrolls && styles.aactivityTrackScroll,
+        )}
         style={trackStyle}
       >
         {activity}
@@ -226,22 +230,26 @@ function AgentRow({
   agent,
   onOpen,
   onRename,
+  onArchive,
   onDragStart,
   onDragEnd,
   isDragging,
   isMoving,
+  canArchive,
   draggable = true,
 }: {
   agent: TaskforceFleetAgent
   onOpen: (agent: TaskforceFleetAgent) => void
   onRename: (agent: TaskforceFleetAgent, displayName: string) => void
+  onArchive: (agent: TaskforceFleetAgent) => void
   onDragStart: (
     agent: TaskforceFleetAgent,
-    event: DragEvent<HTMLDivElement>,
+    event: DragEvent<HTMLElement>,
   ) => void
   onDragEnd: () => void
   isDragging: boolean
   isMoving: boolean
+  canArchive: boolean
   draggable?: boolean
 }) {
   const suppressClick = useRef(false)
@@ -268,7 +276,8 @@ function AgentRow({
   }
 
   return (
-    <div
+    <fieldset
+      aria-label={`${sessionLabel} session row`}
       data-testid="fleet-agent-row"
       className={cn(
         styles.arow,
@@ -325,10 +334,7 @@ function AgentRow({
                   <span className={styles.asep} aria-hidden="true">
                     ·
                   </span>
-                  <ActivityMarquee
-                    activity={activity}
-                    active={rowHovered}
-                  />
+                  <ActivityMarquee activity={activity} active={rowHovered} />
                 </>
               )}
             </div>
@@ -367,6 +373,15 @@ function AgentRow({
             <Pencil />
             Rename
           </DropdownMenuItem>
+          {canArchive && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => onArchive(agent)}>
+                <Archive />
+                Archive agent
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -417,7 +432,7 @@ function AgentRow({
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </fieldset>
   )
 }
 
@@ -427,6 +442,8 @@ function FleetCard({
   onToggleCollapse,
   onOpenAgent,
   onRenameAgent,
+  onArchiveAgent,
+  canArchiveAgents,
   onRename,
   onDelete,
   onSetDefault,
@@ -443,6 +460,8 @@ function FleetCard({
   onToggleCollapse: () => void
   onOpenAgent: (agent: TaskforceFleetAgent) => void
   onRenameAgent: (agent: TaskforceFleetAgent, displayName: string) => void
+  onArchiveAgent: (agent: TaskforceFleetAgent) => void
+  canArchiveAgents: boolean
   onRename: (fleet: TaskforceFleetSession, name: string) => void
   onDelete: (fleet: TaskforceFleetSession) => void
   onSetDefault: (fleet: TaskforceFleetSession) => void
@@ -451,7 +470,7 @@ function FleetCard({
   movingSessionId: string | null
   onAgentDragStart: (
     agent: TaskforceFleetAgent,
-    event: DragEvent<HTMLDivElement>,
+    event: DragEvent<HTMLElement>,
   ) => void
   onAgentDragEnd: () => void
   onDragOver: (fleetSessionId: string) => void
@@ -613,10 +632,12 @@ function FleetCard({
                 agent={agent}
                 onOpen={onOpenAgent}
                 onRename={onRenameAgent}
+                onArchive={onArchiveAgent}
                 onDragStart={onAgentDragStart}
                 onDragEnd={onAgentDragEnd}
                 isDragging={draggingAgent?.session_id === agent.session_id}
                 isMoving={movingSessionId === agent.session_id}
+                canArchive={!isHistory && canArchiveAgents}
                 draggable
               />
             ))
@@ -751,6 +772,7 @@ export function FleetPage() {
 
   const fleetSessions = fleetQuery.data?.fleet_sessions ?? []
   const workFleets = fleetSessions.filter((fleet) => !fleet.is_history)
+  const historyFleet = fleetSessions.find((fleet) => fleet.is_history)
   const allAgents = fleetSessions.flatMap((fleet) => fleet.agents)
   const activeAgents = workFleets.flatMap((fleet) => fleet.agents)
   const running = runningCount(activeAgents)
@@ -805,6 +827,10 @@ export function FleetPage() {
       sessionId: agent.session_id,
       destinationId: destination.id,
     })
+  }
+  const archiveAgent = (agent: TaskforceFleetAgent) => {
+    if (!historyFleet) return
+    moveAgent(agent, historyFleet)
   }
   const toggleFleetCollapsed = useCallback(
     (fleet: TaskforceFleetSession) => {
@@ -916,6 +942,8 @@ export function FleetPage() {
                   onToggleCollapse={() => toggleFleetCollapsed(fleet)}
                   onOpenAgent={openAgent}
                   onRenameAgent={renameAgent}
+                  onArchiveAgent={archiveAgent}
+                  canArchiveAgents={Boolean(historyFleet)}
                   onRename={renameFleet}
                   onDelete={deleteFleet}
                   onSetDefault={setDefaultFleet}
