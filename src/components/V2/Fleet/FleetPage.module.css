@@ -215,8 +215,9 @@
 /* ----- shared-context drawer body ----- */
 .ctxDrawer {
   --ctx-pad-inline: 26px;
-  --ctx-lead-col: 62px;
+  --ctx-icon-size: 30px;
   --ctx-col-gap: 12px;
+  --ctx-text-inset: calc(var(--ctx-icon-size) + var(--ctx-col-gap));
   width: 100%;
   max-width: min(100vw, 520px);
 }
@@ -239,7 +240,7 @@
 
 .ctxGrid {
   display: grid;
-  grid-template-columns: var(--ctx-lead-col) minmax(0, 1fr);
+  grid-template-columns: var(--ctx-icon-size) minmax(0, 1fr);
   column-gap: var(--ctx-col-gap);
   align-items: start;
 }
@@ -250,7 +251,7 @@
 
 .ctxLead {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   min-width: 0;
 }
 
@@ -330,10 +331,10 @@
   border-bottom: 0;
 }
 
-.ctxEntryHeader {
+.ctxEntryTop {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
 }
 
 .ctxEntryTitle {
@@ -355,8 +356,16 @@
   line-height: 1.35;
 }
 
+.ctxBodyText {
+  margin: 0;
+  padding-left: var(--ctx-text-inset);
+  font-size: calc(13px * var(--v2-scale, 1));
+  line-height: 1.5;
+}
+
 .ctxEntrySummary {
   margin: 8px 0 0;
+  padding-left: var(--ctx-text-inset);
   color: var(--muted-foreground);
   font-size: calc(13px * var(--v2-scale, 1));
   line-height: 1.5;
@@ -365,15 +374,10 @@
 .ctxEmptyText {
   margin: 0;
   color: var(--muted-foreground);
-  font-size: calc(13px * var(--v2-scale, 1));
-  line-height: 1.5;
 }
 
 .ctxErrorText {
-  margin: 0;
   color: var(--destructive);
-  font-size: calc(13px * var(--v2-scale, 1));
-  line-height: 1.5;
 }
 
 .ctxLoading {
@@ -384,6 +388,7 @@
 
 .ctxLoadingRow {
   height: 80px;
+  margin-left: var(--ctx-text-inset);
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--muted) 20%, transparent);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -402,7 +407,8 @@
 }
 
 .ctxOutcome {
-  margin-top: 6px;
+  margin: 6px 0 0;
+  padding-left: var(--ctx-text-inset);
   color: var(--primary);
   font-size: calc(12px * var(--v2-scale, 1));
   line-height: 1.45;

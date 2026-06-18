@@ -120,28 +120,20 @@ export function SharedContextDrawer({
           {query.isLoading ? (
             <div className={styles.ctxLoading}>
               {[0, 1, 2].map((item) => (
-                <div key={item} className={styles.ctxGrid}>
-                  <span className={styles.ctxLead} aria-hidden="true" />
-                  <div className={styles.ctxLoadingRow} />
-                </div>
+                <div key={item} className={styles.ctxLoadingRow} />
               ))}
             </div>
           ) : query.error ? (
-            <div className={styles.ctxGrid}>
-              <span className={styles.ctxLead} aria-hidden="true" />
-              <p className={styles.ctxErrorText}>
+            <p className={styles.ctxBodyText}>
+              <span className={styles.ctxErrorText}>
                 Session context could not load.
-              </p>
-            </div>
+              </span>
+            </p>
           ) : entries.length === 0 ? (
-            <div className={styles.ctxGrid}>
-              <span className={styles.ctxLead} aria-hidden="true" />
-              <p className={styles.ctxEmptyText}>
-                No session context yet. As this group's agents capture work,
-                their documents appear here and are injected into each agent's
-                turn.
-              </p>
-            </div>
+            <p className={cn(styles.ctxBodyText, styles.ctxEmptyText)}>
+              No session context yet. As this group's agents capture work, their
+              documents appear here and are injected into each agent's turn.
+            </p>
           ) : (
             <ul className={styles.ctxList}>
               {entries.map((entry) => (
@@ -159,27 +151,21 @@ function ContextEntry({ entry }: { entry: TaskforceSessionContextEntry }) {
   const kind = clientKind(entry.produced_by_client)
   return (
     <li className={styles.ctxEntry} data-testid="fleet-context-entry">
-      <div className={styles.ctxGrid}>
-        <span className={styles.ctxLead}>
-          <span className={cn(styles.ctxBadge, CHIP_CLASS[kind])}>
-            {clientLabel(entry.produced_by_client)}
-          </span>
+      <div className={styles.ctxEntryTop}>
+        <span className={cn(styles.ctxBadge, CHIP_CLASS[kind])}>
+          {clientLabel(entry.produced_by_client)}
         </span>
-        <div className={styles.ctxCol}>
-          <div className={styles.ctxEntryHeader}>
-            <span className={styles.ctxEntryTitle}>{entry.title}</span>
-            <span className={styles.ctxEntryTime}>
-              {timeAgo(entry.last_touched_at)}
-            </span>
-          </div>
-          {entry.summary_markdown && (
-            <p className={styles.ctxEntrySummary}>{entry.summary_markdown}</p>
-          )}
-          {entry.outcome && (
-            <p className={styles.ctxOutcome}>Outcome: {entry.outcome}</p>
-          )}
-        </div>
+        <span className={styles.ctxEntryTitle}>{entry.title}</span>
+        <span className={styles.ctxEntryTime}>
+          {timeAgo(entry.last_touched_at)}
+        </span>
       </div>
+      {entry.summary_markdown && (
+        <p className={styles.ctxEntrySummary}>{entry.summary_markdown}</p>
+      )}
+      {entry.outcome && (
+        <p className={styles.ctxOutcome}>Outcome: {entry.outcome}</p>
+      )}
     </li>
   )
 }
