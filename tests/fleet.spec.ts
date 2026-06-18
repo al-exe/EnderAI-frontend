@@ -509,6 +509,25 @@ test("activity timeline shows the full canonical event stream and exact Ledger l
   expect(href).toContain("/v2/ledger?")
   expect(href).toContain("session_id=session-1")
   expect(href).toContain("event_id=event-command")
+
+  const dotAlignment = await page.evaluate(() => {
+    const timeline = document.querySelector(
+      '[data-testid="fleet-activity-timeline"]',
+    )
+    if (!timeline) throw new Error("timeline missing")
+    const dots = [...timeline.children]
+      .map((entry) => entry.querySelector("span"))
+      .filter((dot): dot is HTMLSpanElement => Boolean(dot))
+    if (dots.length < 2) throw new Error("expected multiple timeline dots")
+    const centers = dots.map((dot) => {
+      const rect = dot.getBoundingClientRect()
+      return rect.left + rect.width / 2
+    })
+    const spread = Math.max(...centers) - Math.min(...centers)
+    return { dotCount: dots.length, spread }
+  })
+  expect(dotAlignment.dotCount).toBeGreaterThanOrEqual(2)
+  expect(dotAlignment.spread).toBeLessThan(2)
 })
 
 test("activity timeline live head shows running without summary", async ({

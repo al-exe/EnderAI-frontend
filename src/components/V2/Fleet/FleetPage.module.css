@@ -1060,6 +1060,11 @@
   box-shadow: 0 0 0 3px var(--background);
 }
 
+/* tevLink inset hover padding shifts the positioning origin; keep dots on the spine. */
+.tev.tevLink .tdot {
+  left: -8px;
+}
+
 .tevRun .tdot,
 .tevNow .tdot {
   background: var(--primary);

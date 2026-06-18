@@ -439,7 +439,7 @@ function FleetAgentDetailRoute() {
             {/* Activity — durable per-turn timeline, newest-first (TF-247). */}
             <div className={styles.section}>
               <div className={styles.seclabel}>Activity</div>
-              <div className={styles.timeline}>
+              <div className={styles.timeline} data-testid="fleet-activity-timeline">
                 <div className={cn(styles.tev, styles.tevNow)}>
                   <span className={styles.tdot} />
                   <div className={styles.tt}>{liveActivityTime(agent)}</div>
