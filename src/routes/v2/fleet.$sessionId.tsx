@@ -40,6 +40,7 @@ import {
   modelLabel,
   presenceLabel,
   STATE_LABEL,
+  sessionPreviousWork,
   sessionWorkSummary,
 } from "@/components/V2/Fleet/fleetStatus"
 import { Markdown } from "@/components/V2/Fleet/Markdown"
@@ -306,7 +307,7 @@ function FleetAgentDetailRoute() {
           data-testid="fleet-detail-body"
         >
         <div className={styles.dmain}>
-          {/* Working on — waiting agents surface a question when present. */}
+          {/* Currently working on — waiting agents surface a question when present. */}
           {status === "waiting" ? (
             question ? (
               <div className={styles.section}>
@@ -328,12 +329,22 @@ function FleetAgentDetailRoute() {
             ) : null
           ) : (
             <div className={styles.section}>
-              <div className={styles.seclabel}>Working on</div>
+              <div className={styles.seclabel}>Currently working on</div>
               <div className={styles.nowtask}>
                 <Markdown>{sessionWorkSummary(agent)}</Markdown>
               </div>
             </div>
           )}
+
+          {/* Previously worked on — the turn just before the in-progress one. */}
+          {sessionPreviousWork(agent) ? (
+            <div className={styles.section}>
+              <div className={styles.seclabel}>Previously worked on</div>
+              <div className={styles.nowtask}>
+                <Markdown>{sessionPreviousWork(agent)}</Markdown>
+              </div>
+            </div>
+          ) : null}
 
           {/* Document */}
           {agent.active_document_id && (

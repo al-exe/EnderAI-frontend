@@ -253,27 +253,33 @@ export function agentActivityLine(agent: TaskforceFleetAgent): string {
   return pick ? truncateLine(pick) : ""
 }
 
-/** Session detail "Working on" body.
-
-   For a running agent we surface both that something new is in progress *and*
-   the most recent thing it did just before, so the user can orient quickly. */
+/** Session detail "Currently working on" body. */
 export function sessionWorkSummary(agent: TaskforceFleetAgent): string {
   const summary = agent.summary_markdown?.trim()
   const status = agentStatus(agent)
 
   if (status === "run") {
-    const base =
+    return (
       summary ||
       "Running in this terminal. A summary appears after Taskforce capture records work."
-    // recent[0] is the in-progress turn; recent[1] is what happened before it.
-    const previous = agentRecentActivity(agent)[1]
-    return previous ? `${base}\n\nMost recently: ${previous}` : base
+    )
   }
   if (summary) return summary
   if (status === "paused" || agentCapturePaused(agent)) {
     return "Activity capture is paused, so no summary is being updated."
   }
   return "No summary has been captured for this session yet."
+}
+
+/** Session detail "Previously worked on" body.
+
+   For a running agent, surface the thing it did just before the in-progress
+   turn so the user can orient quickly. Empty when there's nothing prior or the
+   agent isn't actively running. */
+export function sessionPreviousWork(agent: TaskforceFleetAgent): string {
+  if (agentStatus(agent) !== "run") return ""
+  // recent[0] is the in-progress turn; recent[1] is what happened before it.
+  return agentRecentActivity(agent)[1] ?? ""
 }
 
 /** Locale-aware date and time in the browser's local timezone. */
