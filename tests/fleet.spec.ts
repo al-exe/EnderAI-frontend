@@ -734,6 +734,12 @@ for (const theme of ["light", "dark"] as const) {
             document.documentElement.scrollWidth -
             document.documentElement.clientWidth,
           detailOverflowY: getComputedStyle(detail).overflowY,
+          mainOverflowY: getComputedStyle(
+            document.querySelector<HTMLElement>(
+              '[data-testid="fleet-detail-main"]',
+            )!,
+          ).overflowY,
+          railOverflowY: getComputedStyle(rail).overflowY,
           bodyDisplay: getComputedStyle(body).display,
           railBorderTop: getComputedStyle(rail).borderTopWidth,
           railBorderLeft: getComputedStyle(rail).borderLeftWidth,
@@ -741,8 +747,10 @@ for (const theme of ["light", "dark"] as const) {
       })
 
       expect(detailLayout.overflow).toBeLessThanOrEqual(0)
+      expect(detailLayout.detailOverflowY).toBe("visible")
+      expect(detailLayout.mainOverflowY).toBe("visible")
+      expect(detailLayout.railOverflowY).toBe("visible")
       if (width <= 880) {
-        expect(detailLayout.detailOverflowY).toBe("auto")
         expect(detailLayout.bodyDisplay).toBe("block")
         expect(detailLayout.railBorderTop).toBe("1px")
         expect(detailLayout.railBorderLeft).toBe("0px")
