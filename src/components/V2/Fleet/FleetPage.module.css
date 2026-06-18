@@ -215,9 +215,6 @@
 /* ----- shared-context drawer body ----- */
 .ctxDrawer {
   --ctx-pad-inline: 26px;
-  --ctx-icon-size: 30px;
-  --ctx-col-gap: 12px;
-  --ctx-text-inset: calc(var(--ctx-icon-size) + var(--ctx-col-gap));
   width: 100%;
   max-width: min(100vw, 520px);
 }
@@ -236,27 +233,6 @@
   flex: 1;
   overflow-y: auto;
   padding-block: 20px 24px;
-}
-
-.ctxGrid {
-  display: grid;
-  grid-template-columns: var(--ctx-icon-size) minmax(0, 1fr);
-  column-gap: var(--ctx-col-gap);
-  align-items: start;
-}
-
-.ctxGrid + .ctxGrid {
-  margin-top: 14px;
-}
-
-.ctxLead {
-  display: flex;
-  justify-content: flex-start;
-  min-width: 0;
-}
-
-.ctxCol {
-  min-width: 0;
 }
 
 .ctxTitle {
@@ -278,29 +254,24 @@
   white-space: nowrap;
 }
 
-.ctxIcon {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--fl-primary-line);
-  background: var(--fl-primary-soft);
-  color: var(--primary);
-}
-
-.ctxIcon svg {
-  width: 16px;
-  height: 16px;
-}
-
 .ctxInjectText {
-  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 14px 0 0;
   padding: 9px 12px;
   border: 1px solid var(--fl-primary-line);
   background: var(--fl-primary-soft);
   font-size: calc(12px * var(--v2-scale, 1));
   line-height: 1.45;
+}
+
+.ctxInjectIcon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary);
 }
 
 .ctxMeta {
@@ -356,16 +327,8 @@
   line-height: 1.35;
 }
 
-.ctxBodyText {
-  margin: 0;
-  padding-left: var(--ctx-text-inset);
-  font-size: calc(13px * var(--v2-scale, 1));
-  line-height: 1.5;
-}
-
 .ctxEntrySummary {
   margin: 8px 0 0;
-  padding-left: var(--ctx-text-inset);
   color: var(--muted-foreground);
   font-size: calc(13px * var(--v2-scale, 1));
   line-height: 1.5;
@@ -374,10 +337,15 @@
 .ctxEmptyText {
   margin: 0;
   color: var(--muted-foreground);
+  font-size: calc(13px * var(--v2-scale, 1));
+  line-height: 1.5;
 }
 
 .ctxErrorText {
+  margin: 0;
   color: var(--destructive);
+  font-size: calc(13px * var(--v2-scale, 1));
+  line-height: 1.5;
 }
 
 .ctxLoading {
@@ -388,7 +356,6 @@
 
 .ctxLoadingRow {
   height: 80px;
-  margin-left: var(--ctx-text-inset);
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--muted) 20%, transparent);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -408,7 +375,6 @@
 
 .ctxOutcome {
   margin: 6px 0 0;
-  padding-left: var(--ctx-text-inset);
   color: var(--primary);
   font-size: calc(12px * var(--v2-scale, 1));
   line-height: 1.45;

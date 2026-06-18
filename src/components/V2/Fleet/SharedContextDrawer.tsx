@@ -74,46 +74,29 @@ export function SharedContextDrawer({
         data-testid="fleet-context-drawer"
       >
         <div className={cn(styles.ctxPanel, styles.ctxPanelHeader)}>
-          <div className={styles.ctxGrid}>
-            <span className={styles.ctxLead}>
-              <span className={styles.ctxIcon}>
-                <FileText aria-hidden="true" />
+          <h2 className={styles.ctxTitle}>Session context</h2>
+          <p className={styles.ctxScope}>
+            {data?.scope ?? fleetTitle(fleet)}
+          </p>
+          <p className={styles.ctxInjectText}>
+            <Zap aria-hidden="true" className={styles.ctxInjectIcon} />
+            Shared context between all agents in this session. Automatically
+            injected into each agent, up to{" "}
+            <b>
+              {(data?.inject_token_budget ?? 2000).toLocaleString()} tokens
+            </b>
+            .
+          </p>
+          {data && (
+            <div className={styles.ctxMeta}>
+              <span>
+                {data.entry_count}{" "}
+                {data.entry_count === 1 ? "document" : "documents"}
               </span>
-            </span>
-            <div className={styles.ctxCol}>
-              <h2 className={styles.ctxTitle}>Session context</h2>
-              <p className={styles.ctxScope}>
-                {data?.scope ?? fleetTitle(fleet)}
-              </p>
+              <span aria-hidden="true">·</span>
+              <span>~{data.token_estimate.toLocaleString()} tokens</span>
             </div>
-          </div>
-          <div className={styles.ctxGrid}>
-            <span className={styles.ctxLead}>
-              <span className={styles.ctxIcon}>
-                <Zap aria-hidden="true" />
-              </span>
-            </span>
-            <div className={styles.ctxCol}>
-              <p className={styles.ctxInjectText}>
-                Shared context between all agents in this session. Automatically
-                injected into each agent, up to{" "}
-                <b>
-                  {(data?.inject_token_budget ?? 2000).toLocaleString()} tokens
-                </b>
-                .
-              </p>
-              {data && (
-                <div className={styles.ctxMeta}>
-                  <span>
-                    {data.entry_count}{" "}
-                    {data.entry_count === 1 ? "document" : "documents"}
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>~{data.token_estimate.toLocaleString()} tokens</span>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
 
         <div className={cn(styles.ctxPanel, styles.ctxPanelBody)}>
@@ -124,13 +107,11 @@ export function SharedContextDrawer({
               ))}
             </div>
           ) : query.error ? (
-            <p className={styles.ctxBodyText}>
-              <span className={styles.ctxErrorText}>
-                Session context could not load.
-              </span>
+            <p className={styles.ctxErrorText}>
+              Session context could not load.
             </p>
           ) : entries.length === 0 ? (
-            <p className={cn(styles.ctxBodyText, styles.ctxEmptyText)}>
+            <p className={styles.ctxEmptyText}>
               No session context yet. As this group's agents capture work, their
               documents appear here and are injected into each agent's turn.
             </p>
