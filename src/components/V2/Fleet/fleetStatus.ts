@@ -204,6 +204,29 @@ function stripCursorDiagnosticTail(text: string): string {
   return text
 }
 
+/** True when captured activity text should render as a shell command block. */
+export function isCommandLikeText(text: string | null | undefined): boolean {
+  if (!text) return false
+  const trimmed = text.trim()
+  const lowered = trimmed.toLowerCase()
+  if (lowered.startsWith("ran:")) return true
+  if (trimmed.startsWith("$ ")) return true
+  if (
+    trimmed.length > 80 &&
+    /\b(?:cd|grep|find|ls|git|npm|bunx|npx|pytest)\b/.test(lowered) &&
+    /(?:&&|;|\|\|)/.test(trimmed)
+  ) {
+    return true
+  }
+  return false
+}
+
+/** Normalize command text for display inside a command block. */
+export function formatCommandBlockText(text: string): string {
+  const trimmed = text.trim()
+  return trimmed.replace(/^Ran:\s*/i, "").trim()
+}
+
 /** Strip Cursor wrappers and Fleet UI paste noise for activity display. */
 export function cleanActivityPromptText(
   text: string | null | undefined,

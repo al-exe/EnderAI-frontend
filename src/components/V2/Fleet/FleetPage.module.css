@@ -919,6 +919,29 @@
   letter-spacing: -0.005em;
 }
 
+.cmdBlock {
+  margin: 0;
+  padding: 9px 11px;
+  overflow-x: auto;
+  border: 1px solid var(--fl-hair);
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--v2-scale, 1));
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.cmdBlock code {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.cmdBlockCompact {
+  font-size: calc(11.5px * var(--v2-scale, 1));
+}
+
 .question {
   padding: 16px 18px;
   border: 1px solid var(--border);
