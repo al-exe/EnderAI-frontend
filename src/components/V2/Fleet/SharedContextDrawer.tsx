@@ -70,28 +70,30 @@ export function SharedContextDrawer({
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full gap-0 p-0 sm:max-w-md"
+        className={cn("w-full gap-0 p-0 sm:max-w-none", styles.ctxDrawer)}
         data-testid="fleet-context-drawer"
       >
-        <div className="border-border border-b p-5">
-          <div className={styles.ctxRow}>
-            <span className={styles.ctxIcon}>
-              <FileText aria-hidden="true" />
+        <div className={cn(styles.ctxPanel, styles.ctxPanelHeader)}>
+          <div className={styles.ctxGrid}>
+            <span className={styles.ctxLead}>
+              <span className={styles.ctxIcon}>
+                <FileText aria-hidden="true" />
+              </span>
             </span>
-            <div className={styles.ctxRowBody}>
-              <h2 className="text-sm font-semibold tracking-tight">
-                Session context
-              </h2>
-              <p className="text-muted-foreground truncate font-mono text-xs">
+            <div className={styles.ctxCol}>
+              <h2 className={styles.ctxTitle}>Session context</h2>
+              <p className={styles.ctxScope}>
                 {data?.scope ?? fleetTitle(fleet)}
               </p>
             </div>
           </div>
-          <div className={styles.ctxRow}>
-            <span className={styles.ctxIcon}>
-              <Zap aria-hidden="true" />
+          <div className={styles.ctxGrid}>
+            <span className={styles.ctxLead}>
+              <span className={styles.ctxIcon}>
+                <Zap aria-hidden="true" />
+              </span>
             </span>
-            <div className={styles.ctxRowBody}>
+            <div className={styles.ctxCol}>
               <p className={styles.ctxInjectText}>
                 Injected into this group's agents each turn, up to{" "}
                 <b>
@@ -100,7 +102,7 @@ export function SharedContextDrawer({
                 .
               </p>
               {data && (
-                <div className="text-muted-foreground mt-3 flex flex-wrap gap-x-2 gap-y-1 font-mono text-[11px]">
+                <div className={styles.ctxMeta}>
                   <span>
                     {data.entry_count}{" "}
                     {data.entry_count === 1 ? "document" : "documents"}
@@ -113,27 +115,34 @@ export function SharedContextDrawer({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+        <div className={cn(styles.ctxPanel, styles.ctxPanelBody)}>
           {query.isLoading ? (
-            <div className="space-y-3">
+            <div className={styles.ctxLoading}>
               {[0, 1, 2].map((item) => (
-                <div
-                  key={item}
-                  className="border-border bg-muted/20 h-20 animate-pulse border"
-                />
+                <div key={item} className={styles.ctxGrid}>
+                  <span className={styles.ctxLead} aria-hidden="true" />
+                  <div className={styles.ctxLoadingRow} />
+                </div>
               ))}
             </div>
           ) : query.error ? (
-            <p className="text-destructive text-sm">
-              Session context could not load.
-            </p>
+            <div className={styles.ctxGrid}>
+              <span className={styles.ctxLead} aria-hidden="true" />
+              <p className={styles.ctxErrorText}>
+                Session context could not load.
+              </p>
+            </div>
           ) : entries.length === 0 ? (
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              No session context yet. As this group's agents capture work, their
-              documents appear here and are injected into each agent's turn.
-            </p>
+            <div className={styles.ctxGrid}>
+              <span className={styles.ctxLead} aria-hidden="true" />
+              <p className={styles.ctxEmptyText}>
+                No session context yet. As this group's agents capture work,
+                their documents appear here and are injected into each agent's
+                turn.
+              </p>
+            </div>
           ) : (
-            <ul className="flex flex-col">
+            <ul className={styles.ctxList}>
               {entries.map((entry) => (
                 <ContextEntry key={entry.document_id} entry={entry} />
               ))}
@@ -149,25 +158,27 @@ function ContextEntry({ entry }: { entry: TaskforceSessionContextEntry }) {
   const kind = clientKind(entry.produced_by_client)
   return (
     <li className={styles.ctxEntry} data-testid="fleet-context-entry">
-      <div className="mb-1.5 flex items-center gap-2">
-        <span className={cn(styles.ctxBadge, CHIP_CLASS[kind])}>
-          {clientLabel(entry.produced_by_client)}
+      <div className={styles.ctxGrid}>
+        <span className={styles.ctxLead}>
+          <span className={cn(styles.ctxBadge, CHIP_CLASS[kind])}>
+            {clientLabel(entry.produced_by_client)}
+          </span>
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
-          {entry.title}
-        </span>
-        <span className="text-muted-foreground shrink-0 font-mono text-[10.5px]">
-          {timeAgo(entry.last_touched_at)}
-        </span>
+        <div className={styles.ctxCol}>
+          <div className={styles.ctxEntryHeader}>
+            <span className={styles.ctxEntryTitle}>{entry.title}</span>
+            <span className={styles.ctxEntryTime}>
+              {timeAgo(entry.last_touched_at)}
+            </span>
+          </div>
+          {entry.summary_markdown && (
+            <p className={styles.ctxEntrySummary}>{entry.summary_markdown}</p>
+          )}
+          {entry.outcome && (
+            <p className={styles.ctxOutcome}>Outcome: {entry.outcome}</p>
+          )}
+        </div>
       </div>
-      {entry.summary_markdown && (
-        <p className="text-muted-foreground text-[13px] leading-relaxed">
-          {entry.summary_markdown}
-        </p>
-      )}
-      {entry.outcome && (
-        <p className={styles.ctxOutcome}>Outcome: {entry.outcome}</p>
-      )}
     </li>
   )
 }
