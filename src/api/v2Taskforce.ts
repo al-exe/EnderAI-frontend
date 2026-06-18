@@ -66,6 +66,7 @@ export interface TaskforceFleetSession {
   id: string
   name: string
   is_history: boolean
+  is_default: boolean
   created_at: string
   updated_at: string
   agents: TaskforceFleetAgent[]
@@ -186,6 +187,20 @@ export function updateTaskforceFleetSession(
       fleet_session_id: fleetSessionId,
     },
     body: { name },
+  })
+}
+
+/** Mark a session group as the default that new agents join. */
+export function setDefaultTaskforceFleetSession(
+  fleetSessionId: string,
+): CancelablePromise<TaskforceFleetSession> {
+  return request(OpenAPI, {
+    method: "PATCH",
+    url: "/api/v1/v2/taskforce/fleet/{fleet_session_id}",
+    path: {
+      fleet_session_id: fleetSessionId,
+    },
+    body: { is_default: true },
   })
 }
 
