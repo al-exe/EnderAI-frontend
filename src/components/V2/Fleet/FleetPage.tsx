@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import {
   Archive,
+  Bot,
   ChevronDown,
   ChevronRight,
   GripVertical,
@@ -69,6 +70,8 @@ import {
   agentDisplayName,
   agentKind,
   agentModelName,
+  agentSpecialistName,
+  agentSpecialistRuleCount,
   agentStatus,
   compactPresence,
   type FleetStatus,
@@ -261,6 +264,19 @@ function AgentRow({
   const model = agentModelName(agent)
   const branch = agent.branch?.trim() || null
   const activity = agentActivityLine(agent)
+  // The specialist profile steering this session, if Taskforce routed one.
+  // Prefer the resolved name; fall back to a humanized slug.
+  const specialistSlug = agent.specialist_slug?.trim() || null
+  const profileLabel =
+    agentSpecialistName(agent) ??
+    (specialistSlug
+      ? specialistSlug
+          .split(/[-_]/)
+          .filter(Boolean)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ")
+      : null)
+  const profileRuleCount = agentSpecialistRuleCount(agent)
   const [rowHovered, setRowHovered] = useState(false)
 
   const submitRename = (event: FormEvent) => {
@@ -320,6 +336,28 @@ function AgentRow({
               {sessionLabel}
             </div>
             <div className={styles.asub} data-testid="fleet-agent-sub">
+              {profileLabel && (
+                <>
+                  <span
+                    className={styles.profilePill}
+                    data-testid="fleet-agent-profile"
+                    title={
+                      profileRuleCount
+                        ? `Profile: ${profileLabel} · ${profileRuleCount} routing rules`
+                        : `Profile: ${profileLabel}`
+                    }
+                  >
+                    <Bot
+                      className={styles.profilePillIcon}
+                      aria-hidden="true"
+                    />
+                    {profileLabel}
+                  </span>
+                  <span className={styles.asep} aria-hidden="true">
+                    ·
+                  </span>
+                </>
+              )}
               <span className={styles.amodel}>{model}</span>
               {branch && (
                 <>
