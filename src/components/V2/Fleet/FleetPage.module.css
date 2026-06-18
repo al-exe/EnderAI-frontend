@@ -987,6 +987,42 @@
   cursor: pointer;
 }
 
+.reply button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.replyNote {
+  margin-top: 10px;
+  color: var(--fl-faint);
+  font-size: calc(12.5px * var(--v2-scale, 1));
+  line-height: 1.5;
+}
+
+/* queued "reply to agent" prompts awaiting delivery */
+.queued {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.queuedLabel {
+  color: var(--fl-faint);
+  font-size: calc(11px * var(--v2-scale, 1));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.queuedItem {
+  padding: 8px 11px;
+  border: 1px dashed var(--border);
+  background: var(--fl-surface);
+  color: var(--foreground);
+  font-size: calc(13px * var(--v2-scale, 1));
+  line-height: 1.5;
+}
+
 /* activity timeline */
 .timeline {
   position: relative;
