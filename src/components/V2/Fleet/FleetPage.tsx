@@ -310,9 +310,24 @@ function AgentRow({
             </div>
             <div className={styles.asub} data-testid="fleet-agent-sub">
               <span className={styles.amodel}>{model}</span>
-              {branch && <span className={styles.abranch}>{branch}</span>}
+              {branch && (
+                <>
+                  <span className={styles.asep} aria-hidden="true">
+                    ·
+                  </span>
+                  <span className={styles.abranch}>{branch}</span>
+                </>
+              )}
               {activity && (
-                <ActivityMarquee activity={activity} active={rowHovered} />
+                <>
+                  <span className={styles.asep} aria-hidden="true">
+                    ·
+                  </span>
+                  <ActivityMarquee
+                    activity={activity}
+                    active={rowHovered}
+                  />
+                </>
               )}
             </div>
           </div>
