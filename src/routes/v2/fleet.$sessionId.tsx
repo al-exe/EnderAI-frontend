@@ -465,11 +465,6 @@ function FleetAgentDetailRoute() {
             <p className={styles.sessionName}>{fleetName}</p>
             {model && metaRow("Model", model)}
             {startedAt && metaRow("Started", formatLocalDateTime(startedAt))}
-            {metaRow(
-              "Capture",
-              capturePaused ? "paused" : "on",
-              capturePaused ? styles.capPaused : undefined,
-            )}
             {metaRow("Session", agent.session_id)}
           </div>
 
