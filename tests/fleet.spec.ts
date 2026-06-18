@@ -616,6 +616,23 @@ test("session detail strips Cursor capture noise from working-on text", async ({
   await expect(page.getByText(/<user_query>/)).toHaveCount(0)
 })
 
+test("session detail renders Ran diagnostics in a command block", async ({
+  page,
+}) => {
+  await mockFleet(page, {
+    agentOverrides: {
+      summary_markdown:
+        "Ran: cd /home/alexlee/dev && ls -la && echo test",
+    },
+  })
+  await page.goto("/v2/fleet/session-1")
+
+  const block = page.getByTestId("fleet-command-block").first()
+  await expect(block).toBeVisible()
+  await expect(block).toContainText("cd /home/alexlee/dev")
+  await expect(block).not.toContainText("Ran:")
+})
+
 test("activity timeline live head shows waiting state", async ({ page }) => {
   await mockFleet(page, {
     agentOverrides: {

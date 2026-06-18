@@ -42,6 +42,7 @@ import {
   sessionPreviousWork,
   sessionWorkSummary,
 } from "@/components/V2/Fleet/fleetStatus"
+import { ActivityProse } from "@/components/V2/Fleet/ActivityProse"
 import { Markdown } from "@/components/V2/Fleet/Markdown"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
 import { useFleetPulseSync } from "@/components/V2/Fleet/fleetPulseSync"
@@ -97,9 +98,8 @@ function metaRow(key: string, value: string, valueClass?: string) {
 }
 
 // Prompt/reply/note carry free-form prose worth rendering as markdown. Command
-// and edit titles are structured ("$ cmd", "Edited file") — leave them literal
-// so shell/path characters aren't mangled by the markdown parser.
-const PROSE_EVENT_KINDS = new Set(["prompt", "reply", "note"])
+// and edit titles are structured ("$ cmd", "Edited file") — ActivityProse picks
+// command blocks vs markdown automatically.
 
 function eventTitle(event: TaskforceSessionActivityEntry): string {
   if (event.kind === "command") return `$ ${event.cmd ?? "command"}`
@@ -332,7 +332,7 @@ function FleetAgentDetailRoute() {
             <div className={styles.section}>
               <div className={styles.seclabel}>Currently working on</div>
               <div className={styles.nowtask}>
-                <Markdown>{sessionWorkSummary(agent)}</Markdown>
+                <ActivityProse>{sessionWorkSummary(agent)}</ActivityProse>
               </div>
             </div>
           )}
@@ -342,7 +342,7 @@ function FleetAgentDetailRoute() {
             <div className={styles.section}>
               <div className={styles.seclabel}>Previously worked on</div>
               <div className={styles.nowtask}>
-                <Markdown>{sessionPreviousWork(agent)}</Markdown>
+                <ActivityProse>{sessionPreviousWork(agent)}</ActivityProse>
               </div>
             </div>
           ) : null}
@@ -355,12 +355,15 @@ function FleetAgentDetailRoute() {
                 <span className={styles.tdot} />
                 <div className={styles.tt}>{liveActivityTime(agent)}</div>
                 <div className={styles.tx}>
-                  <Markdown>
+                  <ActivityProse
+                    compact
+                    className={styles.txProse}
+                  >
                     {liveActivityLabel(agent, {
                       capturePaused,
                       pauseReason,
                     })}
-                  </Markdown>
+                  </ActivityProse>
                 </div>
               </div>
               {activityEntries.map((entry) => {
@@ -373,11 +376,9 @@ function FleetAgentDetailRoute() {
                       <span className={styles.tkind}>{entry.kind}</span>
                     </div>
                     <div className={styles.tx}>
-                      {PROSE_EVENT_KINDS.has(entry.kind) ? (
-                        <Markdown>{eventTitle(entry)}</Markdown>
-                      ) : (
-                        eventTitle(entry)
-                      )}
+                      <ActivityProse compact className={styles.txProse}>
+                        {eventTitle(entry)}
+                      </ActivityProse>
                     </div>
                     {detail && <div className={styles.tsub}>{detail}</div>}
                   </>
