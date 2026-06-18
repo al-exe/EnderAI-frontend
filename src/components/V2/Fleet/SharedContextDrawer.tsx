@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { FileText, Zap } from "lucide-react"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 import {
   readTaskforceFleetSessionContext,
   type TaskforceFleetSession,
@@ -35,15 +35,13 @@ function timeAgo(iso: string | null): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
-/** Read-only session context drawer for one session group.
- *
- * Surfaces the documents the group's agents have produced (served by
- * GET /v2/taskforce/fleet/{id}/context). The feed is fetched lazily on open
- * so the roster doesn't fire one request per group on every poll. */
-export function SharedContextDrawer({
+/** Session context drawer — shared roster trigger or a custom opener. */
+export function SessionContextSheet({
   fleet,
+  trigger,
 }: {
   fleet: TaskforceFleetSession
+  trigger: ReactNode
 }) {
   const [open, setOpen] = useState(false)
   const query = useQuery({
@@ -57,17 +55,7 @@ export function SharedContextDrawer({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <button
-          type="button"
-          className={styles.fctx}
-          aria-label={`Session context for ${fleetTitle(fleet)}`}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <FileText aria-hidden="true" />
-          <span className={styles.fctxLabel}>Session context</span>
-        </button>
-      </SheetTrigger>
+      <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="right"
         className={cn("w-full gap-0 p-0 sm:max-w-none", styles.ctxDrawer)}
@@ -127,6 +115,53 @@ export function SharedContextDrawer({
         </div>
       </SheetContent>
     </Sheet>
+  )
+}
+
+/** Roster row trigger for the session context drawer. */
+export function SharedContextDrawer({
+  fleet,
+}: {
+  fleet: TaskforceFleetSession
+}) {
+  return (
+    <SessionContextSheet
+      fleet={fleet}
+      trigger={
+        <button
+          type="button"
+          className={styles.fctx}
+          aria-label={`Session context for ${fleetTitle(fleet)}`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <FileText aria-hidden="true" />
+          <span className={styles.fctxLabel}>Session context</span>
+        </button>
+      }
+    />
+  )
+}
+
+/** Agent detail rail trigger for the session context drawer. */
+export function SessionContextRailLink({
+  fleet,
+}: {
+  fleet: TaskforceFleetSession
+}) {
+  return (
+    <SessionContextSheet
+      fleet={fleet}
+      trigger={
+        <button
+          type="button"
+          className={styles.railContextLink}
+          data-testid="fleet-detail-session-context"
+          aria-label={`Open session context for ${fleetTitle(fleet)}`}
+        >
+          Session context
+        </button>
+      }
+    />
   )
 }
 

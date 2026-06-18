@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { BookOpen, ChevronLeft, ScrollText } from "lucide-react"
 import { readV2Document } from "@/api/v2Documents"
@@ -7,6 +7,7 @@ import {
   readTaskforceSessionActivity,
   type TaskforceFleetAgent,
   type TaskforceFleetResponse,
+  type TaskforceFleetSession,
   type TaskforceSessionActivityEntry,
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
@@ -16,8 +17,6 @@ import {
   V2_STICKY_HEADER_CLASS,
   V2_TAB_CONTENT_CLASS,
 } from "@/components/V2/v2PageShell"
-import styles from "@/components/V2/Fleet/FleetPage.module.css"
-import { useFleetPulseSync } from "@/components/V2/Fleet/fleetPulseSync"
 import {
   agentCapturePaused,
   agentDisplayName,
@@ -44,6 +43,9 @@ import {
   sessionWorkSummary,
 } from "@/components/V2/Fleet/fleetStatus"
 import { Markdown } from "@/components/V2/Fleet/Markdown"
+import styles from "@/components/V2/Fleet/FleetPage.module.css"
+import { useFleetPulseSync } from "@/components/V2/Fleet/fleetPulseSync"
+import { SessionContextRailLink } from "@/components/V2/Fleet/SharedContextDrawer"
 import { cn } from "@/lib/utils"
 
 const FLEET_QUERY_KEY = ["v2-taskforce-fleet"] as const
@@ -55,7 +57,11 @@ export const Route = createFileRoute("/v2/fleet/$sessionId")({
   }),
 })
 
-type Located = { agent: TaskforceFleetAgent; fleetName: string }
+type Located = {
+  agent: TaskforceFleetAgent
+  fleet: TaskforceFleetSession
+  fleetName: string
+}
 
 function locateAgent(
   data: TaskforceFleetResponse | undefined,
@@ -66,7 +72,7 @@ function locateAgent(
     const agent = fleet.agents.find(
       (candidate) => candidate.session_id === sessionId,
     )
-    if (agent) return { agent, fleetName: fleetTitle(fleet) }
+    if (agent) return { agent, fleet, fleetName: fleetTitle(fleet) }
   }
   return null
 }
@@ -137,19 +143,11 @@ function FleetAgentDetailRoute() {
 
   const located = locateAgent(fleetQuery.data, sessionId)
 
-  // Resolve referenced-document titles for the "Context in use" rail block.
-  const referencedIds = located?.agent.referenced_document_ids ?? []
   const activeDocumentId = located?.agent.active_document_id ?? null
   const activeDocumentQuery = useQuery({
     queryKey: ["v2-document", { documentId: activeDocumentId }],
     queryFn: () => readV2Document(activeDocumentId!),
     enabled: Boolean(activeDocumentId),
-  })
-  const contextQueries = useQueries({
-    queries: referencedIds.map((documentId) => ({
-      queryKey: ["v2-document", { documentId }],
-      queryFn: () => readV2Document(documentId),
-    })),
   })
 
   if (fleetQuery.isLoading) {
@@ -201,7 +199,7 @@ function FleetAgentDetailRoute() {
     )
   }
 
-  const { agent, fleetName } = located
+  const { agent, fleet, fleetName } = located
   const status = agentStatus(agent)
   const age = compactPresence(agent)
   const model = modelLabel(agent.model_id)
@@ -213,14 +211,6 @@ function FleetAgentDetailRoute() {
   const pauseReason = agentPauseReason(agent)
   const startedAt = agentStartedAt(agent)
   const files = agentFiles(agent)
-
-  const contextItems = referencedIds.map((id, index) => {
-    const query = contextQueries[index]
-    return {
-      id,
-      label: query?.data?.title || (query?.isLoading ? "Loading…" : id),
-    }
-  })
 
   const activeDocumentTitle =
     activeDocumentQuery.data?.title ||
@@ -488,17 +478,9 @@ function FleetAgentDetailRoute() {
             </div>
           )}
 
-          {/* Context in use — resolved referenced-document titles. */}
-          {contextItems.length > 0 && (
-            <div className={styles.block}>
-              <div className={styles.seclabel}>Context in use</div>
-              {contextItems.map((item) => (
-                <div className={styles.ctxitem} key={item.id}>
-                  {item.label}
-                </div>
-              ))}
-            </div>
-          )}
+          <div className={styles.block}>
+            <SessionContextRailLink fleet={fleet} />
+          </div>
 
           {/* Files touched — degrades to empty until TF-245 supplies the list. */}
           <div className={styles.block}>

@@ -713,6 +713,9 @@ for (const theme of ["light", "dark"] as const) {
       await expect(page.getByTestId("fleet-detail-document")).toContainText(
         "User requested feature",
       )
+      await expect(
+        page.getByTestId("fleet-detail-session-context"),
+      ).toBeVisible()
 
       const detailLayout = await page.evaluate(() => {
         const detail = document.querySelector<HTMLElement>(
