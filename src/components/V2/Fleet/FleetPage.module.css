@@ -322,25 +322,19 @@
   color: inherit;
   text-decoration: none;
   cursor: pointer;
-  transition:
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color 120ms ease;
 }
 
 .ctxEntryLink:hover,
 .ctxEntryLink:focus-visible {
-  background: var(--fl-primary-softer);
-  box-shadow: inset 0 0 0 1px var(--fl-primary-line-soft);
-}
-
-.ctxEntryLink:hover .ctxEntryTitle,
-.ctxEntryLink:focus-visible .ctxEntryTitle {
-  color: var(--primary);
-  text-decoration: none;
+  background: var(--fl-hair);
 }
 
 .ctxEntryLink:focus-visible {
-  outline: none;
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
 }
 
 .ctxEntryTop {
