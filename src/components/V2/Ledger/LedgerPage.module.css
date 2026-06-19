@@ -613,15 +613,10 @@
   font-size: calc(13px * var(--v2-scale, 1));
   line-height: 1.45;
   text-wrap: pretty;
-  white-space: pre-wrap;
 }
 .evPrompt .evTitle,
 .evReply .evTitle {
   color: var(--tf-fg);
-}
-.evTitleMono {
-  font-family: var(--font-mono);
-  word-break: break-word;
 }
 .evSub {
   margin-top: 4px;
