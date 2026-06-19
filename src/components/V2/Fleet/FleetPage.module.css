@@ -913,11 +913,13 @@
   letter-spacing: -0.005em;
 }
 
+/* ActivityProse is shared with the Ledger transcript, which is outside the
+   Fleet --fl-* scope; fall back to the global border token there. */
 .cmdBlock {
   margin: 0;
   padding: 9px 11px;
   overflow-x: auto;
-  border: 1px solid var(--fl-hair);
+  border: 1px solid var(--fl-hair, var(--border));
   background: color-mix(in srgb, var(--foreground) 6%, transparent);
   color: var(--foreground);
   font-family: var(--font-mono);

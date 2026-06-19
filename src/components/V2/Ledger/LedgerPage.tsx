@@ -24,6 +24,7 @@ import {
 } from "@/api/v2Ledger"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { formatCompactNumber } from "@/components/V2/Agents/formatters"
+import { ActivityProse } from "@/components/V2/Fleet/ActivityProse"
 import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
@@ -778,6 +779,15 @@ function LedgerDetail({
   )
 }
 
+// Dot/emphasis treatment per kind; commands and edits stay neutral and lean on
+// ActivityProse (command block / markdown) for their formatting.
+function eventModifier(kind: string): string | undefined {
+  if (kind === "prompt") return styles.evPrompt
+  if (kind === "reply") return styles.evReply
+  if (kind === "command" || kind === "edit") return undefined
+  return styles.evNote
+}
+
 function TranscriptEvent({
   anchorRef,
   detail,
@@ -794,60 +804,18 @@ function TranscriptEvent({
   const title = transcriptEventTitle(event)
   const eventDetail = transcriptEventDetail(event, detail)
 
-  if (event.kind === "prompt") {
-    return (
-      <EventShell
-        kind={event.kind}
-        modifier={styles.evPrompt}
-        time={time}
-        {...anchorProps}
-      >
-        <div className={styles.evTitle}>{title}</div>
-        {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
-      </EventShell>
-    )
-  }
-
-  if (event.kind === "reply") {
-    return (
-      <EventShell
-        kind={event.kind}
-        modifier={styles.evReply}
-        time={time}
-        {...anchorProps}
-      >
-        <div className={styles.evTitle}>{title}</div>
-        {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
-      </EventShell>
-    )
-  }
-
-  if (event.kind === "command") {
-    return (
-      <EventShell kind={event.kind} time={time} {...anchorProps}>
-        <div className={cn(styles.evTitle, styles.evTitleMono)}>{title}</div>
-        {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
-      </EventShell>
-    )
-  }
-
-  if (event.kind === "edit") {
-    return (
-      <EventShell kind={event.kind} time={time} {...anchorProps}>
-        <div className={styles.evTitle}>{title}</div>
-        {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
-      </EventShell>
-    )
-  }
-
+  // Mirrors the Fleet agent-detail activity timeline: prose text renders as
+  // compact markdown and command-like text ("$ …") renders as a command block.
   return (
     <EventShell
       kind={event.kind}
-      modifier={styles.evNote}
+      modifier={eventModifier(event.kind)}
       time={time}
       {...anchorProps}
     >
-      <div className={styles.evTitle}>{title}</div>
+      <div className={styles.evTitle}>
+        <ActivityProse compact>{title}</ActivityProse>
+      </div>
       {eventDetail ? <div className={styles.evSub}>{eventDetail}</div> : null}
     </EventShell>
   )
