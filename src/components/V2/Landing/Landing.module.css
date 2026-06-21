@@ -1193,24 +1193,6 @@
   border-top: 1px solid var(--landing-hairline);
 }
 
-.proofRowStacked {
-  grid-template-columns: 1fr;
-  gap: 28px;
-}
-
-.proofRowStacked .featureCopy {
-  max-width: 40rem;
-}
-
-.proofRowStacked .visual {
-  width: 100%;
-}
-
-.proofRowStacked .metricsCard {
-  height: auto;
-  min-height: 0;
-}
-
 .features .proofRow:first-child {
   border-top: 1px solid var(--landing-hairline);
 }
@@ -1224,8 +1206,15 @@
 }
 
 .metricsCard {
-  justify-content: center;
-  padding: 18px;
+  justify-content: flex-start;
+}
+
+.metricsBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px;
 }
 
 .metricsHeroStat {
@@ -1237,7 +1226,7 @@
 
 .metricsHeroStat span {
   color: var(--landing-primary);
-  font-size: 38px;
+  font-size: 34px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -1250,65 +1239,65 @@
 }
 
 .metricsSub {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: var(--landing-faint);
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.04em;
 }
 
-.chart {
-  margin-right: -18px;
-  margin-bottom: 14px;
-  margin-left: -18px;
-  padding: 10px 12px 6px;
-  border-width: 1px 0;
-  border-style: solid;
-  border-color: var(--landing-hairline);
+.metricsBarChart {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  gap: 8px;
+  min-height: 0;
+}
+
+.metricsBarCol {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+
+.metricsBarTrack {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  min-height: 112px;
+  padding: 8px 6px 0;
+  border: 1px solid var(--landing-hairline);
   background: var(--landing-bg);
 }
 
-.metricsChartSvg {
-  display: block;
-  overflow: visible;
+.metricsBarFill {
   width: 100%;
-  height: clamp(160px, 18vw, 240px);
+  border: 1px solid color-mix(in srgb, var(--landing-primary) 45%, var(--landing-border));
+  background: color-mix(in srgb, var(--landing-primary) 18%, var(--landing-bg));
 }
 
-.chartGrid line {
-  stroke: var(--landing-hairline);
-  stroke-width: 1;
+.metricsBarFillActive {
+  border-color: var(--landing-primary);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--landing-primary) 28%, var(--landing-bg)),
+    var(--landing-primary)
+  );
 }
 
-.chartAxis line {
-  stroke: color-mix(in srgb, var(--landing-faint) 72%, var(--landing-border));
-  stroke-width: 1.2;
-}
-
-.chartLabels text {
-  fill: var(--landing-faint);
+.metricsBarLabel {
+  color: var(--landing-faint);
   font-family: var(--font-mono);
-  font-size: 3.2px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-align: center;
 }
 
-.chartArea {
-  fill: url("#rediscovery-gradient");
-}
-
-.chartLine {
-  fill: none;
-  stroke: var(--landing-primary);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-}
-
-.chartPoints circle {
-  fill: var(--landing-bg);
-  stroke: var(--landing-primary);
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
+.metricsCard .metricsTiles {
+  margin-top: 12px;
 }
 
 .ctaBand {
