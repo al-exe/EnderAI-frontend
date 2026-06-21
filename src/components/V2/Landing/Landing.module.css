@@ -217,9 +217,9 @@
   z-index: 1;
   display: grid;
   flex: 1 1 auto;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
   align-items: stretch;
-  gap: clamp(32px, 3.5vw, 52px);
+  gap: clamp(24px, 2.2vw, 36px);
 }
 
 .heroCopy {
@@ -463,14 +463,22 @@
 }
 
 .termBody {
-  position: relative;
-  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
   padding: 18px;
+}
+
+.termScenes {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 298px;
+  margin-top: 11px;
 }
 
 .terminalScene {
   position: absolute;
-  inset: 18px;
+  inset: 0;
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -1351,7 +1359,8 @@
 
 .metricsBarFill {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--landing-primary) 45%, var(--landing-border));
+  border: 1px solid
+    color-mix(in srgb, var(--landing-primary) 45%, var(--landing-border));
   background: color-mix(in srgb, var(--landing-primary) 18%, var(--landing-bg));
 }
 
@@ -1509,7 +1518,7 @@
     animation: cueBounce 1900ms ease-in-out infinite;
   }
 
-  .caret {
+  .caretIdle {
     animation: caretBlink 1100ms steps(1) infinite;
   }
 

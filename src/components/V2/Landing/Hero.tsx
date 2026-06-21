@@ -36,8 +36,18 @@ const SCENES = [
   },
 ] as const
 
-const HERO_ROTATION_MS = 4400
-const HERO_CLICK_PAUSE_MS = 10_000
+const SCENE_COMMANDS = [
+  "tf sessions --live",
+  'tf route "stripe tax for new subscribers"',
+  'tf recall "annual-plan tax pattern"',
+  'tf ledger --ref "Stripe checkout wiring"',
+  "tf metrics --last 30d",
+] as const
+
+const HERO_ROTATION_MS = 5600
+const HERO_CLICK_PAUSE_MS = 12_000
+const TYPE_SPEED_MS = 30
+const OUTPUT_DELAY_MS = 220
 
 function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
@@ -219,7 +229,10 @@ export function LandingHero() {
               className={cn(styles.heroTerm, termReveal.className)}
               ref={termReveal.ref}
             >
-              <HeroTerminal sceneIndex={sceneIndex} />
+              <HeroTerminal
+                reducedMotion={reducedMotion}
+                sceneIndex={sceneIndex}
+              />
             </div>
           </div>
         </div>
@@ -240,7 +253,13 @@ export function LandingHero() {
   )
 }
 
-function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
+function HeroTerminal({
+  reducedMotion,
+  sceneIndex,
+}: {
+  reducedMotion: boolean
+  sceneIndex: number
+}) {
   const scenes = [
     <SessionsScene key="sessions" />,
     <ProfilesScene key="profiles" />,
@@ -248,6 +267,41 @@ function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
     <LedgerScene key="ledger" />,
     <MetricsScene key="metrics" />,
   ]
+
+  const command = SCENE_COMMANDS[sceneIndex]
+  const [typed, setTyped] = useState("")
+  const [showOutput, setShowOutput] = useState(false)
+
+  // Type the command character by character, then reveal the output below it.
+  useEffect(() => {
+    if (reducedMotion) {
+      setTyped(command)
+      setShowOutput(true)
+      return
+    }
+
+    setTyped("")
+    setShowOutput(false)
+
+    let index = 0
+    let outputTimer: number | undefined
+    const typeTimer = window.setInterval(() => {
+      index += 1
+      setTyped(command.slice(0, index))
+      if (index >= command.length) {
+        window.clearInterval(typeTimer)
+        outputTimer = window.setTimeout(
+          () => setShowOutput(true),
+          OUTPUT_DELAY_MS,
+        )
+      }
+    }, TYPE_SPEED_MS)
+
+    return () => {
+      window.clearInterval(typeTimer)
+      if (outputTimer) window.clearTimeout(outputTimer)
+    }
+  }, [command, reducedMotion])
 
   return (
     <div className={styles.term}>
@@ -260,17 +314,26 @@ function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
         </span>
       </div>
       <div className={styles.termBody}>
-        {scenes.map((scene, index) => (
-          <div
-            className={cn(
-              styles.terminalScene,
-              sceneIndex === index && styles.terminalSceneActive,
-            )}
-            key={scene.key}
-          >
-            {scene}
-          </div>
-        ))}
+        <div className={styles.cmd}>
+          <span className={styles.cmdSign}>$</span>
+          <span className={styles.cmdText}>{typed}</span>
+          <span className={cn(styles.caret, showOutput && styles.caretIdle)} />
+        </div>
+        <div className={styles.termScenes}>
+          {scenes.map((scene, index) => (
+            <div
+              className={cn(
+                styles.terminalScene,
+                sceneIndex === index &&
+                  showOutput &&
+                  styles.terminalSceneActive,
+              )}
+              key={scene.key}
+            >
+              {scene}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -279,7 +342,6 @@ function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
 function SessionsScene() {
   return (
     <>
-      <Command>tf sessions --live</Command>
       <SessionGroup count="3 agents" name="checkout-squad" />
       <SessionRow name="tax-refactor" state="running" tool="claude · vm-04" />
       <SessionRow name="checkout-e2e" state="14/20" tool="codex · term-2" />
@@ -309,7 +371,6 @@ function SessionsScene() {
 function ProfilesScene() {
   return (
     <>
-      <Command>tf route "stripe tax for new subscribers"</Command>
       <Field label="matched">
         <span className={styles.accent}>Jensen · Billing Reliability</span>
       </Field>
@@ -338,7 +399,6 @@ function ProfilesScene() {
 function LibraryScene() {
   return (
     <>
-      <Command>tf recall "annual-plan tax pattern"</Command>
       <Field label="reading">
         <span className={styles.accent}>Stripe checkout wiring</span> ·{" "}
         <span className={styles.accent}>tax-rates rollout</span>
@@ -369,7 +429,6 @@ function LibraryScene() {
 function LedgerScene() {
   return (
     <>
-      <Command>tf ledger --ref "Stripe checkout wiring"</Command>
       <div className={styles.ledgerHead}>
         <span>time</span>
         <span>session</span>
@@ -413,7 +472,6 @@ function LedgerScene() {
 function MetricsScene() {
   return (
     <>
-      <Command>tf metrics --last 30d</Command>
       <div className={styles.metricBig}>
         <span>73%</span>
         <span>rediscovery avoided · across 12 repos</span>
@@ -436,16 +494,6 @@ function MetricsScene() {
         ]}
       />
     </>
-  )
-}
-
-function Command({ children }: { children: ReactNode }) {
-  return (
-    <div className={styles.cmd}>
-      <span className={styles.cmdSign}>$</span>
-      <span className={styles.cmdText}>{children}</span>
-      <span className={styles.caret} />
-    </div>
   )
 }
 
