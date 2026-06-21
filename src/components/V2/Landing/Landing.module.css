@@ -1233,21 +1233,18 @@
   margin-right: -18px;
   margin-bottom: 14px;
   margin-left: -18px;
-  padding: 18px 20px 14px;
+  padding: 10px 12px 6px;
   border-width: 1px 0;
   border-style: solid;
   border-color: var(--landing-hairline);
   background: var(--landing-bg);
 }
 
-.proofRowStacked .chart svg {
-  height: clamp(148px, 16vw, 220px);
-}
-
-.chart svg {
+.metricsChartSvg {
   display: block;
+  overflow: visible;
   width: 100%;
-  height: 132px;
+  height: clamp(160px, 18vw, 240px);
 }
 
 .chartGrid line {
@@ -1263,7 +1260,7 @@
 .chartLabels text {
   fill: var(--landing-faint);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 3.2px;
 }
 
 .chartArea {
@@ -1275,13 +1272,15 @@
   stroke: var(--landing-primary);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 2.4;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 
 .chartPoints circle {
   fill: var(--landing-bg);
   stroke: var(--landing-primary);
   stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 
 .ctaBand {

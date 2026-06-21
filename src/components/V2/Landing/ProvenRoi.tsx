@@ -37,8 +37,9 @@ export function ProvenRoi() {
               <div className={styles.chart}>
                 <svg
                   aria-hidden="true"
-                  preserveAspectRatio="xMidYMid meet"
-                  viewBox="0 0 320 132"
+                  className={styles.metricsChartSvg}
+                  preserveAspectRatio="none"
+                  viewBox="0 0 100 50"
                 >
                   <defs>
                     <linearGradient
@@ -51,7 +52,7 @@ export function ProvenRoi() {
                       <stop
                         offset="0%"
                         stopColor="var(--landing-primary)"
-                        stopOpacity="0.22"
+                        stopOpacity="0.24"
                       />
                       <stop
                         offset="100%"
@@ -61,51 +62,49 @@ export function ProvenRoi() {
                     </linearGradient>
                   </defs>
                   <g className={styles.chartGrid}>
-                    <line x1="44" x2="304" y1="20" y2="20" />
-                    <line x1="44" x2="304" y1="52" y2="52" />
-                    <line x1="44" x2="304" y1="84" y2="84" />
+                    <line x1="7" x2="100" y1="12" y2="12" />
+                    <line x1="7" x2="100" y1="24" y2="24" />
+                    <line x1="7" x2="100" y1="36" y2="36" />
                   </g>
                   <g className={styles.chartAxis}>
-                    <line x1="44" x2="44" y1="12" y2="100" />
-                    <line x1="44" x2="304" y1="100" y2="100" />
+                    <line x1="7" x2="100" y1="42" y2="42" />
                   </g>
                   <g className={styles.chartLabels}>
-                    <text x="10" y="24">
+                    <text textAnchor="start" x="0" y="10.5">
                       80%
                     </text>
-                    <text x="10" y="56">
+                    <text textAnchor="start" x="0" y="22.5">
                       60%
                     </text>
-                    <text x="10" y="88">
+                    <text textAnchor="start" x="0" y="34.5">
                       40%
                     </text>
-                    <text x="44" y="122">
+                    <text textAnchor="start" x="7" y="47.5">
                       W1
                     </text>
-                    <text x="124" y="122">
+                    <text textAnchor="middle" x="38" y="47.5">
                       W2
                     </text>
-                    <text x="204" y="122">
+                    <text textAnchor="middle" x="69" y="47.5">
                       W3
                     </text>
-                    <text x="284" y="122">
+                    <text textAnchor="end" x="100" y="47.5">
                       W4
                     </text>
                   </g>
                   <path
                     className={styles.chartArea}
-                    d="M44 88 L76 84 L108 77 L140 72 L172 61 L204 54 L236 43 L268 34 L304 24 L304 100 L44 100 Z"
+                    d="M7 33.2 L38 29.6 L69 25.2 L100 20.4 L100 42 L7 42 Z"
                   />
                   <path
                     className={styles.chartLine}
-                    d="M44 88 L76 84 L108 77 L140 72 L172 61 L204 54 L236 43 L268 34 L304 24"
+                    d="M7 33.2 L38 29.6 L69 25.2 L100 20.4"
                   />
                   <g className={styles.chartPoints}>
-                    <circle cx="44" cy="88" r="3" />
-                    <circle cx="108" cy="77" r="3" />
-                    <circle cx="172" cy="61" r="3" />
-                    <circle cx="236" cy="43" r="3" />
-                    <circle cx="304" cy="24" r="3.5" />
+                    <circle cx="7" cy="33.2" r="0.9" />
+                    <circle cx="38" cy="29.6" r="0.9" />
+                    <circle cx="69" cy="25.2" r="0.9" />
+                    <circle cx="100" cy="20.4" r="1.05" />
                   </g>
                 </svg>
               </div>
