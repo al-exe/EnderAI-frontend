@@ -10,7 +10,7 @@ const navItems = [
   { href: "#sessions", label: "Orchestration" },
   { href: "#profiles", label: "Profiles" },
   { href: "#library", label: "Library" },
-  { href: "#ledger", label: "Audit" },
+  { href: "#ledger", label: "Ledger" },
   { href: "#metrics", label: "Metrics" },
 ]
 
