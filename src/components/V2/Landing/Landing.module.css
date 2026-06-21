@@ -274,10 +274,10 @@
 }
 
 .heroSwitcher {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
-  align-items: stretch;
-  width: 100%;
+  align-items: flex-start;
+  width: max-content;
   max-width: 100%;
   gap: 12px;
   margin-bottom: 22px;
@@ -312,14 +312,15 @@
 
 .heroDots {
   display: flex;
-  gap: 8px;
-  width: 100%;
+  gap: 6px;
+  width: auto;
   margin-bottom: 0;
 }
 
 .heroDots button {
   position: relative;
-  flex: 1 1 0;
+  flex: 0 0 22px;
+  width: 22px;
   min-height: 32px;
   padding: 0;
   border: 0;
