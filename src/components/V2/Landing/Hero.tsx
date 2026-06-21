@@ -90,13 +90,10 @@ function useRevealClass() {
 export function LandingHero() {
   const [sceneIndex, setSceneIndex] = useState(0)
   const [isSwapping, setIsSwapping] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const [pauseToken, setPauseToken] = useState(0)
   const reducedMotion = usePrefersReducedMotion()
   const copyReveal = useRevealClass()
   const termReveal = useRevealClass()
   const swapTimer = useRef<number | null>(null)
-  const pauseTimer = useRef<number | null>(null)
   const pauseUntilRef = useRef(0)
   const scene = SCENES[sceneIndex]
 
@@ -135,44 +132,15 @@ export function LandingHero() {
 
   const selectSceneFromDot = (nextIndex: number) => {
     pauseUntilRef.current = Date.now() + HERO_CLICK_PAUSE_MS
-    setPauseToken((token) => token + 1)
-    setIsPaused(true)
     if (nextIndex !== sceneIndex) {
       selectScene(nextIndex)
     }
   }
 
   useEffect(() => {
-    if (!isPaused) return
-
-    if (pauseTimer.current) {
-      window.clearTimeout(pauseTimer.current)
-    }
-
-    const remaining = pauseUntilRef.current - Date.now()
-    pauseTimer.current = window.setTimeout(
-      () => {
-        setIsPaused(false)
-        pauseTimer.current = null
-      },
-      Math.max(0, remaining),
-    )
-
-    return () => {
-      if (pauseTimer.current) {
-        window.clearTimeout(pauseTimer.current)
-        pauseTimer.current = null
-      }
-    }
-  }, [isPaused, pauseToken])
-
-  useEffect(() => {
     return () => {
       if (swapTimer.current) {
         window.clearTimeout(swapTimer.current)
-      }
-      if (pauseTimer.current) {
-        window.clearTimeout(pauseTimer.current)
       }
     }
   }, [])
@@ -231,32 +199,19 @@ export function LandingHero() {
                 Works with Claude Code, Codex, and Cursor.
               </div>
               <div className={styles.heroCtas}>
-                <div className={styles.heroCtaButtons}>
-                  <Button asChild className={styles.solidButton}>
-                    <Link to="/signup">
-                      Start free
-                      <ArrowRight />
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    className={styles.outlineButton}
-                    variant="outline"
-                  >
-                    <Link to="/login">Open Taskforce</Link>
-                  </Button>
-                </div>
-                {isPaused && !reducedMotion ? (
-                  <span
-                    aria-hidden
-                    className={styles.pauseRing}
-                    key={pauseToken}
-                    style={{
-                      animationDuration: `${HERO_CLICK_PAUSE_MS}ms`,
-                    }}
-                    title="Auto-advancing soon"
-                  />
-                ) : null}
+                <Button asChild className={styles.solidButton}>
+                  <Link to="/signup">
+                    Start free
+                    <ArrowRight />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  className={styles.outlineButton}
+                  variant="outline"
+                >
+                  <Link to="/login">Open Taskforce</Link>
+                </Button>
               </div>
             </div>
 

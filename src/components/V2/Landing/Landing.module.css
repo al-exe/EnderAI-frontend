@@ -389,14 +389,8 @@
   justify-content: flex-start;
 }
 
-.heroCtaButtons {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.heroCtaButtons .solidButton,
-.heroCtaButtons .outlineButton {
+.heroCtas .solidButton,
+.heroCtas .outlineButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -404,44 +398,6 @@
   min-width: 168px;
   padding: 0 24px;
   font-size: 14px;
-}
-
-@property --pause-sweep {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 360deg;
-}
-
-.pauseRing {
-  display: block;
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  clip-path: circle(50% at 50% 50%);
-  animation: pausePieCountdown linear forwards;
-  background: conic-gradient(
-    from -90deg,
-    var(--landing-primary) 0deg,
-    var(--landing-primary) var(--pause-sweep),
-    transparent var(--pause-sweep),
-    transparent 360deg
-  );
-  box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--landing-primary) 45%, var(--landing-border));
-}
-
-@keyframes pausePieCountdown {
-  from {
-    --pause-sweep: 360deg;
-    opacity: 1;
-  }
-
-  to {
-    --pause-sweep: 0deg;
-    opacity: 0;
-  }
 }
 
 .term {
@@ -1452,12 +1408,6 @@
   .page {
     scroll-behavior: auto;
   }
-
-  .pauseRing {
-    animation: none;
-    opacity: 0.45;
-    --pause-sweep: 180deg;
-  }
 }
 
 @keyframes revealUp {
@@ -1594,11 +1544,6 @@
   }
 
   .heroCtas {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .heroCtaButtons {
     flex-direction: column;
     align-items: stretch;
   }
