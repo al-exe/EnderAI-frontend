@@ -218,34 +218,12 @@ export function LandingHero() {
                     <button
                       aria-label={item.key}
                       aria-selected={sceneIndex === index}
-                      className={cn(
-                        sceneIndex === index && styles.activeDot,
-                        sceneIndex === index &&
-                          isPaused &&
-                          !reducedMotion &&
-                          styles.pauseTimer,
-                      )}
+                      className={cn(sceneIndex === index && styles.activeDot)}
                       key={item.key}
                       onClick={() => selectSceneFromDot(index)}
                       role="tab"
-                      title={
-                        sceneIndex === index && isPaused
-                          ? "Auto-advancing soon"
-                          : undefined
-                      }
                       type="button"
-                    >
-                      {sceneIndex === index && isPaused && !reducedMotion ? (
-                        <span aria-hidden className={styles.pauseClock} key={pauseToken}>
-                          <span
-                            className={styles.pauseClockHand}
-                            style={{
-                              animationDuration: `${HERO_CLICK_PAUSE_MS}ms`,
-                            }}
-                          />
-                        </span>
-                      ) : null}
-                    </button>
+                    />
                   ))}
                 </div>
               </div>
@@ -266,6 +244,17 @@ export function LandingHero() {
                 >
                   <Link to="/login">Open Taskforce</Link>
                 </Button>
+                {isPaused && !reducedMotion ? (
+                  <span
+                    aria-hidden
+                    className={styles.pauseRing}
+                    key={pauseToken}
+                    style={{
+                      animationDuration: `${HERO_CLICK_PAUSE_MS}ms`,
+                    }}
+                    title="Auto-advancing soon"
+                  />
+                ) : null}
               </div>
             </div>
 

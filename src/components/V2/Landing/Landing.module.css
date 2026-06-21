@@ -243,6 +243,9 @@
 
 .heroCopy {
   align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   width: 100%;
   margin-top: 7vh;
 }
@@ -290,13 +293,13 @@
 }
 
 .heroSwitcher {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: fit-content;
+  width: max-content;
   max-width: 100%;
   gap: 10px;
-  margin-bottom: 26px;
+  margin-bottom: 18px;
 }
 
 .heroCap {
@@ -308,6 +311,7 @@
   font-family: var(--font-mono);
   font-size: 15px;
   letter-spacing: 0.04em;
+  white-space: nowrap;
   transition: opacity 260ms ease;
 }
 
@@ -364,51 +368,8 @@
   background: var(--landing-primary);
 }
 
-.heroDots .pauseTimer::after {
-  opacity: 0.28;
-}
-
-.pauseClock {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid color-mix(in srgb, var(--landing-primary) 42%, var(--landing-border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--landing-bg) 92%, transparent);
-  transform: translate(-50%, -50%);
-}
-
-.pauseClockHand {
-  position: absolute;
-  top: 3px;
-  left: calc(50% - 0.75px);
-  width: 1.5px;
-  height: 5px;
-  transform-origin: 50% 100%;
-  border-radius: 999px;
-  animation: pauseClockHand linear forwards;
-  background: var(--landing-primary);
-}
-
-@keyframes pauseClockHand {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .works {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  display: block;
   margin-bottom: 22px;
   color: var(--landing-faint);
   font-family: var(--font-mono);
@@ -418,6 +379,7 @@
 
 .heroCtas {
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: 12px;
 }
@@ -428,8 +390,35 @@
 
 .heroCtas .solidButton,
 .heroCtas .outlineButton {
-  padding: 12px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  min-width: 148px;
+  padding: 0 20px;
   font-size: 13px;
+}
+
+.pauseRing {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid color-mix(in srgb, var(--landing-primary) 70%, var(--landing-border));
+  border-radius: 999px;
+  animation: pauseRingShrink linear forwards;
+  background: color-mix(in srgb, var(--landing-primary) 12%, transparent);
+}
+
+@keyframes pauseRingShrink {
+  from {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0.35;
+    transform: scale(0.35);
+  }
 }
 
 .term {
@@ -1439,9 +1428,10 @@
     scroll-behavior: auto;
   }
 
-  .pauseClockHand {
+  .pauseRing {
     animation: none;
-    transform: rotate(45deg);
+    opacity: 0.55;
+    transform: scale(0.65);
   }
 }
 
