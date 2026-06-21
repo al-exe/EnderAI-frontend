@@ -16,18 +16,18 @@ const SCENES = [
   },
   {
     key: "Profiles",
-    name: "Agent profiles",
+    name: "Agent identities",
     phrase: ["re-briefing", "every agent."],
   },
   {
     key: "Library",
-    name: "Self-updating documents",
+    name: "Self-maintaining documents",
     phrase: ["re-explaining", "your codebase."],
   },
   {
     key: "Ledger",
     name: "Audit trail",
-    phrase: ["guessing what", "agents did."],
+    phrase: ["guessing what", "your agents did."],
   },
   {
     key: "Metrics",
@@ -90,10 +90,13 @@ function useRevealClass() {
 export function LandingHero() {
   const [sceneIndex, setSceneIndex] = useState(0)
   const [isSwapping, setIsSwapping] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [pauseToken, setPauseToken] = useState(0)
   const reducedMotion = usePrefersReducedMotion()
   const copyReveal = useRevealClass()
   const termReveal = useRevealClass()
   const swapTimer = useRef<number | null>(null)
+  const pauseTimer = useRef<number | null>(null)
   const pauseUntilRef = useRef(0)
   const scene = SCENES[sceneIndex]
 
@@ -132,13 +135,44 @@ export function LandingHero() {
 
   const selectSceneFromDot = (nextIndex: number) => {
     pauseUntilRef.current = Date.now() + HERO_CLICK_PAUSE_MS
-    selectScene(nextIndex)
+    setPauseToken((token) => token + 1)
+    setIsPaused(true)
+    if (nextIndex !== sceneIndex) {
+      selectScene(nextIndex)
+    }
   }
+
+  useEffect(() => {
+    if (!isPaused) return
+
+    if (pauseTimer.current) {
+      window.clearTimeout(pauseTimer.current)
+    }
+
+    const remaining = pauseUntilRef.current - Date.now()
+    pauseTimer.current = window.setTimeout(
+      () => {
+        setIsPaused(false)
+        pauseTimer.current = null
+      },
+      Math.max(0, remaining),
+    )
+
+    return () => {
+      if (pauseTimer.current) {
+        window.clearTimeout(pauseTimer.current)
+        pauseTimer.current = null
+      }
+    }
+  }, [isPaused, pauseToken])
 
   useEffect(() => {
     return () => {
       if (swapTimer.current) {
         window.clearTimeout(swapTimer.current)
+      }
+      if (pauseTimer.current) {
+        window.clearTimeout(pauseTimer.current)
       }
     }
   }, [])
@@ -167,29 +201,53 @@ export function LandingHero() {
                 <span className={styles.lead}>Stop </span>
                 <span className={styles.phrase}>{phrase}</span>
               </h1>
-              <div
-                className={cn(styles.heroCap, isSwapping && styles.swapping)}
-              >
-                <span className={styles.capKey}>{scene.key}</span>
-                <span className={styles.capSep}>·</span>
-                <span>{scene.name}</span>
-              </div>
-              <div
-                aria-label="Capabilities"
-                className={styles.heroDots}
-                role="tablist"
-              >
-                {SCENES.map((item, index) => (
-                  <button
-                    aria-label={item.key}
-                    aria-selected={sceneIndex === index}
-                    className={cn(sceneIndex === index && styles.activeDot)}
-                    key={item.key}
-                    onClick={() => selectSceneFromDot(index)}
-                    role="tab"
-                    type="button"
-                  />
-                ))}
+              <div className={styles.heroSwitcher}>
+                <div
+                  className={cn(styles.heroCap, isSwapping && styles.swapping)}
+                >
+                  <span className={styles.capKey}>{scene.key}</span>
+                  <span className={styles.capSep}>·</span>
+                  <span>{scene.name}</span>
+                </div>
+                <div
+                  aria-label="Capabilities"
+                  className={styles.heroDots}
+                  role="tablist"
+                >
+                  {SCENES.map((item, index) => (
+                    <button
+                      aria-label={item.key}
+                      aria-selected={sceneIndex === index}
+                      className={cn(
+                        sceneIndex === index && styles.activeDot,
+                        sceneIndex === index &&
+                          isPaused &&
+                          !reducedMotion &&
+                          styles.pauseTimer,
+                      )}
+                      key={item.key}
+                      onClick={() => selectSceneFromDot(index)}
+                      role="tab"
+                      title={
+                        sceneIndex === index && isPaused
+                          ? "Auto-advancing soon"
+                          : undefined
+                      }
+                      type="button"
+                    >
+                      {sceneIndex === index && isPaused && !reducedMotion ? (
+                        <span aria-hidden className={styles.pauseClock} key={pauseToken}>
+                          <span
+                            className={styles.pauseClockHand}
+                            style={{
+                              animationDuration: `${HERO_CLICK_PAUSE_MS}ms`,
+                            }}
+                          />
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className={styles.works}>
                 Works with Claude Code, Codex, and Cursor.
@@ -250,10 +308,6 @@ function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
       <div className={styles.termHead}>
         <span className={styles.termDot} />
         <span className={styles.termName}>taskforce</span>
-        <span className={styles.liveStatus}>
-          <span />
-          connected
-        </span>
       </div>
       <div className={styles.termBody}>
         {scenes.map((scene, index) => (
@@ -394,7 +448,6 @@ function LedgerScene() {
       <div className={styles.searchLine}>
         <span className={styles.termAccent}>search -</span> referenced:
         <span className={styles.termHighlight}>"Stripe checkout wiring"</span>
-        <span className={styles.termCursor} />
       </div>
       <div className={styles.ledgerHead}>
         <span>time</span>
