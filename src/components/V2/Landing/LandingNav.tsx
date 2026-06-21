@@ -9,9 +9,9 @@ import styles from "./Landing.module.css"
 const navItems = [
   { href: "#sessions", label: "Orchestration" },
   { href: "#profiles", label: "Profiles" },
-  { href: "#library", label: "Docs" },
-  { href: "#ledger", label: "Audit" },
-  { href: "#metrics", label: "ROI" },
+  { href: "#library", label: "Library" },
+  { href: "#ledger", label: "Ledger" },
+  { href: "#metrics", label: "Metrics" },
 ]
 
 const THEME_KEY = "tf-landing-theme"
