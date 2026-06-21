@@ -376,11 +376,38 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   height: 46px;
+  min-height: 46px;
+  max-height: 46px;
   min-width: 0;
   padding: 0 18px;
+  border-radius: 0;
+  font-family: var(--font-mono);
   font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
   white-space: nowrap;
+  gap: 8px;
+  box-shadow: none;
+}
+
+.heroCtas .solidButton {
+  border: 1px solid var(--landing-primary);
+  background: var(--landing-primary);
+  color: var(--landing-primary-fg);
+}
+
+.heroCtas .outlineButton {
+  border: 1px solid var(--landing-border);
+  background: transparent;
+  color: var(--landing-fg);
+}
+
+.heroCtas .solidButton svg {
+  width: 16px;
+  height: 16px;
 }
 
 .term {
@@ -1301,6 +1328,11 @@
     transparent 60%
   );
   content: "";
+}
+
+.ctaActions {
+  margin-inline: auto;
+  justify-content: center;
 }
 
 .ctaInner {

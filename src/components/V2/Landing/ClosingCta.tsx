@@ -3,6 +3,8 @@ import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
+import { cn } from "@/lib/utils"
+
 import styles from "./Landing.module.css"
 
 export function ClosingCta() {
@@ -12,7 +14,7 @@ export function ClosingCta() {
         <h2>
           Stop starting from <em>scratch</em>. Start using <em>Taskforce</em>.
         </h2>
-        <div className={styles.heroCtas}>
+        <div className={cn(styles.heroCtas, styles.ctaActions)}>
           <Button asChild className={styles.solidButton}>
             <Link to="/signup">
               Start free
