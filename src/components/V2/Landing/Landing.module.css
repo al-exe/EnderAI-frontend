@@ -1,5 +1,6 @@
 .page {
   --landing-max: clamp(1180px, calc(100vw - 11vw), 1540px);
+  --landing-nav-h: 77px;
   --landing-bg: var(--background);
   --landing-fg: var(--foreground);
   --landing-muted: var(--muted-foreground);
@@ -194,7 +195,7 @@
 }
 
 .hero {
-  --nav-h: 77px;
+  --nav-h: var(--landing-nav-h);
   position: relative;
   display: flex;
   overflow: hidden;
@@ -746,8 +747,10 @@
   padding: 0 0 8px;
 }
 
-#sessions {
-  scroll-margin-top: 28px;
+.featureRow,
+.proofRow,
+.features[id] {
+  scroll-margin-top: calc(var(--landing-nav-h) + 24px);
 }
 
 .featureRow {
