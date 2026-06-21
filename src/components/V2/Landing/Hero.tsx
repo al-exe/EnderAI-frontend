@@ -231,19 +231,21 @@ export function LandingHero() {
                 Works with Claude Code, Codex, and Cursor.
               </div>
               <div className={styles.heroCtas}>
-                <Button asChild className={styles.solidButton}>
-                  <Link to="/signup">
-                    Start free
-                    <ArrowRight />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  className={styles.outlineButton}
-                  variant="outline"
-                >
-                  <Link to="/login">Open Taskforce</Link>
-                </Button>
+                <div className={styles.heroCtaButtons}>
+                  <Button asChild className={styles.solidButton}>
+                    <Link to="/signup">
+                      Start free
+                      <ArrowRight />
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    className={styles.outlineButton}
+                    variant="outline"
+                  >
+                    <Link to="/login">Open Taskforce</Link>
+                  </Button>
+                </div>
                 {isPaused && !reducedMotion ? (
                   <span
                     aria-hidden
