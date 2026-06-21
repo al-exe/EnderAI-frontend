@@ -140,26 +140,6 @@
   gap: 10px;
 }
 
-.themeToggle {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-color: var(--landing-border);
-  background: var(--landing-bg);
-  color: var(--landing-muted);
-}
-
-.themeToggle:hover {
-  border-color: var(--landing-faint);
-  color: var(--landing-fg);
-}
-
-.themeToggle svg {
-  width: 18.75px;
-  height: 18.75px;
-}
-
 .solidButton,
 .outlineButton {
   height: auto;
