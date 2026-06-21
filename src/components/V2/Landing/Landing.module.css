@@ -381,15 +381,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .heroCopy .heroCtas {
   justify-content: flex-start;
 }
 
-.heroCtas .solidButton,
-.heroCtas .outlineButton {
+.heroCtaButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.heroCtaButtons .solidButton,
+.heroCtaButtons .outlineButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -399,25 +405,41 @@
   font-size: 13px;
 }
 
-.pauseRing {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid color-mix(in srgb, var(--landing-primary) 70%, var(--landing-border));
-  border-radius: 999px;
-  animation: pauseRingShrink linear forwards;
-  background: color-mix(in srgb, var(--landing-primary) 12%, transparent);
+@property --pause-sweep {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 360deg;
 }
 
-@keyframes pauseRingShrink {
+.pauseRing {
+  display: block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
+  animation: pausePieCountdown linear forwards;
+  background: conic-gradient(
+    from -90deg,
+    var(--landing-primary) 0deg,
+    var(--landing-primary) var(--pause-sweep),
+    transparent var(--pause-sweep),
+    transparent 360deg
+  );
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--landing-primary) 45%, var(--landing-border));
+}
+
+@keyframes pausePieCountdown {
   from {
-    opacity: 0.95;
-    transform: scale(1);
+    --pause-sweep: 360deg;
+    opacity: 1;
   }
 
   to {
-    opacity: 0.35;
-    transform: scale(0.35);
+    --pause-sweep: 0deg;
+    opacity: 0;
   }
 }
 
@@ -1430,8 +1452,8 @@
 
   .pauseRing {
     animation: none;
-    opacity: 0.55;
-    transform: scale(0.65);
+    opacity: 0.45;
+    --pause-sweep: 180deg;
   }
 }
 
@@ -1569,6 +1591,11 @@
   }
 
   .heroCtas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .heroCtaButtons {
     flex-direction: column;
     align-items: stretch;
   }
