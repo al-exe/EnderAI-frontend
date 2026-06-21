@@ -242,7 +242,7 @@ export function LandingHero() {
 
 function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
   const scenes = [
-    <FleetScene key="fleet" />,
+    <SessionsScene key="sessions" />,
     <ProfilesScene key="profiles" />,
     <LibraryScene key="library" />,
     <LedgerScene key="ledger" />,
@@ -253,7 +253,11 @@ function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
     <div className={styles.term}>
       <div className={styles.termHead}>
         <span className={styles.termDot} />
-        <span className={styles.termName}>taskforce</span>
+        <span className={styles.termName}>tf · taskforce</span>
+        <span className={styles.termStatus}>
+          <span />
+          connected
+        </span>
       </div>
       <div className={styles.termBody}>
         {scenes.map((scene, index) => (
@@ -272,44 +276,29 @@ function HeroTerminal({ sceneIndex }: { sceneIndex: number }) {
   )
 }
 
-function FleetScene() {
+function SessionsScene() {
   return (
     <>
-      <div className={styles.tlFleet}>
-        <span>checkout-squad</span>
-        <span>3 agents</span>
-      </div>
-      <TerminalAgent
-        name="tax-refactor"
-        status="running"
-        tool="claude - vm-04"
-      />
-      <TerminalAgent name="checkout-e2e" status="14/20" tool="codex - term-2" />
-      <div className={styles.tlFleet}>
-        <span>platform</span>
-        <span>3 agents</span>
-      </div>
-      <TerminalAgent
+      <Command>tf sessions --live</Command>
+      <SessionGroup count="3 agents" name="checkout-squad" />
+      <SessionRow name="tax-refactor" state="running" tool="claude · vm-04" />
+      <SessionRow name="checkout-e2e" state="14/20" tool="codex · term-2" />
+      <SessionGroup count="3 agents" name="platform" />
+      <SessionRow
         accent="amber"
         name="migrate-pg16"
-        status="review"
-        tool="cursor - vm-01"
+        state="review"
+        tool="cursor · vm-01"
       />
-      <TerminalAgent
+      <SessionRow
         name="api-deprecation"
-        status="38 left"
-        tool="claude - vm-02"
+        state="38 left"
+        tool="claude · vm-02"
       />
-      <div className={styles.termLine}>
-        <span className={styles.termAccent}>live -</span>{" "}
-        <span className={styles.termDim}>
-          tax-refactor referenced "Stripe checkout wiring"
-        </span>
-      </div>
       <SummaryGrid
         items={[
           ["sessions", "6 active", true],
-          ["across", "3 terminals - 3 VMs"],
+          ["across", "3 VMs"],
           ["context", "shared"],
         ]}
       />
@@ -320,31 +309,26 @@ function FleetScene() {
 function ProfilesScene() {
   return (
     <>
-      <Conversation who="you">
-        how do we handle stripe tax for new subscribers?
-      </Conversation>
-      <Conversation dim who="tf">
-        matching prompt to a specialist profile...
-      </Conversation>
-      <Conversation who="tf">
-        <span className={styles.termAccent}>Jensen - Billing Reliability</span>{" "}
-        - confidence <span className={styles.termGreen}>high</span>
-      </Conversation>
-      <Conversation dim who="tf">
-        pulling linked knowledge:{" "}
-        <span className={styles.termAccent}>Stripe checkout wiring</span>,{" "}
-        <span className={styles.termAccent}>tax-rates rollout</span>
-      </Conversation>
-      <Conversation who="tf">
-        briefing applied - role{" "}
-        <span className={styles.termAccent}>billing & checkout</span> - 38 docs
-        linked
-      </Conversation>
+      <Command>tf route "stripe tax for new subscribers"</Command>
+      <Field label="matched">
+        <span className={styles.accent}>Jensen · Billing Reliability</span>
+      </Field>
+      <Field label="confidence">
+        <span className={styles.green}>high</span> · 96% route match
+      </Field>
+      <Field label="linked">
+        <span className={styles.accent}>Stripe checkout wiring</span>,{" "}
+        <span className={styles.accent}>tax-rates rollout</span>
+      </Field>
+      <Field label="briefing">
+        role <span className={styles.accent}>billing & checkout</span> · 38 docs
+      </Field>
+      <Status>profile applied to this session</Status>
       <SummaryGrid
         items={[
           ["routed to", "Jensen", true],
           ["role", "billing & checkout"],
-          ["route match", "96%"],
+          ["match", "96%"],
         ]}
       />
     </>
@@ -354,34 +338,28 @@ function ProfilesScene() {
 function LibraryScene() {
   return (
     <>
-      <Conversation who="you">apply the annual-plan tax pattern</Conversation>
-      <Conversation dim who="tf">
-        recalling{" "}
-        <span className={styles.termAccent}>Stripe checkout wiring</span> +{" "}
-        <span className={styles.termAccent}>tax-rates rollout</span>...
-      </Conversation>
-      <Conversation who="tf">
-        attach{" "}
-        <span className={styles.termAccent}>
+      <Command>tf recall "annual-plan tax pattern"</Command>
+      <Field label="reading">
+        <span className={styles.accent}>Stripe checkout wiring</span> ·{" "}
+        <span className={styles.accent}>tax-rates rollout</span>
+      </Field>
+      <Field label="apply">
+        <span className={styles.accent}>
           automatic_tax: {"{ enabled: true }"}
         </span>{" "}
-        on signup - see section 3
-      </Conversation>
-      <Conversation dim who="tf">
-        writing patch - <span className={styles.termGreen}>0 tokens</span> spent
-        on rediscovery
-      </Conversation>
-      <Conversation dim who="tf">
-        recording session back to Taskforce...
-      </Conversation>
-      <Conversation who="ok">
-        <span className={styles.termAccent}>checkout.md</span> updated
-        automatically
-      </Conversation>
+        <span className={styles.dim}>(§3)</span>
+      </Field>
+      <Field label="cost">
+        <span className={styles.green}>0 tokens</span> spent on rediscovery
+      </Field>
+      <Field label="write">
+        <span className={styles.accent}>checkout.md</span> updated automatically
+      </Field>
+      <Status>session recorded back to Taskforce</Status>
       <SummaryGrid
         items={[
           ["referenced", "2 docs", true],
-          ["recorded", "session -> Taskforce"],
+          ["rediscovery", "0 tokens"],
         ]}
       />
     </>
@@ -391,37 +369,35 @@ function LibraryScene() {
 function LedgerScene() {
   return (
     <>
-      <div className={styles.searchLine}>
-        <span className={styles.termAccent}>search -</span> referenced:
-        <span className={styles.termHighlight}>"Stripe checkout wiring"</span>
-      </div>
+      <Command>tf ledger --ref "Stripe checkout wiring"</Command>
       <div className={styles.ledgerHead}>
         <span>time</span>
-        <span>session - activity</span>
+        <span>session</span>
+        <span>activity</span>
         <span>ref</span>
       </div>
-      <TerminalLedgerRow
+      <LedgerRow
         activity="Patched annual plan tax"
         refName="checkout.md"
-        session="cursor-tax-refactor"
+        session="cursor·tax-refactor"
         time="2:14 PM"
       />
-      <TerminalLedgerRow
+      <LedgerRow
         activity="Ran 20 E2E specs"
         refName="tax-rates.md"
-        session="claude-checkout-e2e"
+        session="claude·checkout-e2e"
         time="1:47 PM"
       />
-      <TerminalLedgerRow
+      <LedgerRow
         activity="Added EU no-VAT guard"
         refName="checkout.md"
-        session="codex-vat-fallback"
-        time="11:02"
+        session="codex·vat-fallback"
+        time="11:02 AM"
       />
-      <TerminalLedgerRow
+      <LedgerRow
         activity="Reviewed webhook retries"
         refName="webhooks.md"
-        session="cursor-billing-audit"
+        session="cursor·billing-audit"
         time="9:30 AM"
       />
       <SummaryGrid
@@ -437,25 +413,21 @@ function LedgerScene() {
 function MetricsScene() {
   return (
     <>
-      <Conversation dim who="tf">
-        rollup - last 30 days - across 12 repos
-      </Conversation>
+      <Command>tf metrics --last 30d</Command>
       <div className={styles.metricBig}>
-        <span className={styles.termAccent}>73%</span>
-        <span>rediscovery avoided</span>
+        <span>73%</span>
+        <span>rediscovery avoided · across 12 repos</span>
       </div>
-      <MetricTerminalRow label="tokens saved / wk" value="2.4M" />
-      <MetricTerminalRow
+      <MetricRow label="tokens saved / wk" value="2.4M" />
+      <MetricRow
         label="dollars saved / wk"
         value="$1,840"
-        valueClassName={styles.termGreen}
+        valueClassName={styles.green}
       />
-      <MetricTerminalRow label="eng time / wk" value="31 hrs" />
-      <div className={cn(styles.termLine, styles.termDim)}>
-        measured vs cold-start baselines -{" "}
-        <span className={styles.termAccent}>methodology</span> -{" "}
-        <span className={styles.termAccent}>session #a4f2</span>
-      </div>
+      <MetricRow label="eng time / wk" value="31 hrs" />
+      <Status kind="live">
+        measured vs cold-start baselines · session #a4f2
+      </Status>
       <SummaryGrid
         items={[
           ["saved / wk", "$1,840", true],
@@ -467,50 +439,82 @@ function MetricsScene() {
   )
 }
 
-function TerminalAgent({
+function Command({ children }: { children: ReactNode }) {
+  return (
+    <div className={styles.cmd}>
+      <span className={styles.cmdSign}>$</span>
+      <span className={styles.cmdText}>{children}</span>
+      <span className={styles.caret} />
+    </div>
+  )
+}
+
+function Field({ children, label }: { children: ReactNode; label: string }) {
+  return (
+    <div className={styles.field}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <span>{children}</span>
+    </div>
+  )
+}
+
+function Status({
+  children,
+  kind = "ok",
+}: {
+  children: ReactNode
+  kind?: "live" | "ok"
+}) {
+  return (
+    <div className={styles.statusLine}>
+      <span
+        className={cn(
+          kind === "live" ? styles.statusGlyphLive : styles.statusGlyphOk,
+        )}
+      >
+        {kind === "live" ? "→" : "✓"}
+      </span>
+      <span>{children}</span>
+    </div>
+  )
+}
+
+function SessionGroup({ count, name }: { count: string; name: string }) {
+  return (
+    <div className={styles.sessionGroup}>
+      <span>{name}</span>
+      <span>{count}</span>
+    </div>
+  )
+}
+
+function SessionRow({
   accent = "green",
   name,
-  status,
+  state,
   tool,
 }: {
-  accent?: "green" | "amber"
+  accent?: "amber" | "green"
   name: string
-  status: string
+  state: string
   tool: string
 }) {
   return (
-    <div className={cn(styles.termLine, styles.termAgent)}>
+    <div className={styles.sessionRow}>
       <span
         className={cn(
           styles.statusDot,
-          accent === "green" ? styles.greenDot : styles.amberDot,
+          accent === "amber" ? styles.amberDot : styles.greenDot,
         )}
       />
-      <span className={styles.agentName}>{name}</span>
-      <span className={styles.agentHost}>{tool}</span>
-      <span className={styles.agentState}>{status}</span>
+      <span className={styles.sessionName}>{name}</span>
+      <span className={styles.sessionTool}>{tool}</span>
+      <span className={styles.sessionState}>{state}</span>
     </div>
   )
 }
 
-function Conversation({
-  children,
-  dim = false,
-  who,
-}: {
-  children: ReactNode
-  dim?: boolean
-  who: "ok" | "tf" | "you"
-}) {
-  return (
-    <div className={cn(styles.termLine, styles.conversation)}>
-      <span className={styles[`${who}Who`]}>{who === "ok" ? "ok" : who}</span>
-      <span className={cn(dim && styles.termDim)}>{children}</span>
-    </div>
-  )
-}
-
-function TerminalLedgerRow({
+function LedgerRow({
   activity,
   refName,
   session,
@@ -522,17 +526,16 @@ function TerminalLedgerRow({
   time: string
 }) {
   return (
-    <div className={cn(styles.termLine, styles.ledgerRow)}>
+    <div className={styles.ledgerRow}>
       <span className={styles.ledgerTime}>{time}</span>
-      <span>
-        <span className={styles.termDim}>{session}</span> {activity}
-      </span>
+      <span className={styles.ledgerSession}>{session}</span>
+      <span className={styles.ledgerActivity}>{activity}</span>
       <span className={styles.ledgerRef}>{refName}</span>
     </div>
   )
 }
 
-function MetricTerminalRow({
+function MetricRow({
   label,
   value,
   valueClassName,
@@ -542,9 +545,10 @@ function MetricTerminalRow({
   valueClassName?: string
 }) {
   return (
-    <div className={cn(styles.termLine, styles.metricRow)}>
-      <span>{label}</span>
-      <span className={valueClassName ?? styles.termAccent}>{value}</span>
+    <div className={styles.metricRow}>
+      <span className={styles.metricLabel}>{label}</span>
+      <span aria-hidden className={styles.metricDots} />
+      <span className={cn(styles.metricValue, valueClassName)}>{value}</span>
     </div>
   )
 }
