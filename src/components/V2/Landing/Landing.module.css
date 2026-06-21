@@ -140,26 +140,6 @@
   gap: 10px;
 }
 
-.themeToggle {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-color: var(--landing-border);
-  background: var(--landing-bg);
-  color: var(--landing-muted);
-}
-
-.themeToggle:hover {
-  border-color: var(--landing-faint);
-  color: var(--landing-fg);
-}
-
-.themeToggle svg {
-  width: 18.75px;
-  height: 18.75px;
-}
-
 .solidButton,
 .outlineButton {
   height: auto;
@@ -382,7 +362,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  width: fit-content;
+  max-width: 100%;
+  gap: 10px;
 }
 
 .heroCopy .heroCtas {
@@ -394,10 +376,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 50px;
-  min-width: 168px;
-  padding: 0 24px;
+  height: 46px;
+  min-width: 0;
+  padding: 0 18px;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .term {
@@ -1182,6 +1165,24 @@
   border-top: 1px solid var(--landing-hairline);
 }
 
+.proofRowStacked {
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+
+.proofRowStacked .featureCopy {
+  max-width: 40rem;
+}
+
+.proofRowStacked .visual {
+  width: 100%;
+}
+
+.proofRowStacked .metricsCard {
+  height: auto;
+  min-height: 0;
+}
+
 .features .proofRow:first-child {
   border-top: 1px solid var(--landing-hairline);
 }
@@ -1229,10 +1230,18 @@
 }
 
 .chart {
+  margin-right: -18px;
   margin-bottom: 14px;
-  padding: 12px 14px 10px;
-  border: 1px solid var(--landing-hairline);
+  margin-left: -18px;
+  padding: 18px 20px 14px;
+  border-width: 1px 0;
+  border-style: solid;
+  border-color: var(--landing-hairline);
   background: var(--landing-bg);
+}
+
+.proofRowStacked .chart svg {
+  height: clamp(148px, 16vw, 220px);
 }
 
 .chart svg {
