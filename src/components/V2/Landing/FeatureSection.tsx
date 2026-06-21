@@ -23,7 +23,7 @@ export function FeatureSection() {
           icon={Bot}
           id="profiles"
           label="Profiles"
-          title="Agent profiles"
+          title="Agent identities"
           visual={<ProfilePanel />}
         />
         <FeatureRow
@@ -31,7 +31,7 @@ export function FeatureSection() {
           icon={BookOpenText}
           id="library"
           label="Library"
-          title="Self-updating documents"
+          title="Self-maintaining documents"
           visual={<LibraryPanel />}
           visualLeft
         />

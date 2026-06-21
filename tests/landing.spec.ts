@@ -24,8 +24,8 @@ test("/landing renders the redesigned Taskforce landing page", async ({
 
   for (const heading of [
     "Orchestration",
-    "Agent profiles",
-    "Self-updating documents",
+    "Agent identities",
+    "Self-maintaining documents",
     "Audit trail",
     "Proven ROI",
   ]) {

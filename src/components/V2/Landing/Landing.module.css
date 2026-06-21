@@ -1,5 +1,5 @@
 .page {
-  --landing-max: 1180px;
+  --landing-max: clamp(1180px, calc(100vw - 11vw), 1540px);
   --landing-bg: var(--background);
   --landing-fg: var(--foreground);
   --landing-muted: var(--muted-foreground);
@@ -205,15 +205,15 @@
 
 .hero::before {
   position: absolute;
-  top: -280px;
+  top: -360px;
   left: 50%;
   z-index: 0;
-  width: 820px;
-  height: 560px;
+  width: min(1240px, 96vw);
+  height: 820px;
   background: radial-gradient(
     ellipse at center,
-    color-mix(in srgb, var(--landing-primary) 24%, transparent),
-    transparent 66%
+    color-mix(in srgb, var(--landing-primary) 26%, transparent),
+    transparent 74%
   );
   content: "";
   pointer-events: none;
@@ -238,7 +238,7 @@
   flex: 1 1 auto;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
-  gap: 46px;
+  gap: clamp(46px, 4vw, 64px);
 }
 
 .heroCopy {
@@ -289,11 +289,21 @@
   transform: translateY(7px);
 }
 
+.heroSwitcher {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
 .heroCap {
   display: flex;
   align-items: center;
   gap: 9px;
-  margin-bottom: 22px;
+  margin-bottom: 0;
   color: var(--landing-muted);
   font-family: var(--font-mono);
   font-size: 15px;
@@ -318,27 +328,81 @@
 .heroDots {
   display: flex;
   gap: 8px;
-  margin-bottom: 26px;
   width: 100%;
+  margin-bottom: 0;
 }
 
 .heroDots button {
+  position: relative;
   flex: 1 1 0;
-  height: 4.4px;
+  min-height: 28px;
   padding: 0;
   border: 0;
-  background: var(--landing-border);
+  background: transparent;
   appearance: none;
+  cursor: pointer;
+}
+
+.heroDots button::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 8px;
+  background: var(--landing-border);
+  content: "";
+  transform: translateY(-50%);
   transition: background 250ms ease;
 }
 
-.heroDots button:hover {
+.heroDots button:hover::after {
   background: var(--landing-faint);
 }
 
-.heroDots .activeDot,
-.heroDots .activeDot:hover {
+.heroDots .activeDot::after,
+.heroDots .activeDot:hover::after {
   background: var(--landing-primary);
+}
+
+.heroDots .pauseTimer::after {
+  opacity: 0.28;
+}
+
+.pauseClock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid color-mix(in srgb, var(--landing-primary) 42%, var(--landing-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--landing-bg) 92%, transparent);
+  transform: translate(-50%, -50%);
+}
+
+.pauseClockHand {
+  position: absolute;
+  top: 3px;
+  left: calc(50% - 0.75px);
+  width: 1.5px;
+  height: 5px;
+  transform-origin: 50% 100%;
+  border-radius: 999px;
+  animation: pauseClockHand linear forwards;
+  background: var(--landing-primary);
+}
+
+@keyframes pauseClockHand {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .works {
@@ -399,21 +463,6 @@
 
 .termName {
   color: oklch(0.84 0 0);
-}
-
-.liveStatus {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.liveStatus span {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  animation: pulse 2400ms ease-in-out infinite;
-  background: var(--landing-positive);
 }
 
 .termBody {
@@ -586,14 +635,6 @@
   gap: 6px;
   color: oklch(0.8 0 0);
   font-size: 11px;
-}
-
-.termCursor {
-  display: inline-block;
-  width: 7px;
-  height: 13px;
-  animation: blink 1100ms step-end infinite;
-  background: var(--landing-term-accent);
 }
 
 .metricBig {
@@ -1397,6 +1438,11 @@
   .page {
     scroll-behavior: auto;
   }
+
+  .pauseClockHand {
+    animation: none;
+    transform: rotate(45deg);
+  }
 }
 
 @keyframes revealUp {
@@ -1428,12 +1474,6 @@
   }
   50% {
     opacity: 0.35;
-  }
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
   }
 }
 
