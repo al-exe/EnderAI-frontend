@@ -11,7 +11,7 @@ const navItems = [
   { href: "#profiles", label: "Profiles" },
   { href: "#library", label: "Docs" },
   { href: "#ledger", label: "Audit" },
-  { href: "#metrics", label: "ROI" },
+  { href: "#metrics", label: "Metrics" },
 ]
 
 const THEME_KEY = "tf-landing-theme"
