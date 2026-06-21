@@ -9,7 +9,7 @@ import styles from "./Landing.module.css"
 const navItems = [
   { href: "#sessions", label: "Orchestration" },
   { href: "#profiles", label: "Profiles" },
-  { href: "#library", label: "Docs" },
+  { href: "#library", label: "Library" },
   { href: "#ledger", label: "Audit" },
   { href: "#metrics", label: "Metrics" },
 ]
