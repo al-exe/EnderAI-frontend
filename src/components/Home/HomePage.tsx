@@ -51,12 +51,12 @@ export function HomePage({ mode, signedIn = false, user }: HomePageProps) {
               <div className={styles.heroText}>
                 <p className={styles.greeting}>
                   {isPublic
-                    ? "Working memory for AI-assisted teams"
+                    ? "Mission control for your AI"
                     : `Welcome back, ${displayName}`}
                 </p>
                 <h1 className={styles.heroTitle}>
-                  Taskforce turns the collective knowledge of your company into
-                  reusable workflows for humans and AI.
+                  Taskforce remembers what your agents figure out — and brings
+                  it back to the next one, across every tool.
                 </h1>
                 <p className={styles.heroDescription}>
                   Knowledge that matters is scattered across support tickets,

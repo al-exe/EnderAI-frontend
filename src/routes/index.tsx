@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
-import { TaskforceLandingPage } from "@/components/V2/TaskforceLandingPage"
+import { LandingPage } from "@/components/V2/Landing/LandingPage"
 import { isLoggedIn } from "@/hooks/useAuth"
 import { getDefaultFrontendPath } from "@/lib/experimentalMode"
 
@@ -14,12 +14,12 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       {
-        title: "Taskforce | AI work memory",
+        title: "Taskforce | Mission control for your AI",
       },
     ],
   }),
 })
 
 function Landing() {
-  return <TaskforceLandingPage />
+  return <LandingPage />
 }

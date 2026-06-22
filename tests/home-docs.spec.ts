@@ -49,24 +49,12 @@ test("Landing page presents Taskforce V2 as the public product", async ({
 }) => {
   await page.goto("/")
 
-  await expect(page.getByTestId("taskforce-landing")).toBeVisible()
-  await expect(page.getByText("Search", { exact: true })).toHaveCount(0)
+  await expect(page.getByTestId("landing-redesign")).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Taskforce", exact: true }),
-  ).toBeVisible()
-  await expect(page.getByText("AI work memory for builders")).toBeVisible()
-  await expect(
-    page.getByTestId("taskforce-landing-demo-disclosure"),
-  ).toContainText("Documents and activity below are example data.")
-  await expect(page.getByText("Library").first()).toBeVisible()
-  await expect(page.getByText("Profiles").first()).toBeVisible()
-  await expect(page.getByText("Metrics").first()).toBeVisible()
-  await expect(page.getByText(/rediscovery avoided/i)).toHaveCount(0)
-  await expect(
-    page.getByRole("link", { name: "Log in", exact: true }),
+    page.getByText("Works with Claude Code, Codex, and Cursor."),
   ).toBeVisible()
   await expect(
-    page.getByRole("link", { name: "Sign up", exact: true }),
+    page.getByRole("link", { name: /start free/i }).first(),
   ).toBeVisible()
   await expect(page.getByText("Browse Topics")).toHaveCount(0)
   await expect(page.getByText("Review Cases")).toHaveCount(0)

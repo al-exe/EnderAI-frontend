@@ -23,7 +23,7 @@ test("/landing renders the redesigned Taskforce landing page", async ({
   await expect(page.getByText("taskforce", { exact: true })).toBeVisible()
 
   for (const heading of [
-    "Orchestration",
+    "Fleet visibility",
     "Agent identities",
     "Self-maintaining documents",
     "Audit trail",
