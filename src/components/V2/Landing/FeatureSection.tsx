@@ -14,7 +14,7 @@ export function FeatureSection() {
           icon={Boxes}
           id="sessions"
           label="Sessions"
-          title="Orchestration"
+          title="Fleet visibility"
           visual={<SessionsPanel />}
           visualLeft
         />

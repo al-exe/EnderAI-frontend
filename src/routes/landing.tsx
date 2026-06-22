@@ -7,7 +7,7 @@ export const Route = createFileRoute("/landing")({
   head: () => ({
     meta: [
       {
-        title: "Taskforce | AI work memory",
+        title: "Taskforce | Mission control for your AI",
       },
     ],
   }),

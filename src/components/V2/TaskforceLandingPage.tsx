@@ -50,7 +50,7 @@ export function TaskforceLandingPage() {
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 pb-14 pt-8 md:pt-16">
         <div className="max-w-3xl">
           <p className="mb-4 text-sm font-medium text-muted-foreground">
-            AI work memory for builders
+            Mission control for your AI
           </p>
           <h1 className="max-w-2xl text-5xl font-semibold leading-[1.05] md:text-6xl">
             Taskforce

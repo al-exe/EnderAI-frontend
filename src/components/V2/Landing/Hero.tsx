@@ -11,7 +11,7 @@ import styles from "./Landing.module.css"
 const SCENES = [
   {
     key: "Sessions",
-    name: "Orchestration",
+    name: "Fleet visibility",
     phrase: ["losing track", "of your agents."],
   },
   {

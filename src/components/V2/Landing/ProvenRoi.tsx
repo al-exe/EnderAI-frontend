@@ -25,9 +25,9 @@ export function ProvenRoi() {
             </div>
             <h2>Proven ROI</h2>
             <p>
-              Measure the tokens and engineering time your agents save with
-              Taskforce-powered shared context and knowledge. Use a transparent
-              methodology to understand what Taskforce returns across your work.
+              Every reuse is on the record, measured with a transparent
+              methodology — so the value your shared context returns is
+              auditable, not asserted.
             </p>
           </div>
           <div className={styles.visual}>
