@@ -32,7 +32,7 @@ const SCENES = [
   {
     key: "Metrics",
     name: "Proven ROI",
-    phrase: ["running your agents", "without metrics."],
+    phrase: ["running agents", "without metrics."],
   },
 ] as const
 
