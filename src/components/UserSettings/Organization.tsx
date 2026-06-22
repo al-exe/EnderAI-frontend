@@ -7,6 +7,7 @@ import {
   MailPlus,
   RefreshCw,
   Shield,
+  Sparkles,
   Trash2,
   Users,
   XCircle,
@@ -203,10 +204,25 @@ function OrganizationSettings() {
     isAdmin && trimmedOrganizationName.length > 0 && organizationNameChanged
 
   const organizationMutation = useMutation({
-    mutationFn: (name: string) => updateMyOrganization({ name }),
+    mutationFn: (body: { name?: string; auto_evolve_enabled?: boolean }) =>
+      updateMyOrganization(body),
     onSuccess: (updatedOrganization) => {
       setOrganizationName(updatedOrganization.name)
-      showSuccessToast("Organization name updated")
+      showSuccessToast("Organization settings updated")
+      void queryClient.invalidateQueries({ queryKey: organizationQueryKey })
+    },
+    onError: handleError.bind(showErrorToast),
+  })
+
+  const autoEvolveMutation = useMutation({
+    mutationFn: (autoEvolveEnabled: boolean) =>
+      updateMyOrganization({ auto_evolve_enabled: autoEvolveEnabled }),
+    onSuccess: (updatedOrganization) => {
+      showSuccessToast(
+        updatedOrganization.auto_evolve_enabled
+          ? "Auto-evolve enabled"
+          : "Auto-evolve disabled — humans-only mode",
+      )
       void queryClient.invalidateQueries({ queryKey: organizationQueryKey })
     },
     onError: handleError.bind(showErrorToast),
@@ -228,7 +244,7 @@ function OrganizationSettings() {
   const submitOrganizationName = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!canUpdateOrganizationName) return
-    organizationMutation.mutate(trimmedOrganizationName)
+    organizationMutation.mutate({ name: trimmedOrganizationName })
   }
 
   const refresh = () => {
@@ -342,6 +358,35 @@ function OrganizationSettings() {
                 Save name
               </LoadingButton>
             </form>
+          )}
+
+          {isAdmin && (
+            <div className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Sparkles className="size-4 text-primary" />
+                  Auto-evolve
+                </div>
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  When on, Taskforce may automatically create and update Library
+                  docs and profiles from captured work. When off, capture and
+                  summaries still run — changes are manual only.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant={
+                  organization.auto_evolve_enabled ? "default" : "outline"
+                }
+                data-testid="org-auto-evolve-toggle"
+                disabled={autoEvolveMutation.isPending}
+                onClick={() =>
+                  autoEvolveMutation.mutate(!organization.auto_evolve_enabled)
+                }
+              >
+                {organization.auto_evolve_enabled ? "On" : "Off"}
+              </Button>
+            </div>
           )}
 
           {isAdmin && (
