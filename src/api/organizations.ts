@@ -22,6 +22,7 @@ export interface OrganizationInvitationPublic {
 export interface OrganizationMePublic {
   id: string
   name: string
+  auto_evolve_enabled: boolean
   created_at: string | null
   updated_at: string | null
   organization_role: OrganizationRole
@@ -41,7 +42,8 @@ export interface OrganizationInvitationCreate {
 }
 
 export interface OrganizationUpdate {
-  name: string
+  name?: string
+  auto_evolve_enabled?: boolean
 }
 
 export interface OrganizationMemberUpdate {
