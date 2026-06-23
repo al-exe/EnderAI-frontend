@@ -6,6 +6,7 @@ const mockedSpecs = [
   "fleet",
   "home-docs",
   "landing",
+  "landing-mobile",
   "ledger",
   "taskforce-external-links",
   "taskforce-routing",
@@ -34,7 +35,21 @@ export default defineConfig({
   projects: [
     {
       name: "mocked-chromium",
+      testIgnore: /landing-mobile\.spec\.ts$/,
       use: devices["Desktop Chrome"],
+    },
+    {
+      name: "mobile-chromium",
+      testMatch: /landing-mobile\.spec\.ts$/,
+      use: {
+        ...devices["iPhone 15 Pro"],
+        browserName: "chromium",
+      },
+    },
+    {
+      name: "mobile-webkit",
+      testMatch: /landing-mobile\.spec\.ts$/,
+      use: devices["iPhone 15 Pro"],
     },
   ],
   webServer: {

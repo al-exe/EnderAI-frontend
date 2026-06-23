@@ -194,9 +194,11 @@ export function LandingHero() {
                 >
                   {SCENES.map((item, index) => (
                     <button
+                      aria-controls={`landing-scene-${item.key.toLowerCase()}`}
                       aria-label={item.key}
                       aria-selected={sceneIndex === index}
                       className={cn(sceneIndex === index && styles.activeDot)}
+                      id={`landing-tab-${item.key.toLowerCase()}`}
                       key={item.key}
                       onClick={() => selectSceneFromDot(index)}
                       role="tab"
@@ -304,7 +306,7 @@ function HeroTerminal({
   }, [command, reducedMotion])
 
   return (
-    <div className={styles.term}>
+    <div className={styles.term} data-testid="landing-terminal">
       <div className={styles.termHead}>
         <span className={styles.termDot} />
         <span className={styles.termName}>tf · taskforce</span>
@@ -322,13 +324,17 @@ function HeroTerminal({
         <div className={styles.termScenes}>
           {scenes.map((scene, index) => (
             <div
+              aria-hidden={sceneIndex !== index || !showOutput}
+              aria-labelledby={`landing-tab-${SCENES[index].key.toLowerCase()}`}
               className={cn(
                 styles.terminalScene,
                 sceneIndex === index &&
                   showOutput &&
                   styles.terminalSceneActive,
               )}
+              id={`landing-scene-${SCENES[index].key.toLowerCase()}`}
               key={scene.key}
+              role="tabpanel"
             >
               {scene}
             </div>
