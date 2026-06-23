@@ -191,7 +191,7 @@ function AgentReplyPanel({ agent }: { agent: TaskforceFleetAgent }) {
               submit()
             }
           }}
-          placeholder={`Reply to ${agentDisplayName(agent)}…`}
+          placeholder="Send a prompt…"
           aria-label="Reply to agent"
           disabled={enqueue.isPending}
         />
@@ -412,7 +412,7 @@ function FleetAgentDetailRoute() {
                 <div className={styles.question}>
                   <div className={styles.questionText}>
                     {question ??
-                      `${agentDisplayName(agent)} is idle. Send a prompt to pick up where it left off.`}
+                      "This agent is idle. Send a prompt to pick up where it left off."}
                   </div>
                   <AgentReplyPanel agent={agent} />
                 </div>
