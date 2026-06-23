@@ -1706,7 +1706,10 @@
 
   .heroCap {
     align-items: flex-start;
+    align-content: flex-start;
     flex-wrap: wrap;
+    min-height: 42px;
+    gap: 0 8px;
     font-size: 15px;
     line-height: 1.4;
     white-space: normal;

@@ -41,6 +41,7 @@ for (const viewport of MOBILE_VIEWPORTS) {
     }
 
     const terminal = page.getByTestId("landing-terminal")
+    const terminalTopByCapability: number[] = []
     for (const capability of CAPABILITIES) {
       const tab = page.getByRole("tab", { name: capability })
       await expect(tab).toHaveCSS("min-height", "44px")
@@ -55,7 +56,16 @@ for (const viewport of MOBILE_VIEWPORTS) {
           (scene) => scene.scrollWidth <= scene.clientWidth + 1,
         ),
       ).toBe(true)
+      terminalTopByCapability.push(
+        await terminal.evaluate(
+          (element) => element.getBoundingClientRect().top,
+        ),
+      )
     }
+    expect(
+      Math.max(...terminalTopByCapability) -
+        Math.min(...terminalTopByCapability),
+    ).toBeLessThanOrEqual(1)
 
     for (const link of await page.locator("footer a").all()) {
       const box = await link.boundingBox()
