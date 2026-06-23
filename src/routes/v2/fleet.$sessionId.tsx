@@ -14,6 +14,7 @@ import {
   type TaskforceSessionActivityEntry,
 } from "@/api/v2Taskforce"
 import { Button } from "@/components/ui/button"
+import { BackLink } from "@/components/V2/BackLink"
 import { ActivityProse } from "@/components/V2/Fleet/ActivityProse"
 import styles from "@/components/V2/Fleet/FleetPage.module.css"
 import { useFleetPulseSync } from "@/components/V2/Fleet/fleetPulseSync"
@@ -336,10 +337,12 @@ function FleetAgentDetailRoute() {
       >
         <div className={cn(styles.dtop, V2_STICKY_HEADER_CLASS, "border-b-0")}>
           <div className={styles.crumb}>
-            <Link to="/v2/fleet" className={styles.back}>
-              <ChevronLeft />
-              Sessions
-            </Link>
+            <BackLink
+              to="/v2/fleet"
+              fallbackLabel="Sessions"
+              icon={<ChevronLeft />}
+              className={styles.back}
+            />
             <span className={styles.sep}>/</span>
             <span>{fleetName}</span>
           </div>

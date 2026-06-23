@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { ArrowLeft } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { BackLink } from "@/components/V2/BackLink"
 import methodologyRaw from "@/components/V2/Metrics/methodology.md?raw"
 import { V2_PAGE_CONTENT } from "@/components/V2/v2PageShell"
 
@@ -20,13 +21,13 @@ function MetricsMethodology() {
   return (
     <div className={V2_PAGE_CONTENT}>
       <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-6">
-        <Link
+        <BackLink
           to="/v2/metrics"
+          fallbackLabel="Back to Metrics"
+          backLabel="Back to Metrics"
+          icon={<ArrowLeft className="size-4" />}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Back to Metrics
-        </Link>
+        />
         <article className="pb-8 text-sm leading-6 text-foreground">
           <Markdown source={methodologyRaw} />
         </article>
