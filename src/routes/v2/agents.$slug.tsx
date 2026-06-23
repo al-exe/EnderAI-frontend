@@ -37,6 +37,7 @@ import {
   formatCompactNumber,
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
+import { BackLink } from "@/components/V2/BackLink"
 import { QueryErrorState } from "@/components/V2/QueryErrorState"
 import {
   V2_PAGE_BODY,
@@ -502,9 +503,11 @@ function AgentDetailPage() {
         >
           <div>
             <div className={AGENT_BREADCRUMB_CLASS}>
-              <Link to="/v2/agents" className="hover:text-foreground">
-                Profiles
-              </Link>
+              <BackLink
+                to="/v2/agents"
+                fallbackLabel="Profiles"
+                className="hover:text-foreground"
+              />
               <span className="px-2 text-muted-foreground/50">/</span>
               <span className="text-foreground">{agent.slug}</span>
             </div>

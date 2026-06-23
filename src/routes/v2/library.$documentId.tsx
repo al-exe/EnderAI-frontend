@@ -69,6 +69,7 @@ import {
   formatCompactNumber,
   formatRelativeTime,
 } from "@/components/V2/Agents/formatters"
+import { BackLink } from "@/components/V2/BackLink"
 import {
   FolderCreateDialog,
   FolderPickerDropdown,
@@ -941,14 +942,13 @@ function TaskforceDocumentDetail() {
         >
           <div className="flex items-center justify-between gap-3 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground">
             <div className="flex min-w-0 items-center gap-2">
-              <Link
+              <BackLink
                 to="/v2/library"
+                fallbackLabel="Library"
+                icon={<ArrowLeft className="size-3" />}
                 data-testid="v2-document-back-link"
                 className="inline-flex items-center gap-1 hover:text-foreground"
-              >
-                <ArrowLeft className="size-3" />
-                <span>Library</span>
-              </Link>
+              />
               <span className="text-border">/</span>
               <span className="truncate">
                 {document.folder_name ?? "Unfiled"}
