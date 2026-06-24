@@ -370,40 +370,48 @@ function AgentRow({
 
       <div className={styles.age}>{age}</div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <div className={styles.arowActions}>
+        {canArchive && (
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={`${sessionLabel} actions`}
-            className={styles.arowMenu}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onSelect={() => {
-              setRenameValue(agent.display_name ?? "")
-              setRenameOpen(true)
+            aria-label={`Archive ${sessionLabel}`}
+            className={styles.arowArchive}
+            onClick={(event) => {
+              event.stopPropagation()
+              onArchive(agent)
             }}
           >
-            <Pencil />
-            Rename
-          </DropdownMenuItem>
-          {canArchive && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => onArchive(agent)}>
-                <Archive />
-                Archive agent
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <Archive />
+          </Button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`${sessionLabel} actions`}
+              className={styles.arowMenu}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onSelect={() => {
+                setRenameValue(agent.display_name ?? "")
+                setRenameOpen(true)
+              }}
+            >
+              <Pencil />
+              Rename
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       <Dialog
         open={renameOpen}

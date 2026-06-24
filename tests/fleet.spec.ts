@@ -443,21 +443,20 @@ test("agent session can be renamed from the row menu", async ({ page }) => {
   )
 })
 
-test("agent session can be archived from the row menu", async ({ page }) => {
+test("agent session can be archived from the row", async ({ page }) => {
   await mockFleet(page)
   await page.goto("/v2/sessions")
 
-  await page
-    .getByRole("button", {
-      name: "Wiring automatic tax on Stripe checkout actions",
-    })
-    .click()
   const archiveRequest = page.waitForRequest(
     (request) =>
       request.url().endsWith("/api/v1/v2/taskforce/session/session-1") &&
       request.method() === "PATCH",
   )
-  await page.getByRole("menuitem", { name: "Archive agent" }).click()
+  await page
+    .getByRole("button", {
+      name: "Archive Wiring automatic tax on Stripe checkout",
+    })
+    .click()
 
   expect((await archiveRequest).postDataJSON()).toEqual({
     fleet_session_id: "fleet-history",
