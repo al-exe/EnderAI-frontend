@@ -415,7 +415,7 @@ function FleetAgentDetailRoute() {
                 <div className={styles.question}>
                   <div className={styles.questionText}>
                     {question ??
-                      "This agent is idle. Send a prompt to pick up where it left off."}
+                      "This agent is idle. Send a prompt to continue."}
                   </div>
                   <AgentReplyPanel agent={agent} />
                 </div>
