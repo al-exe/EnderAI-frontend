@@ -45,7 +45,7 @@ export const membershipPlans: MembershipPlan[] = [
     eyebrow: "The ultimate package",
     price: "$49.99",
     priceDetail: "/ month",
-    description: "For enterprise scale teams who can't waste a moment or token",
+    description: "For enterprise scale teams and organizations",
     benefits: [
       "Up to 1,000 agent profiles",
       "1 TB of library storage",

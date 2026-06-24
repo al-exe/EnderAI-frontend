@@ -16,6 +16,7 @@ export interface AgentSpecialistSummary {
   invocations_count: number
   tokens_saved: number
   last_invoked_at: string | null
+  created_at: string | null
 }
 
 export interface AgentsListResponse {

@@ -10,7 +10,6 @@ import { useMemo, useState } from "react"
 
 import {
   type AgentSpecialistCreate,
-  type AgentSpecialistStatus,
   type AgentSpecialistSummary,
   createAgent,
   listAgents,
@@ -25,7 +24,6 @@ import {
 } from "@/components/V2/Agents/agentsTypography"
 import { CreateProfileDialog } from "@/components/V2/Agents/CreateProfileDialog"
 import { QueryErrorState } from "@/components/V2/QueryErrorState"
-import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
@@ -35,38 +33,58 @@ import {
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 
-type AgentScope = "all" | AgentSpecialistStatus
-
-const AGENT_SCOPES: { key: AgentScope; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "active", label: "Active" },
-  { key: "draft", label: "Draft" },
-  { key: "archived", label: "Archived" },
-]
-
-const AGENT_SORT_MODES = [
-  { key: "alphabetical", label: "A–Z" },
-  { key: "recent", label: "Recent" },
-] as const
-
-type AgentSortMode = (typeof AGENT_SORT_MODES)[number]["key"]
-
-function compareAgents(
-  a: AgentSpecialistSummary,
-  b: AgentSpecialistSummary,
-  sortMode: AgentSortMode,
-) {
-  if (sortMode === "alphabetical") {
+function sortAgentsByCreatedAt(agents: AgentSpecialistSummary[]) {
+  return [...agents].sort((a, b) => {
+    const aTime = a.created_at ? Date.parse(a.created_at) : 0
+    const bTime = b.created_at ? Date.parse(b.created_at) : 0
+    if (aTime !== bTime) return bTime - aTime
     return a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-  }
-
-  const aTime = a.last_invoked_at ? Date.parse(a.last_invoked_at) : null
-  const bTime = b.last_invoked_at ? Date.parse(b.last_invoked_at) : null
-  if (aTime === null && bTime === null) return 0
-  if (aTime === null) return 1
-  if (bTime === null) return -1
-  return aTime - bTime
+  })
 }
+
+// TODO: Restore Profiles scope/sort filter bar (All/Active/Draft/Archived + A-Z/Recent).
+// import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
+// import { type AgentSpecialistStatus } from "@/api/v2Agents"
+//
+// type AgentScope = "all" | AgentSpecialistStatus
+//
+// const AGENT_SCOPES: { key: AgentScope; label: string }[] = [
+//   { key: "all", label: "All" },
+//   { key: "active", label: "Active" },
+//   { key: "draft", label: "Draft" },
+//   { key: "archived", label: "Archived" },
+// ]
+//
+// const AGENT_SORT_MODES = [
+//   { key: "alphabetical", label: "A–Z" },
+//   { key: "recent", label: "Recent" },
+// ] as const
+//
+// type AgentSortMode = (typeof AGENT_SORT_MODES)[number]["key"]
+//
+// const [scope, setScope] = useState<AgentScope>("all")
+// const [sortMode, setSortMode] = useState<AgentSortMode>("recent")
+// const [sortDir, setSortDir] = useState<"desc" | "asc">("desc")
+//
+// <ScopeFilterBar
+//   items={AGENT_SCOPES.map((agentScope) => ({
+//     key: agentScope.key,
+//     label: agentScope.label,
+//     count:
+//       agentScope.key === "all"
+//         ? agents.length
+//         : agents.filter((agent) => agent.status === agentScope.key).length,
+//   }))}
+//   active={scope}
+//   onChange={setScope}
+//   sortModes={[...AGENT_SORT_MODES]}
+//   activeSortMode={sortMode}
+//   onSortModeChange={setSortMode}
+//   sortDir={sortDir}
+//   onSortDirToggle={() =>
+//     setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
+//   }
+// />
 
 export const Route = createFileRoute("/v2/agents")({
   component: TaskforceAgents,
@@ -128,9 +146,6 @@ function AgentsIndex() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
-  const [scope, setScope] = useState<AgentScope>("all")
-  const [sortMode, setSortMode] = useState<AgentSortMode>("recent")
-  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc")
   const [createProfileOpen, setCreateProfileOpen] = useState(false)
   const agentsQuery = useQuery({
     queryKey: ["v2-agents", isDemoMode],
@@ -155,28 +170,7 @@ function AgentsIndex() {
     },
   })
 
-  const visible = useMemo(() => {
-    const filtered =
-      scope === "all"
-        ? agents
-        : agents.filter((agent) => agent.status === scope)
-    const sorted = [...filtered].sort((a, b) => {
-      if (sortMode === "recent") {
-        const aTime = a.last_invoked_at ? Date.parse(a.last_invoked_at) : null
-        const bTime = b.last_invoked_at ? Date.parse(b.last_invoked_at) : null
-        if (aTime === null && bTime === null) {
-          return a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-        }
-        if (aTime === null) return 1
-        if (bTime === null) return -1
-        const comparison = aTime - bTime
-        return sortDir === "asc" ? comparison : -comparison
-      }
-      const comparison = compareAgents(a, b, sortMode)
-      return sortDir === "asc" ? comparison : -comparison
-    })
-    return sorted
-  }, [agents, scope, sortDir, sortMode])
+  const visible = useMemo(() => sortAgentsByCreatedAt(agents), [agents])
 
   return (
     <section
@@ -203,83 +197,59 @@ function AgentsIndex() {
               + Profile
             </Button>
           </header>
-          <ScopeFilterBar
-            items={AGENT_SCOPES.map((agentScope) => ({
-              key: agentScope.key,
-              label: agentScope.label,
-              count:
-                agentScope.key === "all"
-                  ? agents.length
-                  : agents.filter((agent) => agent.status === agentScope.key)
-                      .length,
-            }))}
-            active={scope}
-            onChange={setScope}
-            sortModes={[...AGENT_SORT_MODES]}
-            activeSortMode={sortMode}
-            onSortModeChange={setSortMode}
-            sortDir={sortDir}
-            onSortDirToggle={() =>
-              setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
-            }
-          />
         </div>
 
         <div className={V2_TAB_CONTENT_CLASS}>
-        <CreateProfileDialog
-          open={createProfileOpen}
-          onOpenChange={setCreateProfileOpen}
-          isCreating={createProfileMutation.isPending}
-          onSubmit={(values) => createProfileMutation.mutate(values)}
-        />
-
-        {agentsQuery.isError && !hasAgentsData ? (
-          <QueryErrorState
-            title="Could not load profiles"
-            description="Taskforce could not reach the profiles service. Try again without leaving this page."
-            onRetry={() => void agentsQuery.refetch()}
-            isRetrying={agentsQuery.isFetching}
-            testId="profiles-load-error"
+          <CreateProfileDialog
+            open={createProfileOpen}
+            onOpenChange={setCreateProfileOpen}
+            isCreating={createProfileMutation.isPending}
+            onSubmit={(values) => createProfileMutation.mutate(values)}
           />
-        ) : agentsQuery.isLoading ? (
-          <AgentsLoading />
-        ) : (
-          <>
-            {agentsQuery.isError && (
-              <QueryErrorState
-                title="Profiles may be out of date"
-                description="The latest profiles could not be loaded. The last available results are still shown."
-                onRetry={() => void agentsQuery.refetch()}
-                isRetrying={agentsQuery.isFetching}
-                compact
-                testId="profiles-refresh-error"
-              />
-            )}
-            {agents.length === 0 ? (
-              <EmptyAgents isDemoMode={isDemoMode} />
-            ) : visible.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No profiles match this filter.
-              </p>
-            ) : (
-              <div
-                data-testid="agents-card-grid"
-                className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-              >
-                {visible.map((agent) => (
-                  <AgentProfileCard key={agent.id} agent={agent} />
-                ))}
-              </div>
-            )}
-          </>
-        )}
 
-        {agentsQuery.isFetching && !agentsQuery.isLoading && (
-          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-3 animate-spin" />
-            Refreshing profiles
-          </div>
-        )}
+          {agentsQuery.isError && !hasAgentsData ? (
+            <QueryErrorState
+              title="Could not load profiles"
+              description="Taskforce could not reach the profiles service. Try again without leaving this page."
+              onRetry={() => void agentsQuery.refetch()}
+              isRetrying={agentsQuery.isFetching}
+              testId="profiles-load-error"
+            />
+          ) : agentsQuery.isLoading ? (
+            <AgentsLoading />
+          ) : (
+            <>
+              {agentsQuery.isError && (
+                <QueryErrorState
+                  title="Profiles may be out of date"
+                  description="The latest profiles could not be loaded. The last available results are still shown."
+                  onRetry={() => void agentsQuery.refetch()}
+                  isRetrying={agentsQuery.isFetching}
+                  compact
+                  testId="profiles-refresh-error"
+                />
+              )}
+              {agents.length === 0 ? (
+                <EmptyAgents isDemoMode={isDemoMode} />
+              ) : (
+                <div
+                  data-testid="agents-card-grid"
+                  className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+                >
+                  {visible.map((agent) => (
+                    <AgentProfileCard key={agent.id} agent={agent} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {agentsQuery.isFetching && !agentsQuery.isLoading && (
+            <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="size-3 animate-spin" />
+              Refreshing profiles
+            </div>
+          )}
         </div>
       </div>
     </section>
