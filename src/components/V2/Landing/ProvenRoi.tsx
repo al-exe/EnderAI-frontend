@@ -15,7 +15,7 @@ export function ProvenRoi() {
   return (
     <section className={styles.features} id="metrics">
       <div className={styles.wrap}>
-        <div className={cn(styles.featureRow, styles.proofRow)}>
+        <div className={cn(styles.featureRow, styles.proofRow, styles.visualLeft)}>
           <div className={styles.featureCopy}>
             <div className={styles.featureLabel}>
               <span className={styles.featureIcon}>

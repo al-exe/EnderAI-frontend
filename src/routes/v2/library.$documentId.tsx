@@ -936,10 +936,11 @@ function TaskforceDocumentDetail() {
         <div
           data-testid="v2-document-sticky-header"
           className={cn(
-            "sticky top-0 z-30 -mx-6 border-b bg-background px-6 pt-1 pb-3",
+            "sticky top-0 z-30 -mx-6 bg-background px-6 pt-1",
             isSplit && "md:shrink-0",
           )}
         >
+          <div className="border-b border-border pb-3">
           <div className="flex items-center justify-between gap-3 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground">
             <div className="flex min-w-0 items-center gap-2">
               <BackLink
@@ -1089,6 +1090,7 @@ function TaskforceDocumentDetail() {
               </div>
             }
           />
+          </div>
         </div>
 
         <FolderCreateDialog
