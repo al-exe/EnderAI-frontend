@@ -1,9 +1,20 @@
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Loader2, Search as SearchIcon } from "lucide-react"
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
-import { readGlobalSearch, type SearchHitPublic } from "@/api/search"
+import {
+  readGlobalSearch,
+  type SearchHitPublic,
+  type SearchResultsPublic,
+} from "@/api/search"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,13 +22,43 @@ import { cn } from "@/lib/utils"
 import styles from "./GlobalSearchBar.module.css"
 
 const MIN_QUERY_LENGTH = 2
-const LIMIT_PER_KIND = 5
+const LIMIT_PER_KIND = 4
 const DEBOUNCE_MS = 200
 
+type SearchGroup =
+  | "Sessions"
+  | "Profiles"
+  | "Library"
+  | "Ledger"
+  | "Topics"
+  | "Cases"
+  | "Skills"
+
 type SearchEntry = {
-  group: "Topics" | "Cases" | "Skills"
+  group: SearchGroup
   hit: SearchHitPublic
 }
+
+type SearchGroupKey = keyof Pick<
+  SearchResultsPublic,
+  | "sessions"
+  | "profiles"
+  | "documents"
+  | "ledger"
+  | "topics"
+  | "cases"
+  | "skills"
+>
+
+const GROUPS: { title: SearchGroup; key: SearchGroupKey }[] = [
+  { title: "Sessions", key: "sessions" },
+  { title: "Profiles", key: "profiles" },
+  { title: "Library", key: "documents" },
+  { title: "Ledger", key: "ledger" },
+  { title: "Topics", key: "topics" },
+  { title: "Cases", key: "cases" },
+  { title: "Skills", key: "skills" },
+]
 
 export function GlobalSearchBar() {
   const navigate = useNavigate()
@@ -70,20 +111,12 @@ export function GlobalSearchBar() {
   })
 
   const entries = useMemo<SearchEntry[]>(() => {
-    const topics = (searchQuery.data?.topics ?? []).map((hit) => ({
-      group: "Topics" as const,
-      hit,
-    }))
-    const cases = (searchQuery.data?.cases ?? []).map((hit) => ({
-      group: "Cases" as const,
-      hit,
-    }))
-    const skills = (searchQuery.data?.skills ?? []).map((hit) => ({
-      group: "Skills" as const,
-      hit,
-    }))
-
-    return [...topics, ...cases, ...skills]
+    if (!searchQuery.data) return []
+    return GROUPS.flatMap(({ title, key }) => {
+      const results = searchQuery.data?.[key]
+      if (!Array.isArray(results)) return []
+      return results.map((hit) => ({ group: title, hit }))
+    })
   }, [searchQuery.data])
 
   useEffect(() => {
@@ -102,6 +135,38 @@ export function GlobalSearchBar() {
     setDebouncedQuery("")
     setIsFocused(false)
     setActiveIndex(-1)
+
+    if (hit.kind === "session") {
+      void navigate({
+        to: "/v2/sessions/$sessionId",
+        params: { sessionId: hit.route_search.sessionId ?? hit.id },
+      })
+      return
+    }
+
+    if (hit.kind === "profile") {
+      void navigate({
+        to: "/v2/agents/$slug",
+        params: { slug: hit.route_search.slug ?? hit.id },
+      })
+      return
+    }
+
+    if (hit.kind === "document") {
+      void navigate({
+        to: "/v2/library/$documentId",
+        params: { documentId: hit.route_search.documentId ?? hit.id },
+      })
+      return
+    }
+
+    if (hit.kind === "ledger") {
+      void navigate({
+        to: "/v2/ledger",
+        search: { session_id: hit.route_search.sessionId ?? hit.id },
+      })
+      return
+    }
 
     if (hit.kind === "topic") {
       void navigate({
@@ -166,7 +231,7 @@ export function GlobalSearchBar() {
   }
 
   const renderGroup = (
-    title: "Topics" | "Cases" | "Skills",
+    title: SearchGroup,
     results: SearchHitPublic[],
     startIndex: number,
   ) => {
@@ -182,7 +247,7 @@ export function GlobalSearchBar() {
 
             return (
               <button
-                key={hit.id}
+                key={`${hit.kind}:${hit.id}`}
                 type="button"
                 className={cn(
                   styles.resultButton,
@@ -213,10 +278,6 @@ export function GlobalSearchBar() {
     )
   }
 
-  const topicResults = searchQuery.data?.topics ?? []
-  const caseResults = searchQuery.data?.cases ?? []
-  const skillResults = searchQuery.data?.skills ?? []
-
   return (
     <div
       ref={containerRef}
@@ -227,7 +288,7 @@ export function GlobalSearchBar() {
         <SearchIcon className={styles.searchIcon} />
         <Input
           value={query}
-          placeholder="Search Topics, Cases, and Skills"
+          placeholder="Search Taskforce"
           className={styles.input}
           data-testid="global-search-input"
           onFocus={() => setIsFocused(true)}
@@ -241,22 +302,28 @@ export function GlobalSearchBar() {
         <Card className={styles.resultsCard}>
           <CardContent className={styles.resultsContent}>
             {searchQuery.isFetching ? (
-              <div className={styles.status}>
-                Searching Topics, Cases, and Skills…
-              </div>
+              <div className={styles.status}>Searching Taskforce…</div>
             ) : entries.length === 0 ? (
-              <div className={styles.status}>
-                No Topics, Cases, or Skills matched.
-              </div>
+              <div className={styles.status}>Nothing matched your search.</div>
             ) : (
               <div>
-                {renderGroup("Topics", topicResults, 0)}
-                {renderGroup("Cases", caseResults, topicResults.length)}
-                {renderGroup(
-                  "Skills",
-                  skillResults,
-                  topicResults.length + caseResults.length,
-                )}
+                {
+                  GROUPS.reduce(
+                    (rendered, { title, key }) => {
+                      const results = searchQuery.data?.[key]
+                      if (!Array.isArray(results)) return rendered
+                      const startIndex = rendered.offset
+                      return {
+                        offset: startIndex + results.length,
+                        nodes: [
+                          ...rendered.nodes,
+                          renderGroup(title, results, startIndex),
+                        ],
+                      }
+                    },
+                    { offset: 0, nodes: [] as ReactNode[] },
+                  ).nodes
+                }
               </div>
             )}
           </CardContent>
