@@ -816,7 +816,7 @@ export function FleetPage() {
 
   const openAgent = (agent: TaskforceFleetAgent) =>
     navigate({
-      to: "/v2/fleet/$sessionId",
+      to: "/v2/sessions/$sessionId",
       params: { sessionId: agent.session_id },
     })
 
