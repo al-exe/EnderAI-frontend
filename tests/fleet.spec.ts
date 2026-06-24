@@ -393,7 +393,7 @@ test("clicking an agent row opens the session detail and back returns", async ({
     .first()
     .click()
 
-  await expect(page).toHaveURL(/\/v2\/fleet\/session-1$/)
+  await expect(page).toHaveURL(/\/v2\/sessions\/session-1$/)
   await expect(
     page.getByRole("heading", {
       name: "Wiring automatic tax on Stripe checkout",
@@ -414,7 +414,7 @@ test("clicking an agent row opens the session detail and back returns", async ({
 
   // Breadcrumb returns to the roster.
   await page.getByRole("link", { name: "Sessions" }).first().click()
-  await expect(page).toHaveURL(/\/v2\/fleet$/)
+  await expect(page).toHaveURL(/\/v2\/sessions$/)
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
 
@@ -438,7 +438,9 @@ test("agent session can be renamed from the row menu", async ({ page }) => {
   expect((await renameRequest).postDataJSON()).toEqual({
     display_name: "Checkout tax rollout",
   })
-  await expect(page.getByText("Checkout tax rollout")).toBeVisible()
+  await expect(page.getByTestId("fleet-agent-name")).toHaveText(
+    "Checkout tax rollout",
+  )
 })
 
 test("agent session can be archived from the row menu", async ({ page }) => {
