@@ -602,8 +602,8 @@
 }
 
 .hcCard {
-  width: 256px;
-  max-width: min(256px, calc(100vw - 24px));
+  width: 512px;
+  max-width: min(512px, calc(100vw - 24px));
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--popover);
