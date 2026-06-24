@@ -146,7 +146,7 @@ export function GlobalSearchBar() {
 
     if (hit.kind === "profile") {
       void navigate({
-        to: "/v2/agents/$slug",
+        to: "/v2/profiles/$slug",
         params: { slug: hit.route_search.slug ?? hit.id },
       })
       return

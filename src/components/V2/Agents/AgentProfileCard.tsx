@@ -72,7 +72,7 @@ export function AgentProfileCard({ agent }: { agent: AgentSpecialistSummary }) {
 
   return (
     <Link
-      to="/v2/agents/$slug"
+      to="/v2/profiles/$slug"
       params={{ slug: agent.slug }}
       aria-label={`Open profile ${agent.name}`}
       className="group relative flex min-h-[168px] flex-col border border-border bg-card px-4 pt-[15px] text-card-foreground transition-colors hover:border-muted-foreground/40 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"

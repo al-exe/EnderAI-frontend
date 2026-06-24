@@ -904,7 +904,7 @@ function ExperimentalSessionMetrics({
               </h1>
               {sessionSavings?.specialist_slug ? (
                 <Link
-                  to="/v2/agents/$slug"
+                  to="/v2/profiles/$slug"
                   params={{ slug: sessionSavings.specialist_slug }}
                   className="mt-3 inline-flex items-center gap-1.5 border border-border px-2.5 py-1 font-mono text-xs tracking-[0.01em] text-foreground hover:bg-muted"
                 >

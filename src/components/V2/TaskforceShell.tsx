@@ -68,7 +68,7 @@ type TaskforceNavItem = {
 
 const taskforceItems: TaskforceNavItem[] = [
   { icon: LayoutGrid, title: "Sessions", path: "/v2/sessions" },
-  { icon: Bot, title: "Profiles", path: "/v2/agents" },
+  { icon: Bot, title: "Profiles", path: "/v2/profiles" },
   { icon: BookOpen, title: "Library", path: "/v2/library" },
   { icon: ReceiptText, title: "Ledger", path: "/v2/ledger" },
   { icon: LineChart, title: "Metrics", path: "/v2/metrics" },
@@ -158,8 +158,8 @@ function TaskforceNav({ currentUser }: TaskforceShellProps) {
           normalizedPath === item.path ||
           (item.path === "/v2/library" &&
             normalizedPath.startsWith("/v2/library/")) ||
-          (item.path === "/v2/agents" &&
-            normalizedPath.startsWith("/v2/agents/")) ||
+          (item.path === "/v2/profiles" &&
+            normalizedPath.startsWith("/v2/profiles/")) ||
           (item.path === "/v2/sessions" &&
             normalizedPath.startsWith("/v2/sessions/")) ||
           (item.path === "/v2/metrics" &&

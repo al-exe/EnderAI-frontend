@@ -70,7 +70,7 @@ export function AgentCard({ agent }: Props) {
             <span>{formatRelativeTime(agent.last_invoked_at)}</span>
           </div>
           <Button asChild size="sm" variant="outline">
-            <Link to="/v2/agents/$slug" params={{ slug: agent.slug }}>
+            <Link to="/v2/profiles/$slug" params={{ slug: agent.slug }}>
               View profile
               <ArrowRight className="size-4" />
             </Link>

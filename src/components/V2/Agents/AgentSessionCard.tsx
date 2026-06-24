@@ -37,7 +37,7 @@ export function AgentSessionCard({ agent }: Props) {
       className="group relative flex flex-col border border-border bg-background transition-colors hover:border-foreground/40"
     >
       <Link
-        to="/v2/agents/$slug"
+        to="/v2/profiles/$slug"
         params={{ slug: agent.slug }}
         aria-label={`Open profile ${agent.name}`}
         className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
