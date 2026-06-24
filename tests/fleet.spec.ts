@@ -281,11 +281,11 @@ async function mockFleet(
   })
 }
 
-test("hard refresh on /v2/fleet/ keeps Fleet selected and renders content", async ({
+test("hard refresh on /v2/sessions/ keeps Fleet selected and renders content", async ({
   page,
 }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet/")
+  await page.goto("/v2/sessions/")
   await page.reload()
 
   await expect(page.getByRole("link", { name: "Sessions" })).toHaveAttribute(
@@ -296,11 +296,11 @@ test("hard refresh on /v2/fleet/ keeps Fleet selected and renders content", asyn
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
 })
 
-test("hard refresh on /v2/fleet keeps Fleet selected and renders content", async ({
+test("hard refresh on /v2/sessions keeps Fleet selected and renders content", async ({
   page,
 }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
   await page.reload()
 
   await expect(page.getByRole("link", { name: "Sessions" })).toHaveAttribute(
@@ -315,7 +315,7 @@ test("agent session display name truncates on one line", async ({ page }) => {
   const longName =
     "Wiring automatic tax on Stripe checkout for international customers with VAT compliance"
   await mockFleet(page, { agentOverrides: { display_name: longName } })
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   const name = page.getByTestId("fleet-agent-name")
   await expect(name).toHaveText(longName)
@@ -336,7 +336,7 @@ test("agent session display name truncates on one line", async ({ page }) => {
 test("agent session display name preserves stored casing", async ({ page }) => {
   const mixedCaseName = "e2eCheckout — wire VAT for EU"
   await mockFleet(page, { agentOverrides: { display_name: mixedCaseName } })
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   const name = page.getByTestId("fleet-agent-name")
   await expect(name).toHaveText(mixedCaseName)
@@ -345,7 +345,7 @@ test("agent session display name preserves stored casing", async ({ page }) => {
 
 test("Fleet renders the calm roster from live API data", async ({ page }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible()
   await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
@@ -386,7 +386,7 @@ test("clicking an agent row opens the session detail and back returns", async ({
   page,
 }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   await page
     .getByText("Wiring automatic tax on Stripe checkout")
@@ -420,7 +420,7 @@ test("clicking an agent row opens the session detail and back returns", async ({
 
 test("agent session can be renamed from the row menu", async ({ page }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   await page
     .getByRole("button", {
@@ -443,7 +443,7 @@ test("agent session can be renamed from the row menu", async ({ page }) => {
 
 test("agent session can be archived from the row menu", async ({ page }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   await page
     .getByRole("button", {
@@ -475,7 +475,7 @@ test("activity timeline shows the full canonical event stream and exact Ledger l
   page,
 }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet/session-1")
+  await page.goto("/v2/sessions/session-1")
 
   const newest = page.getByText("$ pytest tests/payments.spec.ts")
   const oldest = page.getByText("Investigate the Stripe checkout flow")
@@ -540,7 +540,7 @@ test("activity timeline live head shows running without summary", async ({
       minutes_ago: 0,
     },
   })
-  await page.goto("/v2/fleet/session-1")
+  await page.goto("/v2/sessions/session-1")
 
   await expect(page.getByText("now", { exact: true })).toBeVisible()
   await expect(
@@ -561,7 +561,7 @@ test("roster shows agent status when summary is empty", async ({ page }) => {
       minutes_ago: 0,
     },
   })
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   const row = page.getByTestId("fleet-agent-row")
   await expect(row.getByTestId("fleet-agent-status")).toHaveText(
@@ -586,7 +586,7 @@ test("roster shows agent status when summary is empty", async ({ page }) => {
 
 test("collapsed fleet cards share header height", async ({ page }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   await page.getByTestId("fleet-header-toggle-fleet-1").click()
   await expect(page.getByTestId("fleet-card-fleet-1")).toHaveAttribute(
@@ -624,7 +624,7 @@ test("session detail strips Cursor capture noise from working-on text", async ({
       ],
     },
   })
-  await page.goto("/v2/fleet/session-1")
+  await page.goto("/v2/sessions/session-1")
 
   const workingOn = page
     .getByText("Currently working on")
@@ -644,7 +644,7 @@ test("session detail renders Ran diagnostics in a command block", async ({
         "Ran: cd /home/alexlee/dev && ls -la && echo test",
     },
   })
-  await page.goto("/v2/fleet/session-1")
+  await page.goto("/v2/sessions/session-1")
 
   const block = page.getByTestId("fleet-command-block").first()
   await expect(block).toBeVisible()
@@ -660,7 +660,7 @@ test("activity timeline live head shows waiting state", async ({ page }) => {
       minutes_ago: 0,
     },
   })
-  await page.goto("/v2/fleet/session-1")
+  await page.goto("/v2/sessions/session-1")
 
   await expect(page.getByText("now", { exact: true })).toBeVisible()
   await expect(page.getByText("Awaiting user prompt")).toBeVisible()
@@ -675,7 +675,7 @@ test("activity timeline live head shows idle state", async ({ page }) => {
       minutes_ago: 2,
     },
   })
-  await page.goto("/v2/fleet/session-1")
+  await page.goto("/v2/sessions/session-1")
 
   await expect(page.getByText("2m", { exact: true })).toBeVisible()
   await expect(
@@ -693,7 +693,7 @@ test("activity timeline live head shows paused capture state", async ({
       minutes_ago: 1,
     },
   })
-  await page.goto("/v2/fleet/session-1")
+  await page.goto("/v2/sessions/session-1")
 
   await expect(page.getByText("1m", { exact: true })).toBeVisible()
   await expect(
@@ -703,7 +703,7 @@ test("activity timeline live head shows paused capture state", async ({
 
 test("Fleet session collapse defaults and persists", async ({ page }) => {
   await mockFleet(page)
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   const historyCard = page.getByTestId("fleet-card-fleet-history")
   const workCard = page.getByTestId("fleet-card-fleet-1")
@@ -733,7 +733,7 @@ test("Fleet session collapse defaults and persists", async ({ page }) => {
 
 test("dragging an agent moves it to another fleet", async ({ page }) => {
   await mockFleet(page, { includeDestination: true })
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   const moveRequest = page.waitForRequest(
     (request) =>
@@ -766,7 +766,7 @@ for (const theme of ["light", "dark"] as const) {
 
     for (const width of [360, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 })
-      await page.goto("/v2/fleet")
+      await page.goto("/v2/sessions")
       await expect(
         page.getByRole("heading", { name: "Sessions" }),
       ).toBeVisible()
@@ -800,7 +800,7 @@ for (const theme of ["light", "dark"] as const) {
         .filter(Boolean).length
       expect(rosterColumnCount).toBe(width <= 760 ? 4 : 5)
 
-      await page.goto("/v2/fleet/session-1")
+      await page.goto("/v2/sessions/session-1")
       await expect(
         page.getByRole("heading", {
           name: "Wiring automatic tax on Stripe checkout",
@@ -867,10 +867,28 @@ for (const theme of ["light", "dark"] as const) {
 test("Fleet running pulse respects reduced motion", async ({ page }) => {
   await mockFleet(page)
   await page.emulateMedia({ reducedMotion: "reduce" })
-  await page.goto("/v2/fleet")
+  await page.goto("/v2/sessions")
 
   const animationName = await page
     .getByTestId("fleet-status-dot")
     .evaluate((dot) => getComputedStyle(dot).animationName)
   expect(animationName).toBe("none")
+})
+
+test("legacy /v2/fleet redirects to /v2/sessions", async ({ page }) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet")
+
+  await expect(page).toHaveURL(/\/v2\/sessions$/)
+  await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible()
+  await expect(page.getByText("stripe-checkout", { exact: true })).toBeVisible()
+})
+
+test("legacy /v2/fleet/:sessionId redirects preserving the id", async ({
+  page,
+}) => {
+  await mockFleet(page)
+  await page.goto("/v2/fleet/session-1")
+
+  await expect(page).toHaveURL(/\/v2\/sessions\/session-1$/)
 })

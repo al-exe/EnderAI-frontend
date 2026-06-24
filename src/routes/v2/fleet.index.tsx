@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router"
-
-import { FleetPage } from "@/components/V2/Fleet/FleetPage"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/v2/fleet/")({
-  component: FleetPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/v2/sessions", replace: true })
+  },
 })
