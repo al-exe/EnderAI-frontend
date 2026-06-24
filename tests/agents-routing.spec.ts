@@ -178,9 +178,9 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
 }) => {
   await mockAgentsShell(page)
 
-  await page.goto("/v2/agents/jensen")
+  await page.goto("/v2/profiles/jensen")
 
-  await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
+  await expect(page).toHaveURL(/\/v2\/profiles\/jensen$/)
   await expect(
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
@@ -191,12 +191,27 @@ test("direct specialist URL renders detail instead of the agents grid", async ({
   ).toHaveCount(0)
 })
 
-test("hard refresh on /v2/agents/ keeps Profiles selected and renders content", async ({
+test("legacy agents URLs redirect to the canonical profiles routes", async ({
   page,
 }) => {
   await mockAgentsShell(page)
 
-  await page.goto("/v2/agents/")
+  await page.goto("/v2/agents")
+  await expect(page).toHaveURL(/\/v2\/profiles$/)
+
+  await page.goto("/v2/agents/jensen")
+  await expect(page).toHaveURL(/\/v2\/profiles\/jensen$/)
+  await expect(
+    page.getByRole("heading", { name: "Jensen", level: 1 }),
+  ).toBeVisible()
+})
+
+test("hard refresh on /v2/profiles/ keeps Profiles selected and renders content", async ({
+  page,
+}) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/profiles/")
   await page.reload()
 
   await expect(page.getByRole("link", { name: "Profiles" })).toHaveAttribute(
@@ -210,16 +225,18 @@ test("hard refresh on /v2/agents/ keeps Profiles selected and renders content", 
 
 test("profiles grid sorts by creation date", async ({ page }) => {
   await mockAgentsShell(page)
-  await page.goto("/v2/agents")
+  await page.goto("/v2/profiles")
 
   const grid = page.getByTestId("agents-card-grid")
   const profileOrder = () =>
-    grid.getByRole("link").evaluateAll((links) =>
-      links.map(
-        (link) =>
-          link.getAttribute("aria-label")?.replace("Open profile ", "") ?? "",
-      ),
-    )
+    grid
+      .getByRole("link")
+      .evaluateAll((links) =>
+        links.map(
+          (link) =>
+            link.getAttribute("aria-label")?.replace("Open profile ", "") ?? "",
+        ),
+      )
 
   await expect(grid).toBeVisible()
   await expect.poll(profileOrder).toEqual(["Vega", "Jensen", "Mira"])
@@ -235,10 +252,10 @@ test("agent detail navigation does not flash no-access or not-found", async ({
     await route.fulfill({ json: jensenDetail })
   })
 
-  await page.goto("/v2/agents")
+  await page.goto("/v2/profiles")
   await page.getByRole("link", { name: /open profile jensen/i }).click()
 
-  await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
+  await expect(page).toHaveURL(/\/v2\/profiles\/jensen$/)
   await expect(
     page.getByRole("heading", { name: "No access", exact: true }),
   ).toHaveCount(0)
@@ -265,7 +282,7 @@ test("v2 route transient session errors do not render membership no-access", asy
   })
 
   const userResponse = page.waitForResponse("**/api/v1/users/me")
-  await page.goto("/v2/agents")
+  await page.goto("/v2/profiles")
   await userResponse
 
   await expect(
@@ -290,7 +307,7 @@ test("v2 route invalid session redirects to login instead of membership no-acces
     })
   })
 
-  await page.goto("/v2/agents")
+  await page.goto("/v2/profiles")
 
   await expect(page).toHaveURL(/\/login$/)
   await expect(
@@ -304,7 +321,7 @@ test("v2 route invalid session redirects to login instead of membership no-acces
 test("profiles grid links to detail and session metrics", async ({ page }) => {
   await mockAgentsShell(page)
 
-  await page.goto("/v2/agents")
+  await page.goto("/v2/profiles")
 
   await expect(
     page.getByRole("heading", { name: "Profiles", level: 1 }),
@@ -316,7 +333,7 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
   await expect(page.getByTestId("agent-status-archived")).toBeVisible()
 
   await page.getByRole("link", { name: /open profile jensen/i }).click()
-  await expect(page).toHaveURL(/\/v2\/agents\/jensen$/)
+  await expect(page).toHaveURL(/\/v2\/profiles\/jensen$/)
   await expect(
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
@@ -346,7 +363,7 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
 test("profile lifecycle updates detail and list", async ({ page }) => {
   await mockAgentsShell(page)
 
-  await page.goto("/v2/agents/jensen")
+  await page.goto("/v2/profiles/jensen")
   await expect(page.getByTestId("agent-status-active")).toBeVisible()
 
   await page.getByRole("button", { name: "Edit" }).click()
@@ -383,7 +400,7 @@ test("profiles grid shows empty state before profiles are seeded", async ({
 }) => {
   await mockAgentsShell(page, { empty: true })
 
-  await page.goto("/v2/agents")
+  await page.goto("/v2/profiles")
 
   await expect(
     page.getByRole("heading", { name: "No profiles yet" }),
@@ -420,7 +437,7 @@ test("profiles list exposes a retry state instead of an empty state", async ({
     await route.fulfill({ json: { items: agents } })
   })
 
-  await page.goto("/v2/agents")
+  await page.goto("/v2/profiles")
 
   await expect(page.getByTestId("profiles-load-error")).toBeVisible()
   await expect(
@@ -452,7 +469,7 @@ test("profile detail exposes a retry state instead of not found", async ({
     await route.fulfill({ json: jensenDetail })
   })
 
-  await page.goto("/v2/agents/jensen")
+  await page.goto("/v2/profiles/jensen")
 
   await expect(page.getByTestId("profile-detail-load-error")).toBeVisible()
   await expect(
