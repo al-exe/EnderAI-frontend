@@ -603,34 +603,113 @@
   color: var(--muted-foreground);
 }
 
+/* Live activity preview — truncated in the row; the full text lives in the
+   hover card (.hovercard) so the row stays terse and never animates. */
 .aactivity {
   overflow: hidden;
   flex: 1;
   min-width: 0;
-  padding-left: var(--activity-fade, 12px);
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.aactivityMarquee {
-  --activity-fade: 12px;
-  --activity-end-inset: calc(var(--activity-fade) + 4px);
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 var(--activity-fade),
-    #000 calc(100% - var(--activity-fade)),
-    transparent 100%
-  );
+/* ---------- agent hover card (compact) ---------- */
+/* Portaled to <body> and positioned at the cursor imperatively, so it is fixed
+   and laid out from the top-left corner via transform. */
+.hovercard {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  pointer-events: none;
+  will-change: transform;
 }
 
-.aactivityTrack {
-  display: inline-block;
+.hcInner {
+  transform-origin: top left;
+  animation: hcIn 0.14s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes hcIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hcCard {
+  width: 256px;
+  border: 1px solid var(--border);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow:
+    0 18px 50px -18px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.hcTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 13px 0;
+}
+
+.hcName {
+  flex: 1;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--v2-scale, 1));
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.aactivityTrackScroll {
-  padding-right: var(--activity-end-inset, 16px);
-  transition: transform var(--activity-motion-duration, 0.25s) ease-in-out;
+.hcTitle {
+  padding: 8px 13px 0;
+  font-size: calc(13px * var(--v2-scale, 1));
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+
+.hcAct {
+  display: flex;
+  gap: 6px;
+  margin: 10px 13px 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--fl-hair);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--v2-scale, 1));
+  line-height: 1.45;
+}
+
+.hcCaret {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.hcRows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  padding: 9px 13px 12px;
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--v2-scale, 1));
+}
+
+.hcKey {
+  color: var(--fl-faint);
+}
+
+.hcVal {
+  overflow-wrap: anywhere;
+  color: var(--foreground);
+  text-align: right;
 }
 
 /* client chip — which coding tool drives the session. Fixed width so the chips
@@ -1517,11 +1596,9 @@
     animation: none;
   }
 
-  .aactivityTrackScroll {
+  .hovercard,
+  .hcInner {
+    animation: none;
     transition: none;
-  }
-
-  .aactivity {
-    text-overflow: ellipsis;
   }
 }

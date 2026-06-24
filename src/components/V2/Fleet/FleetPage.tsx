@@ -13,14 +13,15 @@ import {
   Trash2,
 } from "lucide-react"
 import {
-  type CSSProperties,
   type DragEvent,
   type FormEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react"
+import { createPortal } from "react-dom"
 import {
   assignTaskforceFleetSession,
   createTaskforceFleetSession,
@@ -76,6 +77,7 @@ import {
   compactPresence,
   type FleetStatus,
   fleetTitle,
+  formatClockTime,
   rosterStatusLabel,
   runningCount,
   waitingCount,
@@ -158,79 +160,75 @@ function ClientChip({ kind }: { kind: AgentKind }) {
   )
 }
 
-function ActivityMarquee({
-  activity,
-  active,
+// Compact detail card shown while hovering an agent row. Rendered into a body
+// portal and positioned next to the cursor (see AgentRow.placeCard), so the row
+// itself can stay terse — the full activity line and meta live here instead of
+// scrolling inside the row.
+function AgentHoverCard({
+  agent,
+  fleetName,
+  cardRef,
 }: {
-  activity: string
-  active: boolean
+  agent: TaskforceFleetAgent
+  fleetName: string
+  cardRef: React.RefObject<HTMLDivElement | null>
 }) {
-  const containerRef = useRef<HTMLSpanElement>(null)
-  const trackRef = useRef<HTMLSpanElement>(null)
-  const [scrollDistance, setScrollDistance] = useState(0)
+  const status = agentStatus(agent)
+  const title = agentDisplayName(agent)
+  const model = agentModelName(agent)
+  const branch = agent.branch?.trim() || null
+  const activity = agentActivityLine(agent)
+  const started = agent.started_at ? formatClockTime(agent.started_at) : null
+  const presence = compactPresence(agent)
 
-  useEffect(() => {
-    const container = containerRef.current
-    const track = trackRef.current
-    if (!container || !track) return
-
-    const measure = () => {
-      const overflow = track.scrollWidth - container.clientWidth
-      setScrollDistance(overflow > 4 ? overflow : 0)
-    }
-
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(container)
-    observer.observe(track)
-    return () => observer.disconnect()
-  }, [])
-
-  const scrolls = scrollDistance > 0
-  const forwardDuration = scrolls
-    ? Math.max(1.6, (scrollDistance / 32 + 2) / 2.5)
-    : 0
-  const rewindDuration = forwardDuration / 6
-
-  const marqueeStyle = scrolls
-    ? ({
-        "--activity-scroll": `${scrollDistance}px`,
-        "--activity-fade": "12px",
-      } as CSSProperties)
-    : undefined
-
-  const trackStyle = scrolls
-    ? ({
-        "--activity-motion-duration": `${active ? forwardDuration : rewindDuration}s`,
-        transform: active
-          ? "translateX(calc(-1 * var(--activity-scroll, 0px)))"
-          : "translateX(0)",
-      } as CSSProperties)
-    : undefined
-
-  return (
-    <span
-      ref={containerRef}
-      className={cn(styles.aactivity, scrolls && styles.aactivityMarquee)}
-      style={marqueeStyle}
-      title={activity}
-    >
-      <span
-        ref={trackRef}
-        className={cn(
-          styles.aactivityTrack,
-          scrolls && styles.aactivityTrackScroll,
-        )}
-        style={trackStyle}
-      >
-        {activity}
-      </span>
-    </span>
+  return createPortal(
+    <div ref={cardRef} className={styles.hovercard} role="tooltip">
+      <div className={styles.hcInner}>
+        <div className={styles.hcCard}>
+          <div className={styles.hcTop}>
+            <ClientChip kind={agentKind(agent)} />
+            <span className={styles.hcName}>{fleetName}</span>
+            <StatusDot status={status} />
+          </div>
+          <div className={styles.hcTitle}>{title}</div>
+          {activity && (
+            <div className={styles.hcAct}>
+              <span className={styles.hcCaret} aria-hidden="true">
+                ▸
+              </span>
+              <span>{activity}</span>
+            </div>
+          )}
+          <div className={styles.hcRows}>
+            <span className={styles.hcKey}>status</span>
+            <span className={styles.hcVal}>{rosterStatusLabel(agent)}</span>
+            <span className={styles.hcKey}>model</span>
+            <span className={styles.hcVal}>{model}</span>
+            {branch && (
+              <>
+                <span className={styles.hcKey}>branch</span>
+                <span className={styles.hcVal}>{branch}</span>
+              </>
+            )}
+            {started && (
+              <>
+                <span className={styles.hcKey}>started</span>
+                <span className={styles.hcVal}>{started}</span>
+              </>
+            )}
+            <span className={styles.hcKey}>active</span>
+            <span className={styles.hcVal}>{presence}</span>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
   )
 }
 
 function AgentRow({
   agent,
+  fleetName,
   onOpen,
   onRename,
   onArchive,
@@ -242,6 +240,7 @@ function AgentRow({
   draggable = true,
 }: {
   agent: TaskforceFleetAgent
+  fleetName: string
   onOpen: (agent: TaskforceFleetAgent) => void
   onRename: (agent: TaskforceFleetAgent, displayName: string) => void
   onArchive: (agent: TaskforceFleetAgent) => void
@@ -279,6 +278,44 @@ function AgentRow({
       : null)
   const profileRuleCount = agentSpecialistRuleCount(agent)
 
+  // Cursor-following hover card. We track the latest pointer position in a ref
+  // and reposition the portal element imperatively, so following the cursor
+  // never triggers a React re-render.
+  const hoverCardRef = useRef<HTMLDivElement>(null)
+  const lastPointer = useRef({ x: 0, y: 0 })
+
+  const placeCard = useCallback(() => {
+    const el = hoverCardRef.current
+    if (!el) return
+    const { x, y } = lastPointer.current
+    const margin = 10
+    const offset = 18
+    const width = el.offsetWidth
+    const height = el.offsetHeight
+    let nextX = x + offset
+    let nextY = y + offset
+    if (nextX + width > window.innerWidth - margin) nextX = x - width - offset
+    if (nextX < margin) nextX = margin
+    if (nextY + height > window.innerHeight - margin)
+      nextY = y - height - offset
+    if (nextY < margin) nextY = margin
+    el.style.transform = `translate(${nextX}px, ${nextY}px)`
+  }, [])
+
+  // Position before paint when the card mounts so it never flashes at (0,0).
+  useLayoutEffect(() => {
+    if (rowHovered) placeCard()
+  }, [rowHovered, placeCard])
+
+  // A fixed card detaches from the row on scroll, so dismiss it instead.
+  useEffect(() => {
+    if (!rowHovered) return
+    const dismiss = () => setRowHovered(false)
+    window.addEventListener("scroll", dismiss, { capture: true, passive: true })
+    return () =>
+      window.removeEventListener("scroll", dismiss, { capture: true })
+  }, [rowHovered])
+
   const submitRename = (event: FormEvent) => {
     event.preventDefault()
     const nextName = renameValue.trim()
@@ -302,7 +339,14 @@ function AgentRow({
       )}
       draggable={draggable && !isMoving}
       title={draggable ? undefined : "View this agent session"}
-      onMouseEnter={() => setRowHovered(true)}
+      onMouseEnter={(event) => {
+        lastPointer.current = { x: event.clientX, y: event.clientY }
+        setRowHovered(true)
+      }}
+      onMouseMove={(event) => {
+        lastPointer.current = { x: event.clientX, y: event.clientY }
+        if (rowHovered) placeCard()
+      }}
       onMouseLeave={() => setRowHovered(false)}
       onDragStart={(event) => {
         suppressClick.current = true
@@ -372,7 +416,9 @@ function AgentRow({
                   <span className={styles.asep} aria-hidden="true">
                     ·
                   </span>
-                  <ActivityMarquee activity={activity} active={rowHovered} />
+                  <span className={styles.aactivity} title={activity}>
+                    {activity}
+                  </span>
                 </>
               )}
             </div>
@@ -470,6 +516,14 @@ function AgentRow({
           </form>
         </DialogContent>
       </Dialog>
+
+      {rowHovered && !isDragging && !isMoving && (
+        <AgentHoverCard
+          agent={agent}
+          fleetName={fleetName}
+          cardRef={hoverCardRef}
+        />
+      )}
     </fieldset>
   )
 }
@@ -668,6 +722,7 @@ function FleetCard({
               <AgentRow
                 key={agent.session_id}
                 agent={agent}
+                fleetName={fleetTitle(fleet)}
                 onOpen={onOpenAgent}
                 onRename={onRenameAgent}
                 onArchive={onArchiveAgent}
