@@ -369,7 +369,7 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
     historyCard.getByText(/feature\/new-user-max-promo/),
   ).toHaveCount(0)
   await expect(page.getByTestId("fleet-card-fleet-1")).toContainText(
-    "feature/automatic-tax",
+    "Wiring automatic tax on Stripe checkout",
   )
 
   // New fleet creates a nameless fleet (no request body).

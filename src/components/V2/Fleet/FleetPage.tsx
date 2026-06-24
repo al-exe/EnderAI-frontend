@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import {
   Archive,
-  Bot,
   ChevronDown,
   ChevronRight,
   GripVertical,
@@ -71,8 +70,6 @@ import {
   agentDisplayName,
   agentKind,
   agentModelName,
-  agentSpecialistName,
-  agentSpecialistRuleCount,
   agentStatus,
   compactPresence,
   type FleetStatus,
@@ -260,23 +257,7 @@ function AgentRow({
   const status = agentStatus(agent)
   const age = compactPresence(agent)
   const sessionLabel = agentDisplayName(agent)
-  const model = agentModelName(agent)
-  const branch = agent.branch?.trim() || null
-  const activity = agentActivityLine(agent)
   const [rowHovered, setRowHovered] = useState(false)
-  // The specialist profile steering this session, if Taskforce routed one.
-  // Prefer the resolved name; fall back to a humanized slug.
-  const specialistSlug = agent.specialist_slug?.trim() || null
-  const profileLabel =
-    agentSpecialistName(agent) ??
-    (specialistSlug
-      ? specialistSlug
-          .split(/[-_]/)
-          .filter(Boolean)
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ")
-      : null)
-  const profileRuleCount = agentSpecialistRuleCount(agent)
 
   // Cursor-following hover card. We track the latest pointer position in a ref
   // and reposition the portal element imperatively, so following the cursor
@@ -375,53 +356,8 @@ function AgentRow({
         </span>
         <div className={styles.who}>
           <ClientChip kind={agentKind(agent)} />
-          <div className={styles.identity}>
-            <div className={styles.nm} data-testid="fleet-agent-name">
-              {sessionLabel}
-            </div>
-            <div className={styles.asub} data-testid="fleet-agent-sub">
-              {profileLabel && (
-                <>
-                  <span
-                    className={styles.profilePill}
-                    data-testid="fleet-agent-profile"
-                    title={
-                      profileRuleCount
-                        ? `Profile: ${profileLabel} · ${profileRuleCount} routing rules`
-                        : `Profile: ${profileLabel}`
-                    }
-                  >
-                    <Bot
-                      className={styles.profilePillIcon}
-                      aria-hidden="true"
-                    />
-                    {profileLabel}
-                  </span>
-                  <span className={styles.asep} aria-hidden="true">
-                    ·
-                  </span>
-                </>
-              )}
-              <span className={styles.amodel}>{model}</span>
-              {branch && (
-                <>
-                  <span className={styles.asep} aria-hidden="true">
-                    ·
-                  </span>
-                  <span className={styles.abranch}>{branch}</span>
-                </>
-              )}
-              {activity && (
-                <>
-                  <span className={styles.asep} aria-hidden="true">
-                    ·
-                  </span>
-                  <span className={styles.aactivity} title={activity}>
-                    {activity}
-                  </span>
-                </>
-              )}
-            </div>
+          <div className={styles.nm} data-testid="fleet-agent-name">
+            {sessionLabel}
           </div>
         </div>
         <div
