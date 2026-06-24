@@ -196,7 +196,7 @@ function AgentHoverCard({
               <span className={styles.hcCaret} aria-hidden="true">
                 ▸
               </span>
-              <span>{activity}</span>
+              <span className={styles.hcActText}>{activity}</span>
             </div>
           )}
           <div className={styles.hcRows}>

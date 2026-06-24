@@ -643,6 +643,8 @@
 
 .hcCard {
   width: 256px;
+  max-width: min(256px, calc(100vw - 24px));
+  overflow: hidden;
   border: 1px solid var(--border);
   background: var(--popover);
   color: var(--popover-foreground);
@@ -674,6 +676,8 @@
   font-weight: 500;
   line-height: 1.35;
   letter-spacing: -0.005em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .hcAct {
@@ -686,6 +690,14 @@
   font-family: var(--font-mono);
   font-size: calc(11px * var(--v2-scale, 1));
   line-height: 1.45;
+  min-width: 0;
+}
+
+.hcActText {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .hcCaret {
@@ -707,7 +719,9 @@
 }
 
 .hcVal {
+  min-width: 0;
   overflow-wrap: anywhere;
+  word-break: break-word;
   color: var(--foreground);
   text-align: right;
 }
