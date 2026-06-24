@@ -374,7 +374,7 @@ test("profile lifecycle updates detail and list", async ({ page }) => {
   await expect(
     page
       .getByRole("link", { name: /open profile jensen/i })
-      .getByText("Archived", { exact: true }),
+      .getByTestId("agent-status-archived"),
   ).toBeVisible()
 })
 
