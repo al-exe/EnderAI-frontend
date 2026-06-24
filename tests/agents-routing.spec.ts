@@ -28,6 +28,7 @@ const agents = [
     invocations_count: 12,
     tokens_saved: 42000,
     last_invoked_at: "2026-05-24T12:00:00Z",
+    created_at: "2026-05-20T12:00:00Z",
   },
   {
     id: "agent-2",
@@ -43,6 +44,7 @@ const agents = [
     invocations_count: 4,
     tokens_saved: 12000,
     last_invoked_at: null,
+    created_at: "2026-04-01T12:00:00Z",
   },
   {
     id: "agent-3",
@@ -57,6 +59,7 @@ const agents = [
     invocations_count: 8,
     tokens_saved: 8000,
     last_invoked_at: "2026-06-01T12:00:00Z",
+    created_at: "2026-06-01T12:00:00Z",
   },
 ]
 
@@ -205,7 +208,7 @@ test("hard refresh on /v2/agents/ keeps Profiles selected and renders content", 
   ).toBeVisible()
 })
 
-test("profiles grid sorts alphabetically and by recent use", async ({ page }) => {
+test("profiles grid sorts by creation date", async ({ page }) => {
   await mockAgentsShell(page)
   await page.goto("/v2/agents")
 
@@ -219,18 +222,6 @@ test("profiles grid sorts alphabetically and by recent use", async ({ page }) =>
     )
 
   await expect(grid).toBeVisible()
-  await expect.poll(profileOrder).toEqual(["Vega", "Jensen", "Mira"])
-
-  await page.getByRole("button", { name: "A–Z" }).click()
-  await expect.poll(profileOrder).toEqual(["Vega", "Mira", "Jensen"])
-
-  await page.getByRole("button", { name: "Sort descending" }).click()
-  await expect.poll(profileOrder).toEqual(["Jensen", "Mira", "Vega"])
-
-  await page.getByRole("button", { name: "Recent" }).click()
-  await expect.poll(profileOrder).toEqual(["Jensen", "Vega", "Mira"])
-
-  await page.getByRole("button", { name: "Sort ascending" }).click()
   await expect.poll(profileOrder).toEqual(["Vega", "Jensen", "Mira"])
 })
 
@@ -352,7 +343,7 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
   await expect(page).toHaveURL(/\/v2\/metrics\?session_id=session-1$/)
 })
 
-test("profile lifecycle updates detail and list filters", async ({ page }) => {
+test("profile lifecycle updates detail and list", async ({ page }) => {
   await mockAgentsShell(page)
 
   await page.goto("/v2/agents/jensen")
@@ -377,14 +368,14 @@ test("profile lifecycle updates detail and list filters", async ({ page }) => {
     .getByTestId("agent-detail-sticky-header")
     .getByRole("link", { name: "Profiles" })
     .click()
-  await page.getByRole("button", { name: /^Archived/ }).click()
   await expect(
     page.getByRole("link", { name: /open profile jensen/i }),
   ).toBeVisible()
-  await page.getByRole("button", { name: /^Active/ }).click()
   await expect(
-    page.getByRole("link", { name: /open profile jensen/i }),
-  ).toHaveCount(0)
+    page
+      .getByRole("link", { name: /open profile jensen/i })
+      .getByText("Archived", { exact: true }),
+  ).toBeVisible()
 })
 
 test("profiles grid shows empty state before profiles are seeded", async ({

@@ -26,7 +26,7 @@ export const Route = createFileRoute("/v2/pricing")({
   head: () => ({
     meta: [
       {
-        title: "Taskforce Membership",
+        title: "Taskforce | Pricing",
       },
     ],
   }),
@@ -61,17 +61,12 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
   return (
     <section className="flex min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 py-8">
-        <div className="space-y-3">
-          <p className="text-sm font-medium tracking-[0.01em] text-muted-foreground">
-            Taskforce Membership
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight md:whitespace-nowrap md:text-3xl">
-            Choose the <span className="text-[#8447ff]">Taskforce</span> tier
-            right for your team
-          </h1>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight text-balance md:text-3xl">
+          Choose the <span className="text-[#8447ff]">Taskforce</span> tier right
+          for your team
+        </h1>
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch">
           {membershipPlans.map((plan) => {
             const isCurrent = plan.tier === currentTier
             const isSelected = plan.tier === selectedTier
@@ -81,52 +76,52 @@ function TaskforcePricing({ currentUser }: { currentUser: UserPublic }) {
                 key={plan.tier}
                 data-testid={`membership-plan-${plan.tier}`}
                 className={cn(
-                  "relative flex cursor-pointer flex-col border bg-card transition hover:border-primary/60 hover:shadow-sm",
+                  "relative flex h-full cursor-pointer flex-col border bg-card transition hover:border-primary/60 hover:shadow-sm",
                   isSelected && "border-primary ring-2 ring-primary/20",
                   plan.highlighted && "bg-primary/[0.03]",
                 )}
                 onClick={() => setSelectedTier(plan.tier)}
               >
                 <CardHeader className="gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium tracking-[0.01em] text-muted-foreground">
-                        {plan.eyebrow}
-                      </p>
-                      <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      {isCurrent && (
-                        <Badge variant="secondary">
-                          You already have this tier
-                        </Badge>
-                      )}
-                    </div>
+                  <div className="flex min-h-6 items-start justify-between gap-3">
+                    <p className="text-xs font-medium tracking-[0.01em] text-muted-foreground">
+                      {plan.eyebrow}
+                    </p>
+                    {isCurrent && (
+                      <Badge variant="secondary" className="shrink-0 text-right">
+                        You already have this tier
+                      </Badge>
+                    )}
                   </div>
-                  <CardDescription>{plan.description}</CardDescription>
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <CardDescription className="min-h-10 text-pretty">
+                    {plan.description}
+                  </CardDescription>
                 </CardHeader>
 
                 <CardContent className="flex flex-1 flex-col gap-5">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-semibold">{plan.price}</span>
+                  <div className="flex min-h-14 flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="text-4xl font-semibold leading-none">
+                      {plan.price}
+                    </span>
                     {plan.priceDetail && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm leading-snug text-muted-foreground">
                         {plan.priceDetail}
                       </span>
                     )}
                   </div>
 
-                  <ul className="grid gap-3 text-sm text-muted-foreground">
+                  <ul className="grid flex-1 gap-3 text-sm text-muted-foreground">
                     {plan.benefits.map((benefit) => (
                       <li key={benefit} className="flex items-start gap-3">
                         <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
-                        <span>{benefit}</span>
+                        <span className="text-pretty">{benefit}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
 
-                <CardFooter className="flex flex-col items-stretch gap-2">
+                <CardFooter className="mt-auto flex flex-col items-stretch gap-2">
                   {(plan.tier === "pro" || plan.tier === "max") &&
                   !isCurrent ? (
                     <LoadingButton
