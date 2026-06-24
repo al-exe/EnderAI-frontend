@@ -67,7 +67,7 @@ test("/skills routes authenticated users to Profiles", async ({ page }) => {
 
   await page.goto("/skills")
 
-  await expect(page).toHaveURL(/\/v2\/agents$/)
+  await expect(page).toHaveURL(/\/v2\/profiles$/)
   await expect(
     page.getByRole("heading", { name: "Profiles", level: 1 }),
   ).toBeVisible()
