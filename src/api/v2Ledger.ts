@@ -82,6 +82,8 @@ export interface LedgerSessionRow {
   cache_write_tokens: number
   source: string | null
   transcript_available: boolean
+  document_relationship?: "produced" | "reused" | "touched" | null
+  session_href?: string | null
 }
 
 export interface LedgerSessionDetail extends LedgerSessionRow {
