@@ -22,12 +22,14 @@ import {
   agentCapturePaused,
   agentDisplayName,
   agentFiles,
+  agentKind,
   agentPauseReason,
   agentQuestion,
   agentSpecialistName,
   agentSpecialistRuleCount,
   agentStartedAt,
   agentStatus,
+  AGENT_KIND_LABEL,
   cleanActivityPromptText,
   compactPresence,
   type FleetStatus,
@@ -167,8 +169,8 @@ function AgentReplyPanel({ agent }: { agent: TaskforceFleetAgent }) {
   if (!canReply) {
     return (
       <div className={styles.replyNote}>
-        Replying isn’t supported for {agent.agent_kind} agents yet — they have
-        no way to pick up a queued prompt.
+        Replying isn’t supported for {AGENT_KIND_LABEL[agentKind(agent)]} agents
+        yet.
       </div>
     )
   }
