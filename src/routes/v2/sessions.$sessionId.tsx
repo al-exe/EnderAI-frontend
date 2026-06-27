@@ -22,14 +22,12 @@ import {
   agentCapturePaused,
   agentDisplayName,
   agentFiles,
-  agentKind,
   agentPauseReason,
   agentQuestion,
   agentSpecialistName,
   agentSpecialistRuleCount,
   agentStartedAt,
   agentStatus,
-  AGENT_KIND_LABEL,
   cleanActivityPromptText,
   compactPresence,
   type FleetStatus,
@@ -132,9 +130,7 @@ function eventDetail(event: TaskforceSessionActivityEntry): string | null {
   return event.note
 }
 
-// Only Claude and Codex agents have a Stop-hook injection surface, so they are
-// the only kinds that can pick up a queued prompt. Cursor/other agents get a
-// note instead of a dead input.
+// Only Claude and Codex agents have a Stop-hook injection surface.
 function agentSupportsReply(agent: TaskforceFleetAgent): boolean {
   return agent.agent_kind === "claude" || agent.agent_kind === "codex"
 }
@@ -167,12 +163,7 @@ function AgentReplyPanel({ agent }: { agent: TaskforceFleetAgent }) {
   })
 
   if (!canReply) {
-    return (
-      <div className={styles.replyNote}>
-        Replying isn’t supported for {AGENT_KIND_LABEL[agentKind(agent)]} agents
-        yet.
-      </div>
-    )
+    return null
   }
 
   const pending = inboxQuery.data?.pending ?? []
@@ -412,14 +403,22 @@ function FleetAgentDetailRoute() {
             {status === "waiting" ? (
               <div className={styles.section}>
                 <div className={styles.seclabel}>
-                  {question ? "Waiting for input" : "Awaiting your prompt"}
+                  {question
+                    ? "Waiting for input"
+                    : agentSupportsReply(agent)
+                      ? "Awaiting your prompt"
+                      : "Idle"}
                 </div>
                 <div className={styles.question}>
                   <div className={styles.questionText}>
                     {question ??
-                      "This agent is idle. Send a prompt to continue."}
+                      (agentSupportsReply(agent)
+                        ? "This agent is idle. Send a prompt to continue."
+                        : "This agent is idle.")}
                   </div>
-                  <AgentReplyPanel agent={agent} />
+                  {agentSupportsReply(agent) ? (
+                    <AgentReplyPanel agent={agent} />
+                  ) : null}
                 </div>
               </div>
             ) : (
