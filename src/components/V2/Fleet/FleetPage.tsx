@@ -850,7 +850,7 @@ export function FleetPage() {
     `${activeAgents.length} ${activeAgents.length === 1 ? "agent" : "agents"}`,
     `${running} running`,
   ]
-  if (waiting) eyebrowParts.push(`${waiting} awaiting prompt`)
+  if (waiting) eyebrowParts.push(`${waiting} Awaiting prompt`)
 
   const openAgent = (agent: TaskforceFleetAgent) =>
     navigate({
