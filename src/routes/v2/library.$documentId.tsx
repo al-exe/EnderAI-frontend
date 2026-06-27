@@ -170,6 +170,15 @@ function documentClientLabel(value: string | null): string {
 }
 
 function documentSessionAction(row: LedgerSessionRow): string {
+  if (row.document_relationship === "produced") {
+    return "Produced by"
+  }
+  if (row.document_relationship === "reused") {
+    return "Reused by"
+  }
+  if (row.document_relationship === "touched") {
+    return "Touched by"
+  }
   if (row.kinds.some((kind) => kind === "document.created")) {
     return "Produced by"
   }
@@ -1197,13 +1206,14 @@ function DocumentProvenanceStrip({
           {rows.slice(0, 3).map((row) => (
             <Link
               key={row.session_id}
-              to="/v2/metrics"
-              search={{ session_id: row.session_id }}
+              to="/v2/sessions/$sessionId"
+              params={{ sessionId: row.session_id }}
               className="group min-w-0 border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/40"
             >
               <div className="flex min-w-0 items-center justify-between gap-2">
                 <span className="truncate font-medium">
-                  {documentSessionAction(row)} {row.actor_name}
+                  {documentSessionAction(row)}{" "}
+                  {row.title ?? row.actor_name}
                 </span>
                 {row.cross_boundary ? (
                   <Badge
