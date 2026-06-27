@@ -13,7 +13,7 @@ export type FleetStatus = "run" | "waiting" | "paused" | "idle" | "inactive"
 /** Quiet word shown next to a non-running status dot. */
 export const STATE_LABEL: Record<FleetStatus, string> = {
   run: "running",
-  waiting: "awaiting prompt",
+  waiting: "Awaiting prompt",
   paused: "capture paused",
   idle: "idle",
   inactive: "inactive",
