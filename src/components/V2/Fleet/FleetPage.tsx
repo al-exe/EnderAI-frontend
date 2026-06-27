@@ -28,6 +28,7 @@ import {
   readTaskforceFleet,
   renameTaskforceSession,
   setDefaultTaskforceFleetSession,
+  setFleetSessionAutoArchiveDisabled,
   type TaskforceFleetAgent,
   type TaskforceFleetResponse,
   type TaskforceFleetSession,
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -483,6 +485,7 @@ function FleetCard({
   onRename,
   onDelete,
   onSetDefault,
+  onToggleAutoArchive,
   draggingAgent,
   dropTargetId,
   movingSessionId,
@@ -501,6 +504,10 @@ function FleetCard({
   onRename: (fleet: TaskforceFleetSession, name: string) => void
   onDelete: (fleet: TaskforceFleetSession) => void
   onSetDefault: (fleet: TaskforceFleetSession) => void
+  onToggleAutoArchive: (
+    fleet: TaskforceFleetSession,
+    disabled: boolean,
+  ) => void
   draggingAgent: TaskforceFleetAgent | null
   dropTargetId: string | null
   movingSessionId: string | null
@@ -638,6 +645,15 @@ function FleetCard({
                       Make default
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuCheckboxItem
+                    checked={fleet.auto_archive_disabled}
+                    onCheckedChange={(checked) =>
+                      onToggleAutoArchive(fleet, checked === true)
+                    }
+                    onSelect={(event) => event.preventDefault()}
+                  >
+                    Disable auto-archive
+                  </DropdownMenuCheckboxItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     variant="destructive"
@@ -754,6 +770,20 @@ export function FleetPage() {
     },
     onError: setMutationError,
   })
+  const autoArchiveMutation = useMutation({
+    mutationFn: ({
+      fleet,
+      disabled,
+    }: {
+      fleet: TaskforceFleetSession
+      disabled: boolean
+    }) => setFleetSessionAutoArchiveDisabled(fleet.id, disabled),
+    onSuccess: () => {
+      setMutationError(null)
+      refreshFleet()
+    },
+    onError: setMutationError,
+  })
   const moveMutation = useMutation({
     mutationFn: ({
       sessionId,
@@ -847,6 +877,16 @@ export function FleetPage() {
   const setDefaultFleet = (fleet: TaskforceFleetSession) => {
     setMutationError(null)
     setDefaultMutation.mutate(fleet)
+  }
+  const toggleAutoArchive = (
+    fleet: TaskforceFleetSession,
+    disabled: boolean,
+  ) => {
+    if (fleet.auto_archive_disabled === disabled || autoArchiveMutation.isPending) {
+      return
+    }
+    setMutationError(null)
+    autoArchiveMutation.mutate({ fleet, disabled })
   }
   const endAgentDrag = () => {
     setDraggingAgent(null)
@@ -984,6 +1024,7 @@ export function FleetPage() {
                   onRename={renameFleet}
                   onDelete={deleteFleet}
                   onSetDefault={setDefaultFleet}
+                  onToggleAutoArchive={toggleAutoArchive}
                   draggingAgent={draggingAgent}
                   dropTargetId={dropTargetId}
                   movingSessionId={
