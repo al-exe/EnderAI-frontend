@@ -67,6 +67,7 @@ export interface TaskforceFleetSession {
   name: string
   is_history: boolean
   is_default: boolean
+  auto_archive_disabled: boolean
   created_at: string
   updated_at: string
   agents: TaskforceFleetAgent[]
@@ -201,6 +202,21 @@ export function setDefaultTaskforceFleetSession(
       fleet_session_id: fleetSessionId,
     },
     body: { is_default: true },
+  })
+}
+
+/** Toggle whether stale agents in this session group are auto-archived. */
+export function setFleetSessionAutoArchiveDisabled(
+  fleetSessionId: string,
+  disabled: boolean,
+): CancelablePromise<TaskforceFleetSession> {
+  return request(OpenAPI, {
+    method: "PATCH",
+    url: "/api/v1/v2/taskforce/fleet/{fleet_session_id}",
+    path: {
+      fleet_session_id: fleetSessionId,
+    },
+    body: { auto_archive_disabled: disabled },
   })
 }
 
