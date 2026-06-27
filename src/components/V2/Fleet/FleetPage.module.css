@@ -513,15 +513,20 @@
 
 /* status dot */
 .sdot {
-  width: 7px;
-  height: 7px;
+  display: block;
+  width: 9px;
+  height: 9px;
   flex-shrink: 0;
+  box-shadow: none;
   /* biome-ignore lint/complexity/noImportantStyles: global square-corner rule should not flatten status indicators. */
-  border-radius: 999px !important;
+  border-radius: 50% !important;
 }
 
 .run {
   background: var(--primary);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent),
+    0 0 12px color-mix(in srgb, var(--primary) 58%, transparent);
 }
 
 .pulse {
@@ -546,6 +551,9 @@
 
 .waiting {
   background: var(--fl-waiting);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--fl-waiting) 16%, transparent),
+    0 0 12px color-mix(in srgb, var(--fl-waiting) 52%, transparent);
 }
 
 @keyframes fleet-pulse {
