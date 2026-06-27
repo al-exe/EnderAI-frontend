@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router"
 
 import { LandingPage } from "@/components/V2/Landing/LandingPage"
 import { isLoggedIn } from "@/hooks/useAuth"
-import { getDefaultFrontendPath } from "@/lib/experimentalMode"
+import { getDefaultFrontendPath } from "@/lib/navigation"
 
 export const Route = createFileRoute("/")({
   component: Landing,

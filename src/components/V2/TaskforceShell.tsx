@@ -32,11 +32,7 @@ import {
 import { readV2Documents, type V2DocumentPublic } from "@/api/v2Documents"
 import type { UserPublic } from "@/client"
 import { useDemoMode } from "@/components/demo-mode-provider"
-import { useExperimentalMode } from "@/components/experimental-mode-provider"
-import {
-  DemoModeToggle,
-  ExperimentalModeToggle,
-} from "@/components/Sidebar/ModeSwitches"
+import { DemoModeToggle } from "@/components/Sidebar/ModeSwitches"
 import { User } from "@/components/Sidebar/User"
 import { Input } from "@/components/ui/input"
 import {
@@ -279,12 +275,7 @@ function SidebarUtilityDrawer({
       {!isCollapsed && (
         <SidebarMenu className="mt-1">
           <DiscordButton />
-          {showInternalModes && (
-            <>
-              <ExperimentalModeToggle />
-              <DemoModeToggle />
-            </>
-          )}
+          {showInternalModes && <DemoModeToggle />}
         </SidebarMenu>
       )}
     </div>
@@ -610,13 +601,11 @@ function DocumentSearch() {
 
 function InternalModeAccessGate({ currentUser }: TaskforceShellProps) {
   const { setDemoMode } = useDemoMode()
-  const { setExperimentalMode } = useExperimentalMode()
 
   useEffect(() => {
     if (currentUser.is_superuser) return
     setDemoMode(false)
-    setExperimentalMode(false)
-  }, [currentUser.is_superuser, setDemoMode, setExperimentalMode])
+  }, [currentUser.is_superuser, setDemoMode])
 
   return null
 }

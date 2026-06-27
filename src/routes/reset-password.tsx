@@ -23,7 +23,7 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import { isLoggedIn } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
-import { getDefaultFrontendPath } from "@/lib/experimentalMode"
+import { getDefaultFrontendPath } from "@/lib/navigation"
 import { handleError } from "@/utils"
 
 const searchSchema = z.object({
