@@ -65,10 +65,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import {
-  formatCompactNumber,
-  formatRelativeTime,
-} from "@/components/V2/Agents/formatters"
+import { formatRelativeTime } from "@/components/V2/Agents/formatters"
 import { BackLink } from "@/components/V2/BackLink"
 import {
   FolderCreateDialog,
@@ -1232,12 +1229,9 @@ function DocumentProvenanceStrip({
                 <span>·</span>
                 <span>{formatRelativeTime(row.occurred_at_last)}</span>
               </div>
-              <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-                <span className="truncate text-muted-foreground">
+              <div className="mt-2 text-xs text-muted-foreground">
+                <span className="truncate">
                   {row.specialist_name ?? row.specialist_slug ?? "No profile"}
-                </span>
-                <span className="shrink-0 tabular-nums text-foreground">
-                  {formatCompactNumber(row.net_saved_tokens)} tok
                 </span>
               </div>
             </Link>
