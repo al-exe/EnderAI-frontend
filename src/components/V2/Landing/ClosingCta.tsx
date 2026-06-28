@@ -12,7 +12,8 @@ export function ClosingCta() {
     <section className={styles.ctaBand}>
       <div className={styles.ctaInner}>
         <h2>
-          Stop starting from <em>scratch</em>. Start using <em>Taskforce</em>.
+          Stop starting from <em className={styles.ctaScratch}>scratch</em>.
+          Start using <em>Taskforce</em>.
         </h2>
         <div className={cn(styles.heroCtas, styles.ctaActions)}>
           <Button asChild className={styles.solidButton}>

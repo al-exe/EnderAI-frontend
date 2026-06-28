@@ -4,6 +4,8 @@ import { useDemoMode } from "@/components/demo-mode-provider"
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
+import styles from "./ModeSwitches.module.css"
+
 type ModeToggleProps = {
   icon: LucideIcon
   isActive: boolean
@@ -44,16 +46,18 @@ function ModeToggle({
           aria-hidden="true"
           data-testid={`${testId}-track`}
           className={cn(
-            "ml-auto hidden h-7 w-12 items-center rounded-full border border-sidebar-border/70 bg-muted/70 p-1 shadow-inner transition-colors group-data-[collapsible=icon]:hidden md:flex",
-            isActive && "border-sidebar-primary/40 bg-sidebar-primary",
+            styles.track,
+            "ml-auto hidden h-6 w-11 shrink-0 items-center border border-sidebar-border/80 bg-muted/60 p-0.5 shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] transition-[background-color,border-color] duration-150 group-data-[collapsible=icon]:hidden md:flex",
+            isActive && "border-sidebar-primary/45 bg-sidebar-primary",
           )}
         >
           <div
             data-testid={`${testId}-thumb`}
             className={cn(
-              "size-5 rounded-full bg-background shadow-sm ring-1 ring-black/5 transition-transform",
+              styles.thumb,
+              "size-5 bg-background shadow-[0_1px_2px_rgb(0_0_0/0.14)] ring-1 ring-black/5 transition-transform duration-150 dark:ring-white/10",
               isActive &&
-                "translate-x-5 bg-sidebar-primary-foreground ring-white/20",
+                "translate-x-5 bg-sidebar-primary-foreground ring-white/15",
             )}
           />
         </div>

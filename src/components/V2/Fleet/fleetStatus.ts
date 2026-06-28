@@ -82,6 +82,11 @@ export function agentStatus(agent: TaskforceFleetAgent): FleetStatus {
   return agent.status === "running" ? "run" : agent.status
 }
 
+/** Running (purple) and awaiting-prompt / "Agent idle" (red) roster dots pulse. */
+export function statusDotPulses(status: FleetStatus): boolean {
+  return status === "run" || status === "waiting"
+}
+
 export function isRunning(agent: TaskforceFleetAgent): boolean {
   return agentStatus(agent) === "run"
 }

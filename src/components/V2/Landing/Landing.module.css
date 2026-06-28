@@ -1447,6 +1447,13 @@
   font-style: normal;
 }
 
+.ctaInner h2 em.ctaScratch {
+  display: inline-block;
+  padding: 0 0.12em;
+  background: var(--landing-primary);
+  color: #fff;
+}
+
 .footer {
   padding: 40px 0 56px;
 }
