@@ -118,7 +118,6 @@ test("Taskforce v2 sidebar includes drag collapse and Extras controls", async ({
     "placeholder",
     "Search documents",
   )
-  await expect(page.getByText("Experimental workspace")).toHaveCount(0)
   await expect(page.getByTestId("v2-mode-switch")).toHaveCount(0)
 
   await extrasHandle.click()

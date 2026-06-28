@@ -16,9 +16,9 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
-import { getDefaultFrontendPath } from "@/lib/experimentalMode"
 import { firebaseAuth } from "@/lib/firebase"
 import { getAuthErrorMessage } from "@/lib/firebase-errors"
+import { getDefaultFrontendPath } from "@/lib/navigation"
 import { invalidateTaskforceSession } from "@/lib/taskforceSession"
 import useCustomToast from "./useCustomToast"
 

@@ -23,12 +23,12 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { isLoggedIn } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
-import { getDefaultFrontendPath } from "@/lib/experimentalMode"
 import { firebaseAuth } from "@/lib/firebase"
 import {
   getAuthErrorMessage,
   isFirebaseUserNotFoundError,
 } from "@/lib/firebase-errors"
+import { getDefaultFrontendPath } from "@/lib/navigation"
 
 const formSchema = z.object({
   email: z.email(),

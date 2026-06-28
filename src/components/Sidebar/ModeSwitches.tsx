@@ -1,7 +1,6 @@
-import { FlaskConical, type LucideIcon, Rocket } from "lucide-react"
+import { FlaskConical, type LucideIcon } from "lucide-react"
 
 import { useDemoMode } from "@/components/demo-mode-provider"
-import { useExperimentalMode } from "@/components/experimental-mode-provider"
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
@@ -39,7 +38,8 @@ function ModeToggle({
             isActive && "text-sidebar-primary",
           )}
         />
-        <span>{label}</span>
+        {/* Match the V2 sidebar nav label size (TaskforceShell SIDEBAR_TAB_LABEL_CLASS). */}
+        <span className="text-[calc(18px*0.85)]">{label}</span>
         <div
           aria-hidden="true"
           data-testid={`${testId}-track`}
@@ -59,25 +59,6 @@ function ModeToggle({
         </div>
       </SidebarMenuButton>
     </SidebarMenuItem>
-  )
-}
-
-export function ExperimentalModeToggle() {
-  const { isExperimentalMode, toggleExperimentalMode } = useExperimentalMode()
-
-  return (
-    <ModeToggle
-      icon={Rocket}
-      isActive={isExperimentalMode}
-      label="Experimental mode"
-      testId="experimental-mode-toggle"
-      tooltip={
-        isExperimentalMode
-          ? "Disable experimental mode"
-          : "Enable experimental mode"
-      }
-      onClick={toggleExperimentalMode}
-    />
   )
 }
 

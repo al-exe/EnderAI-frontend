@@ -9,7 +9,6 @@ import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
 import { ApiError, OpenAPI } from "./client"
 import { DemoModeProvider } from "./components/demo-mode-provider"
-import { ExperimentalModeProvider } from "./components/experimental-mode-provider"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import { invalidateTaskforceSession } from "./lib/taskforceSession"
@@ -66,12 +65,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <DemoModeProvider>
-        <ExperimentalModeProvider>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-            <Toaster richColors closeButton />
-          </QueryClientProvider>
-        </ExperimentalModeProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+          <Toaster richColors closeButton />
+        </QueryClientProvider>
       </DemoModeProvider>
     </ThemeProvider>
   </StrictMode>,

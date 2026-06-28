@@ -79,18 +79,12 @@ function crossBoundarySavingsValue() {
 async function mockMetricsPage(
   page: Page,
   options: {
-    experimental?: boolean
     organizationRole?: "admin" | "member" | null
   } = {},
 ) {
-  await page.addInitScript((experimental) => {
+  await page.addInitScript(() => {
     window.localStorage.setItem("access_token", "test-token")
-    if (experimental) {
-      window.localStorage.setItem("taskforce-experimental-mode", "true")
-    } else {
-      window.localStorage.removeItem("taskforce-experimental-mode")
-    }
-  }, options.experimental ?? false)
+  })
 
   await page.route("**/api/v1/users/**", async (route) => {
     const url = new URL(route.request().url())
@@ -281,46 +275,6 @@ test("metrics page shows session-scoped savings when session_id is present", asy
   await expect(page).toHaveURL(/\/v2\/metrics$/)
 })
 
-test("experimental mode shows expressive session-scoped metrics", async ({
-  page,
-}) => {
-  await mockMetricsPage(page, { experimental: true })
-
-  await page.route(
-    "**/api/v1/v2/taskforce/session-savings?*",
-    async (route) => {
-      await route.fulfill({
-        json: {
-          session_id: sessionId,
-          doc_count: 2,
-          net_saved_tokens: 4218,
-          usd_saved: "0.00423",
-          pricing_model_id: "claude-opus-4-7",
-          occurred_at_first: "2026-05-23T19:00:00Z",
-          occurred_at_last: "2026-05-23T19:04:00Z",
-        },
-      })
-    },
-  )
-
-  await page.goto(`/v2/metrics?session_id=${sessionId}`)
-
-  await expect(
-    page.getByTestId("metrics-experimental-session-page"),
-  ).toBeVisible()
-  await expect(
-    page.getByRole("heading", { name: /this session saved 4\.2k tokens/i }),
-  ).toBeVisible()
-  await expect(page.getByText("$0.00423 estimated savings")).toBeVisible()
-  await expect(
-    page.getByRole("link", { name: "Bridge incident investigation" }),
-  ).toHaveAttribute("href", /\/v2\/library\/doc-1$/)
-  await expect(
-    page.getByRole("heading", { name: "Documents consulted" }),
-  ).toBeVisible()
-  await expect(page.getByText("claude-opus-4-7", { exact: true })).toBeVisible()
-})
-
 test("metrics page keeps aggregate dashboard without session_id", async ({
   page,
 }) => {
@@ -337,7 +291,9 @@ test("metrics page keeps aggregate dashboard without session_id", async ({
   await page.goto("/v2/metrics")
 
   await expect(page.getByText("7d · personal")).toBeVisible()
-  await expect(page.getByRole("heading", { name: "Metrics", level: 1 })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Metrics", level: 1 }),
+  ).toBeVisible()
   await expect(page.getByTestId("metrics-session-filter-banner")).toHaveCount(0)
   await expect(page.getByText("Reuse Rate", { exact: true })).toBeVisible()
   await expect(page.getByText("1K", { exact: true }).first()).toBeVisible()
@@ -395,35 +351,6 @@ test("organization metrics scope is hidden for session views", async ({
   await mockMetricsPage(page, { organizationRole: "admin" })
   await page.goto(`/v2/metrics?session_id=${sessionId}`)
   await expect(page.getByRole("tablist", { name: "Scope" })).toHaveCount(0)
-})
-
-test("experimental mode shows expressive aggregate metrics", async ({
-  page,
-}) => {
-  let sessionSavingsRequests = 0
-  await mockMetricsPage(page, { experimental: true })
-  await page.route(
-    "**/api/v1/v2/taskforce/session-savings?*",
-    async (route) => {
-      sessionSavingsRequests += 1
-      await route.fulfill({ status: 500, json: { detail: "Unexpected call" } })
-    },
-  )
-
-  await page.goto("/v2/metrics")
-
-  await expect(page.getByTestId("metrics-experimental-page")).toBeVisible()
-  await expect(
-    page.getByRole("heading", { name: /you saved 1k tokens this week/i }),
-  ).toBeVisible()
-  await expect(page.getByText("Saved / used")).toBeVisible()
-  await expect(page.getByTestId("cross-boundary-metric")).toContainText(
-    "Boundary-Crossing Reuse",
-  )
-  await expect(page.getByText("Top models by tokens used")).toBeVisible()
-  await expect(page.getByText("Documents Touched")).toBeVisible()
-  await expect(page.getByTestId("metrics-session-filter-banner")).toHaveCount(0)
-  expect(sessionSavingsRequests).toBe(0)
 })
 
 test("metrics methodology route renders from direct URL and metrics link", async ({

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
 import { type Item, Main } from "./Main"
-import { DemoModeToggle, ExperimentalModeToggle } from "./ModeSwitches"
+import { DemoModeToggle } from "./ModeSwitches"
 import { User } from "./User"
 
 const baseItems: Item[] = [
@@ -35,12 +35,7 @@ export function AppSidebar() {
         <Main items={items} />
       </SidebarContent>
       <SidebarFooter className="gap-1">
-        {currentUser?.is_superuser && (
-          <>
-            <ExperimentalModeToggle />
-            <DemoModeToggle />
-          </>
-        )}
+        {currentUser?.is_superuser && <DemoModeToggle />}
         <User user={currentUser} />
       </SidebarFooter>
     </Sidebar>
