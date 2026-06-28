@@ -42,6 +42,7 @@ import {
   STATE_LABEL,
   sessionPreviousWork,
   sessionWorkSummary,
+  statusDotPulses,
 } from "@/components/V2/Fleet/fleetStatus"
 import { SessionContextRailLink } from "@/components/V2/Fleet/SharedContextDrawer"
 import {
@@ -346,7 +347,7 @@ function FleetAgentDetailRoute() {
               className={cn(
                 styles.sdot,
                 styles[status],
-                status === "run" && styles.pulse,
+                statusDotPulses(status) && styles.pulse,
               )}
             />
             <div className={styles.dtitle}>

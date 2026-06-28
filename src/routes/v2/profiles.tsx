@@ -131,11 +131,11 @@ function EmptyAgents({ isDemoMode }: { isDemoMode: boolean }) {
       <div className="mx-auto grid size-12 place-items-center border border-border bg-muted text-primary">
         <Bot className="size-6" />
       </div>
-      <h2 className={cn("mt-5", AGENT_PAGE_TITLE_CLASS)}>No profiles yet</h2>
+      <h2 className={cn("mt-5", AGENT_PAGE_TITLE_CLASS)}>No profiles yet.</h2>
       <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
         {isDemoMode
           ? "Seeded demo profiles have not been created for this account yet."
-          : "Agents will appear here after Taskforce packages reusable profile knowledge from your work."}
+          : "Taskforce will create profiles automatically for you as you go."}
       </p>
     </div>
   )

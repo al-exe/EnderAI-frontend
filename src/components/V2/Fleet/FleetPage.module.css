@@ -592,12 +592,18 @@
 /* ---------- agent hover card (compact) ---------- */
 /* Portaled to <body> and positioned at the cursor imperatively, so it is fixed
    and laid out from the top-left corner via transform. */
+.hovercard,
+.hovercard * {
+  /* Children default to pointer-events: auto and would block row actions
+     when the cursor-following card overlaps archive/menu buttons. */
+  pointer-events: none;
+}
+
 .hovercard {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 60;
-  pointer-events: none;
   will-change: transform;
 }
 

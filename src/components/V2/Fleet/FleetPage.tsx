@@ -79,6 +79,7 @@ import {
   formatClockTime,
   rosterStatusLabel,
   runningCount,
+  statusDotPulses,
   waitingCount,
 } from "./fleetStatus"
 import { SharedContextDrawer } from "./SharedContextDrawer"
@@ -133,7 +134,7 @@ function StatusDot({ status }: { status: FleetStatus }) {
       className={cn(
         styles.sdot,
         styles[status],
-        status === "run" && styles.pulse,
+        statusDotPulses(status) && styles.pulse,
       )}
     />
   )
@@ -675,7 +676,7 @@ function FleetCard({
             <div className={styles.emptyRows}>
               {isHistory
                 ? "Drag a session here to archive it."
-                : "No active agents in this session group yet."}
+                : "No agents in this session."}
             </div>
           ) : (
             fleet.agents.map((agent) => (

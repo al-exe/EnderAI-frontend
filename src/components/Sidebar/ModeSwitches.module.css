@@ -1,0 +1,5 @@
+/* Global sharp-corner reset flattens rounded-full utilities; switches stay pill-shaped. */
+.track,
+.thumb {
+  border-radius: 999px !important;
+}

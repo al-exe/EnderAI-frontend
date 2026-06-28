@@ -403,11 +403,11 @@ test("profiles grid shows empty state before profiles are seeded", async ({
   await page.goto("/v2/profiles")
 
   await expect(
-    page.getByRole("heading", { name: "No profiles yet" }),
+    page.getByRole("heading", { name: "No profiles yet." }),
   ).toBeVisible()
   await expect(
     page.getByText(
-      "Agents will appear here after Taskforce packages reusable profile knowledge",
+      "Taskforce will create profiles automatically for you as you go.",
     ),
   ).toBeVisible()
 })
@@ -441,7 +441,7 @@ test("profiles list exposes a retry state instead of an empty state", async ({
 
   await expect(page.getByTestId("profiles-load-error")).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "No profiles yet" }),
+    page.getByRole("heading", { name: "No profiles yet." }),
   ).toHaveCount(0)
 
   await page.getByTestId("profiles-load-error").getByRole("button").click()
