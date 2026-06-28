@@ -10,14 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as V2RouteImport } from './routes/v2'
+import { Route as TopicsRouteImport } from './routes/topics'
+import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LandingRouteImport } from './routes/landing'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocsRouteImport } from './routes/docs'
-import { Route as LayoutRouteImport } from './routes/_layout'
+import { Route as CasesRouteImport } from './routes/cases'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V2IndexRouteImport } from './routes/v2/index'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
@@ -34,12 +39,6 @@ import { Route as V2FleetRouteImport } from './routes/v2/fleet'
 import { Route as V2AgentsRouteImport } from './routes/v2/agents'
 import { Route as V2AdminRouteImport } from './routes/v2/admin'
 import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
-import { Route as LayoutTopicsRouteImport } from './routes/_layout/topics'
-import { Route as LayoutSkillsRouteImport } from './routes/_layout/skills'
-import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
-import { Route as LayoutHomeRouteImport } from './routes/_layout/home'
-import { Route as LayoutCasesRouteImport } from './routes/_layout/cases'
-import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as V2SessionsIndexRouteImport } from './routes/v2/sessions.index'
 import { Route as V2FleetIndexRouteImport } from './routes/v2/fleet.index'
 import { Route as V2AgentsIndexRouteImport } from './routes/v2/agents.index'
@@ -55,9 +54,24 @@ const V2Route = V2RouteImport.update({
   path: '/v2',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TopicsRoute = TopicsRouteImport.update({
+  id: '/topics',
+  path: '/topics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SkillsRoute = SkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -85,13 +99,24 @@ const LandingRoute = LandingRouteImport.update({
   path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LayoutRoute = LayoutRouteImport.update({
-  id: '/_layout',
+const CasesRoute = CasesRouteImport.update({
+  id: '/cases',
+  path: '/cases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -174,36 +199,6 @@ const DocsSlugRoute = DocsSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => DocsRoute,
 } as any)
-const LayoutTopicsRoute = LayoutTopicsRouteImport.update({
-  id: '/topics',
-  path: '/topics',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutSkillsRoute = LayoutSkillsRouteImport.update({
-  id: '/skills',
-  path: '/skills',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutHomeRoute = LayoutHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutCasesRoute = LayoutCasesRouteImport.update({
-  id: '/cases',
-  path: '/cases',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAdminRoute = LayoutAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => LayoutRoute,
-} as any)
 const V2SessionsIndexRoute = V2SessionsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -252,20 +247,20 @@ const V2AgentsSlugRoute = V2AgentsSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/cases': typeof CasesRoute
   '/docs': typeof DocsRouteWithChildren
+  '/home': typeof HomeRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/skills': typeof SkillsRoute
+  '/topics': typeof TopicsRoute
   '/v2': typeof V2RouteWithChildren
-  '/admin': typeof LayoutAdminRoute
-  '/cases': typeof LayoutCasesRoute
-  '/home': typeof LayoutHomeRoute
-  '/settings': typeof LayoutSettingsRoute
-  '/skills': typeof LayoutSkillsRoute
-  '/topics': typeof LayoutTopicsRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
@@ -293,18 +288,18 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/cases': typeof CasesRoute
+  '/home': typeof HomeRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
-  '/admin': typeof LayoutAdminRoute
-  '/cases': typeof LayoutCasesRoute
-  '/home': typeof LayoutHomeRoute
-  '/settings': typeof LayoutSettingsRoute
-  '/skills': typeof LayoutSkillsRoute
-  '/topics': typeof LayoutTopicsRoute
+  '/skills': typeof SkillsRoute
+  '/topics': typeof TopicsRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/home': typeof V2HomeRoute
@@ -330,21 +325,20 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_layout': typeof LayoutRouteWithChildren
+  '/admin': typeof AdminRoute
+  '/cases': typeof CasesRoute
   '/docs': typeof DocsRouteWithChildren
+  '/home': typeof HomeRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/skills': typeof SkillsRoute
+  '/topics': typeof TopicsRoute
   '/v2': typeof V2RouteWithChildren
-  '/_layout/admin': typeof LayoutAdminRoute
-  '/_layout/cases': typeof LayoutCasesRoute
-  '/_layout/home': typeof LayoutHomeRoute
-  '/_layout/settings': typeof LayoutSettingsRoute
-  '/_layout/skills': typeof LayoutSkillsRoute
-  '/_layout/topics': typeof LayoutTopicsRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/v2/admin': typeof V2AdminRoute
   '/v2/agents': typeof V2AgentsRouteWithChildren
@@ -374,20 +368,20 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
+    | '/cases'
     | '/docs'
+    | '/home'
     | '/landing'
     | '/login'
     | '/pricing'
     | '/recover-password'
     | '/reset-password'
-    | '/signup'
-    | '/v2'
-    | '/admin'
-    | '/cases'
-    | '/home'
     | '/settings'
+    | '/signup'
     | '/skills'
     | '/topics'
+    | '/v2'
     | '/docs/$slug'
     | '/v2/admin'
     | '/v2/agents'
@@ -415,16 +409,16 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
+    | '/cases'
+    | '/home'
     | '/landing'
     | '/login'
     | '/pricing'
     | '/recover-password'
     | '/reset-password'
-    | '/signup'
-    | '/admin'
-    | '/cases'
-    | '/home'
     | '/settings'
+    | '/signup'
     | '/skills'
     | '/topics'
     | '/docs/$slug'
@@ -451,21 +445,20 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/_layout'
+    | '/admin'
+    | '/cases'
     | '/docs'
+    | '/home'
     | '/landing'
     | '/login'
     | '/pricing'
     | '/recover-password'
     | '/reset-password'
+    | '/settings'
     | '/signup'
+    | '/skills'
+    | '/topics'
     | '/v2'
-    | '/_layout/admin'
-    | '/_layout/cases'
-    | '/_layout/home'
-    | '/_layout/settings'
-    | '/_layout/skills'
-    | '/_layout/topics'
     | '/docs/$slug'
     | '/v2/admin'
     | '/v2/agents'
@@ -494,14 +487,19 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LayoutRoute: typeof LayoutRouteWithChildren
+  AdminRoute: typeof AdminRoute
+  CasesRoute: typeof CasesRoute
   DocsRoute: typeof DocsRouteWithChildren
+  HomeRoute: typeof HomeRoute
   LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
   RecoverPasswordRoute: typeof RecoverPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  SkillsRoute: typeof SkillsRoute
+  TopicsRoute: typeof TopicsRoute
   V2Route: typeof V2RouteWithChildren
 }
 
@@ -514,11 +512,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof V2RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/topics': {
+      id: '/topics'
+      path: '/topics'
+      fullPath: '/topics'
+      preLoaderRoute: typeof TopicsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/skills': {
+      id: '/skills'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof SkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -556,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs': {
       id: '/docs'
       path: '/docs'
@@ -563,11 +589,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_layout': {
-      id: '/_layout'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof LayoutRouteImport
+    '/cases': {
+      id: '/cases'
+      path: '/cases'
+      fullPath: '/cases'
+      preLoaderRoute: typeof CasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -682,48 +715,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsSlugRouteImport
       parentRoute: typeof DocsRoute
     }
-    '/_layout/topics': {
-      id: '/_layout/topics'
-      path: '/topics'
-      fullPath: '/topics'
-      preLoaderRoute: typeof LayoutTopicsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/skills': {
-      id: '/_layout/skills'
-      path: '/skills'
-      fullPath: '/skills'
-      preLoaderRoute: typeof LayoutSkillsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/settings': {
-      id: '/_layout/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof LayoutSettingsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/home': {
-      id: '/_layout/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof LayoutHomeRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/cases': {
-      id: '/_layout/cases'
-      path: '/cases'
-      fullPath: '/cases'
-      preLoaderRoute: typeof LayoutCasesRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/admin': {
-      id: '/_layout/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof LayoutAdminRouteImport
-      parentRoute: typeof LayoutRoute
-    }
     '/v2/sessions/': {
       id: '/v2/sessions/'
       path: '/'
@@ -789,27 +780,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface LayoutRouteChildren {
-  LayoutAdminRoute: typeof LayoutAdminRoute
-  LayoutCasesRoute: typeof LayoutCasesRoute
-  LayoutHomeRoute: typeof LayoutHomeRoute
-  LayoutSettingsRoute: typeof LayoutSettingsRoute
-  LayoutSkillsRoute: typeof LayoutSkillsRoute
-  LayoutTopicsRoute: typeof LayoutTopicsRoute
-}
-
-const LayoutRouteChildren: LayoutRouteChildren = {
-  LayoutAdminRoute: LayoutAdminRoute,
-  LayoutCasesRoute: LayoutCasesRoute,
-  LayoutHomeRoute: LayoutHomeRoute,
-  LayoutSettingsRoute: LayoutSettingsRoute,
-  LayoutSkillsRoute: LayoutSkillsRoute,
-  LayoutTopicsRoute: LayoutTopicsRoute,
-}
-
-const LayoutRouteWithChildren =
-  LayoutRoute._addFileChildren(LayoutRouteChildren)
 
 interface DocsRouteChildren {
   DocsSlugRoute: typeof DocsSlugRoute
@@ -936,14 +906,19 @@ const V2RouteWithChildren = V2Route._addFileChildren(V2RouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LayoutRoute: LayoutRouteWithChildren,
+  AdminRoute: AdminRoute,
+  CasesRoute: CasesRoute,
   DocsRoute: DocsRouteWithChildren,
+  HomeRoute: HomeRoute,
   LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
   RecoverPasswordRoute: RecoverPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  SkillsRoute: SkillsRoute,
+  TopicsRoute: TopicsRoute,
   V2Route: V2RouteWithChildren,
 }
 export const routeTree = rootRouteImport
