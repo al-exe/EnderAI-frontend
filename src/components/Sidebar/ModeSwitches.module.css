@@ -1,5 +1,13 @@
-/* Global sharp-corner reset flattens rounded-full utilities; switches stay pill-shaped. */
+/* Redundant with index.css data-attribute rules; keeps switch styling co-located. */
 .track,
 .thumb {
-  border-radius: 999px !important;
+  border-radius: 9999px !important;
+}
+
+.track {
+  overflow: hidden;
+}
+
+.thumb {
+  flex-shrink: 0;
 }
