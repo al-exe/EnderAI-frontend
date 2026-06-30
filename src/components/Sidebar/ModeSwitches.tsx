@@ -44,6 +44,7 @@ function ModeToggle({
         <span className="text-[calc(18px*0.85)]">{label}</span>
         <div
           aria-hidden="true"
+          data-mode-switch-track
           data-testid={`${testId}-track`}
           className={cn(
             styles.track,
@@ -52,10 +53,11 @@ function ModeToggle({
           )}
         >
           <div
+            data-mode-switch-thumb
             data-testid={`${testId}-thumb`}
             className={cn(
               styles.thumb,
-              "size-5 bg-background shadow-[0_1px_2px_rgb(0_0_0/0.14)] ring-1 ring-black/5 transition-transform duration-150 dark:ring-white/10",
+              "size-[1.125rem] bg-background shadow-[0_1px_2px_rgb(0_0_0/0.14)] ring-1 ring-black/5 transition-transform duration-150 dark:ring-white/10",
               isActive &&
                 "translate-x-5 bg-sidebar-primary-foreground ring-white/15",
             )}

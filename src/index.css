@@ -126,6 +126,17 @@
     scrollbar-width: none;
   }
 
+  /* Same layer + higher specificity than `*` — sidebar mode toggles stay pill-shaped. */
+  [data-mode-switch-track],
+  [data-mode-switch-thumb] {
+    /* biome-ignore lint/complexity/noImportantStyles: override global square-corner reset for sidebar toggles. */
+    border-radius: 9999px !important;
+  }
+
+  [data-mode-switch-track] {
+    overflow: hidden;
+  }
+
   *::-webkit-scrollbar {
     width: 0;
     height: 0;
