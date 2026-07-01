@@ -130,6 +130,7 @@ const STATE_CLASS: Record<FleetStatus, string> = {
 function StatusDot({ status }: { status: FleetStatus }) {
   return (
     <span
+      data-fleet-status-dot
       data-testid="fleet-status-dot"
       className={cn(
         styles.sdot,

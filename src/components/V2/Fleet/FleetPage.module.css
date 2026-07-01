@@ -511,12 +511,13 @@
   opacity: 1;
 }
 
-/* status dot */
+/* status dot — circles for every state color (run, waiting, idle, paused, inactive). */
 .sdot {
-  display: block;
+  display: inline-block;
   width: 9px;
   height: 9px;
   flex-shrink: 0;
+  aspect-ratio: 1;
   box-shadow: none;
   /* biome-ignore lint/complexity/noImportantStyles: global square-corner rule should not flatten status indicators. */
   border-radius: 50% !important;
