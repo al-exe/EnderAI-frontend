@@ -23,6 +23,7 @@ async function mockFleet(
   options: {
     includeDestination?: boolean
     agentOverrides?: Record<string, unknown>
+    activityEntries?: Record<string, unknown>[]
   } = {},
 ) {
   let agentFleetId = "fleet-1"
@@ -178,7 +179,7 @@ async function mockFleet(
       await route.fulfill({
         json: {
           session_id: "session-1",
-          entries: [
+          entries: options.activityEntries ?? [
             {
               id: "event-command",
               kind: "command",
@@ -596,40 +597,31 @@ test("session detail truncates long activity prompt previews", async ({
     agentOverrides: {
       recent_activity: [longPrompt],
     },
+    activityEntries: [
+      {
+        id: "event-long-prompt",
+        kind: "prompt",
+        occurred_at: "2026-06-12T10:02:00Z",
+        role: "user",
+        who: "@user",
+        text: longPrompt,
+        cmd: null,
+        exit_code: null,
+        output: null,
+        file: null,
+        added: null,
+        removed: null,
+        note: null,
+        repo: null,
+        ledger_href: null,
+      },
+    ],
   })
-  await page.route(
-    "**/api/v1/v2/taskforce/session-activity/session-1",
-    async (route) => {
-      await route.fulfill({
-        json: {
-          session_id: "session-1",
-          entries: [
-            {
-              id: "event-long-prompt",
-              kind: "prompt",
-              occurred_at: "2026-06-12T10:02:00Z",
-              role: "user",
-              who: "@user",
-              text: longPrompt,
-              cmd: null,
-              exit_code: null,
-              output: null,
-              file: null,
-              added: null,
-              removed: null,
-              note: null,
-              repo: null,
-              ledger_href: null,
-            },
-          ],
-        },
-      })
-    },
-  )
   await page.goto("/v2/sessions/session-1")
 
-  await expect(page.getByText(/ending marker$/)).toHaveCount(0)
-  await expect(page.getByText(/session activity t…$/)).toBeVisible()
+  const timeline = page.getByTestId("fleet-activity-timeline")
+  await expect(timeline.getByText(/ending marker$/)).toHaveCount(0)
+  await expect(timeline.getByText(/^Ask Codex.*…$/)).toBeVisible()
 })
 
 test("collapsed fleet cards share header height", async ({ page }) => {
