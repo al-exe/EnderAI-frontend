@@ -343,6 +343,7 @@ function FleetAgentDetailRoute() {
 
           <div className={styles.dhead}>
             <span
+              data-fleet-status-dot
               data-testid="fleet-status-dot"
               className={cn(
                 styles.sdot,
