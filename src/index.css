@@ -134,7 +134,8 @@
   }
 
   /* Session roster/detail status dots — keep every state color circular. */
-  [data-fleet-status-dot] {
+  [data-fleet-status-dot],
+  [data-timeline-dot] {
     display: inline-block;
     aspect-ratio: 1;
     /* biome-ignore lint/complexity/noImportantStyles: override global square-corner reset for fleet status dots. */

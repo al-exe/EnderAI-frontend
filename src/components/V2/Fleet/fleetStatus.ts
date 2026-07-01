@@ -172,11 +172,15 @@ export function compactPresence(agent: TaskforceFleetAgent): string {
   return minutes ? `${hours}h ${minutes}m` : `${hours}h`
 }
 
-/** Clock time (HH:MM) for an activity event timestamp. */
+/** Clock time for activity timeline rows, e.g. "6:59 PM". */
 export function formatClockTime(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return ""
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
 }
 
 const USER_QUERY_RE = /^<user_query>\s*|\s*<\/user_query>\s*$/gim

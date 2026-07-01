@@ -815,6 +815,9 @@
 
 .dtop {
   flex-shrink: 0;
+  /* Hairline ::after is the header bottom edge — no padding below it or the
+     rail border-left leaves a gap at the T-junction when scrolling. */
+  padding-bottom: 0;
 }
 
 .dtop::after {
@@ -1104,6 +1107,8 @@
 /* activity timeline */
 .timeline {
   position: relative;
+  --timeline-dot-size: calc(7px * 0.85);
+  --timeline-dot-line: calc(10.5px * var(--v2-scale, 1) * 1.3);
   padding-left: 20px;
 }
 
@@ -1128,19 +1133,47 @@
 
 .tdot {
   position: absolute;
-  top: 5px;
+  top: calc((var(--timeline-dot-line) - var(--timeline-dot-size)) / 2);
   left: -20px;
-  width: 7px;
-  height: 7px;
-  /* biome-ignore lint/complexity/noImportantStyles: global square-corner rule should not flatten timeline dots. */
-  border-radius: 999px !important;
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
   background: var(--fl-faint);
-  box-shadow: 0 0 0 3px var(--background);
+  box-shadow: 0 0 0 calc(3px * 0.85) var(--background);
 }
 
-/* tevLink inset hover padding shifts the positioning origin; keep dots on the spine. */
-.tev.tevLink .tdot {
-  left: -8px;
+/* tevLink rows share the same layout as plain .tev so timeline dots, timestamps,
+   and command blocks stay aligned across link and non-link entries. */
+.tev.tevLink {
+  display: block;
+  padding: 0 0 18px;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.tev.tevLink:last-child {
+  padding-bottom: 0;
+}
+
+.tev.tevLink:hover,
+.tev.tevLink:focus-visible {
+  background: var(--fl-primary-softer);
+  box-shadow: inset 0 0 0 1px var(--fl-primary-line-soft);
+}
+
+.tev.tevLink:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.tx > .cmdBlock {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tx .md > pre:first-child {
+  margin-top: 0;
 }
 
 .tevRun .tdot,
@@ -1190,30 +1223,6 @@
   line-height: 1.45;
 }
 
-.tev.tevLink {
-  display: block;
-  margin-inline: -12px;
-  padding: 8px 12px 18px;
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 120ms ease;
-}
-
-.tev.tevLink:last-child {
-  padding-bottom: 8px;
-}
-
-.tev.tevLink:hover,
-.tev.tevLink:focus-visible {
-  background: var(--fl-primary-softer);
-  box-shadow: inset 0 0 0 1px var(--fl-primary-line-soft);
-}
-
-.tev.tevLink:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
-}
 
 /* rail blocks */
 .block {

@@ -100,11 +100,15 @@ function pad(value: number): string {
   return String(value).padStart(2, "0")
 }
 
-/** "14:02" */
+/** "6:59 PM" — matches Fleet activity timeline formatting. */
 function formatClock(value: string | null | undefined): string {
   const date = dateFrom(value)
   if (!date) return "—"
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
 }
 
 /** "14:02:11" */
@@ -842,7 +846,7 @@ function EventShell({
       data-highlighted={highlighted ? "true" : undefined}
       ref={rootRef}
     >
-      <span className={styles.evDot} />
+      <span className={styles.evDot} data-timeline-dot />
       <div className={styles.evT}>
         {time}
         <span className={styles.evKind}>{kind}</span>

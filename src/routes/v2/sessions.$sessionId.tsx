@@ -329,7 +329,13 @@ function FleetAgentDetailRoute() {
         data-testid="fleet-agent-detail"
         ref={setPulseRoot}
       >
-        <div className={cn(styles.dtop, V2_STICKY_HEADER_CLASS, "border-b-0")}>
+        <div
+          className={cn(
+            styles.dtop,
+            V2_STICKY_HEADER_CLASS,
+            "border-b-0 pb-0",
+          )}
+        >
           <div className={styles.crumb}>
             <BackLink
               to="/v2/sessions"
@@ -447,7 +453,7 @@ function FleetAgentDetailRoute() {
               <div className={styles.seclabel}>Activity</div>
               <div className={styles.timeline} data-testid="fleet-activity-timeline">
                 <div className={cn(styles.tev, styles.tevNow)}>
-                  <span className={styles.tdot} />
+                  <span className={styles.tdot} data-timeline-dot />
                   <div className={styles.tt}>{liveActivityTime(agent)}</div>
                   <div className={styles.tx}>
                     <ActivityProse compact className={styles.txProse}>
@@ -462,7 +468,7 @@ function FleetAgentDetailRoute() {
                   const detail = eventDetail(entry)
                   const body = (
                     <>
-                      <span className={styles.tdot} />
+                      <span className={styles.tdot} data-timeline-dot />
                       <div className={styles.tt}>
                         {formatClockTime(entry.occurred_at)}
                         <span className={styles.tkind}>{entry.kind}</span>
@@ -481,7 +487,6 @@ function FleetAgentDetailRoute() {
                       to="/v2/ledger"
                       search={{ session_id: sessionId, event_id: entry.id }}
                       className={cn(styles.tev, styles.tevLink)}
-                      title="Open this event in Ledger"
                     >
                       {body}
                     </Link>
@@ -493,13 +498,13 @@ function FleetAgentDetailRoute() {
                 })}
                 {activityQuery.isLoading && (
                   <div className={styles.tev}>
-                    <span className={styles.tdot} />
+                    <span className={styles.tdot} data-timeline-dot />
                     <div className={styles.tx}>Loading session activity…</div>
                   </div>
                 )}
                 {!activityQuery.isLoading && activityEntries.length === 0 && (
                   <div className={styles.tev}>
-                    <span className={styles.tdot} />
+                    <span className={styles.tdot} data-timeline-dot />
                     <div className={styles.tx}>No activity captured yet.</div>
                   </div>
                 )}
