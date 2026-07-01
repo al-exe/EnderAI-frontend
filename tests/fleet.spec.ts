@@ -23,6 +23,7 @@ async function mockFleet(
   options: {
     includeDestination?: boolean
     agentOverrides?: Record<string, unknown>
+    activityEntries?: Record<string, unknown>[]
   } = {},
 ) {
   let agentFleetId = "fleet-1"
@@ -178,7 +179,7 @@ async function mockFleet(
       await route.fulfill({
         json: {
           session_id: "session-1",
-          entries: [
+          entries: options.activityEntries ?? [
             {
               id: "event-command",
               kind: "command",
@@ -583,6 +584,44 @@ test("roster shows agent status when summary is empty", async ({ page }) => {
     box ? box.y + box.height / 2 : 0
   expect(Math.abs(midY(dotBox) - midY(ageBox))).toBeLessThan(6)
   expect(Math.abs(midY(dotBox) - midY(menuBox))).toBeLessThan(6)
+  expect(dotBox?.width).toBe(7)
+  expect(dotBox?.height).toBe(7)
+})
+
+test("session detail truncates long activity prompt previews", async ({
+  page,
+}) => {
+  const longPrompt =
+    "Ask Codex to inspect the full AGENTS.md workspace defaults and explain why the prompt preview in the session activity timeline appears clipped in the UI without an ending marker"
+  await mockFleet(page, {
+    agentOverrides: {
+      recent_activity: [longPrompt],
+    },
+    activityEntries: [
+      {
+        id: "event-long-prompt",
+        kind: "prompt",
+        occurred_at: "2026-06-12T10:02:00Z",
+        role: "user",
+        who: "@user",
+        text: longPrompt,
+        cmd: null,
+        exit_code: null,
+        output: null,
+        file: null,
+        added: null,
+        removed: null,
+        note: null,
+        repo: null,
+        ledger_href: null,
+      },
+    ],
+  })
+  await page.goto("/v2/sessions/session-1")
+
+  const timeline = page.getByTestId("fleet-activity-timeline")
+  await expect(timeline.getByText(/ending marker$/)).toHaveCount(0)
+  await expect(timeline.getByText(/^Ask Codex.*…$/)).toBeVisible()
 })
 
 test("collapsed fleet cards share header height", async ({ page }) => {
@@ -641,8 +680,7 @@ test("session detail renders Ran diagnostics in a command block", async ({
 }) => {
   await mockFleet(page, {
     agentOverrides: {
-      summary_markdown:
-        "Ran: cd /home/alexlee/dev && ls -la && echo test",
+      summary_markdown: "Ran: cd /home/alexlee/dev && ls -la && echo test",
     },
   })
   await page.goto("/v2/sessions/session-1")
