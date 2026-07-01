@@ -11,7 +11,6 @@ import {
   Heading2,
   Heading3,
   Italic,
-  Link as LinkIcon,
   Pencil,
   Pilcrow,
   ReceiptText,
@@ -19,16 +18,8 @@ import {
   Share2,
   Star,
   Strikethrough,
-  X,
 } from "lucide-react"
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 
 import {
   type OrganizationMemberPublic,
@@ -87,22 +78,7 @@ export const Route = createFileRoute("/v2/library/$documentId")({
   }),
 })
 
-type ViewMode = "summary" | "details" | "split"
-
-type AnchorPick = {
-  paragraphIndex: number
-  segmentIndex: number
-  start: number
-  end: number
-  text: string
-}
-
-type DetailsPick = {
-  sectionIndex: number
-  start: number
-  end: number
-  text: string
-}
+type ViewMode = "summary" | "details"
 
 type EditableDoc = {
   title: string
@@ -183,32 +159,6 @@ function documentSessionAction(row: LedgerSessionRow): string {
     return "Reused by"
   }
   return "Touched by"
-}
-
-function shortAnchorId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return `evidence-${crypto.randomUUID().slice(0, 8)}`
-  }
-  return `evidence-${Math.random().toString(36).slice(2, 10)}`
-}
-
-function getOffsetWithin(
-  root: Node,
-  target: Node,
-  targetOffset: number,
-): number {
-  if (!root.contains(target)) return -1
-  let offset = 0
-  const walker = window.document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  let node = walker.nextNode()
-  while (node) {
-    if (node === target) {
-      return offset + targetOffset
-    }
-    offset += node.textContent?.length ?? 0
-    node = walker.nextNode()
-  }
-  return -1
 }
 
 function escapeHtml(value: string): string {
@@ -541,16 +491,11 @@ function TaskforceDocumentDetail() {
   const { user } = useAuth()
 
   const [viewMode, setViewMode] = useState<ViewMode>("summary")
-  const [activeEvidenceAnchorId, setActiveEvidenceAnchorId] = useState<string>()
   const [isEditing, setIsEditing] = useState(false)
   const [editState, setEditState] = useState<EditableDoc | null>(null)
-  const [anchorMode, setAnchorMode] = useState(false)
-  const [summaryPick, setSummaryPick] = useState<AnchorPick | null>(null)
-  const [detailsPick, setDetailsPick] = useState<DetailsPick | null>(null)
   const [accessOpen, setAccessOpen] = useState(false)
   const [shareDraft, setShareDraft] = useState<ShareDraft>({})
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
-  const handledHashScrollRef = useRef<string | null>(null)
 
   const documentQuery = useQuery({
     queryKey: ["v2-document", documentId, { demo: isDemoMode }],
@@ -685,60 +630,10 @@ function TaskforceDocumentDetail() {
     },
   })
 
-  const isSplit = viewMode === "split"
-  const summaryVisible = viewMode === "summary" || isSplit
-  const detailsVisible = viewMode === "details" || isSplit
-
-  const showEvidence = useCallback((anchorId: string) => {
-    setActiveEvidenceAnchorId(anchorId)
-    setViewMode("split")
-    window.setTimeout(() => {
-      window.document
-        .getElementById(anchorId)
-        ?.scrollIntoView({ block: "start", behavior: "smooth" })
-    }, 0)
-  }, [])
-
-  useEffect(() => {
-    if (!document) return
-
-    const rawHash = window.location.hash.slice(1)
-    if (!rawHash) return
-
-    let anchorId = rawHash
-    try {
-      anchorId = decodeURIComponent(rawHash)
-    } catch {
-      anchorId = rawHash
-    }
-
-    const scrollKey = `${document.id}:${anchorId}`
-    if (handledHashScrollRef.current === scrollKey) return
-
-    const hasMatchingSection = document.details_markdown_sections.some(
-      (section) => section.anchor_id === anchorId,
-    )
-    if (!hasMatchingSection) return
-
-    handledHashScrollRef.current = scrollKey
-    showEvidence(anchorId)
-  }, [document, showEvidence])
-
-  const closeSplit = () => {
-    setViewMode("summary")
-    setActiveEvidenceAnchorId(undefined)
-    setAnchorMode(false)
-    setSummaryPick(null)
-    setDetailsPick(null)
-  }
-
   const enterEdit = () => {
     if (!document || !canEditDocument) return
     setEditState(toEditable(document))
     setIsEditing(true)
-    setAnchorMode(false)
-    setSummaryPick(null)
-    setDetailsPick(null)
   }
 
   const cancelEdit = () => {
@@ -772,64 +667,6 @@ function TaskforceDocumentDetail() {
 
   const moveDocumentToFolder = (folderId: string | null) => {
     updateMutation.mutate({ folder_id: folderId })
-  }
-
-  const confirmAnchor = () => {
-    if (!document || !summaryPick || !detailsPick) return
-
-    const anchorId = shortAnchorId()
-
-    const nextMainBody: V2DocumentParagraph[] = document.main_body.map(
-      (paragraph, pIdx) => {
-        if (pIdx !== summaryPick.paragraphIndex) return paragraph
-        const nextSegments = paragraph.segments.flatMap((segment, sIdx) => {
-          if (sIdx !== summaryPick.segmentIndex) return [segment]
-          const text = segment.text
-          const before = text.slice(0, summaryPick.start)
-          const middle = text.slice(summaryPick.start, summaryPick.end)
-          const after = text.slice(summaryPick.end)
-          const out: V2DocumentParagraph["segments"] = []
-          if (before) out.push({ text: before })
-          out.push({ text: middle, evidence_anchor_id: anchorId })
-          if (after) out.push({ text: after })
-          return out
-        })
-        return { segments: nextSegments }
-      },
-    )
-
-    const nextDetailsSections: V2DocumentDetailsSection[] =
-      document.details_markdown_sections.flatMap((section, idx) => {
-        if (idx !== detailsPick.sectionIndex) return [section]
-        const md = section.markdown
-        const before = md.slice(0, detailsPick.start)
-        const middle = md.slice(detailsPick.start, detailsPick.end)
-        const after = md.slice(detailsPick.end)
-        const out: V2DocumentDetailsSection[] = []
-        if (before.trim()) {
-          out.push({ anchor_id: `${section.anchor_id}-pre`, markdown: before })
-        }
-        out.push({ anchor_id: anchorId, markdown: middle })
-        if (after.trim()) {
-          out.push({ anchor_id: `${section.anchor_id}-post`, markdown: after })
-        }
-        return out
-      })
-
-    updateMutation.mutate(
-      {
-        main_body: nextMainBody,
-        details_markdown_sections: nextDetailsSections,
-      },
-      {
-        onSuccess: () => {
-          setAnchorMode(false)
-          setSummaryPick(null)
-          setDetailsPick(null)
-          setActiveEvidenceAnchorId(anchorId)
-        },
-      },
-    )
   }
 
   if (documentQuery.isLoading) {
@@ -879,7 +716,6 @@ function TaskforceDocumentDetail() {
   }
 
   const editing = isEditing && editState !== null
-  const anchorReady = anchorMode && summaryPick && detailsPick
   const documentViewToggle = (
     <div
       role="tablist"
@@ -889,28 +725,12 @@ function TaskforceDocumentDetail() {
       <ViewToggle
         label="Summary"
         active={viewMode === "summary"}
-        onClick={() => {
-          setViewMode("summary")
-          setActiveEvidenceAnchorId(undefined)
-          setAnchorMode(false)
-        }}
+        onClick={() => setViewMode("summary")}
       />
       <ViewToggle
         label="Details"
         active={viewMode === "details"}
-        onClick={() => {
-          setViewMode("details")
-          setActiveEvidenceAnchorId(undefined)
-          setAnchorMode(false)
-        }}
-      />
-      <ViewToggle
-        label="Split"
-        active={isSplit}
-        onClick={() => {
-          setViewMode("split")
-          setActiveEvidenceAnchorId(undefined)
-        }}
+        onClick={() => setViewMode("details")}
       />
     </div>
   )
@@ -918,17 +738,9 @@ function TaskforceDocumentDetail() {
   return (
     <section
       data-testid="v2-document-scroll"
-      className={cn(
-        "flex min-h-0 flex-1 flex-col",
-        isSplit ? "overflow-y-auto md:overflow-hidden" : "overflow-y-auto",
-      )}
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto"
     >
-      <article
-        className={cn(
-          "flex w-full max-w-none flex-col px-6 pb-3 pt-0",
-          isSplit && "md:min-h-0 md:flex-1 md:overflow-hidden",
-        )}
-      >
+      <article className="flex w-full max-w-none flex-col px-6 pb-3 pt-0">
         {documentQuery.isError && (
           <QueryErrorState
             title="Document details may be out of date"
@@ -941,161 +753,127 @@ function TaskforceDocumentDetail() {
         )}
         <div
           data-testid="v2-document-sticky-header"
-          className={cn(
-            "sticky top-0 z-30 -mx-6 bg-background px-6 pt-1",
-            isSplit && "md:shrink-0",
-          )}
+          className="sticky top-0 z-30 -mx-6 bg-background px-6 pt-1"
         >
           <div className="border-b border-border pb-3">
-          <div className="flex items-center justify-between gap-3 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground">
-            <div className="flex min-w-0 items-center gap-2">
-              <BackLink
-                to="/v2/library"
-                fallbackLabel="Library"
-                icon={<ArrowLeft className="size-3" />}
-                data-testid="v2-document-back-link"
-                className="inline-flex items-center gap-1 hover:text-foreground"
-              />
-              <span className="text-border">/</span>
-              <span className="truncate">
-                {document.folder_name ?? "Unfiled"}
-              </span>
-            </div>
+            <div className="flex items-center justify-between gap-3 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground">
+              <div className="flex min-w-0 items-center gap-2">
+                <BackLink
+                  to="/v2/library"
+                  fallbackLabel="Library"
+                  icon={<ArrowLeft className="size-3" />}
+                  data-testid="v2-document-back-link"
+                  className="inline-flex items-center gap-1 hover:text-foreground"
+                />
+                <span className="text-border">/</span>
+                <span className="truncate">
+                  {document.folder_name ?? "Unfiled"}
+                </span>
+              </div>
 
-            <div className="flex items-center gap-2">
-              {!canEditDocument && (
-                <Badge variant="outline">
-                  <Eye className="size-3" />
-                  View only
-                </Badge>
-              )}
-              {editing && (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={cancelEdit}
-                    disabled={updateMutation.isPending}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={saveEdit}
-                    disabled={updateMutation.isPending}
-                    data-testid="document-save"
-                  >
-                    {updateMutation.isPending ? "Saving…" : "Save"}
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            {editing ? (
-              <PlainInlineEditor
-                value={editState.title}
-                onChange={(next) => setEditState({ ...editState, title: next })}
-                className="w-full text-[1.65rem] font-semibold leading-tight text-foreground md:max-w-3xl"
-                data-testid="edit-title"
-              />
-            ) : (
-              <h1 className="max-w-[30ch] text-[1.65rem] font-semibold leading-tight text-foreground text-balance">
-                {document.title}
-              </h1>
-            )}
-
-            <div className="flex flex-wrap items-center gap-2">
-              {isSplit && !editing && canEditDocument && (
-                <Button
-                  type="button"
-                  variant={anchorMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    if (anchorMode) {
-                      setAnchorMode(false)
-                      setSummaryPick(null)
-                      setDetailsPick(null)
-                    } else {
-                      setAnchorMode(true)
-                    }
-                  }}
-                  data-testid="anchor-mode-toggle"
-                >
-                  <LinkIcon className="size-4" />
-                  {anchorMode ? "Cancel link" : "Link evidence"}
-                </Button>
-              )}
-
-              {anchorMode && (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={confirmAnchor}
-                  disabled={!anchorReady || updateMutation.isPending}
-                  data-testid="anchor-confirm"
-                >
-                  {updateMutation.isPending ? "Linking…" : "Confirm anchor"}
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <DocumentMetadata
-            document={document}
-            folders={foldersQuery.data?.data ?? []}
-            canManageLibrary={canManageDocument}
-            canShare={canShareDocument}
-            canFavorite={true}
-            organizationMembers={organizationQuery.data?.members ?? []}
-            shares={sharesQuery.data?.data ?? document.shared_with ?? []}
-            ownerId={document.owner_id}
-            accessOpen={accessOpen}
-            onAccessOpenChange={setAccessDropdownOpen}
-            shareDraft={shareDraft}
-            setShareDraft={setShareDraft}
-            onSaveAccess={() => shareMutation.mutate()}
-            isSavingAccess={shareMutation.isPending}
-            isLoadingAccess={
-              sharesQuery.isLoading || organizationQuery.isLoading
-            }
-            hasAccessError={sharesQuery.isError || organizationQuery.isError}
-            onRetryAccess={() => {
-              if (sharesQuery.isError) void sharesQuery.refetch()
-              if (organizationQuery.isError) void organizationQuery.refetch()
-            }}
-            isRetryingAccess={
-              sharesQuery.isFetching || organizationQuery.isFetching
-            }
-            onMoveFolder={moveDocumentToFolder}
-            isMovingFolder={updateMutation.isPending}
-            onCreateFolder={() => setCreateFolderOpen(true)}
-            onToggleFavorite={toggleFavorite}
-            isTogglingFavorite={favoriteMutation.isPending}
-            onUpdateDates={(dates) => updateMutation.mutate(dates)}
-            isUpdatingDates={updateMutation.isPending}
-            viewSwitcher={
               <div className="flex items-center gap-2">
-                {documentViewToggle}
-                {!editing && canEditDocument && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={enterEdit}
-                    data-testid="document-edit"
-                    className="h-7 px-2.5 font-mono text-[0.65rem]"
-                  >
-                    <Pencil className="size-4" />
-                    Edit
-                  </Button>
+                {!canEditDocument && (
+                  <Badge variant="outline">
+                    <Eye className="size-3" />
+                    View only
+                  </Badge>
+                )}
+                {editing && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={cancelEdit}
+                      disabled={updateMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={saveEdit}
+                      disabled={updateMutation.isPending}
+                      data-testid="document-save"
+                    >
+                      {updateMutation.isPending ? "Saving…" : "Save"}
+                    </Button>
+                  </>
                 )}
               </div>
-            }
-          />
+            </div>
+
+            <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              {editing ? (
+                <PlainInlineEditor
+                  value={editState.title}
+                  onChange={(next) =>
+                    setEditState({ ...editState, title: next })
+                  }
+                  className="w-full text-[1.65rem] font-semibold leading-tight text-foreground md:max-w-3xl"
+                  data-testid="edit-title"
+                />
+              ) : (
+                <h1 className="max-w-[30ch] text-[1.65rem] font-semibold leading-tight text-foreground text-balance">
+                  {document.title}
+                </h1>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2" />
+            </div>
+
+            <DocumentMetadata
+              document={document}
+              folders={foldersQuery.data?.data ?? []}
+              canManageLibrary={canManageDocument}
+              canShare={canShareDocument}
+              canFavorite={true}
+              organizationMembers={organizationQuery.data?.members ?? []}
+              shares={sharesQuery.data?.data ?? document.shared_with ?? []}
+              ownerId={document.owner_id}
+              accessOpen={accessOpen}
+              onAccessOpenChange={setAccessDropdownOpen}
+              shareDraft={shareDraft}
+              setShareDraft={setShareDraft}
+              onSaveAccess={() => shareMutation.mutate()}
+              isSavingAccess={shareMutation.isPending}
+              isLoadingAccess={
+                sharesQuery.isLoading || organizationQuery.isLoading
+              }
+              hasAccessError={sharesQuery.isError || organizationQuery.isError}
+              onRetryAccess={() => {
+                if (sharesQuery.isError) void sharesQuery.refetch()
+                if (organizationQuery.isError) void organizationQuery.refetch()
+              }}
+              isRetryingAccess={
+                sharesQuery.isFetching || organizationQuery.isFetching
+              }
+              onMoveFolder={moveDocumentToFolder}
+              isMovingFolder={updateMutation.isPending}
+              onCreateFolder={() => setCreateFolderOpen(true)}
+              onToggleFavorite={toggleFavorite}
+              isTogglingFavorite={favoriteMutation.isPending}
+              onUpdateDates={(dates) => updateMutation.mutate(dates)}
+              isUpdatingDates={updateMutation.isPending}
+              viewSwitcher={
+                <div className="flex items-center gap-2">
+                  {documentViewToggle}
+                  {!editing && canEditDocument && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={enterEdit}
+                      data-testid="document-edit"
+                      className="h-7 px-2.5 font-mono text-[0.65rem]"
+                    >
+                      <Pencil className="size-4" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              }
+            />
           </div>
         </div>
 
@@ -1107,10 +885,6 @@ function TaskforceDocumentDetail() {
           onCreated={(folder) => moveDocumentToFolder(folder.id)}
         />
 
-        {anchorMode && (
-          <AnchorHelper summaryPick={summaryPick} detailsPick={detailsPick} />
-        )}
-
         <DocumentProvenanceStrip
           rows={documentSessionsQuery.data?.rows ?? []}
           total={documentSessionsQuery.data?.total ?? 0}
@@ -1118,41 +892,22 @@ function TaskforceDocumentDetail() {
           isError={documentSessionsQuery.isError}
         />
 
-        <div
-          className={cn(
-            "gap-6 pt-6",
-            isSplit
-              ? "grid grid-cols-1 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:overflow-hidden md:pb-4"
-              : "block",
-          )}
-        >
-          {summaryVisible && (
+        <div className="pt-6">
+          {viewMode === "summary" && (
             <SummaryPane
               document={document}
               editing={editing}
               editState={editState}
               setEditState={setEditState}
-              onShowEvidence={showEvidence}
-              isSplit={isSplit}
-              anchorMode={anchorMode}
-              summaryPick={summaryPick}
-              setSummaryPick={setSummaryPick}
             />
           )}
 
-          {detailsVisible && (
+          {viewMode === "details" && (
             <DetailsPane
               document={document}
               editing={editing}
               editState={editState}
               setEditState={setEditState}
-              activeEvidenceAnchorId={activeEvidenceAnchorId}
-              showClose={isSplit}
-              onClose={closeSplit}
-              isSplit={isSplit}
-              anchorMode={anchorMode}
-              detailsPick={detailsPick}
-              setDetailsPick={setDetailsPick}
             />
           )}
         </div>
@@ -1209,8 +964,7 @@ function DocumentProvenanceStrip({
             >
               <div className="flex min-w-0 items-center justify-between gap-2">
                 <span className="truncate font-medium">
-                  {documentSessionAction(row)}{" "}
-                  {row.title ?? row.actor_name}
+                  {documentSessionAction(row)} {row.title ?? row.actor_name}
                 </span>
                 {row.cross_boundary ? (
                   <Badge
@@ -1649,110 +1403,19 @@ function ViewToggle({
   )
 }
 
-function AnchorHelper({
-  summaryPick,
-  detailsPick,
-}: {
-  summaryPick: AnchorPick | null
-  detailsPick: DetailsPick | null
-}) {
-  return (
-    <div
-      className="mt-3 rounded-md border border-dashed border-purple-300 bg-purple-50/60 px-3 py-2 text-xs text-purple-900 dark:border-purple-900 dark:bg-purple-950/30 dark:text-purple-100"
-      data-testid="anchor-helper"
-    >
-      <p className="font-medium">Linking evidence</p>
-      <ol className="mt-1 list-decimal space-y-0.5 pl-5">
-        <li>
-          {summaryPick ? (
-            <>
-              Summary selected: <em>"{summaryPick.text}"</em>
-            </>
-          ) : (
-            "Select text in Summary (within a non-anchored span)."
-          )}
-        </li>
-        <li>
-          {detailsPick ? (
-            <>
-              Details selected: <em>"{detailsPick.text.slice(0, 60)}…"</em>
-            </>
-          ) : (
-            "Select text in Details (within a single section)."
-          )}
-        </li>
-        <li>Confirm to create the anchor.</li>
-      </ol>
-    </div>
-  )
-}
-
 function SummaryPane({
   document,
   editing,
   editState,
   setEditState,
-  onShowEvidence,
-  isSplit,
-  anchorMode,
-  summaryPick,
-  setSummaryPick,
 }: {
   document: V2DocumentPublic
   editing: boolean
   editState: EditableDoc | null
   setEditState: (next: EditableDoc) => void
-  onShowEvidence: (anchorId: string) => void
-  isSplit: boolean
-  anchorMode: boolean
-  summaryPick: AnchorPick | null
-  setSummaryPick: (pick: AnchorPick | null) => void
 }) {
-  const reportRef = useRef<HTMLDivElement | null>(null)
-
-  const handleSummarySelection = () => {
-    if (!anchorMode || !reportRef.current) return
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-      return
-    }
-    const range = selection.getRangeAt(0)
-    const startSpan = (range.startContainer.parentElement?.closest(
-      "[data-segment-key]",
-    ) ?? null) as HTMLElement | null
-    const endSpan = (range.endContainer.parentElement?.closest(
-      "[data-segment-key]",
-    ) ?? null) as HTMLElement | null
-    if (!startSpan || !endSpan || startSpan !== endSpan) return
-    if (startSpan.dataset.anchored === "true") return
-
-    const key = startSpan.dataset.segmentKey
-    if (!key) return
-    const [pIdxStr, sIdxStr] = key.split("-")
-    const paragraphIndex = Number(pIdxStr)
-    const segmentIndex = Number(sIdxStr)
-
-    const start = getOffsetWithin(
-      startSpan,
-      range.startContainer,
-      range.startOffset,
-    )
-    const end = getOffsetWithin(startSpan, range.endContainer, range.endOffset)
-    if (start < 0 || end < 0 || end <= start) return
-
-    const text = startSpan.textContent?.slice(start, end) ?? ""
-    if (!text) return
-
-    setSummaryPick({ paragraphIndex, segmentIndex, start, end, text })
-  }
-
   return (
-    <div
-      className={cn(
-        "space-y-9",
-        isSplit && "md:min-h-0 md:overflow-y-auto md:pb-4 md:pr-2",
-      )}
-    >
+    <div className="space-y-9">
       <section className="space-y-3">
         {editing && editState ? (
           <EditableMainBody
@@ -1760,81 +1423,14 @@ function SummaryPane({
             onChange={(next) => setEditState({ ...editState, main_body: next })}
           />
         ) : (
-          // biome-ignore lint/a11y/noStaticElementInteractions: captures text selection for evidence anchoring
-          <div
-            ref={reportRef}
-            onMouseUp={handleSummarySelection}
-            onKeyUp={handleSummarySelection}
-            className={cn(
-              "space-y-5 text-[15.5px] leading-[1.65] text-foreground/85 [&_p]:text-pretty [&_strong]:font-semibold [&_strong]:text-foreground",
-              isSplit && "max-w-[64ch]",
-              anchorMode && "cursor-text select-text",
-            )}
-          >
+          <div className="space-y-5 text-[15.5px] leading-[1.65] text-foreground/85 [&_p]:text-pretty [&_strong]:font-semibold [&_strong]:text-foreground">
             {document.main_body.map((paragraph, paragraphIndex) => {
-              const hasAnchors = paragraph.segments.some(
-                (segment) => segment.evidence_anchor_id,
-              )
-              if (!hasAnchors && paragraph.segments.length === 1) {
-                return (
-                  <MarkdownBlocks
-                    key={paragraphIndex}
-                    markdown={paragraph.segments[0].text}
-                  />
-                )
-              }
-
               return (
-                <p key={paragraphIndex}>
-                  {paragraph.segments.map((segment, segmentIndex) => {
-                    const segmentKey = `${paragraphIndex}-${segmentIndex}`
-                    const isAnchored = Boolean(segment.evidence_anchor_id)
-                    const isPicked =
-                      summaryPick?.paragraphIndex === paragraphIndex &&
-                      summaryPick?.segmentIndex === segmentIndex
-
-                    if (!isAnchored) {
-                      return (
-                        <span
-                          key={segmentKey}
-                          data-segment-key={segmentKey}
-                          data-anchored="false"
-                          className={cn(
-                            isPicked && "bg-primary/15 text-foreground",
-                          )}
-                        >
-                          {renderInlineMarkdown(
-                            segment.text,
-                            `segment-${segmentKey}`,
-                          )}
-                        </span>
-                      )
-                    }
-
-                    const evidenceAnchorId =
-                      segment.evidence_anchor_id as string
-                    return (
-                      <button
-                        key={segmentKey}
-                        type="button"
-                        data-segment-key={segmentKey}
-                        data-anchored="true"
-                        aria-label={`Show evidence for: ${segment.text}`}
-                        data-testid={`human-evidence-${evidenceAnchorId}`}
-                        onClick={() => {
-                          if (anchorMode) return
-                          onShowEvidence(evidenceAnchorId)
-                        }}
-                        className="inline border-b border-primary/40 bg-primary/15 px-1 py-0.5 text-left align-baseline font-mono text-[0.68rem] text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        {renderInlineMarkdown(
-                          segment.text,
-                          `segment-${segmentKey}`,
-                        )}
-                      </button>
-                    )
-                  })}
-                </p>
+                <MarkdownBlocks
+                  key={paragraphIndex}
+                  markdown={paragraph.segments.map((s) => s.text).join("")}
+                  variant="plain"
+                />
               )
             })}
           </div>
@@ -1852,6 +1448,27 @@ function paragraphsToMarkdown(paragraphs: V2DocumentParagraph[]): string {
 
 function markdownToParagraphs(markdown: string): V2DocumentParagraph[] {
   return [{ segments: [{ text: markdown }] }]
+}
+
+function detailsSectionsToMarkdown(
+  sections: V2DocumentDetailsSection[],
+): string {
+  return sections
+    .map((section) => section.markdown)
+    .join("\n\n")
+    .trim()
+}
+
+function markdownToDetailsSections(
+  markdown: string,
+  previousSections: V2DocumentDetailsSection[],
+): V2DocumentDetailsSection[] {
+  return [
+    {
+      anchor_id: previousSections[0]?.anchor_id || "details",
+      markdown,
+    },
+  ]
 }
 
 function EditableMainBody({
@@ -1878,28 +1495,12 @@ function DetailsPane({
   editing,
   editState,
   setEditState,
-  activeEvidenceAnchorId,
-  showClose,
-  onClose,
-  isSplit,
-  anchorMode,
-  detailsPick,
-  setDetailsPick,
 }: {
   document: V2DocumentPublic
   editing: boolean
   editState: EditableDoc | null
   setEditState: (next: EditableDoc) => void
-  activeEvidenceAnchorId: string | undefined
-  showClose: boolean
-  onClose: () => void
-  isSplit: boolean
-  anchorMode: boolean
-  detailsPick: DetailsPick | null
-  setDetailsPick: (pick: DetailsPick | null) => void
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-
   const sections = useMemo(
     () =>
       editing && editState
@@ -1913,52 +1514,14 @@ function DetailsPane({
       ? editState.details_file_name
       : document.details_file_name
 
-  const handleDetailsSelection = () => {
-    if (!anchorMode || !containerRef.current) return
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-      return
-    }
-    const range = selection.getRangeAt(0)
-    const startBlock = (range.startContainer.parentElement?.closest(
-      "[data-section-key]",
-    ) ?? null) as HTMLElement | null
-    const endBlock = (range.endContainer.parentElement?.closest(
-      "[data-section-key]",
-    ) ?? null) as HTMLElement | null
-    if (!startBlock || !endBlock || startBlock !== endBlock) return
-
-    const key = startBlock.dataset.sectionKey
-    if (!key) return
-    const sectionIndex = Number(key)
-
-    const start = getOffsetWithin(
-      startBlock,
-      range.startContainer,
-      range.startOffset,
-    )
-    const end = getOffsetWithin(startBlock, range.endContainer, range.endOffset)
-    if (start < 0 || end < 0 || end <= start) return
-    const text = startBlock.textContent?.slice(start, end) ?? ""
-    if (!text) return
-
-    setDetailsPick({ sectionIndex, start, end, text })
-  }
+  const markdown = detailsSectionsToMarkdown(sections)
 
   return (
     <section
       aria-label={`${fileName} markdown details`}
-      className={cn(
-        "overflow-hidden border border-border bg-background",
-        isSplit && "md:flex md:min-h-0 md:flex-col",
-      )}
+      className="overflow-hidden border border-border bg-background"
     >
-      <div
-        className={cn(
-          "flex items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-2 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground",
-          isSplit && "md:shrink-0",
-        )}
-      >
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-2 font-mono text-[0.66rem] tracking-[0.01em] text-muted-foreground">
         {editing && editState ? (
           <input
             type="text"
@@ -1975,78 +1538,28 @@ function DetailsPane({
         ) : (
           <span className="truncate">{fileName}</span>
         )}
-        {showClose && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            data-testid="evidence-split-close"
-            aria-label="Close details pane"
-            onClick={onClose}
-            className="-mr-2 h-7 px-2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="size-4" />
-            <span className="font-sans">Close</span>
-          </Button>
-        )}
       </div>
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: captures text selection for evidence anchoring */}
-      <div
-        ref={containerRef}
-        onMouseUp={handleDetailsSelection}
-        onKeyUp={handleDetailsSelection}
-        className={cn(
-          "px-5 py-4",
-          isSplit && "md:min-h-0 md:flex-1 md:overflow-y-auto",
-          anchorMode && "cursor-text select-text",
+      <div className="px-5 py-4">
+        {editing && editState ? (
+          <RichTextField
+            value={markdown}
+            onChange={(nextMarkdown) =>
+              setEditState({
+                ...editState,
+                details_markdown_sections: markdownToDetailsSections(
+                  nextMarkdown,
+                  editState.details_markdown_sections,
+                ),
+              })
+            }
+            className="text-[15.5px] leading-[1.65]"
+            data-testid="edit-details-payload"
+          />
+        ) : (
+          <div className="text-[15.5px] leading-[1.65] text-foreground/85 [&_p]:text-pretty">
+            <MarkdownBlocks markdown={markdown} variant="plain" />
+          </div>
         )}
-      >
-        {sections.map((section, sectionIndex) => {
-          const isActive = activeEvidenceAnchorId === section.anchor_id
-          const isPicked = detailsPick?.sectionIndex === sectionIndex
-
-          if (editing && editState) {
-            return (
-              <RichTextField
-                key={`${section.anchor_id}-${sectionIndex}`}
-                value={section.markdown}
-                onChange={(nextMarkdown) => {
-                  const next = editState.details_markdown_sections.map(
-                    (s, idx) =>
-                      idx === sectionIndex
-                        ? { ...s, markdown: nextMarkdown }
-                        : s,
-                  )
-                  setEditState({
-                    ...editState,
-                    details_markdown_sections: next,
-                  })
-                }}
-                className="mb-5 text-[15.5px] leading-[1.65]"
-                data-testid={`edit-section-${section.anchor_id}`}
-              />
-            )
-          }
-
-          return (
-            <div
-              key={`${section.anchor_id}-${sectionIndex}`}
-              id={section.anchor_id}
-              data-section-key={sectionIndex}
-              data-testid={`ai-evidence-${section.anchor_id}`}
-              data-active-evidence={isActive ? "true" : "false"}
-              className={cn(
-                "scroll-mt-6 py-2 text-[15.5px] leading-[1.65] text-foreground/85 transition-colors [&_p]:text-pretty",
-                isSplit && "max-w-[64ch]",
-                isActive &&
-                  "border border-primary/40 bg-primary/15 px-3 text-foreground",
-                isPicked && "outline outline-2 outline-primary",
-              )}
-            >
-              <MarkdownBlocks markdown={section.markdown} variant="plain" />
-            </div>
-          )
-        })}
       </div>
     </section>
   )
