@@ -323,7 +323,7 @@ export function agentRecentActivity(agent: TaskforceFleetAgent): string[] {
     .filter(Boolean)
 }
 
-function truncateLine(text: string, max = 120): string {
+export function truncateActivityLine(text: string, max = 120): string {
   const firstLine = text.split(/\r?\n/)[0]?.trim() ?? ""
   return firstLine.length > max ? `${firstLine.slice(0, max - 1)}…` : firstLine
 }
@@ -341,7 +341,7 @@ export function agentActivityLine(agent: TaskforceFleetAgent): string {
     ? (recent[1] ?? summary ?? recent[0])
     : (recent[0] ?? summary)
   const cleaned = pick ? cleanActivityPromptText(pick) : ""
-  return cleaned ? truncateLine(cleaned) : ""
+  return cleaned ? truncateActivityLine(cleaned) : ""
 }
 
 /** Session detail "Currently working on" body. */

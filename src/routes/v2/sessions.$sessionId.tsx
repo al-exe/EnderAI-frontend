@@ -43,6 +43,7 @@ import {
   sessionPreviousWork,
   sessionWorkSummary,
   statusDotPulses,
+  truncateActivityLine,
 } from "@/components/V2/Fleet/fleetStatus"
 import { SessionContextRailLink } from "@/components/V2/Fleet/SharedContextDrawer"
 import {
@@ -110,7 +111,8 @@ function eventTitle(event: TaskforceSessionActivityEntry): string {
   if (event.kind === "edit") return `Edited ${event.file ?? "file"}`
   const raw = event.text ?? event.note ?? event.kind
   if (event.kind === "prompt" || event.kind === "reply") {
-    return cleanActivityPromptText(raw) || raw
+    const cleaned = cleanActivityPromptText(raw) || raw
+    return truncateActivityLine(cleaned, 120)
   }
   return raw
 }
@@ -451,7 +453,10 @@ function FleetAgentDetailRoute() {
             {/* Activity — durable per-turn timeline, newest-first (TF-247). */}
             <div className={styles.section}>
               <div className={styles.seclabel}>Activity</div>
-              <div className={styles.timeline} data-testid="fleet-activity-timeline">
+              <div
+                className={styles.timeline}
+                data-testid="fleet-activity-timeline"
+              >
                 <div className={cn(styles.tev, styles.tevNow)}>
                   <span className={styles.tdot} data-timeline-dot />
                   <div className={styles.tt}>{liveActivityTime(agent)}</div>
