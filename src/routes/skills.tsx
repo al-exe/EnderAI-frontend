@@ -4,6 +4,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router"
 // old links/bookmarks resolve into the V2 app.
 export const Route = createFileRoute("/skills")({
   beforeLoad: () => {
-    throw redirect({ to: "/v2/library" })
+    throw redirect({ to: "/v2/profiles", replace: true })
   },
 })
