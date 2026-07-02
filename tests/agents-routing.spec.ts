@@ -402,8 +402,14 @@ test("profile lifecycle updates detail and list", async ({ page }) => {
   await expect(page.getByTestId("agent-status-archived")).toBeVisible()
   await expect(page.getByTestId("agent-model-hint")).toHaveText("sonnet")
   await expect(page.getByTestId("agent-permission-scope")).toHaveText("full")
-  await expect(page.getByText("refunds")).toBeVisible()
-  await expect(page.getByText("Never trust unverified events.")).toBeVisible()
+  await expect(
+    page.getByTestId("agent-context").getByText("refunds"),
+  ).toBeVisible()
+  await expect(
+    page
+      .getByTestId("agent-instructions")
+      .getByText("Never trust unverified events."),
+  ).toBeVisible()
 
   await page
     .getByTestId("agent-detail-sticky-header")

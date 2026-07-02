@@ -160,7 +160,7 @@ function Instructions({ instructions }: { instructions: string[] }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <section className="pt-5">
+    <section className="pt-5" data-testid="agent-instructions">
       <SectionHeader
         title="Operating instructions"
         meta={`${instructions.length} rules`}
@@ -200,7 +200,7 @@ function Instructions({ instructions }: { instructions: string[] }) {
 
 function ContextSection({ agent }: { agent: AgentSpecialistDetail }) {
   return (
-    <section className="pt-5">
+    <section className="pt-5" data-testid="agent-context">
       <SectionHeader title="Harness context" meta="export-ready" />
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         <div className="border border-black/10 p-3 dark:border-white/12">
