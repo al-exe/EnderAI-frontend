@@ -54,6 +54,71 @@ async function mockTaskforceDocumentPage(page: Page) {
     await route.fulfill({ json: { data: [], count: 0 } })
   })
 
+  await page.route("**/api/v1/v2/agents**", async (route) => {
+    const url = new URL(route.request().url())
+    const method = route.request().method()
+
+    if (url.pathname === "/api/v1/v2/agents" && method === "GET") {
+      await route.fulfill({
+        json: {
+          items: [
+            {
+              id: "agent-1",
+              slug: "jensen",
+              name: "Jensen",
+              role: "Billing Reliability Specialist",
+              short_description: "Stripe webhooks and billing retries.",
+              domain_tags: ["Stripe", "Billing"],
+              status: "active",
+              created_from: "earned",
+              linked_docs_count: 1,
+              invocations_count: 12,
+              tokens_saved: 42000,
+              last_invoked_at: "2026-05-24T12:00:00Z",
+              created_at: "2026-05-20T12:00:00Z",
+            },
+          ],
+        },
+      })
+      return
+    }
+
+    if (
+      url.pathname === "/api/v1/v2/agents/jensen/documents" &&
+      method === "POST"
+    ) {
+      await route.fulfill({
+        json: {
+          id: "agent-1",
+          slug: "jensen",
+          name: "Jensen",
+          role: "Billing Reliability Specialist",
+          status: "active",
+          short_description: "Stripe webhooks and billing retries.",
+          description: "Stripe webhooks and billing retries.",
+          created_from: "earned",
+          model_hint: "inherit",
+          permission_scope: "readonly",
+          domain_tags: ["Stripe", "Billing"],
+          routing_triggers: ["stripe"],
+          negative_triggers: [],
+          instructions: [],
+          linked_knowledge: [],
+          recent_invocations: [],
+          stats: {
+            invocations_count: 12,
+            linked_docs_count: 2,
+            tokens_saved: 42000,
+            usd_saved: "0.630000",
+          },
+        },
+      })
+      return
+    }
+
+    await route.fulfill({ status: 404, json: { detail: "Not found" } })
+  })
+
   await mockV2Documents(page)
 }
 
@@ -139,4 +204,26 @@ test("V2 document viewer ignores unknown URL hash anchors", async ({
       ),
     )
     .toEqual([])
+})
+
+test("V2 document can be added to an agent", async ({ page }) => {
+  await mockTaskforceDocumentPage(page)
+
+  await page.goto(`/v2/library/${bridgeDocumentId}`)
+  await page.getByRole("button", { name: "Add to agent" }).click()
+  await page.getByLabel("Search agents").fill("jensen")
+  await page.getByRole("button", { name: /Jensen/ }).click()
+
+  const addResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/v2/agents/jensen/documents?demo=true") &&
+      response.request().method() === "POST",
+  )
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Add to agent" })
+    .click()
+  expect(
+    await addResponse.then((response) => response.request().postDataJSON()),
+  ).toMatchObject({ document_id: bridgeDocumentId })
 })

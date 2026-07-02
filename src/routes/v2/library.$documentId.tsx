@@ -11,8 +11,10 @@ import {
   Heading2,
   Heading3,
   Italic,
+  Loader2,
   Pencil,
   Pilcrow,
+  Plus,
   ReceiptText,
   Search,
   Share2,
@@ -25,6 +27,11 @@ import {
   type OrganizationMemberPublic,
   readMyOrganization,
 } from "@/api/organizations"
+import {
+  type AgentSpecialistSummary,
+  linkAgentDocument,
+  listAgents,
+} from "@/api/v2Agents"
 import {
   favoriteV2Document,
   readV2Document,
@@ -50,6 +57,14 @@ import { useDemoMode } from "@/components/demo-mode-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,6 +94,7 @@ export const Route = createFileRoute("/v2/library/$documentId")({
 })
 
 type ViewMode = "summary" | "details"
+const MAX_LINKS_PER_SPECIALIST = 25
 
 type EditableDoc = {
   title: string
@@ -496,6 +512,7 @@ function TaskforceDocumentDetail() {
   const [accessOpen, setAccessOpen] = useState(false)
   const [shareDraft, setShareDraft] = useState<ShareDraft>({})
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
+  const [addToAgentOpen, setAddToAgentOpen] = useState(false)
 
   const documentQuery = useQuery({
     queryKey: ["v2-document", documentId, { demo: isDemoMode }],
@@ -540,6 +557,11 @@ function TaskforceDocumentDetail() {
     queryFn: () => readV2DocumentShares(documentId),
     enabled: canManageDocument,
     retry: false,
+  })
+  const agentsQuery = useQuery({
+    queryKey: ["v2-agents", isDemoMode],
+    queryFn: () => listAgents({ demo: isDemoMode }),
+    enabled: addToAgentOpen,
   })
 
   const updateMutation = useMutation({
@@ -627,6 +649,23 @@ function TaskforceDocumentDetail() {
     },
     onError: () => {
       showErrorToast("Could not update sharing.")
+    },
+  })
+  const addToAgentMutation = useMutation({
+    mutationFn: (agentSlug: string) =>
+      linkAgentDocument(
+        agentSlug,
+        { document_id: documentId },
+        { demo: isDemoMode },
+      ),
+    onSuccess: (updated, agentSlug) => {
+      queryClient.setQueryData(["v2-agent", agentSlug, isDemoMode], updated)
+      queryClient.invalidateQueries({ queryKey: ["v2-agents", isDemoMode] })
+      setAddToAgentOpen(false)
+      showSuccessToast("Document added to agent.")
+    },
+    onError: () => {
+      showErrorToast("Could not add document to agent.")
     },
   })
 
@@ -858,6 +897,17 @@ function TaskforceDocumentDetail() {
               viewSwitcher={
                 <div className="flex items-center gap-2">
                   {documentViewToggle}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAddToAgentOpen(true)}
+                    data-testid="document-add-to-agent"
+                    className="h-7 px-2.5 font-mono text-[0.65rem]"
+                  >
+                    <Plus className="size-4" />
+                    Add to agent
+                  </Button>
                   {!editing && canEditDocument && (
                     <Button
                       type="button"
@@ -883,6 +933,14 @@ function TaskforceDocumentDetail() {
           demo={isDemoMode}
           folders={foldersQuery.data?.data ?? []}
           onCreated={(folder) => moveDocumentToFolder(folder.id)}
+        />
+        <AddToAgentDialog
+          open={addToAgentOpen}
+          onOpenChange={setAddToAgentOpen}
+          agents={agentsQuery.data?.items ?? []}
+          isLoading={agentsQuery.isLoading}
+          isAdding={addToAgentMutation.isPending}
+          onAdd={(agentSlug) => addToAgentMutation.mutate(agentSlug)}
         />
 
         <DocumentProvenanceStrip
@@ -993,6 +1051,146 @@ function DocumentProvenanceStrip({
         </div>
       ) : null}
     </section>
+  )
+}
+
+function AddToAgentDialog({
+  open,
+  onOpenChange,
+  agents,
+  isLoading,
+  isAdding,
+  onAdd,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  agents: AgentSpecialistSummary[]
+  isLoading: boolean
+  isAdding: boolean
+  onAdd: (agentSlug: string) => void
+}) {
+  const [query, setQuery] = useState("")
+  const [selectedSlug, setSelectedSlug] = useState("")
+
+  useEffect(() => {
+    if (!open) {
+      setQuery("")
+      setSelectedSlug("")
+    }
+  }, [open])
+
+  const filteredAgents = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return agents
+    return agents.filter((agent) =>
+      [agent.name, agent.role, agent.short_description, ...agent.domain_tags]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(needle)),
+    )
+  }, [agents, query])
+
+  const close = (nextOpen: boolean) => {
+    onOpenChange(nextOpen)
+    if (!nextOpen) {
+      setQuery("")
+      setSelectedSlug("")
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => !isAdding && close(next)}>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add to agent</DialogTitle>
+          <DialogDescription>
+            Pin this document to an agent profile.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="relative">
+          <Search className="-translate-y-1/2 pointer-events-none absolute left-3 top-1/2 size-4 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search agents"
+            className="pl-9"
+            aria-label="Search agents"
+          />
+        </div>
+
+        <div className="max-h-72 overflow-y-auto border border-border">
+          {isLoading ? (
+            <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Loading agents
+            </div>
+          ) : filteredAgents.length === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground">
+              No agents match this search.
+            </div>
+          ) : (
+            filteredAgents.map((agent) => {
+              const selected = selectedSlug === agent.slug
+              return (
+                <button
+                  key={agent.id}
+                  type="button"
+                  onClick={() => setSelectedSlug(agent.slug)}
+                  disabled={agent.linked_docs_count >= MAX_LINKS_PER_SPECIALIST}
+                  aria-pressed={selected}
+                  className={cn(
+                    "flex w-full items-start gap-3 border-b border-border p-3 text-left last:border-b-0 hover:bg-muted/50",
+                    selected && "bg-[#8447ff]/10",
+                    agent.linked_docs_count >= MAX_LINKS_PER_SPECIALIST &&
+                      "cursor-not-allowed opacity-50",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mt-1 size-4 shrink-0 rounded-full border border-border",
+                      selected && "border-[#8447ff] bg-[#8447ff]",
+                    )}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium text-foreground">
+                      {agent.name}
+                    </span>
+                    <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">
+                      {agent.short_description}
+                    </span>
+                    <span className="mt-2 block text-xs text-muted-foreground">
+                      {agent.linked_docs_count} documents
+                      {agent.linked_docs_count >= MAX_LINKS_PER_SPECIALIST
+                        ? " · full"
+                        : ""}
+                    </span>
+                  </span>
+                </button>
+              )
+            })
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => close(false)}
+            disabled={isAdding}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={() => onAdd(selectedSlug)}
+            disabled={!selectedSlug || isAdding}
+          >
+            {isAdding ? "Adding..." : "Add to agent"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

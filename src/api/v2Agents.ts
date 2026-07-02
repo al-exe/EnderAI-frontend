@@ -44,6 +44,11 @@ export interface AgentSpecialistUpdate {
   negative_triggers?: string[]
 }
 
+export interface AgentSpecialistDocumentLinkCreate {
+  document_id: string
+  reason?: string
+}
+
 export interface AgentSpecialistLinkedDoc {
   document_id: string
   title: string
@@ -161,6 +166,42 @@ export function deleteAgent(
     url: "/api/v1/v2/agents/{slug}",
     path: {
       slug,
+    },
+    query: {
+      demo: options.demo || undefined,
+    },
+  })
+}
+
+export function linkAgentDocument(
+  slug: string,
+  body: AgentSpecialistDocumentLinkCreate,
+  options: { demo?: boolean } = {},
+): CancelablePromise<AgentSpecialistDetail> {
+  return request(OpenAPI, {
+    method: "POST",
+    url: "/api/v1/v2/agents/{slug}/documents",
+    path: {
+      slug,
+    },
+    query: {
+      demo: options.demo || undefined,
+    },
+    body,
+  })
+}
+
+export function unlinkAgentDocument(
+  slug: string,
+  documentId: string,
+  options: { demo?: boolean } = {},
+): CancelablePromise<AgentSpecialistDetail> {
+  return request(OpenAPI, {
+    method: "DELETE",
+    url: "/api/v1/v2/agents/{slug}/documents/{document_id}",
+    path: {
+      slug,
+      document_id: documentId,
     },
     query: {
       demo: options.demo || undefined,

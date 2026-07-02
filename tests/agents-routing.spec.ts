@@ -1,7 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
 
-import { mockV2Documents } from "./fixtures/v2-documents"
-
 const currentUser = {
   id: "user-1",
   email: "alex@example.com",
@@ -114,6 +112,53 @@ const jensenDetail = {
   },
 }
 
+const pickerDocuments = [
+  {
+    id: "doc-1",
+    owner_id: "user-1",
+    organization_id: null,
+    folder_id: null,
+    folder_name: "Billing",
+    visibility: "private",
+    user_access: "owner",
+    is_favorite: true,
+    title: "Stripe webhook idempotency strategy",
+    description: "Decision record for route-boundary WAL dedupe.",
+    human_summary: "Use route-boundary WAL dedupe for webhook retries.",
+    ai_generated_summary: "Webhook idempotency strategy.",
+    collaborators: ["Alex Lee"],
+    shared_with: [],
+    main_body: [{ segments: [{ text: "Use route-boundary WAL dedupe." }] }],
+    details_file_name: "stripe-webhook-idempotency-strategy.details.md",
+    details_markdown_sections: [],
+    is_demo: false,
+    created_at: "2026-05-20T12:00:00Z",
+    updated_at: "2026-05-20T12:00:00Z",
+  },
+  {
+    id: "doc-2",
+    owner_id: "user-1",
+    organization_id: null,
+    folder_id: null,
+    folder_name: "Billing",
+    visibility: "private",
+    user_access: "owner",
+    is_favorite: true,
+    title: "Refund idempotency notes",
+    description: "Manual refund retry contract for billing agents.",
+    human_summary: "Key refunds by charge_id so retries no-op.",
+    ai_generated_summary: "Refund idempotency details.",
+    collaborators: ["Alex Lee"],
+    shared_with: [],
+    main_body: [{ segments: [{ text: "Key refunds by charge_id." }] }],
+    details_file_name: "refund-idempotency-notes.details.md",
+    details_markdown_sections: [],
+    is_demo: false,
+    created_at: "2026-05-21T12:00:00Z",
+    updated_at: "2026-05-21T12:00:00Z",
+  },
+]
+
 test.use({
   storageState: {
     cookies: [],
@@ -148,10 +193,59 @@ async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
 
   await page.route("**/api/v1/v2/agents**", async (route) => {
     const url = new URL(route.request().url())
+    const method = route.request().method()
     if (url.pathname === "/api/v1/v2/agents") {
       await route.fulfill({
         json: { items: options.empty ? [] : agentItems },
       })
+      return
+    }
+    if (url.pathname === "/api/v1/v2/agents/jensen/documents") {
+      if (method === "POST") {
+        const body = route.request().postDataJSON()
+        const document = pickerDocuments.find(
+          (item) => item.id === body.document_id,
+        )
+        if (document) {
+          const linked = detail.linked_knowledge.some(
+            (item) => item.document_id === document.id,
+          )
+          if (!linked) {
+            detail = {
+              ...detail,
+              linked_knowledge: [
+                ...detail.linked_knowledge,
+                {
+                  document_id: document.id,
+                  title: document.title,
+                  description: document.description,
+                  anchor_id: null,
+                  href: `/v2/library/${document.id}`,
+                  reason: "added by Alex Lee",
+                },
+              ],
+              stats: {
+                ...detail.stats,
+                linked_docs_count: detail.linked_knowledge.length + 1,
+              },
+            }
+          }
+        }
+        await route.fulfill({ json: detail })
+        return
+      }
+    }
+    const unlinkMatch = url.pathname.match(
+      /^\/api\/v1\/v2\/agents\/jensen\/documents\/([^/]+)$/,
+    )
+    if (unlinkMatch && method === "DELETE") {
+      detail = {
+        ...detail,
+        linked_knowledge: detail.linked_knowledge.filter(
+          (item) => item.document_id !== unlinkMatch[1],
+        ),
+      }
+      await route.fulfill({ json: detail })
       return
     }
     if (url.pathname === "/api/v1/v2/agents/jensen") {
@@ -172,7 +266,19 @@ async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
     await route.fulfill({ json: { metrics: {} } })
   })
 
-  await mockV2Documents(page)
+  await page.route("**/api/v1/v2/documents/**", async (route) => {
+    const url = new URL(route.request().url())
+    if (
+      url.pathname === "/api/v1/v2/documents/" &&
+      route.request().method() === "GET"
+    ) {
+      await route.fulfill({
+        json: { data: pickerDocuments, count: pickerDocuments.length },
+      })
+      return
+    }
+    await route.fulfill({ status: 404, json: { detail: "Not found" } })
+  })
 }
 
 test("direct specialist URL renders detail instead of the agents grid", async ({
@@ -340,11 +446,13 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
-  await expect(
-    page.getByRole("link", {
-      name: /open session "stripe is double-charging some users/i,
-    }),
-  ).toHaveAttribute("href", "/v2/ledger?session_id=session-1")
+  const metricsLink = page.getByRole("link", {
+    name: /open metrics for "stripe is double-charging some users/i,
+  })
+  await expect(metricsLink).toHaveAttribute(
+    "href",
+    "/v2/metrics?session_id=session-1",
+  )
 
   const linkedKnowledge = page.getByRole("link", {
     name: /Stripe webhook idempotency strategy/,
@@ -354,11 +462,7 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
     "/v2/library/doc-1#decision-wal-table",
   )
 
-  await page
-    .getByRole("link", {
-      name: /open metrics for "stripe is double-charging some users/i,
-    })
-    .click()
+  await metricsLink.click()
   await expect(page).toHaveURL(/\/v2\/metrics\?session_id=session-1$/)
 })
 
@@ -423,6 +527,50 @@ test("profile lifecycle updates detail and list", async ({ page }) => {
       .getByRole("link", { name: /open profile jensen/i })
       .getByTestId("agent-status-archived"),
   ).toBeVisible()
+})
+
+test("profile documents can be pinned and removed", async ({ page }) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/profiles/jensen")
+  await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "Stripe webhook idempotency strategy" }),
+  ).toBeVisible()
+
+  await page.getByRole("button", { name: "Add documents" }).click()
+  const addDialog = page.getByRole("dialog", { name: "Add documents" })
+  await addDialog.getByLabel("Search documents").fill("refund")
+  await addDialog
+    .getByRole("button", { name: /Refund idempotency notes/ })
+    .click()
+
+  const addResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/v2/agents/jensen/documents") &&
+      response.request().method() === "POST",
+  )
+  await addDialog.getByRole("button", { name: "Add 1" }).click()
+  expect(
+    await addResponse.then((response) => response.request().postDataJSON()),
+  ).toMatchObject({ document_id: "doc-2" })
+  await expect(
+    page.getByRole("link", { name: "Refund idempotency notes" }),
+  ).toBeVisible()
+
+  const removeResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/v2/agents/jensen/documents/doc-2") &&
+      response.request().method() === "DELETE",
+  )
+  await page
+    .getByRole("row", { name: /Refund idempotency notes/ })
+    .getByRole("button", { name: "Remove" })
+    .click()
+  await removeResponse
+  await expect(
+    page.getByRole("link", { name: "Refund idempotency notes" }),
+  ).toHaveCount(0)
 })
 
 test("profiles grid shows empty state before profiles are seeded", async ({
