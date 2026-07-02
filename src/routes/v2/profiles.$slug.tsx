@@ -7,6 +7,7 @@ import {
   Pencil,
   Pin,
   Plus,
+  RefreshCw,
   Search,
   Trash2,
 } from "lucide-react"
@@ -19,6 +20,7 @@ import {
   deleteAgent,
   getAgent,
   linkAgentDocument,
+  syncAgentHarness,
   unlinkAgentDocument,
   updateAgent,
 } from "@/api/v2Agents"
@@ -659,6 +661,18 @@ function AgentDetailPage() {
       showErrorToast("Could not delete profile.")
     },
   })
+  const syncMutation = useMutation({
+    mutationFn: () => syncAgentHarness(slug, { demo: isDemoMode }),
+    onSuccess: (result) => {
+      const count = result.files.length
+      showSuccessToast(
+        `Harness sync prepared for ${count} file${count === 1 ? "" : "s"}.`,
+      )
+    },
+    onError: () => {
+      showErrorToast("Could not sync this profile to harness.")
+    },
+  })
   const addDocumentsMutation = useMutation({
     mutationFn: async (documentIds: string[]) => {
       const updates = await Promise.all(
@@ -867,6 +881,19 @@ function AgentDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <AgentStatusBadge status={agent.status} className="h-8 px-3" />
+            <button
+              type="button"
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending}
+              className="inline-flex h-8 items-center gap-2 rounded-md border border-black/10 px-3 text-xs font-medium text-foreground transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/12 dark:hover:bg-white/5"
+            >
+              {syncMutation.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+              ) : (
+                <RefreshCw className="size-3.5" aria-hidden />
+              )}
+              Sync to harness
+            </button>
             <button
               type="button"
               onClick={() => setEditOpen(true)}

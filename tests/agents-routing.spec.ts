@@ -235,6 +235,37 @@ async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
         return
       }
     }
+    if (
+      url.pathname === "/api/v1/v2/agents/jensen/sync-harness" &&
+      method === "POST"
+    ) {
+      await route.fulfill({
+        json: {
+          priority: ["claude", "codex", "cursor"],
+          files: [
+            {
+              target: "claude",
+              path: ".claude/agents/jensen.md",
+              content: "---\nname: jensen\n---\n",
+              sha256: "a".repeat(64),
+            },
+            {
+              target: "codex",
+              path: ".codex/agents/jensen.md",
+              content: "---\nname: jensen\n---\n",
+              sha256: "a".repeat(64),
+            },
+            {
+              target: "cursor",
+              path: ".cursor/agents/jensen.md",
+              content: "---\nname: jensen\n---\n",
+              sha256: "a".repeat(64),
+            },
+          ],
+        },
+      })
+      return
+    }
     const unlinkMatch = url.pathname.match(
       /^\/api\/v1\/v2\/agents\/jensen\/documents\/([^/]+)$/,
     )
@@ -571,6 +602,24 @@ test("profile documents can be pinned and removed", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Refund idempotency notes" }),
   ).toHaveCount(0)
+})
+
+test("profile detail can prepare harness sync", async ({ page }) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/profiles/jensen")
+
+  const syncResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/v2/agents/jensen/sync-harness") &&
+      response.request().method() === "POST",
+  )
+  await page.getByRole("button", { name: "Sync to harness" }).click()
+  await syncResponse
+
+  await expect(
+    page.getByText("Harness sync prepared for 3 files."),
+  ).toBeVisible()
 })
 
 test("profiles grid shows empty state before profiles are seeded", async ({
