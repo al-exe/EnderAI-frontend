@@ -57,21 +57,23 @@ async function mockTaskforceDocumentPage(page: Page) {
   await mockV2Documents(page)
 }
 
-test("V2 document viewer opens and scrolls to matching URL hash anchor", async ({
+test("V2 document viewer ignores URL hash anchors after evidence anchoring removal", async ({
   page,
 }) => {
   await mockTaskforceDocumentPage(page)
 
   await page.goto(`/v2/library/${bridgeDocumentId}#affected-users`)
 
-  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
     "data-state",
     "active",
   )
-  await expect(page.getByTestId("ai-evidence-affected-users")).toHaveAttribute(
-    "data-active-evidence",
-    "true",
+  await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
+    "data-state",
+    "inactive",
   )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveCount(0)
+  await expect(page.getByTestId("ai-evidence-affected-users")).toHaveCount(0)
   await expect
     .poll(() =>
       page.evaluate(
@@ -80,7 +82,7 @@ test("V2 document viewer opens and scrolls to matching URL hash anchor", async (
             .__scrollIntoViewCalls,
       ),
     )
-    .toEqual(["affected-users"])
+    .toEqual([])
 })
 
 test("V2 document viewer leaves summary mode unchanged without URL hash", async ({
@@ -94,10 +96,11 @@ test("V2 document viewer leaves summary mode unchanged without URL hash", async 
     "data-state",
     "active",
   )
-  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
     "data-state",
     "inactive",
   )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveCount(0)
   await expect(page.getByText("Sessions / Reused by")).toBeVisible()
   await expect(page.getByText("No sessions recorded yet")).toBeVisible()
   await expect
@@ -122,10 +125,11 @@ test("V2 document viewer ignores unknown URL hash anchors", async ({
     "data-state",
     "active",
   )
-  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
     "data-state",
     "inactive",
   )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveCount(0)
   await expect
     .poll(() =>
       page.evaluate(
