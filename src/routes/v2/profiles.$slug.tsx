@@ -1,7 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
-import { ChevronDown, ChevronUp, Loader2, Pencil } from "lucide-react"
-import { useState } from "react"
+import {
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Pencil,
+  Pin,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
   type AgentSpecialistDetail,
@@ -9,11 +18,23 @@ import {
   type AgentsListResponse,
   deleteAgent,
   getAgent,
+  linkAgentDocument,
+  unlinkAgentDocument,
   updateAgent,
 } from "@/api/v2Agents"
+import { readV2Documents, type V2DocumentPublic } from "@/api/v2Documents"
 import { ApiError } from "@/client"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { AgentDetailSkeleton } from "@/components/V2/Agents/AgentDetailSkeleton"
 import { AgentStatusBadge } from "@/components/V2/Agents/AgentStatusBadge"
 import {
@@ -61,6 +82,7 @@ export const Route = createFileRoute("/v2/profiles/$slug")({
 })
 
 const AGENTS_DETAIL_SHELL = V2_PAGE_BODY
+const MAX_LINKS_PER_SPECIALIST = 25
 
 function initials(name: string) {
   return name
@@ -247,65 +269,233 @@ function ContextSection({ agent }: { agent: AgentSpecialistDetail }) {
   )
 }
 
-function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
+function AddDocumentsDialog({
+  open,
+  onOpenChange,
+  agent,
+  documents,
+  folders,
+  isLoading,
+  isAdding,
+  onAdd,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  agent: AgentSpecialistDetail
+  documents: V2DocumentPublic[]
+  folders: string[]
+  isLoading: boolean
+  isAdding: boolean
+  onAdd: (documentIds: string[]) => void
+}) {
+  const [query, setQuery] = useState("")
+  const [folder, setFolder] = useState("all")
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const remainingSlots = Math.max(
+    0,
+    MAX_LINKS_PER_SPECIALIST - agent.linked_knowledge.length,
+  )
+
+  useEffect(() => {
+    if (!open) {
+      setQuery("")
+      setFolder("all")
+      setFavoritesOnly(false)
+      setSelectedIds([])
+    }
+  }, [open])
+
+  const linkedIds = useMemo(
+    () =>
+      new Set(agent.linked_knowledge.map((document) => document.document_id)),
+    [agent.linked_knowledge],
+  )
+  const filteredDocuments = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    return documents.filter((document) => {
+      if (linkedIds.has(document.id)) return false
+      if (favoritesOnly && !document.is_favorite) return false
+      if (folder !== "all" && (document.folder_name ?? "Unfiled") !== folder) {
+        return false
+      }
+      if (!needle) return true
+      return [document.title, document.description, document.human_summary]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(needle))
+    })
+  }, [documents, favoritesOnly, folder, linkedIds, query])
+
+  const toggleSelected = (documentId: string) => {
+    setSelectedIds((current) =>
+      current.includes(documentId)
+        ? current.filter((id) => id !== documentId)
+        : current.length >= remainingSlots
+          ? current
+          : [...current, documentId],
+    )
+  }
+
+  const close = (nextOpen: boolean) => {
+    onOpenChange(nextOpen)
+    if (!nextOpen) {
+      setQuery("")
+      setFolder("all")
+      setFavoritesOnly(false)
+      setSelectedIds([])
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => !isAdding && close(next)}>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Add documents</DialogTitle>
+          <DialogDescription>
+            Pin library documents to this profile for harness injection.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <div className="relative">
+            <Search className="-translate-y-1/2 pointer-events-none absolute left-3 top-1/2 size-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search title or description"
+              className="pl-9"
+              aria-label="Search documents"
+            />
+          </div>
+          <select
+            value={folder}
+            onChange={(event) => setFolder(event.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            aria-label="Filter by folder"
+          >
+            <option value="all">All folders</option>
+            {folders.map((folderName) => (
+              <option key={folderName} value={folderName}>
+                {folderName}
+              </option>
+            ))}
+          </select>
+          <Button
+            type="button"
+            variant={favoritesOnly ? "default" : "outline"}
+            onClick={() => setFavoritesOnly((value) => !value)}
+          >
+            Favorites
+          </Button>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {remainingSlots} document slot{remainingSlots === 1 ? "" : "s"}{" "}
+          available.
+        </div>
+
+        <div className="max-h-80 overflow-y-auto border border-border">
+          {isLoading ? (
+            <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Loading documents
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground">
+              No available documents match these filters.
+            </div>
+          ) : (
+            filteredDocuments.map((document) => {
+              const selected = selectedIds.includes(document.id)
+              return (
+                <button
+                  key={document.id}
+                  type="button"
+                  onClick={() => toggleSelected(document.id)}
+                  aria-pressed={selected}
+                  className={cn(
+                    "flex w-full items-start gap-3 border-b border-border p-3 text-left last:border-b-0 hover:bg-muted/50",
+                    selected && "bg-[#8447ff]/10",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mt-1 size-4 shrink-0 border border-border",
+                      selected && "border-[#8447ff] bg-[#8447ff]",
+                    )}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium text-foreground">
+                      {document.title}
+                    </span>
+                    <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">
+                      {document.description || document.human_summary}
+                    </span>
+                    <span className="mt-2 block text-xs text-muted-foreground">
+                      {document.folder_name ?? "Unfiled"}
+                      {document.is_favorite ? " · favorite" : ""}
+                    </span>
+                  </span>
+                </button>
+              )
+            })
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => close(false)}
+            disabled={isAdding}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={() => onAdd(selectedIds)}
+            disabled={
+              selectedIds.length === 0 ||
+              selectedIds.length > remainingSlots ||
+              isAdding
+            }
+          >
+            {isAdding ? "Adding..." : `Add ${selectedIds.length || ""}`.trim()}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function DocumentsSection({
+  agent,
+  onAddDocuments,
+  onRemoveDocument,
+  isRemovingDocumentId,
+}: {
+  agent: AgentSpecialistDetail
+  onAddDocuments: () => void
+  onRemoveDocument: (documentId: string) => void
+  isRemovingDocumentId: string | null
+}) {
   return (
     <section className="pt-5">
       <SectionHeader
-        title="Sessions & documents"
-        meta={`${agent.recent_invocations.length} sessions · ${agent.linked_knowledge.length} documents`}
+        title="Documents"
+        meta={`${agent.linked_knowledge.length} pinned`}
       />
-
-      <div className="mt-2 overflow-x-auto">
-        <table className="w-full min-w-[42rem] border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-black/10 text-xs tracking-[0.01em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
-              <th className="py-2 pr-3 text-left font-medium">Session</th>
-              <th className="px-3 text-left font-medium">Repo</th>
-              <th className="px-3 text-right font-medium">Saved</th>
-              <th className="py-2 pl-3 text-right font-medium">When</th>
-            </tr>
-          </thead>
-          <tbody>
-            {agent.recent_invocations.length === 0 ? (
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td
-                  colSpan={4}
-                  className="py-3 text-sm text-zinc-500 dark:text-zinc-400"
-                >
-                  No sessions yet.
-                </td>
-              </tr>
-            ) : (
-              agent.recent_invocations.map((invocation) => (
-                <tr
-                  key={invocation.id}
-                  className="group relative cursor-pointer border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
-                >
-                  <td className="py-3 pr-3 align-top text-sm text-zinc-950 dark:text-white">
-                    {invocation.session_id && (
-                      <Link
-                        to="/v2/ledger"
-                        search={{ session_id: invocation.session_id }}
-                        aria-label={`Open session "${invocation.prompt}"`}
-                        className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                      />
-                    )}
-                    <div className="font-semibold">"{invocation.prompt}"</div>
-                  </td>
-                  <td className="px-3 py-3 align-top text-sm text-zinc-500 dark:text-zinc-400">
-                    {invocation.repo ?? "Taskforce"}
-                  </td>
-                  <td className="px-3 py-3 text-right align-top text-sm font-semibold text-[#8447ff]">
-                    +{formatCompactNumber(invocation.tokens_saved)}
-                  </td>
-                  <td className="py-3 pl-3 text-right align-top text-xs text-zinc-400 dark:text-zinc-500">
-                    {formatRelativeTime(invocation.created_at)}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="mt-3 flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onAddDocuments}
+          disabled={agent.linked_knowledge.length >= MAX_LINKS_PER_SPECIALIST}
+        >
+          <Plus className="size-4" />
+          Add documents
+        </Button>
       </div>
 
       <div className="mt-2 overflow-x-auto">
@@ -314,37 +504,65 @@ function LinkedKnowledge({ agent }: { agent: AgentSpecialistDetail }) {
             <tr className="border-b border-black/10 text-xs tracking-[0.01em] text-zinc-400 dark:border-white/12 dark:text-zinc-500">
               <th className="py-2 pr-3 text-left font-medium">Document</th>
               <th className="px-3 text-left font-medium">Anchor</th>
-              <th className="py-2 px-3 text-right font-medium">Reason</th>
+              <th className="px-3 text-left font-medium">Pin</th>
+              <th className="py-2 pl-3 text-right font-medium">Action</th>
             </tr>
           </thead>
           <tbody>
-            {agent.linked_knowledge.map((document) => (
-              <tr
-                key={`${document.document_id}-${document.anchor_id ?? "summary"}`}
-                className="group relative cursor-pointer border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
-              >
-                <td className="py-3 pr-3 align-top">
-                  <a
-                    href={document.href}
-                    className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                  >
-                    <span className="sr-only">Open {document.title}</span>
-                  </a>
-                  <div className="text-base font-semibold text-zinc-950 dark:text-white">
-                    {document.title}
-                  </div>
-                  <div className="mt-1 line-clamp-1 text-xs text-zinc-500 dark:text-zinc-400">
-                    {document.description}
-                  </div>
-                </td>
-                <td className="px-3 py-3 align-top text-sm text-zinc-500 dark:text-zinc-400">
-                  {document.anchor_id ?? "summary"}
-                </td>
-                <td className="px-3 py-3 text-right align-top text-xs text-zinc-500 dark:text-zinc-400">
-                  {document.reason ?? "Pinned knowledge"}
+            {agent.linked_knowledge.length === 0 ? (
+              <tr className="border-b border-black/5 dark:border-white/10">
+                <td
+                  colSpan={4}
+                  className="py-3 text-sm text-zinc-500 dark:text-zinc-400"
+                >
+                  No documents pinned yet.
                 </td>
               </tr>
-            ))}
+            ) : (
+              agent.linked_knowledge.map((document) => (
+                <tr
+                  key={`${document.document_id}-${document.anchor_id ?? "summary"}`}
+                  className="border-b border-black/5 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5"
+                >
+                  <td className="py-3 pr-3 align-top">
+                    <a
+                      href={document.href}
+                      className="text-base font-semibold text-zinc-950 underline-offset-4 hover:underline dark:text-white"
+                    >
+                      {document.title}
+                    </a>
+                    <div className="mt-1 line-clamp-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      {document.description}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 align-top text-sm text-zinc-500 dark:text-zinc-400">
+                    {document.anchor_id ?? "summary"}
+                  </td>
+                  <td className="px-3 py-3 align-top text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="inline-flex items-center gap-1">
+                      <Pin className="size-3" />
+                      {document.reason ?? "Pinned"}
+                    </span>
+                  </td>
+                  <td className="py-3 pl-3 text-right align-top">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRemoveDocument(document.document_id)}
+                      disabled={isRemovingDocumentId === document.document_id}
+                    >
+                      {isRemovingDocumentId === document.document_id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-4" />
+                      )}
+                      Remove
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -411,6 +629,10 @@ function AgentDetailPage() {
   const navigate = useNavigate()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [editOpen, setEditOpen] = useState(false)
+  const [addDocumentsOpen, setAddDocumentsOpen] = useState(false)
+  const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(
+    null,
+  )
   const updateMutation = useMutation({
     mutationFn: (values: AgentSpecialistUpdate) =>
       updateAgent(slug, values, { demo: isDemoMode }),
@@ -437,6 +659,57 @@ function AgentDetailPage() {
       showErrorToast("Could not delete profile.")
     },
   })
+  const addDocumentsMutation = useMutation({
+    mutationFn: async (documentIds: string[]) => {
+      const updates = await Promise.all(
+        documentIds.map((documentId) =>
+          linkAgentDocument(
+            slug,
+            { document_id: documentId },
+            { demo: isDemoMode },
+          ),
+        ),
+      )
+      return updates[updates.length - 1]
+    },
+    onSuccess: (updated, documentIds) => {
+      if (updated) {
+        queryClient.setQueryData(["v2-agent", slug, isDemoMode], updated)
+      }
+      queryClient.invalidateQueries({
+        queryKey: ["v2-agent", slug, isDemoMode],
+      })
+      queryClient.invalidateQueries({ queryKey: ["v2-agents", isDemoMode] })
+      setAddDocumentsOpen(false)
+      showSuccessToast(
+        `${documentIds.length} document${documentIds.length === 1 ? "" : "s"} added.`,
+      )
+    },
+    onError: () => {
+      showErrorToast("Could not add documents.")
+    },
+  })
+  const removeDocumentMutation = useMutation({
+    mutationFn: (documentId: string) =>
+      unlinkAgentDocument(slug, documentId, { demo: isDemoMode }),
+    onMutate: (documentId) => {
+      setRemovingDocumentId(documentId)
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["v2-agent", slug, isDemoMode], updated)
+      queryClient.invalidateQueries({
+        queryKey: ["v2-agent", slug, isDemoMode],
+      })
+      queryClient.invalidateQueries({ queryKey: ["v2-agents", isDemoMode] })
+      showSuccessToast("Document removed.")
+    },
+    onError: () => {
+      showErrorToast("Could not remove document.")
+    },
+    onSettled: () => {
+      setRemovingDocumentId(null)
+    },
+  })
   const agentQuery = useQuery({
     queryKey: ["v2-agent", slug, isDemoMode],
     queryFn: () => getAgent(slug, { demo: isDemoMode }),
@@ -459,7 +732,24 @@ function AgentDetailPage() {
     },
     retry: false,
   })
+  const documentsQuery = useQuery({
+    queryKey: ["v2-documents", { demo: isDemoMode }],
+    queryFn: () => readV2Documents({ demo: isDemoMode }),
+    enabled: addDocumentsOpen,
+  })
   const agent = agentQuery.data
+  const availableDocuments = documentsQuery.data?.data ?? []
+  const documentFolders = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          availableDocuments.map(
+            (document) => document.folder_name ?? "Unfiled",
+          ),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [availableDocuments],
+  )
   const isAgentError = agentQuery.isError
   const isAgentFetched = agentQuery.isFetched
   const isAgentFetching = agentQuery.isFetching
@@ -597,6 +887,16 @@ function AgentDetailPage() {
           onSubmit={(values) => updateMutation.mutate(values)}
           onDelete={() => deleteMutation.mutate()}
         />
+        <AddDocumentsDialog
+          open={addDocumentsOpen}
+          onOpenChange={setAddDocumentsOpen}
+          agent={agent}
+          documents={availableDocuments}
+          folders={documentFolders}
+          isLoading={documentsQuery.isLoading}
+          isAdding={addDocumentsMutation.isPending}
+          onAdd={(documentIds) => addDocumentsMutation.mutate(documentIds)}
+        />
 
         <div className={V2_TAB_CONTENT_CLASS}>
           {agent.description ? (
@@ -623,7 +923,14 @@ function AgentDetailPage() {
 
               <ContextSection agent={agent} />
               <Instructions instructions={agent.instructions} />
-              <LinkedKnowledge agent={agent} />
+              <DocumentsSection
+                agent={agent}
+                onAddDocuments={() => setAddDocumentsOpen(true)}
+                onRemoveDocument={(documentId) =>
+                  removeDocumentMutation.mutate(documentId)
+                }
+                isRemovingDocumentId={removingDocumentId}
+              />
               <RecentInvocations agent={agent} />
             </>
           )}
