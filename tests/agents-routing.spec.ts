@@ -446,11 +446,13 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
   await expect(page.getByText("Operating instructions")).toBeVisible()
-  await expect(
-    page.getByRole("link", {
-      name: /open session "stripe is double-charging some users/i,
-    }),
-  ).toHaveAttribute("href", "/v2/ledger?session_id=session-1")
+  const metricsLink = page.getByRole("link", {
+    name: /open metrics for "stripe is double-charging some users/i,
+  })
+  await expect(metricsLink).toHaveAttribute(
+    "href",
+    "/v2/metrics?session_id=session-1",
+  )
 
   const linkedKnowledge = page.getByRole("link", {
     name: /Stripe webhook idempotency strategy/,
@@ -460,11 +462,7 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
     "/v2/library/doc-1#decision-wal-table",
   )
 
-  await page
-    .getByRole("link", {
-      name: /open metrics for "stripe is double-charging some users/i,
-    })
-    .click()
+  await metricsLink.click()
   await expect(page).toHaveURL(/\/v2\/metrics\?session_id=session-1$/)
 })
 
@@ -541,15 +539,18 @@ test("profile documents can be pinned and removed", async ({ page }) => {
   ).toBeVisible()
 
   await page.getByRole("button", { name: "Add documents" }).click()
-  await page.getByLabel("Search documents").fill("refund")
-  await page.getByRole("button", { name: /Refund idempotency notes/ }).click()
+  const addDialog = page.getByRole("dialog", { name: "Add documents" })
+  await addDialog.getByLabel("Search documents").fill("refund")
+  await addDialog
+    .getByRole("button", { name: /Refund idempotency notes/ })
+    .click()
 
   const addResponse = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/v1/v2/agents/jensen/documents") &&
       response.request().method() === "POST",
   )
-  await page.getByRole("button", { name: "Add 1" }).click()
+  await addDialog.getByRole("button", { name: "Add 1" }).click()
   expect(
     await addResponse.then((response) => response.request().postDataJSON()),
   ).toMatchObject({ document_id: "doc-2" })
