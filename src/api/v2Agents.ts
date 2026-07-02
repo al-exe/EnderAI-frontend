@@ -3,6 +3,8 @@ import { request } from "@/client/core/request"
 
 export type AgentSpecialistStatus = "active" | "draft" | "archived" | "proposed"
 export type AgentPermissionScope = "readonly" | "full"
+export type AgentHarnessTarget = "claude" | "codex" | "cursor"
+export type AgentHarnessTargetOption = AgentHarnessTarget | "all"
 
 export interface AgentSpecialistSummary {
   id: string
@@ -75,6 +77,18 @@ export interface AgentSpecialistStats {
   linked_docs_count: number
   tokens_saved: number
   usd_saved: string
+}
+
+export interface AgentHarnessSyncFile {
+  target: AgentHarnessTarget
+  path: string
+  content: string
+  sha256: string
+}
+
+export interface AgentHarnessSyncResponse {
+  priority: AgentHarnessTarget[]
+  files: AgentHarnessSyncFile[]
 }
 
 export interface AgentSpecialistDetail {
@@ -204,6 +218,23 @@ export function unlinkAgentDocument(
       document_id: documentId,
     },
     query: {
+      demo: options.demo || undefined,
+    },
+  })
+}
+
+export function syncAgentHarness(
+  slug: string,
+  options: { target?: AgentHarnessTargetOption; demo?: boolean } = {},
+): CancelablePromise<AgentHarnessSyncResponse> {
+  return request(OpenAPI, {
+    method: "POST",
+    url: "/api/v1/v2/agents/{slug}/sync-harness",
+    path: {
+      slug,
+    },
+    query: {
+      target: options.target || undefined,
       demo: options.demo || undefined,
     },
   })
