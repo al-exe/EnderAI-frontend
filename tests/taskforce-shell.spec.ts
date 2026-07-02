@@ -466,10 +466,7 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-state",
     "inactive",
   )
-  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
-    "data-state",
-    "inactive",
-  )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveCount(0)
   await expect(
     page.getByText("XYZ Corp users hit stale bridge routing"),
   ).toBeVisible()
@@ -500,47 +497,19 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     element.scrollTop = 0
   })
 
-  await page.getByRole("tab", { name: "Split" }).click()
+  await page.getByRole("tab", { name: "Details" }).click()
   await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
     "data-state",
     "inactive",
   )
   await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
     "data-state",
-    "inactive",
-  )
-  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
-    "data-state",
     "active",
   )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveCount(0)
   await expect(
     page.getByText("XYZ Corp users hit stale bridge routing"),
-  ).toBeVisible()
-  await expect(
-    page.getByText("latest-stale-network-bridge-issue.details.md"),
-  ).toBeVisible()
-  await expect(page.getByText("Created May 10, 2026")).toBeVisible()
-  await expect(page.getByText("Updated May 12, 2026")).toBeVisible()
-
-  await page.getByRole("tab", { name: "Summary" }).click()
-  await page.getByTestId("human-evidence-affected-users").click()
-
-  // Anchor click opens split view with both Summary and Details visible.
-  await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
-    "data-state",
-    "inactive",
-  )
-  await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
-    "data-state",
-    "inactive",
-  )
-  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
-    "data-state",
-    "active",
-  )
-  await expect(
-    page.getByText("XYZ Corp users hit stale bridge routing"),
-  ).toBeVisible()
+  ).not.toBeVisible()
   await expect(
     page.getByText("latest-stale-network-bridge-issue.details.md"),
   ).toBeVisible()
@@ -548,13 +517,10 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
   await expect(
     page.getByText("<!-- evidence-anchor: affected-users -->"),
   ).toBeVisible()
-  await expect(page.getByTestId("ai-evidence-affected-users")).toHaveAttribute(
-    "data-active-evidence",
-    "true",
-  )
+  await expect(page.getByText("Created May 10, 2026")).toBeVisible()
+  await expect(page.getByText("Updated May 12, 2026")).toBeVisible()
 
-  // Close button returns to Summary-only view.
-  await page.getByTestId("evidence-split-close").click()
+  await page.getByRole("tab", { name: "Summary" }).click()
   await expect(page.getByRole("tab", { name: "Summary" })).toHaveAttribute(
     "data-state",
     "active",
@@ -563,10 +529,10 @@ test("Taskforce v2 library shows document demo data only in demo mode", async ({
     "data-state",
     "inactive",
   )
-  await expect(page.getByRole("tab", { name: "Split" })).toHaveAttribute(
-    "data-state",
-    "inactive",
-  )
+  await expect(page.getByRole("tab", { name: "Split" })).toHaveCount(0)
+  await expect(page.getByTestId("human-evidence-affected-users")).toHaveCount(0)
+  await expect(page.getByTestId("ai-evidence-affected-users")).toHaveCount(0)
+  await expect(page.getByTestId("evidence-split-close")).toHaveCount(0)
   await expect(
     page.getByText("XYZ Corp users hit stale bridge routing"),
   ).toBeVisible()
