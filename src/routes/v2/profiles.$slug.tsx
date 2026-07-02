@@ -160,7 +160,7 @@ function Instructions({ instructions }: { instructions: string[] }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <section className="pt-5">
+    <section className="pt-5" data-testid="agent-instructions">
       <SectionHeader
         title="Operating instructions"
         meta={`${instructions.length} rules`}
@@ -193,6 +193,55 @@ function Instructions({ instructions }: { instructions: string[] }) {
             <ChevronDown className="size-4" />
           )}
         </button>
+      </div>
+    </section>
+  )
+}
+
+function ContextSection({ agent }: { agent: AgentSpecialistDetail }) {
+  return (
+    <section className="pt-5" data-testid="agent-context">
+      <SectionHeader title="Harness context" meta="export-ready" />
+      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+        <div className="border border-black/10 p-3 dark:border-white/12">
+          <div className={AGENT_STAT_LABEL_CLASS}>Model</div>
+          <div
+            className="mt-1 font-mono text-sm text-zinc-950 dark:text-white"
+            data-testid="agent-model-hint"
+          >
+            {agent.model_hint || "inherit"}
+          </div>
+        </div>
+        <div className="border border-black/10 p-3 dark:border-white/12">
+          <div className={AGENT_STAT_LABEL_CLASS}>Permission scope</div>
+          <div
+            className="mt-1 font-mono text-sm capitalize text-zinc-950 dark:text-white"
+            data-testid="agent-permission-scope"
+          >
+            {agent.permission_scope}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div>
+          <SectionHeader
+            title="Use when"
+            meta={`${agent.routing_triggers.length} triggers`}
+          />
+          <div className="py-3">
+            <Chips values={agent.routing_triggers} />
+          </div>
+        </div>
+        <div>
+          <SectionHeader
+            title="Do not use when"
+            meta={`${agent.negative_triggers.length} triggers`}
+          />
+          <div className="py-3">
+            <Chips values={agent.negative_triggers} />
+          </div>
+        </div>
       </div>
     </section>
   )
@@ -550,40 +599,41 @@ function AgentDetailPage() {
         />
 
         <div className={V2_TAB_CONTENT_CLASS}>
-        {agent.description ? (
-          <p className={cn("max-w-3xl", AGENT_DESCRIPTION_CLASS)}>
-            {agent.description}
-          </p>
-        ) : null}
+          {agent.description ? (
+            <p className={cn("max-w-3xl", AGENT_DESCRIPTION_CLASS)}>
+              {agent.description}
+            </p>
+          ) : null}
 
-        {isHydratingDetail ? (
-          <AgentDetailSkeleton
-            shellClassName={AGENTS_DETAIL_SHELL}
-            hideHeader
-          />
-        ) : (
-          <>
-            <StatLine agent={agent} />
+          {isHydratingDetail ? (
+            <AgentDetailSkeleton
+              shellClassName={AGENTS_DETAIL_SHELL}
+              hideHeader
+            />
+          ) : (
+            <>
+              <StatLine agent={agent} />
 
-            <section className="pt-2">
-              <SectionHeader title="Tags" />
-              <div className="py-3">
-                <Chips values={agent.routing_triggers} />
-              </div>
-            </section>
+              <section className="pt-2">
+                <SectionHeader title="Tags" />
+                <div className="py-3">
+                  <Chips values={agent.domain_tags} />
+                </div>
+              </section>
 
-            <Instructions instructions={agent.instructions} />
-            <LinkedKnowledge agent={agent} />
-            <RecentInvocations agent={agent} />
-          </>
-        )}
+              <ContextSection agent={agent} />
+              <Instructions instructions={agent.instructions} />
+              <LinkedKnowledge agent={agent} />
+              <RecentInvocations agent={agent} />
+            </>
+          )}
 
-        {agentQuery.isFetching && !isHydratingDetail && (
-          <div className="mt-5 inline-flex items-center gap-2 text-sm text-zinc-400 dark:text-zinc-500">
-            <Loader2 className="size-4 animate-spin" />
-            Refreshing profile
-          </div>
-        )}
+          {agentQuery.isFetching && !isHydratingDetail && (
+            <div className="mt-5 inline-flex items-center gap-2 text-sm text-zinc-400 dark:text-zinc-500">
+              <Loader2 className="size-4 animate-spin" />
+              Refreshing profile
+            </div>
+          )}
         </div>
       </div>
     </section>
