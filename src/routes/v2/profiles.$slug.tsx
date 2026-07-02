@@ -205,13 +205,19 @@ function ContextSection({ agent }: { agent: AgentSpecialistDetail }) {
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         <div className="border border-black/10 p-3 dark:border-white/12">
           <div className={AGENT_STAT_LABEL_CLASS}>Model</div>
-          <div className="mt-1 font-mono text-sm text-zinc-950 dark:text-white">
+          <div
+            className="mt-1 font-mono text-sm text-zinc-950 dark:text-white"
+            data-testid="agent-model-hint"
+          >
             {agent.model_hint || "inherit"}
           </div>
         </div>
         <div className="border border-black/10 p-3 dark:border-white/12">
           <div className={AGENT_STAT_LABEL_CLASS}>Permission scope</div>
-          <div className="mt-1 font-mono text-sm capitalize text-zinc-950 dark:text-white">
+          <div
+            className="mt-1 font-mono text-sm capitalize text-zinc-950 dark:text-white"
+            data-testid="agent-permission-scope"
+          >
             {agent.permission_scope}
           </div>
         </div>
