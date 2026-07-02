@@ -1,7 +1,8 @@
 import { type CancelablePromise, OpenAPI } from "@/client"
 import { request } from "@/client/core/request"
 
-export type AgentSpecialistStatus = "active" | "draft" | "archived"
+export type AgentSpecialistStatus = "active" | "draft" | "archived" | "proposed"
+export type AgentPermissionScope = "readonly" | "full"
 
 export interface AgentSpecialistSummary {
   id: string
@@ -36,6 +37,11 @@ export interface AgentSpecialistUpdate {
   short_description?: string
   domain_tags?: string[]
   status?: AgentSpecialistStatus
+  model_hint?: string
+  permission_scope?: AgentPermissionScope
+  instructions?: string[]
+  routing_triggers?: string[]
+  negative_triggers?: string[]
 }
 
 export interface AgentSpecialistLinkedDoc {
@@ -75,6 +81,8 @@ export interface AgentSpecialistDetail {
   short_description: string
   description: string
   created_from: string
+  model_hint: string
+  permission_scope: AgentPermissionScope
   domain_tags: string[]
   routing_triggers: string[]
   negative_triggers: string[]

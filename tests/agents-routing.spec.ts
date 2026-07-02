@@ -74,6 +74,8 @@ const jensenDetail = {
   created_from: "earned",
   description:
     "Helps debug Stripe billing, subscription upgrades, webhook retries, idempotency, duplicate invoices, and customer double-charge incidents.",
+  model_hint: "inherit",
+  permission_scope: "readonly",
   domain_tags: ["Stripe", "Billing", "Webhooks", "Reliability"],
   routing_triggers: ["stripe", "webhook", "subscription", "plan upgrade"],
   negative_triggers: ["pricing page copy", "frontend billing UI"],
@@ -369,6 +371,14 @@ test("profile lifecycle updates detail and list", async ({ page }) => {
   await page.getByRole("button", { name: "Edit" }).click()
   await page.getByLabel("Status").click()
   await page.getByRole("option", { name: "Archived" }).click()
+  await page.getByLabel("Model").fill("sonnet")
+  await page.getByLabel("Permission scope").click()
+  await page.getByRole("option", { name: "Full" }).click()
+  await page.getByLabel("Routing triggers").fill("stripe\nwebhook\nrefunds")
+  await page.getByLabel("Negative triggers").fill("pricing page copy")
+  await page
+    .getByLabel("Instructions")
+    .fill("Verify webhook signatures.\nNever trust unverified events.")
 
   const updateResponse = page.waitForResponse(
     (response) =>
@@ -378,8 +388,22 @@ test("profile lifecycle updates detail and list", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click()
   expect(
     await updateResponse.then((response) => response.request().postDataJSON()),
-  ).toMatchObject({ status: "archived" })
+  ).toMatchObject({
+    status: "archived",
+    model_hint: "sonnet",
+    permission_scope: "full",
+    routing_triggers: ["stripe", "webhook", "refunds"],
+    negative_triggers: ["pricing page copy"],
+    instructions: [
+      "Verify webhook signatures.",
+      "Never trust unverified events.",
+    ],
+  })
   await expect(page.getByTestId("agent-status-archived")).toBeVisible()
+  await expect(page.getByText("sonnet")).toBeVisible()
+  await expect(page.getByText("full")).toBeVisible()
+  await expect(page.getByText("refunds")).toBeVisible()
+  await expect(page.getByText("Never trust unverified events.")).toBeVisible()
 
   await page
     .getByTestId("agent-detail-sticky-header")

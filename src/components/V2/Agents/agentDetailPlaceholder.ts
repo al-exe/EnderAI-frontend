@@ -16,6 +16,8 @@ export function agentSummaryToDetailPlaceholder(
     short_description: summary.short_description,
     description: summary.short_description,
     created_from: summary.created_from,
+    model_hint: "inherit",
+    permission_scope: "readonly",
     domain_tags: summary.domain_tags,
     routing_triggers: summary.domain_tags,
     negative_triggers: [],
