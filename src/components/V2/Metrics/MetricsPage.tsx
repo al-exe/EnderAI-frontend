@@ -32,7 +32,6 @@ import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
   V2_TAB_CONTENT_CLASS,
-  V2_TAB_EYEBROW_CLASS,
   V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
 import { usePersistentState } from "@/hooks/usePersistentState"
@@ -161,22 +160,22 @@ const SESSION_METRIC_DEFINITIONS: Record<string, MetricDefinitionPublic> = {
   },
 }
 
-const WINDOW_COPY: Record<MetricsWindow, { label: string; title: string }> = {
-  "7d": { label: "7d", title: "this week" },
-  "30d": { label: "30d", title: "in the last 30 days" },
-  all: { label: "all", title: "all time" },
-}
+// const WINDOW_COPY: Record<MetricsWindow, { label: string; title: string }> = {
+//   "7d": { label: "7d", title: "this week" },
+//   "30d": { label: "30d", title: "in the last 30 days" },
+//   all: { label: "all", title: "all time" },
+// }
 
-function metricsEyebrowLabel(
-  window: MetricsWindow,
-  scope: MetricsScope,
-  sessionShortId?: string,
-) {
-  if (sessionShortId) {
-    return `session · ${sessionShortId}`
-  }
-  return `${WINDOW_COPY[window].label} · ${scope}`
-}
+// function metricsEyebrowLabel(
+//   window: MetricsWindow,
+//   scope: MetricsScope,
+//   sessionShortId?: string,
+// ) {
+//   if (sessionShortId) {
+//     return `session · ${sessionShortId}`
+//   }
+//   return `${WINDOW_COPY[window].label} · ${scope}`
+// }
 
 function toMetricNumber(value: string | number | null | undefined) {
   if (value == null) return 0
@@ -434,10 +433,10 @@ export function MetricsPage({ currentUser, sessionId }: Props) {
         <div className={V2_TAB_HEADER_STACK_CLASS}>
           <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className={V2_TAB_EYEBROW_CLASS}>
+              {/* <div className={V2_TAB_EYEBROW_CLASS}>
                 {metricsEyebrowLabel(window, effectiveScope, sessionShortId)}
-              </div>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+              </div> */}
+              <h1 className="text-2xl font-semibold tracking-tight">
                 Metrics
               </h1>
             </div>

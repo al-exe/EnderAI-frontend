@@ -1,14 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Sparkles } from "lucide-react"
+import { MoreHorizontal } from "lucide-react"
 
 import { readMyOrganization, updateMyOrganization } from "@/api/organizations"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import useCustomToast from "@/hooks/useCustomToast"
-import { cn } from "@/lib/utils"
 
 export const organizationQueryKey = ["my-organization"]
 
-export function AutoEvolveToggle({ className }: { className?: string }) {
+export function ProfilesHeaderMenu() {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -43,29 +48,29 @@ export function AutoEvolveToggle({ className }: { className?: string }) {
   const enabled = organization.auto_evolve_enabled
 
   return (
-    <div
-      className={cn(
-        "inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-1 pl-2.5",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Sparkles className="size-3.5 text-primary" aria-hidden />
-        <span className="whitespace-nowrap font-medium text-foreground">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          aria-label="Profiles options"
+          data-testid="profiles-page-menu-trigger"
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuCheckboxItem
+          checked={enabled}
+          disabled={autoEvolveMutation.isPending}
+          data-testid="profiles-auto-evolve-toggle"
+          onCheckedChange={(checked) => autoEvolveMutation.mutate(checked === true)}
+          onSelect={(event) => event.preventDefault()}
+        >
           Auto-evolve
-        </span>
-      </div>
-      <Button
-        type="button"
-        size="sm"
-        variant={enabled ? "default" : "outline"}
-        className="h-7 min-w-12 px-2.5"
-        data-testid="profiles-auto-evolve-toggle"
-        disabled={autoEvolveMutation.isPending}
-        onClick={() => autoEvolveMutation.mutate(!enabled)}
-      >
-        {enabled ? "On" : "Off"}
-      </Button>
-    </div>
+        </DropdownMenuCheckboxItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

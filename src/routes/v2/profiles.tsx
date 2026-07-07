@@ -19,10 +19,9 @@ import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentProfileCard } from "@/components/V2/Agents/AgentProfileCard"
-import { AutoEvolveToggle } from "@/components/V2/Agents/AutoEvolveToggle"
+import { ProfilesHeaderMenu } from "@/components/V2/Agents/ProfilesHeaderMenu"
 import { CandidateProfileCard } from "@/components/V2/Agents/CandidateProfileCard"
 import {
-  AGENT_EYEBROW_CLASS,
   AGENT_PAGE_TITLE_CLASS,
 } from "@/components/V2/Agents/agentsTypography"
 import { CreateProfileDialog } from "@/components/V2/Agents/CreateProfileDialog"
@@ -161,7 +160,7 @@ function AgentsIndex() {
   })
   const agents = agentsQuery.data?.items ?? []
   const hasAgentsData = agentsQuery.data !== undefined
-  const activeCount = agents.filter((agent) => agent.status === "active").length
+  // const activeCount = agents.filter((agent) => agent.status === "active").length
 
   const createProfileMutation = useMutation({
     mutationFn: (values: AgentSpecialistCreate) =>
@@ -234,13 +233,12 @@ function AgentsIndex() {
         <div className={V2_TAB_HEADER_STACK_CLASS}>
           <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className={AGENT_EYEBROW_CLASS}>
+              {/* <div className={AGENT_EYEBROW_CLASS}>
                 {activeCount} active across team
-              </div>
-              <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
+              </div> */}
+              <h1 className={AGENT_PAGE_TITLE_CLASS}>Profiles</h1>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <AutoEvolveToggle />
               <Button
                 type="button"
                 size="sm"
@@ -249,6 +247,7 @@ function AgentsIndex() {
               >
                 + Profile
               </Button>
+              <ProfilesHeaderMenu />
             </div>
           </header>
         </div>

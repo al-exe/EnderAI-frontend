@@ -788,8 +788,9 @@ test("profiles header exposes auto-evolve toggle for org admins", async ({
 
   await page.goto("/v2/profiles")
 
+  await page.getByTestId("profiles-page-menu-trigger").click()
   const toggle = page.getByTestId("profiles-auto-evolve-toggle")
-  await expect(toggle).toHaveText("On")
+  await expect(toggle).toHaveAttribute("aria-checked", "true")
 
   const patchResponse = page.waitForResponse(
     (response) =>
@@ -800,7 +801,7 @@ test("profiles header exposes auto-evolve toggle for org admins", async ({
   expect(
     await patchResponse.then((response) => response.request().postDataJSON()),
   ).toMatchObject({ auto_evolve_enabled: false })
-  await expect(toggle).toHaveText("Off")
+  await expect(toggle).toHaveAttribute("aria-checked", "false")
 })
 
 test("candidate profiles approve and dismiss update the grids", async ({

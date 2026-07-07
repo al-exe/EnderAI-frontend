@@ -58,7 +58,6 @@ import {
   V2_PAGE_FRAME,
   V2_STICKY_HEADER_CLASS,
   V2_TAB_CONTENT_CLASS,
-  V2_TAB_EYEBROW_CLASS,
 } from "@/components/V2/v2PageShell"
 import { persistedKey, usePersistentState } from "@/hooks/usePersistentState"
 import { peekTaskforceSession } from "@/lib/taskforceSession"
@@ -80,7 +79,6 @@ import {
   rosterStatusLabel,
   runningCount,
   statusDotPulses,
-  waitingCount,
 } from "./fleetStatus"
 import { SharedContextDrawer } from "./SharedContextDrawer"
 
@@ -840,19 +838,19 @@ export function FleetPage() {
   })
 
   const fleetSessions = fleetQuery.data?.fleet_sessions ?? []
-  const workFleets = fleetSessions.filter((fleet) => !fleet.is_history)
+  // const workFleets = fleetSessions.filter((fleet) => !fleet.is_history)
   const historyFleet = fleetSessions.find((fleet) => fleet.is_history)
   const allAgents = fleetSessions.flatMap((fleet) => fleet.agents)
-  const activeAgents = workFleets.flatMap((fleet) => fleet.agents)
-  const running = runningCount(activeAgents)
-  const waiting = waitingCount(activeAgents)
+  // const activeAgents = workFleets.flatMap((fleet) => fleet.agents)
+  // const running = runningCount(activeAgents)
+  // const waiting = waitingCount(activeAgents)
 
-  const eyebrowParts = [
-    `${workFleets.length} ${workFleets.length === 1 ? "session" : "sessions"}`,
-    `${activeAgents.length} ${activeAgents.length === 1 ? "agent" : "agents"}`,
-    `${running} running`,
-  ]
-  if (waiting) eyebrowParts.push(`${waiting} Awaiting prompt`)
+  // const eyebrowParts = [
+  //   `${workFleets.length} ${workFleets.length === 1 ? "session" : "sessions"}`,
+  //   `${activeAgents.length} ${activeAgents.length === 1 ? "agent" : "agents"}`,
+  //   `${running} running`,
+  // ]
+  // if (waiting) eyebrowParts.push(`${waiting} Awaiting prompt`)
 
   const openAgent = (agent: TaskforceFleetAgent) =>
     navigate({
@@ -939,10 +937,10 @@ export function FleetPage() {
         >
           <header className="flex items-start justify-between gap-4">
             <div>
-              <div className={V2_TAB_EYEBROW_CLASS}>
+              {/* <div className={V2_TAB_EYEBROW_CLASS}>
                 {eyebrowParts.join(" · ")}
-              </div>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+              </div> */}
+              <h1 className="text-2xl font-semibold tracking-tight">
                 Sessions
               </h1>
             </div>

@@ -354,8 +354,8 @@ test("Fleet renders the calm roster from live API data", async ({ page }) => {
     "Agent running",
   )
   await expect(page.getByText("10m")).toBeVisible()
-  // Calm summary line — fleets, agents, running; no spend/token metrics.
-  await expect(page.getByText("1 session · 1 agent · 1 running")).toBeVisible()
+  // Page eyebrow hidden for now — title only, no spend/token metrics in header.
+  await expect(page.getByText("1 session · 1 agent · 1 running")).toHaveCount(0)
 
   // The rejected metrics direction must not reappear.
   await expect(page.getByText(/tokens/i)).toHaveCount(0)
