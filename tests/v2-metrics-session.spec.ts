@@ -290,7 +290,7 @@ test("metrics page keeps aggregate dashboard without session_id", async ({
 
   await page.goto("/v2/metrics")
 
-  await expect(page.getByText("7d · personal")).toBeVisible()
+  await expect(page.getByText("7d · personal")).toHaveCount(0)
   await expect(
     page.getByRole("heading", { name: "Metrics", level: 1 }),
   ).toBeVisible()
