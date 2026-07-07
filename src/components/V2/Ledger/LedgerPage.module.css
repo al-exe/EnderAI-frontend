@@ -84,6 +84,9 @@
   text-transform: none;
   color: var(--tf-muted-fg);
 }
+.h1NoEyebrow {
+  margin-top: 0;
+}
 .h1 {
   margin: 4px 0 0;
   font-size: calc(24px * var(--v2-scale, 1));

@@ -84,7 +84,6 @@ import { ScopeFilterBar } from "@/components/V2/ScopeFilterBar"
 import {
   V2_PAGE_BODY,
   V2_PAGE_FRAME,
-  V2_TAB_EYEBROW_CLASS,
   V2_TAB_CONTENT_CLASS,
   V2_TAB_HEADER_STACK_CLASS,
 } from "@/components/V2/v2PageShell"
@@ -579,10 +578,10 @@ function TaskforceLibrary() {
     (libraryView === "files" || folders.length === 0)
   const isFolderEmpty =
     !isLoading && documents.length > 0 && visibleDocuments.length === 0
-  const totalDocumentCount = documentsQuery.data?.count ?? allDocuments.length
-  const teamSharedDocumentCount = allDocuments.filter(
-    (document) => document.visibility === "organization",
-  ).length
+  // const totalDocumentCount = documentsQuery.data?.count ?? allDocuments.length
+  // const teamSharedDocumentCount = allDocuments.filter(
+  //   (document) => document.visibility === "organization",
+  // ).length
   const canMutateLibrary =
     !moveDocumentMutation.isPending &&
     !moveFolderMutation.isPending &&
@@ -725,11 +724,11 @@ function TaskforceLibrary() {
           <div className={V2_TAB_HEADER_STACK_CLASS}>
             <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <div className={V2_TAB_EYEBROW_CLASS}>
+                {/* <div className={V2_TAB_EYEBROW_CLASS}>
                   {totalDocumentCount} documents · {teamSharedDocumentCount}{" "}
                   shared with team
-                </div>
-                <h1 className="mt-1 text-2xl font-semibold">Library</h1>
+                </div> */}
+                <h1 className="text-2xl font-semibold">Library</h1>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <div

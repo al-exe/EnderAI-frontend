@@ -414,12 +414,12 @@ export function LedgerPage({
             <div className={V2_TAB_HEADER_STACK_CLASS}>
               <header className={styles.head}>
                 <div>
-                  <div className={styles.crumb}>
+                  {/* <div className={styles.crumb}>
                     {typeof ledgerQuery.data?.total === "number"
                       ? `${ledgerQuery.data.total} sessions archived`
                       : null}
-                  </div>
-                  <h1 className={styles.h1}>Ledger</h1>
+                  </div> */}
+                  <h1 className={cn(styles.h1, styles.h1NoEyebrow)}>Ledger</h1>
                 </div>
                 <div className={styles.tools}>
                   <form className={styles.search} onSubmit={onSearchSubmit}>
