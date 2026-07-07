@@ -11,6 +11,24 @@ const currentUser = {
   subscription_tier: "free",
 }
 
+const organization = {
+  id: "org-1",
+  name: "Taskforce Labs",
+  auto_evolve_enabled: true,
+  created_at: "2026-03-24T00:00:00Z",
+  updated_at: "2026-03-24T00:00:00Z",
+  organization_role: "admin",
+  members: [
+    {
+      id: "user-1",
+      email: "alex@example.com",
+      full_name: "Alex Lee",
+      organization_role: "admin",
+    },
+  ],
+  invitations: [],
+}
+
 const agents = [
   {
     id: "agent-1",
@@ -58,6 +76,21 @@ const agents = [
     tokens_saved: 8000,
     last_invoked_at: "2026-06-01T12:00:00Z",
     created_at: "2026-06-01T12:00:00Z",
+  },
+  {
+    id: "agent-4",
+    slug: "orion",
+    name: "Orion",
+    role: "Observability Specialist",
+    short_description: "Metrics drift, alert noise, and dashboard hygiene.",
+    domain_tags: ["Metrics", "Observability"],
+    status: "proposed",
+    created_from: "earned",
+    linked_docs_count: 0,
+    invocations_count: 0,
+    tokens_saved: 0,
+    last_invoked_at: null,
+    created_at: "2026-06-15T12:00:00Z",
   },
 ]
 
@@ -169,6 +202,7 @@ test.use({
 async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
   let agentItems = agents.map((agent) => ({ ...agent }))
   let detail = { ...jensenDetail }
+  let organizationState = { ...organization }
 
   await page.addInitScript(() => {
     window.localStorage.setItem("access_token", "test-token")
@@ -189,6 +223,14 @@ async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
 
   await page.route("**/api/v1/organizations/invitations", async (route) => {
     await route.fulfill({ json: { data: [], count: 0 } })
+  })
+
+  await page.route("**/api/v1/organizations/me", async (route) => {
+    if (route.request().method() === "PATCH") {
+      const body = route.request().postDataJSON()
+      organizationState = { ...organizationState, ...body }
+    }
+    await route.fulfill({ json: organizationState })
   })
 
   await page.route("**/api/v1/v2/agents**", async (route) => {
@@ -288,6 +330,29 @@ async function mockAgentsShell(page: Page, options: { empty?: boolean } = {}) {
         )
       }
       await route.fulfill({ json: detail })
+      return
+    }
+    const agentSlugMatch = url.pathname.match(
+      /^\/api\/v1\/v2\/agents\/([^/]+)$/,
+    )
+    if (agentSlugMatch) {
+      const slug = agentSlugMatch[1]
+      const agent = agentItems.find((item) => item.slug === slug)
+      if (!agent) {
+        await route.fulfill({ status: 404, json: { detail: "Not found" } })
+        return
+      }
+      if (method === "PATCH") {
+        const body = route.request().postDataJSON()
+        agentItems = agentItems.map((item) =>
+          item.slug === slug ? { ...item, ...body } : item,
+        )
+        await route.fulfill({
+          json: { ...jensenDetail, ...agent, ...body, slug },
+        })
+        return
+      }
+      await route.fulfill({ json: { ...jensenDetail, ...agent, slug } })
       return
     }
     await route.fulfill({ status: 404, json: { detail: "Not found" } })
@@ -466,6 +531,8 @@ test("profiles grid links to detail and session metrics", async ({ page }) => {
     page.getByRole("heading", { name: "Profiles", level: 1 }),
   ).toBeVisible()
   await expect(page.getByTestId("agents-card-grid")).toBeVisible()
+  await expect(page.getByTestId("candidate-profiles-section")).toBeVisible()
+  await expect(page.getByText("Orion", { exact: true })).toBeVisible()
   await expect(page.getByText("Jensen", { exact: true })).toBeVisible()
   await expect(page.getByText("Mira", { exact: true })).toBeVisible()
   await expect(page.getByTestId("agent-status-active").first()).toBeVisible()
@@ -712,4 +779,82 @@ test("profile detail exposes a retry state instead of not found", async ({
     page.getByRole("heading", { name: "Jensen", level: 1 }),
   ).toBeVisible()
   expect(attempts).toBe(2)
+})
+
+test("profiles header exposes auto-evolve toggle for org admins", async ({
+  page,
+}) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/profiles")
+
+  const toggle = page.getByTestId("profiles-auto-evolve-toggle")
+  await expect(toggle).toHaveText("On")
+
+  const patchResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/organizations/me") &&
+      response.request().method() === "PATCH",
+  )
+  await toggle.click()
+  expect(
+    await patchResponse.then((response) => response.request().postDataJSON()),
+  ).toMatchObject({ auto_evolve_enabled: false })
+  await expect(toggle).toHaveText("Off")
+})
+
+test("candidate profiles approve and dismiss update the grids", async ({
+  page,
+}) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/profiles")
+
+  await expect(page.getByTestId("candidate-profiles-section")).toBeVisible()
+  await expect(page.getByTestId("candidate-profile-orion")).toBeVisible()
+  await expect(
+    page.getByTestId("agents-card-grid").getByText("Orion", { exact: true }),
+  ).toHaveCount(0)
+
+  const approveResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/v2/agents/orion") &&
+      response.request().method() === "PATCH",
+  )
+  await page.getByTestId("candidate-approve-orion").click()
+  expect(
+    await approveResponse.then((response) => response.request().postDataJSON()),
+  ).toMatchObject({ status: "active" })
+
+  await expect(page.getByTestId("candidate-profile-orion")).toHaveCount(0)
+  await expect(
+    page.getByTestId("agents-card-grid").getByRole("link", {
+      name: /open profile orion/i,
+    }),
+  ).toBeVisible()
+  await expect(page.getByTestId("agent-status-active")).toHaveCount(3)
+})
+
+test("candidate profile dismiss archives the profile", async ({ page }) => {
+  await mockAgentsShell(page)
+
+  await page.goto("/v2/profiles")
+
+  const dismissResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/v2/agents/orion") &&
+      response.request().method() === "PATCH",
+  )
+  await page.getByTestId("candidate-dismiss-orion").click()
+  expect(
+    await dismissResponse.then((response) => response.request().postDataJSON()),
+  ).toMatchObject({ status: "archived" })
+
+  await expect(page.getByTestId("candidate-profile-orion")).toHaveCount(0)
+  await expect(
+    page
+      .getByTestId("agents-card-grid")
+      .getByRole("link", { name: /open profile orion/i })
+      .getByTestId("agent-status-archived"),
+  ).toBeVisible()
 })

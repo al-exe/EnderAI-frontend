@@ -13,11 +13,14 @@ import {
   type AgentSpecialistSummary,
   createAgent,
   listAgents,
+  updateAgent,
 } from "@/api/v2Agents"
 import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentProfileCard } from "@/components/V2/Agents/AgentProfileCard"
+import { AutoEvolveToggle } from "@/components/V2/Agents/AutoEvolveToggle"
+import { CandidateProfileCard } from "@/components/V2/Agents/CandidateProfileCard"
 import {
   AGENT_EYEBROW_CLASS,
   AGENT_PAGE_TITLE_CLASS,
@@ -147,6 +150,10 @@ function AgentsIndex() {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [createProfileOpen, setCreateProfileOpen] = useState(false)
+  const [reviewingSlug, setReviewingSlug] = useState<{
+    slug: string
+    action: "approve" | "dismiss"
+  } | null>(null)
   const agentsQuery = useQuery({
     queryKey: ["v2-agents", isDemoMode],
     queryFn: () => listAgents({ demo: isDemoMode }),
@@ -170,7 +177,51 @@ function AgentsIndex() {
     },
   })
 
-  const visible = useMemo(() => sortAgentsByCreatedAt(agents), [agents])
+  const reviewCandidateMutation = useMutation({
+    mutationFn: ({
+      slug,
+      action,
+    }: {
+      slug: string
+      action: "approve" | "dismiss"
+    }) =>
+      updateAgent(
+        slug,
+        { status: action === "approve" ? "active" : "archived" },
+        { demo: isDemoMode },
+      ),
+    onMutate: ({ slug, action }) => {
+      setReviewingSlug({ slug, action })
+    },
+    onSuccess: (_agent, { action }) => {
+      queryClient.invalidateQueries({ queryKey: ["v2-agents", isDemoMode] })
+      showSuccessToast(
+        action === "approve" ? "Profile approved." : "Profile dismissed.",
+      )
+    },
+    onError: (_error, { action }) => {
+      showErrorToast(
+        action === "approve"
+          ? "Could not approve profile."
+          : "Could not dismiss profile.",
+      )
+    },
+    onSettled: () => {
+      setReviewingSlug(null)
+    },
+  })
+
+  const candidateProfiles = useMemo(
+    () => sortAgentsByCreatedAt(agents.filter((agent) => agent.status === "proposed")),
+    [agents],
+  )
+  const approvedProfiles = useMemo(
+    () =>
+      sortAgentsByCreatedAt(
+        agents.filter((agent) => agent.status !== "proposed"),
+      ),
+    [agents],
+  )
 
   return (
     <section
@@ -188,14 +239,17 @@ function AgentsIndex() {
               </div>
               <h1 className={cn("mt-1", AGENT_PAGE_TITLE_CLASS)}>Profiles</h1>
             </div>
-            <Button
-              type="button"
-              size="sm"
-              className="w-fit"
-              onClick={() => setCreateProfileOpen(true)}
-            >
-              + Profile
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <AutoEvolveToggle />
+              <Button
+                type="button"
+                size="sm"
+                className="w-fit"
+                onClick={() => setCreateProfileOpen(true)}
+              >
+                + Profile
+              </Button>
+            </div>
           </header>
         </div>
 
@@ -232,13 +286,69 @@ function AgentsIndex() {
               {agents.length === 0 ? (
                 <EmptyAgents isDemoMode={isDemoMode} />
               ) : (
-                <div
-                  data-testid="agents-card-grid"
-                  className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-                >
-                  {visible.map((agent) => (
-                    <AgentProfileCard key={agent.id} agent={agent} />
-                  ))}
+                <div className="space-y-8">
+                  {candidateProfiles.length > 0 && (
+                    <section data-testid="candidate-profiles-section">
+                      <div className="mb-3">
+                        <h2 className="text-sm font-semibold tracking-tight">
+                          Candidate profiles
+                        </h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Taskforce proposed these profiles from recent work.
+                          Approve to activate routing, or dismiss to archive.
+                        </p>
+                      </div>
+                      <div
+                        data-testid="candidate-profiles-grid"
+                        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+                      >
+                        {candidateProfiles.map((agent) => (
+                          <CandidateProfileCard
+                            key={agent.id}
+                            agent={agent}
+                            isApproving={
+                              reviewingSlug?.slug === agent.slug &&
+                              reviewingSlug.action === "approve"
+                            }
+                            isDismissing={
+                              reviewingSlug?.slug === agent.slug &&
+                              reviewingSlug.action === "dismiss"
+                            }
+                            onApprove={() =>
+                              reviewCandidateMutation.mutate({
+                                slug: agent.slug,
+                                action: "approve",
+                              })
+                            }
+                            onDismiss={() =>
+                              reviewCandidateMutation.mutate({
+                                slug: agent.slug,
+                                action: "dismiss",
+                              })
+                            }
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {approvedProfiles.length > 0 ? (
+                    <section>
+                      {candidateProfiles.length > 0 && (
+                        <h2 className="mb-3 text-sm font-semibold tracking-tight">
+                          Approved profiles
+                        </h2>
+                      )}
+                      <div
+                        data-testid="agents-card-grid"
+                        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+                      >
+                        {approvedProfiles.map((agent) => (
+                          <AgentProfileCard key={agent.id} agent={agent} />
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
                 </div>
               )}
             </>

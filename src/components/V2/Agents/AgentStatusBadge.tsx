@@ -1,6 +1,13 @@
 import type { AgentSpecialistStatus } from "@/api/v2Agents"
 import { cn } from "@/lib/utils"
 
+const STATUS_LABELS: Record<AgentSpecialistStatus, string> = {
+  active: "Active",
+  draft: "Draft",
+  proposed: "Candidate",
+  archived: "Archived",
+}
+
 const STATUS_STYLES: Record<AgentSpecialistStatus, string> = {
   active: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
   draft: "border-amber-500/30 text-amber-700 dark:text-amber-400",
@@ -33,7 +40,7 @@ export function AgentStatusBadge({
           status === "archived" && "bg-muted-foreground/60",
         )}
       />
-      {status}
+      {STATUS_LABELS[status]}
     </span>
   )
 }

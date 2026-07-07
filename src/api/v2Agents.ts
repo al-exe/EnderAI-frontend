@@ -1,7 +1,11 @@
 import { type CancelablePromise, OpenAPI } from "@/client"
 import { request } from "@/client/core/request"
 
-export type AgentSpecialistStatus = "active" | "draft" | "archived" | "proposed"
+export type AgentSpecialistStatus =
+  | "active"
+  | "draft"
+  | "archived"
+  | "proposed"
 export type AgentPermissionScope = "readonly" | "full"
 export type AgentHarnessTarget = "claude" | "codex" | "cursor"
 export type AgentHarnessTargetOption = AgentHarnessTarget | "all"
