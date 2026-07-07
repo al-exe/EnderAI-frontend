@@ -3,6 +3,7 @@ import { Hash } from "lucide-react"
 
 import type { AgentSpecialistSummary } from "@/api/v2Agents"
 import { cn } from "@/lib/utils"
+import { AgentProfileCardActionsMenu } from "./AgentProfileCardActionsMenu"
 import { AgentStatusBadge } from "./AgentStatusBadge"
 import { formatCompactNumber, formatRelativeTime } from "./formatters"
 
@@ -83,10 +84,13 @@ export function AgentProfileCard({ agent }: { agent: AgentSpecialistSummary }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <div className="truncate text-sm font-semibold tracking-[-0.01em]">
+            <div className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[-0.01em]">
               {agent.name}
             </div>
-            <AgentStatusBadge status={agent.status} className="h-6 shrink-0" />
+            <div className="flex shrink-0 items-center gap-0.5">
+              <AgentStatusBadge status={agent.status} className="h-6" />
+              <AgentProfileCardActionsMenu agent={agent} />
+            </div>
           </div>
           <div className="mt-[3px] font-mono text-[10px] tracking-[0.01em] text-foreground/70">
             {agent.role}

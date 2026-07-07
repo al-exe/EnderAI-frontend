@@ -19,7 +19,7 @@ import { useDemoMode } from "@/components/demo-mode-provider"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentProfileCard } from "@/components/V2/Agents/AgentProfileCard"
-import { AutoEvolveToggle } from "@/components/V2/Agents/AutoEvolveToggle"
+import { ProfilesHeaderMenu } from "@/components/V2/Agents/ProfilesHeaderMenu"
 import { CandidateProfileCard } from "@/components/V2/Agents/CandidateProfileCard"
 import {
   AGENT_PAGE_TITLE_CLASS,
@@ -239,7 +239,6 @@ function AgentsIndex() {
               <h1 className={AGENT_PAGE_TITLE_CLASS}>Profiles</h1>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <AutoEvolveToggle />
               <Button
                 type="button"
                 size="sm"
@@ -248,6 +247,7 @@ function AgentsIndex() {
               >
                 + Profile
               </Button>
+              <ProfilesHeaderMenu />
             </div>
           </header>
         </div>
