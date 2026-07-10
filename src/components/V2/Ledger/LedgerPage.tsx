@@ -394,7 +394,7 @@ export function LedgerPage({
     >
       <div className={cn(V2_PAGE_BODY, selectedSessionId && "pb-0")}>
         {selectedSessionId ? (
-          <div className={styles.app}>
+          <div className={cn(styles.app, "v2-tab-content")}>
             <LedgerDetail
               anchorEventId={searchFilters.event_id}
               detail={detailQuery.data}
@@ -408,7 +408,7 @@ export function LedgerPage({
           </div>
         ) : (
           <div
-            className={styles.app}
+            className={cn(styles.app, "v2-tab-content")}
             style={{ "--grid": GRID } as CSSProperties}
           >
             <div className={V2_TAB_HEADER_STACK_CLASS}>
@@ -419,7 +419,9 @@ export function LedgerPage({
                       ? `${ledgerQuery.data.total} sessions archived`
                       : null}
                   </div> */}
-                  <h1 className={cn(styles.h1, styles.h1NoEyebrow)}>Ledger</h1>
+                  <h1 className={cn("text-2xl font-semibold", styles.h1NoEyebrow)}>
+                    Ledger
+                  </h1>
                 </div>
                 <div className={styles.tools}>
                   <form className={styles.search} onSubmit={onSearchSubmit}>
