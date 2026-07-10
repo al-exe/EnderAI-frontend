@@ -150,7 +150,7 @@
   padding: 11px var(--ledger-row-padding-inline, 1rem);
   border-bottom: 1px solid var(--tf-border);
   font-family: var(--font-mono);
-  font-size: var(--text-v2-xs);
+  font-size: var(--text-v2-sm);
   letter-spacing: 0.01em;
   text-transform: none;
   color: var(--tf-faint-fg);
@@ -166,7 +166,7 @@
 }
 .dayLbl {
   font-family: var(--font-mono);
-  font-size: var(--text-v2-xs);
+  font-size: var(--text-v2-sm);
   letter-spacing: 0.01em;
   text-transform: none;
   color: var(--tf-fg);
@@ -177,7 +177,7 @@
 }
 .dayCt {
   font-family: var(--font-mono);
-  font-size: var(--text-v2-xs);
+  font-size: var(--text-v2-sm);
   color: var(--tf-faint-fg);
   font-variant-numeric: tabular-nums;
 }
@@ -217,8 +217,8 @@
   min-width: 0;
 }
 .ttl {
-  font-size: var(--text-v2-base);
-  font-weight: 500;
+  font-size: var(--text-v2-sm);
+  font-weight: 600;
   letter-spacing: -0.005em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -227,7 +227,7 @@
 .sub {
   margin-top: 4px;
   font-family: var(--font-mono);
-  font-size: var(--text-v2-xs);
+  font-size: var(--text-v2-sm);
   color: var(--tf-muted-fg);
   display: flex;
   align-items: center;
@@ -267,7 +267,7 @@
 }
 .harnessAg {
   font-family: var(--font-mono);
-  font-size: var(--text-v2-xs);
+  font-size: var(--text-v2-sm);
   color: var(--tf-faint-fg);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -275,7 +275,7 @@
 }
 .act {
   font-family: var(--font-mono);
-  font-size: var(--text-v2-xs);
+  font-size: var(--text-v2-sm);
   color: var(--tf-muted-fg);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
