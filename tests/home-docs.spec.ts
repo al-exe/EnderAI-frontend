@@ -54,8 +54,8 @@ test("Landing page presents Taskforce V2 as the public product", async ({
     page.getByText("Works with Claude Code, Codex, and Cursor."),
   ).toBeVisible()
   await expect(
-    page.getByRole("link", { name: /start free/i }).first(),
-  ).toBeVisible()
+    page.locator('a[href="/login"], a[href="/signup"], a[href="/pricing"]'),
+  ).toHaveCount(0)
   await expect(page.getByText("Browse Topics")).toHaveCount(0)
   await expect(page.getByText("Review Cases")).toHaveCount(0)
 })

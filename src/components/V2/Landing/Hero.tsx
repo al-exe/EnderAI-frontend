@@ -1,9 +1,7 @@
-import { Link } from "@tanstack/react-router"
-import { ArrowRight, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import type { ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 import styles from "./Landing.module.css"
@@ -209,21 +207,6 @@ export function LandingHero() {
               </div>
               <div className={styles.works}>
                 Works with Claude Code, Codex, and Cursor.
-              </div>
-              <div className={styles.heroCtas}>
-                <Button asChild className={styles.solidButton}>
-                  <Link to="/signup">
-                    Start free
-                    <ArrowRight />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  className={styles.outlineButton}
-                  variant="outline"
-                >
-                  <Link to="/login">Open Taskforce</Link>
-                </Button>
               </div>
             </div>
 

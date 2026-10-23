@@ -130,52 +130,6 @@
   color: var(--landing-fg);
 }
 
-.navRight {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-left: auto;
-}
-
-.navCta {
-  display: flex;
-  gap: 10px;
-}
-
-.solidButton,
-.outlineButton {
-  height: auto;
-  border-radius: 0;
-  padding: 11.25px 18.75px;
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-.solidButton {
-  border: 1px solid var(--landing-primary);
-  background: var(--landing-primary);
-  color: var(--landing-primary-fg);
-}
-
-.solidButton:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-}
-
-.outlineButton {
-  border-color: var(--landing-border);
-  background: transparent;
-  color: var(--landing-fg);
-}
-
-.outlineButton:hover {
-  border-color: var(--landing-fg);
-  background: transparent;
-  color: var(--landing-fg);
-}
-
 .hero {
   --nav-h: var(--landing-nav-h);
   position: relative;
@@ -365,58 +319,6 @@
   font-family: var(--font-mono);
   font-size: 14px;
   letter-spacing: 0.04em;
-}
-
-.heroCtas {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  max-width: 100%;
-  gap: 10px;
-}
-
-.heroCopy .heroCtas {
-  justify-content: flex-start;
-}
-
-.heroCtas .solidButton,
-.heroCtas .outlineButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 46px;
-  min-height: 46px;
-  max-height: 46px;
-  min-width: 0;
-  padding: 0 18px;
-  border-radius: 0;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  gap: 8px;
-  box-shadow: none;
-}
-
-.heroCtas .solidButton {
-  border: 1px solid var(--landing-primary);
-  background: var(--landing-primary);
-  color: var(--landing-primary-fg);
-}
-
-.heroCtas .outlineButton {
-  border: 1px solid var(--landing-border);
-  background: transparent;
-  color: var(--landing-fg);
-}
-
-.heroCtas .solidButton svg {
-  width: 16px;
-  height: 16px;
 }
 
 .term {
@@ -1420,11 +1322,6 @@
   content: "";
 }
 
-.ctaActions {
-  margin-inline: auto;
-  justify-content: center;
-}
-
 .ctaInner {
   position: relative;
   max-width: 720px;
@@ -1434,7 +1331,7 @@
 }
 
 .ctaInner h2 {
-  margin: 0 0 28px;
+  margin: 0;
   font-size: clamp(30px, 4vw, 44px);
   font-weight: 600;
   line-height: 1.05;
@@ -1694,21 +1591,6 @@
 
   .navInner {
     gap: 14px;
-  }
-
-  .navCta .outlineButton {
-    display: none;
-  }
-
-  .heroCtas {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .heroCtas .solidButton,
-  .heroCtas .outlineButton {
-    width: 100%;
   }
 
   .heroCap {
