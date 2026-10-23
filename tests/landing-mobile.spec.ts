@@ -23,23 +23,6 @@ for (const viewport of MOBILE_VIEWPORTS) {
     }))
     expect(pageSize.documentWidth).toBeLessThanOrEqual(pageSize.viewportWidth)
 
-    const heroActions = page
-      .locator("section")
-      .first()
-      .getByRole("link", { name: /start free|open taskforce/i })
-
-    await expect(heroActions).toHaveCount(2)
-    for (const action of await heroActions.all()) {
-      const box = await action.boundingBox()
-      expect(box).not.toBeNull()
-      expect(box?.height).toBeGreaterThanOrEqual(44)
-      expect(box?.width).toBeGreaterThanOrEqual(viewport.width - 42)
-      expect(box?.x).toBeGreaterThanOrEqual(0)
-      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(
-        viewport.width,
-      )
-    }
-
     const terminal = page.getByTestId("landing-terminal")
     const terminalTopByCapability: number[] = []
     for (const capability of CAPABILITIES) {

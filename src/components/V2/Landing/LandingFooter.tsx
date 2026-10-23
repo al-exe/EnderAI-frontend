@@ -22,7 +22,6 @@ export function LandingFooter() {
           </Link>
           <div className={styles.footerLinks}>
             <a href="#library">Library</a>
-            <Link to="/pricing">Pricing</Link>
             <a href="#sessions">Changelog</a>
             <a href="#top">Privacy</a>
           </div>

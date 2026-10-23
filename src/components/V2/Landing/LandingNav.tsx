@@ -1,7 +1,5 @@
 import { Link } from "@tanstack/react-router"
 
-import { Button } from "@/components/ui/button"
-
 import styles from "./Landing.module.css"
 
 const navItems = [
@@ -37,17 +35,6 @@ export function LandingNav() {
             </a>
           ))}
         </nav>
-
-        <div className={styles.navRight}>
-          <div className={styles.navCta}>
-            <Button asChild className={styles.outlineButton} variant="outline">
-              <Link to="/login">Open Taskforce</Link>
-            </Button>
-            <Button asChild className={styles.solidButton}>
-              <Link to="/signup">Start free</Link>
-            </Button>
-          </div>
-        </div>
       </div>
     </header>
   )

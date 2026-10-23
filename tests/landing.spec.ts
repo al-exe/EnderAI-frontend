@@ -39,12 +39,10 @@ test("/landing renders the redesigned Taskforce landing page", async ({
     }),
   ).toBeVisible()
 
+  // The app isn't hosted, so the landing page must not link into it.
   await expect(
-    page.getByRole("link", { name: /start free/i }).first(),
-  ).toHaveAttribute("href", "/signup")
-  await expect(
-    page.getByRole("link", { name: /open taskforce/i }).first(),
-  ).toHaveAttribute("href", "/login")
+    page.locator('a[href="/login"], a[href="/signup"], a[href="/pricing"]'),
+  ).toHaveCount(0)
 })
 
 test("/pricing uses sentence-case calmer mono eyebrows", async ({ page }) => {

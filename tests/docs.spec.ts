@@ -69,13 +69,11 @@ test("docs code blocks copy and mobile navigation opens", async ({ page }) => {
   ).toBeVisible()
 })
 
-test("expressive landing hides documentation while keeping pricing", async ({
-  page,
-}) => {
+test("expressive landing hides documentation and pricing", async ({ page }) => {
   await page.goto("/landing")
 
   const documentation = page.getByRole("link", { name: "Documentation" })
   const pricing = page.getByRole("link", { name: "Pricing" })
   await expect(documentation).toHaveCount(0)
-  await expect(pricing).toHaveAttribute("href", "/pricing")
+  await expect(pricing).toHaveCount(0)
 })
